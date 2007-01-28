@@ -1,0 +1,182 @@
+----------------------------------------------------------------------
+VPN Client
+----------------------------------------------------------------------
+
+Alpha release ...
+----------------------------------------------------------------------
+X Resolve host dns to address in ipsecc
+X Transmit size in vnet driver
+X DHCP renew effects phase2 sa's
+X Client status message rework
+X Allow the configuration of the dns suffix in ipseca
+X NAT-T force option in ipseca & ipsecc
+X Manual config of client settings in ipsecd ( review ipseci )
+X Key size in ipseca for phase1
+X Dir path problem ipsecc & ipsecd
+X Pre-fragment support in ipsecd
+X Update logging facility in ipsecd
+X Use generic logging facility in dll classes
+X Test all dialog options for feature parity
+
+Beta release ...
+----------------------------------------------------------------------
+X Rewrite vnet driver
+X Create cleanup routines for all sa and tunnel objects
+X Fix license view in about dialog
+X Delete sa's after they are declared dead
+X Isakmp re-transmit in ipsecd
+X Send NAT keep-alive packets
+X Mutual auth XAuth mode
+
+1.0 release ...
+----------------------------------------------------------------------
+X SPI size of 8 in sa payload
+X Flag tunnel as dead when proposal is rejected
+X Handle notification payloads when bundled in phase1 or phase2
+X Correct dialog layout issues
+X Allow for disabled client WINS and DNS settings
+X IKE fragmentation
+X Send delete messages as outlined in RFC 2408
+X Handle delete messages as outlined in RFC 2408
+X Send notify messages as outlined in RFC 2408
+X Handle notify messages as outlined in RFC 2408
+X Client feedback for failure cases
+X Fix crash after items deleted in ipseca
+X Support the modecfg banner attribute
+X Cleanup IPFRAG class
+X Phase2 sa re-establish after expire
+X Create debugger application interface
+X Prevent multiple tunnels from using the same gateway
+X Support the pfs modecfg attribute
+X Support the split exclude modecfg attribute
+X Correct client busy loop bug
+X Pre-configured client packaging system
+X Fix multiple tunnel issues
+X Write documentation
+X Button default issue in ipsecc
+X Test non-admin user operation
+X Correct loss of default route ( use DHCP HANDOUT ? )
+X Correct the VNET MTU dropping to 175 ( THANK GOD !!! )
+X Update VProt Interface to handle Dialup Adapters
+. !!! All reported bugs !!!
+
+1.1 release - Bug fixes and fine tuning
+----------------------------------------------------------------------
+X Add Split DNS Support
+X Cleanup orphaned dnsfwd entries
+X Cleanup PACKET_DNS memory leaks
+X Add Dead Peer Detection responder
+X Add Dead Peer Detection initiator
+X Move away from dynamic adapter creation ( adapter pools )
+X Correct phase2 negotiation issues
+X Replace DHCP support with static configuration
+X Fix session termination messages
+X Move remaining projects in-branch to share versions
+X Modify interfaces to support Split DNS, DPD Banner and Notify
+X Remove tunnel references to internal API
+X Standardize and fix validation of inform and config hashes
+X Audit use of random generation
+X Correct debug output for modecfg banner
+X Restructure SDB and packet resend
+X Resolve issue with devcfg initial device creation
+X Report phase 2 id types and values
+X Add client username and password command line options
+X Remove media sense from VNet driver
+X Track down a rare ipsecc freeze when server rudely disconnect
+X Review driver locking
+X Modify VProt to handle multiple dialup adapters
+X Review adapter registry configurtaion
+X Update release documentation
+X Look into reported issue with Split DNS
+X Implement Split DNS reverse lookups
+X Correct p12 related problems
+X Add support for encrypted p12 and pem files
+X Correct problems with local ID checking
+X Test kernel drivers with multi-core systems
+. !!! All reported bugs !!!
+
+2.0 release - Interface below TCPIP and friends
+----------------------------------------------------------------------
+X Replace Protocol driver with IM filter driver
+X Build rule based filter framework into IM driver
+X Implement divert/mirror rule processing ( like FreeBSD ipfw )
+X Implement accept/reject rule processing
+X Use filter framework for packet inspection / redirection
+X Remove uneeded functionality from virtual network interface
+X Hide platform specific route index detail in libip
+X Add support for using a real interface as a tunnel endpoint
+X Review locking and stabilize IM filter driver
+X Modify transparent DNS proxy code to work in direct or virtual mode
+X Modify IM filter driver to support rule priorities for insertion
+X Modify libflt ethernet header creation routine to use ARP data
+X Modify ipsecd, vflt and libvflt to deal with transient devices
+X Add auto configuration for phase1 and phase2 parameters
+X Review and correct any issues with the exchange handlers
+X Rewrite code related to proposal generation and checking
+X Rewrite code related to policy management
+X Fix ipsecd internal structure exposure to ipsecc
+X Rewrite ipsec processing code to be policy driven
+X Add support for ah in ipsecd
+X Add support for ipcomp and deflate compression
+X Rewrite packet queuing system
+X Add ability to view FW rules in VPN Trace
+X Add support for bundled proposals
+X Seperate ike process, ipsec control and ipsec process threads
+X Split ipsec daemon into ipsecd and iked
+X Port iked to a single unix target
+X Build pfkey interface for SPD and SAD management
+X Add ability to view SPD and SAD entries in VPN Trace
+X Fix information exchange and notify support
+X Add iked config file support for unix targets using flex/bison
+X Add iked support for sending responder lifetime notifications
+X Add iked support for xauth via local and ldap sources
+X Add iked support for modecfg
+X Add iked support for advanced policy generation
+X Split DNS Transparent proxy support into dtpd
+X Remove optional esp packet pre-fragmentation from ipsecd
+. Review all db locking and entry removal
+. Test all client features against iked
+. !!! All reported bugs !!!
+
+2.1 release - Bug fix and fine tuning
+----------------------------------------------------------------------
+. Add support for lzs compression
+. Add adaptive communications during connect ( Frag/NATT )
+. Review option flags usage for client struct
+. Move to a purely primitive based tunnel confguration interface
+. Add user preference dialog for site manager
+. Add preference for client minimize to system tray
+. Add preference for auto-reconnect
+. Add support for unattended installations
+? Add preference for pre-populating user names
+? Add ability to drag site connections as shortcuts
+. !!! All reported bugs !!!
+
+2.2 release - Feature Parity ...
+----------------------------------------------------------------------
+. Stateful client side firewall
+. !!! All reported bugs !!!
+
+2.3 release - Feature Parity ...
+----------------------------------------------------------------------
+. Secure Domain Login
+. !!! All reported bugs !!!
+
+3.0 release - High Performance
+----------------------------------------------------------------------
+. Create lightweight kernel or userland buildable crypto library
+. Move ip security processing into the kernel
+. !!! All reported bugs !!!
+
+----------------------------------------------------------------------
+IPSEC-TOOLS
+----------------------------------------------------------------------
+X LDAP auth module
+X Group based sainfo selection
+X Group based xauth
+X isakmp_id2str
+X sainfo debug improvements
+X responder ignores inital fragment
+. clientaddr
+. pass firewall rulesets via modecfg
+. review sa cleanup after client disconnect ( Yvan fixed? )

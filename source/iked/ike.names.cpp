@@ -1,0 +1,858 @@
+
+/*
+ * Copyright (c) 2007
+ *      Shrew Soft Inc.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Redistributions in any form must be accompanied by information on
+ *    how to obtain complete source code for the software and any
+ *    accompanying software that uses the software.  The source code
+ *    must either be included in the distribution or be available for no
+ *    more than the cost of distribution plus a nominal fee, and must be
+ *    freely redistributable under reasonable conditions.  For an
+ *    executable file, complete source code means the source code for all
+ *    modules it contains.  It does not include source code for modules or
+ *    files that typically accompany the major components of the operating
+ *    system on which the executable file runs.
+ *
+ * THIS SOFTWARE IS PROVIDED BY SHREW SOFT INC ``AS IS'' AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+ * NON-INFRINGEMENT, ARE DISCLAIMED.  IN NO EVENT SHALL SHREW SOFT INC
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * AUTHOR : Matthew Grooms
+ *          mgrooms@shrew.net
+ *
+ */
+
+#include "iked.h"
+
+char * _IKED::find_name( long type, long id )
+{
+	static char * unknown1 = "unknown type";
+	static char * unknown2 = "unknown";
+
+	switch( type )
+	{
+		case NAME_INITIATOR:
+		{
+			static char * init0 = "responder";
+			static char * init1 = "initiator";
+
+			switch( id )
+			{
+				case 0:
+					return init0;
+
+				case 1:
+					return init1;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_EXCHANGE:
+		{
+			static char * exchange1 = "base";
+			static char * exchange2 = "identity protect";
+			static char * exchange3 = "authenticateon only";
+			static char * exchange4 = "aggressive";
+			static char * exchange5 = "informational";
+			static char * exchange6 = "isakmp config / xauth";
+
+			switch( id )
+			{
+				case ISAKMP_EXCH_BASE:
+					return exchange1;
+
+				case ISAKMP_EXCH_IDENT_PROTECT:
+					return exchange2;
+
+				case ISAKMP_EXCH_AUTHENTICATION:
+					return exchange3;
+
+				case ISAKMP_EXCH_AGGRESSIVE:
+					return exchange4;
+
+				case ISAKMP_EXCH_INFORMATIONAL:
+					return exchange5;
+
+				case ISAKMP_EXCH_CONFIG:
+					return exchange6;
+
+				default:
+					return unknown2;
+			}
+		}
+
+
+		case NAME_PROTOCOL:
+		{
+			static char * proto1 = "isakmp";
+			static char * proto2 = "ipsec-ah";
+			static char * proto3 = "ipsec-esp";
+			static char * proto4 = "ipcomp";
+
+			switch( id )
+			{
+				case ISAKMP_PROTO_ISAKMP:
+					return proto1;
+
+				case ISAKMP_PROTO_IPSEC_AH:
+					return proto2;
+
+				case ISAKMP_PROTO_IPSEC_ESP:
+					return proto3;
+
+				case ISAKMP_PROTO_IPCOMP:
+					return proto4;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_XFORM_ISAKMP:
+		{
+			static char * xform1 = "ike";
+
+			switch( id )
+			{
+				case ISAKMP_KEY_IKE:
+					return xform1;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_XFORM_AH:
+		{
+			static char * xform1 = "ah-md5";
+			static char * xform2 = "ah-sha";
+			static char * xform3 = "ah-des";
+
+			switch( id )
+			{
+				case ISAKMP_AH_MD5:
+					return xform1;
+
+				case ISAKMP_AH_SHA:
+					return xform2;
+
+				case ISAKMP_AH_DES:
+					return xform3;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_XFORM_ESP:
+		{
+			static char * xform1  = "esp-des-iv64";
+			static char * xform2  = "esp-des";
+			static char * xform3  = "esp-3des";
+			static char * xform4  = "esp-rc5";
+			static char * xform5  = "esp-idea";
+			static char * xform6  = "esp-cast";
+			static char * xform7  = "esp-blowfish";
+			static char * xform8  = "esp-3idea";
+			static char * xform9  = "esp-des-iv32";
+			static char * xform10 = "esp-rc4";
+			static char * xform11 = "esp-null";
+			static char * xform12 = "esp-aes";
+
+			switch( id )
+			{
+				case ISAKMP_ESP_DES_IV64:
+					return xform1;
+
+				case ISAKMP_ESP_DES:
+					return xform2;
+
+				case ISAKMP_ESP_3DES:
+					return xform3;
+
+				case ISAKMP_ESP_RC5:
+					return xform4;
+
+				case ISAKMP_ESP_IDEA:
+					return xform5;
+
+				case ISAKMP_ESP_CAST:
+					return xform6;
+
+				case ISAKMP_ESP_BLOWFISH:
+					return xform7;
+
+				case ISAKMP_ESP_3IDEA:
+					return xform8;
+
+				case ISAKMP_ESP_DES_IV32:
+					return xform9;
+
+				case ISAKMP_ESP_RC4:
+					return xform10;
+
+				case ISAKMP_ESP_NULL:
+					return xform11;
+
+				case ISAKMP_ESP_AES:
+					return xform12;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_XFORM_IPCOMP:
+		{
+			static char * xform0 = "none";
+			static char * xform1 = "ipcomp-oui";
+			static char * xform2 = "ipcomp-deflate";
+			static char * xform3 = "ipcomp-lzs";
+
+			switch( id )
+			{
+				case ISAKMP_IPCOMP_NONE:
+					return xform0;
+
+				case ISAKMP_IPCOMP_OUI:
+					return xform1;
+
+				case ISAKMP_IPCOMP_DEFLATE:
+					return xform2;
+
+				case ISAKMP_IPCOMP_LZS:
+					return xform3;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_PAYLOAD:
+		{
+			static char * pload0  = "none";
+			static char * pload1  = "security association";
+			static char * pload2  = "proposal";
+			static char * pload3  = "transform";
+			static char * pload4  = "key exchange";
+			static char * pload5  = "identity";
+			static char * pload6  = "certificate";
+			static char * pload7  = "certificate request";
+			static char * pload8  = "hash";
+			static char * pload9  = "signature";
+			static char * pload10 = "nonce";
+			static char * pload11 = "notify";
+			static char * pload12 = "delete";
+			static char * pload13 = "vendor";
+			static char * pload14 = "attribute";
+			static char * pload15 = "nat discovery v02";
+			static char * pload16 = "nat original adress v02";
+			static char * pload17 = "nat discovery rfc";
+			static char * pload18 = "nat original adress rfc";
+			static char * pload19 = "fragment";
+
+			switch( id )
+			{
+				case ISAKMP_PAYLOAD_NONE:
+					return pload0;
+
+				case ISAKMP_PAYLOAD_SA:
+					return pload1;
+
+				case ISAKMP_PAYLOAD_PROPOSAL:
+					return pload2;
+
+				case ISAKMP_PAYLOAD_TRANSFORM:
+					return pload3;
+
+				case ISAKMP_PAYLOAD_KEX:
+					return pload4;
+
+				case ISAKMP_PAYLOAD_IDENT:
+					return pload5;
+
+				case ISAKMP_PAYLOAD_CERT:
+					return pload6;
+
+				case ISAKMP_PAYLOAD_CERT_REQ:
+					return pload7;
+
+				case ISAKMP_PAYLOAD_HASH:
+					return pload8;
+
+				case ISAKMP_PAYLOAD_SIGNATURE:
+					return pload9;
+
+				case ISAKMP_PAYLOAD_NONCE:
+					return pload10;
+
+				case ISAKMP_PAYLOAD_NOTIFY:
+					return pload11;
+
+				case ISAKMP_PAYLOAD_DELETE:
+					return pload12;
+
+				case ISAKMP_PAYLOAD_VEND:
+					return pload13;
+
+				case ISAKMP_PAYLOAD_ATTRIB:
+					return pload14;
+
+				case ISAKMP_PAYLOAD_NAT_V02_DISC:
+					return pload15;
+
+				case ISAKMP_PAYLOAD_NAT_V02_ORIG:
+					return pload16;
+
+				case ISAKMP_PAYLOAD_NAT_RFC_DISC:
+					return pload17;
+
+				case ISAKMP_PAYLOAD_NAT_RFC_ORIG:
+					return pload18;
+
+				case ISAKMP_PAYLOAD_FRAGMENT:
+					return pload19;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_CIPHER:
+		{
+			static char * cipher1 = "des";
+			static char * cipher2 = "idea";
+			static char * cipher3 = "blowfish";
+			static char * cipher4 = "rc5";
+			static char * cipher5 = "3des";
+			static char * cipher6 = "cast";
+			static char * cipher7 = "aes";
+
+			switch( id )
+			{
+				case IKE_CIPHER_DES:
+					return cipher1;
+
+				case IKE_CIPHER_IDEA:
+					return cipher2;
+
+				case IKE_CIPHER_BLOWFISH:
+					return cipher3;
+
+				case IKE_CIPHER_RC5_R16_B64:
+					return cipher4;
+
+				case IKE_CIPHER_3DES:
+					return cipher5;
+
+				case IKE_CIPHER_CAST:
+					return cipher6;
+
+				case IKE_CIPHER_AES:
+					return cipher7;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_PAUTH:
+		{
+			static char * auth1 = "psk";
+			static char * auth2 = "sig-dsa";
+			static char * auth3 = "sig-rsa";
+			static char * auth4 = "rsa-encrypt";
+			static char * auth5 = "rsa-revised";
+			static char * auth6 = "hybrid-initiator-rsa";
+			static char * auth7 = "hybrid-responder-rsa";
+			static char * auth8 = "hybrid-initiator-dss";
+			static char * auth9 = "hybrid-responder-dss";
+			static char * auth10 = "xauth-initiator-psk";
+			static char * auth11 = "xauth-responder-psk";
+			static char * auth12 = "xauth-initiator-rsa";
+			static char * auth13 = "xauth-responder-rsa";
+			static char * auth14 = "xauth-initiator-dss";
+			static char * auth15 = "xauth-responder-dss";
+			static char * auth16 = "xauth-initiator-rsa-encryption";
+			static char * auth17 = "xauth-responder-rsa-encryption";
+			static char * auth18 = "xauth-initiator-rsa-revised-encryption";
+			static char * auth19 = "xauth-responder-rsa-revised-encryption";
+
+			switch( id )
+			{
+				case IKE_AUTH_PRESHARED_KEY:
+					return auth1;
+
+				case IKE_AUTH_SIG_DSA:
+					return auth2;
+
+				case IKE_AUTH_SIG_RSA:
+					return auth3;
+
+				case IKE_AUTH_SIG_RSA_ENCRYPT:
+					return auth4;
+
+				case IKE_AUTH_SIG_RSA_REVISED:
+					return auth5;
+
+				case HYBRID_AUTH_INIT_RSA:
+					return auth6;
+
+				case HYBRID_AUTH_RESP_RSA:
+					return auth7;
+
+				case HYBRID_AUTH_INIT_DSS:
+					return auth8;
+
+				case HYBRID_AUTH_RESP_DSS:
+					return auth9;
+
+				case XAUTH_AUTH_INIT_PSK:
+					return auth10;
+
+				case XAUTH_AUTH_RESP_PSK:
+					return auth11;
+
+				case XAUTH_AUTH_INIT_DSS:
+					return auth12;
+
+				case XAUTH_AUTH_RESP_DSS:
+					return auth13;
+
+				case XAUTH_AUTH_INIT_RSA:
+					return auth14;
+
+				case XAUTH_AUTH_RESP_RSA:
+					return auth15;
+
+				case XAUTH_AUTH_INIT_RSA_ENC:
+					return auth16;
+
+				case XAUTH_AUTH_RESP_RSA_ENC:
+					return auth17;
+
+				case XAUTH_AUTH_INIT_RSA_REV:
+					return auth18;
+
+				case XAUTH_AUTH_RESP_RSA_REV:
+					return auth19;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_MAUTH:
+		{
+			static char * hash1 = "hmac-md5";
+			static char * hash2 = "hmac-sha";
+			static char * hash3 = "des-mac";
+			static char * hash4 = "kpdk";
+
+			switch( id )
+			{
+				case ISAKMP_AUTH_HMAC_MD5:
+					return hash1;
+
+				case ISAKMP_AUTH_HMAC_SHA:
+					return hash2;
+
+				case ISAKMP_AUTH_DES_MAC:
+					return hash3;
+
+				case ISAKMP_AUTH_KPDK:
+					return hash4;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_HASH:
+		{
+			static char * hash1 = "md5";
+			static char * hash2 = "sha1";
+			static char * hash3 = "tiger";
+
+			switch( id )
+			{
+				case IKE_HASH_MD5:
+					return hash1;
+
+				case IKE_HASH_SHA1:
+					return hash2;
+
+				case IKE_HASH_TIGER:
+					return hash3;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_CERT:
+		{
+			static char * cert0  = "none";
+			static char * cert1  = "pkcs7";
+			static char * cert2  = "pgp";
+			static char * cert3  = "dns signed";
+			static char * cert4  = "x.509 signed";
+			static char * cert5  = "x.509 key exchange";
+			static char * cert6  = "kerberos";
+			static char * cert7  = "certificate revocation list ( CRL )";
+			static char * cert8  = "authority revocation list ( ARL )";
+			static char * cert9  = "spki";
+			static char * cert10 = "x.509 attribute";
+			static char * cert11 = "plain rsa";
+
+			switch( id )
+			{
+				case ISAKMP_CERT_NONE:
+					return cert0;
+
+				case ISAKMP_CERT_PKCS7:
+					return cert1;
+
+				case ISAKMP_CERT_PGP:
+					return cert2;
+
+				case ISAKMP_CERT_DNS_SIGNED:
+					return cert3;
+
+				case ISAKMP_CERT_X509_SIG:
+					return cert4;
+
+				case ISAKMP_CERT_X509_KEX:
+					return cert5;
+
+				case ISAKMP_CERT_KERBEROS:
+					return cert6;
+
+				case ISAKMP_CERT_CRL:
+					return cert7;
+
+				case ISAKMP_CERT_ARL:
+					return cert8;
+
+				case ISAKMP_CERT_SPKI:
+					return cert9;
+
+				case ISAKMP_CERT_X509_ATTR:
+					return cert10;
+
+				case ISAKMP_CERT_RSA_PLAIN:
+					return cert11;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_GROUP:
+		{
+			static char * group0 = "none";
+			static char * group1 = "modp-768";
+			static char * group2 = "modp-1024";
+			static char * group3 = "ecn-155";
+			static char * group4 = "ecn-185";
+			static char * group5 = "modp-1536";
+			static char * group6 = "modp-2048";
+			static char * group7 = "modp-3072";
+			static char * group8 = "modp-4096";
+
+			switch( id )
+			{
+				case 0:
+					return group0;
+
+				case IKE_GRP_GROUP1:
+					return group1;
+
+				case IKE_GRP_GROUP2:
+					return group2;
+
+				case IKE_GRP_GROUP3:
+					return group3;
+
+				case IKE_GRP_GROUP4:
+					return group4;
+
+				case IKE_GRP_GROUP5:
+					return group5;
+
+				case IKE_GRP_GROUP14:
+					return group6;
+
+				case IKE_GRP_GROUP15:
+					return group7;
+
+				case IKE_GRP_GROUP16:
+					return group8;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_ENCAP:
+		{
+			static char * encap1 = "tunnel";
+			static char * encap2 = "transport";
+			static char * encap3 = "udp-tunnel v02";
+			static char * encap4 = "udp-transport v02";
+			static char * encap5 = "udp-tunnel rfc";
+			static char * encap6 = "udp-transport rfc";
+
+			switch( id )
+			{
+				case ISAKMP_ENCAP_TUNNEL:
+					return encap1;
+
+				case ISAKMP_ENCAP_TRANSPORT:
+					return encap2;
+
+				case ISAKMP_ENCAP_V02_UDP_TUNNEL:
+					return encap3;
+
+				case ISAKMP_ENCAP_V02_UDP_TRANSPORT:
+					return encap4;
+
+				case ISAKMP_ENCAP_RFC_UDP_TUNNEL:
+					return encap5;
+
+				case ISAKMP_ENCAP_RFC_UDP_TRANSPORT:
+					return encap6;
+
+				default:
+					return unknown2;
+			}
+		}
+
+		case NAME_IDENT:
+		{
+			static char * ident1  = "ipv4-host";
+			static char * ident2  = "fqdn";
+			static char * ident3  = "user-fqdn";
+			static char * ident4  = "ipv4-subnet";
+			static char * ident5  = "ipv6-host";
+			static char * ident6  = "ipv6-subnet";
+			static char * ident7  = "ipv4-range";
+			static char * ident8  = "ipv4-range";
+			static char * ident9  = "asn1-dn";
+			static char * ident10 = "asn1-gn";
+			static char * ident11 = "key-id";
+
+			switch( id )
+			{
+				case ISAKMP_ID_IPV4_ADDR:
+					return ident1;
+
+				case ISAKMP_ID_FQDN:
+					return ident2;
+
+				case ISAKMP_ID_USER_FQDN:
+					return ident3;
+
+				case ISAKMP_ID_IPV4_ADDR_SUBNET:
+					return ident4;
+
+				case ISAKMP_ID_IPV6_ADDR:
+					return ident5;
+
+				case ISAKMP_ID_IPV6_ADDR_SUBNET:
+					return ident6;
+
+				case ISAKMP_ID_IPV4_ADDR_RANGE:
+					return ident7;
+
+				case ISAKMP_ID_IPV6_ADDR_RANGE:
+					return ident8;
+
+				case ISAKMP_ID_ASN1_DN:
+					return ident9;
+
+				case ISAKMP_ID_ASN1_GN:
+					return ident10;
+
+				case ISAKMP_ID_KEY_ID:
+					return ident11;
+					
+				default:
+					return unknown2;
+			}
+		}
+		
+		case NAME_NOTIFY:
+		{
+			static char * notify1  = "INVALID-PAYLOAD-TYPE";
+			static char * notify2  = "DOI-NOT-SUPPORTED";
+			static char * notify3  = "SITUATION-NOT-SUPPORTED";
+			static char * notify4  = "INVALID-COOKIE";
+			static char * notify5  = "INVALID-MAJOR-VERSION";
+			static char * notify6  = "INVALID-MINOR-VERSION";
+			static char * notify7  = "INVALID-EXCHANGE-TYPE";
+			static char * notify8  = "INVALID-FLAGS";
+			static char * notify9  = "INVALID-MESSAGE-ID";
+			static char * notify10 = "INVALID-PROTOCOL-ID";
+			static char * notify11 = "INVALID-SPI";
+			static char * notify12 = "INVALID-TRANSFORM-ID";
+			static char * notify13 = "ATTRIBUTES-NOT-SUPPORTED";
+			static char * notify14 = "NO-PROPOSAL-CHOSEN";
+			static char * notify15 = "BAD-PROPOSAL-SYNTAX";
+			static char * notify16 = "PAYLOAD-MALFORMED";
+			static char * notify17 = "INVALID-KEY-INFORMATION";
+			static char * notify18 = "INVALID-ID-INFORMATION";
+			static char * notify19 = "INVALID-CERT-ENCODING";
+			static char * notify20 = "INVALID-CERTIFICATE";
+			static char * notify21 = "CERT-TYPE-UNSUPPORTED";
+			static char * notify22 = "INVALID-CERT-AUTHORITY";
+			static char * notify23 = "INVALID-HASH-INFORMATION";
+			static char * notify24 = "AUTHENTICATION-FAILED";
+			static char * notify25 = "INVALID-SIGNATURE";
+			static char * notify26 = "ADDRESS-NOTIFICATION";
+			static char * notify27 = "NOTIFY-SA-LIFETIME";
+			static char * notify28 = "CERTIFICATE-UNAVAILABLE";
+			static char * notify29 = "UNSUPPORTED-EXCHANGE-TYPE";
+			static char * notify30 = "UNEQUAL-PAYLOAD-LENGTHS";
+			static char * notify31 = "RESPONDER-LIFETIME";
+			static char * notify32 = "REPLAY-STATUS";
+			static char * notify33 = "INITIAL-CONTACT";
+			static char * notify34 = "DPDV1-R-U-THERE";
+			static char * notify35 = "DPDV1-R-U-THERE-ACK";
+			
+			switch( id )
+			{
+				case ISAKMP_N_INVALID_PAYLOAD_TYPE:
+					return notify1;
+					
+				case ISAKMP_N_DOI_NOT_SUPPORTED:
+					return notify2;
+
+				case ISAKMP_N_SITUATION_NOT_SUPPORTED:
+					return notify3;
+
+				case ISAKMP_N_INVALID_COOKIE:
+					return notify4;
+
+				case ISAKMP_N_INVALID_MAJOR_VERSION:
+					return notify5;
+
+				case ISAKMP_N_INVALID_MINOR_VERSION:
+					return notify6;
+
+				case ISAKMP_N_INVALID_EXCHANGE_TYPE:
+					return notify7;
+
+				case ISAKMP_N_INVALID_FLAGS:
+					return notify8;
+
+				case ISAKMP_N_INVALID_MESSAGE_ID:
+					return notify9;
+
+				case ISAKMP_N_INVALID_PROTOCOL_ID:
+					return notify10;
+
+				case ISAKMP_N_INVALID_SPI:
+					return notify11;
+
+				case ISAKMP_N_INVALID_TRANSFORM_ID:
+					return notify12;
+
+				case ISAKMP_N_ATTRIBUTES_NOT_SUPPORTED:
+					return notify13;
+
+				case ISAKMP_N_NO_PROPOSAL_CHOSEN:
+					return notify14;
+
+				case ISAKMP_N_BAD_PROPOSAL_SYNTAX:
+					return notify15;
+
+				case ISAKMP_N_PAYLOAD_MALFORMED:
+					return notify16;
+
+				case ISAKMP_N_INVALID_KEY_INFORMATION:
+					return notify17;
+
+				case ISAKMP_N_INVALID_ID_INFORMATION:
+					return notify18;
+
+				case ISAKMP_N_INVALID_CERT_ENCODING:
+					return notify19;
+
+				case ISAKMP_N_INVALID_CERTIFICATE:
+					return notify20;
+
+				case ISAKMP_N_CERT_TYPE_UNSUPPORTED:
+					return notify21;
+
+				case ISAKMP_N_INVALID_CERT_AUTHORITY:
+					return notify22;
+
+				case ISAKMP_N_INVALID_HASH_INFORMATION:
+					return notify23;
+
+				case ISAKMP_N_AUTHENTICATION_FAILED:
+					return notify24;
+
+				case ISAKMP_N_INVALID_SIGNATURE:
+					return notify25;
+
+				case ISAKMP_N_ADDRESS_NOTIFICATION:
+					return notify26;
+
+				case ISAKMP_N_NOTIFY_SA_LIFETIME:
+					return notify27;
+
+				case ISAKMP_N_CERTIFICATE_UNAVAILABLE:
+					return notify28;
+
+				case ISAKMP_N_UNSUPPORTED_EXCHANGE_TYPE:
+					return notify29;
+
+				case ISAKMP_N_UNEQUAL_PAYLOAD_LENGTHS:
+					return notify30;
+			
+				case ISAKMP_N_RESPONDER_LIFETIME:
+					return notify31;
+
+				case ISAKMP_N_REPLAY_STATUS:
+					return notify32;
+
+				case ISAKMP_N_INITIAL_CONTACT:
+					return notify33;
+
+				case ISAKMP_N_DPD_R_U_THERE:
+					return notify34;
+
+				case ISAKMP_N_DPD_R_U_THERE_ACK:
+					return notify35;
+
+				default:
+					return unknown2;
+			}
+		}
+					
+		default:
+
+			return unknown1;
+	}
+}
