@@ -1233,7 +1233,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 						suffix.text() );
 
 					if( index > 1 )
-						suffix.ins( 1, ',' );
+						suffix.ins( ',', 1 );
 
 					cfg->attr_add_v( UNITY_SPLIT_DOMAIN,
 						suffix.buff(),

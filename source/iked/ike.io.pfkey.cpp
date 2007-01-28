@@ -61,7 +61,7 @@ long _IKED::loop_ike_pfkey()
 
 	refcount++;
 
-	while( true )
+	while( state == DSTATE_ACTIVE )
 	{
 		//
 		// read the next pfkey message
@@ -70,10 +70,6 @@ long _IKED::loop_ike_pfkey()
 		PFKI_MSG msg;
 
 		long result = pfki.next_msg( msg );
-
-		if( result != PFKI_OK )
-			if( state != DSTATE_ACTIVE )
-				break;
 
 		if( result == PFKI_NODATA )
 			continue;

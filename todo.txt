@@ -134,7 +134,7 @@ X Add iked support for modecfg
 X Add iked support for advanced policy generation
 X Split DNS Transparent proxy support into dtpd
 X Remove optional esp packet pre-fragmentation from ipsecd
-. Review all db locking and entry removal
+X Review all db locking and entry removal
 . Test all client features against iked
 . !!! All reported bugs !!!
 
