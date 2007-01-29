@@ -633,13 +633,13 @@ void _IKED::text_mask( char * text, in_addr & addr )
 	unsigned long bits;
 	unsigned long mask;
 
-	bits = 32;
+	bits = 0;
 	mask = ntohl( addr.s_addr );
 
-	while( !( mask & 1 ) )
+	while( mask & 0x80000000 )
 	{
-		mask >>= 1;
-		bits--;
+		mask <<= 1;
+		bits++;
 	}
 
 	snprintf(

@@ -304,16 +304,16 @@ bool _IKED::ph2id_paddr( IKE_PH2ID & ph2id, PFKI_ADDR & paddr )
 			else
 				paddr.proto = IPSEC_PROTO_ANY;
 
-			paddr.prefix = 32;
+			paddr.prefix = 0;
 
 			if( ph2id.type == ISAKMP_ID_IPV4_ADDR_SUBNET )
 			{
 				unsigned long mask = ntohl( ph2id.addr2.s_addr );
 
-				while( !( mask & 1 ) )
+				while( mask 0x80000000 )
 				{
-					mask >>= 1;
-					paddr.prefix--;
+					mask <<= 1;
+					paddr.prefix++;
 				}
 			}
 
