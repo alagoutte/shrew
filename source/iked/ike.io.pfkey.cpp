@@ -310,7 +310,7 @@ bool _IKED::ph2id_paddr( IKE_PH2ID & ph2id, PFKI_ADDR & paddr )
 			{
 				unsigned long mask = ntohl( ph2id.addr2.s_addr );
 
-				while( mask 0x80000000 )
+				while( mask & 0x80000000 )
 				{
 					mask <<= 1;
 					paddr.prefix++;
