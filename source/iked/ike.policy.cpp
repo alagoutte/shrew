@@ -224,7 +224,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 
 	//
 	// if we will be forcing all traffic via
-	// this tunnel, add bypass policies that
+	// this tunnel, add none policies that
 	// will ensure we can still communicate
 	// with our peer
 	//
@@ -233,13 +233,13 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	{
 		memset( &id1, 0, sizeof( id1 ) );
 		id1.type = ISAKMP_ID_IPV4_ADDR;
-		id1.addr1 = tunnel->saddr_r.saddr4.sin_addr;
+		id1.addr1 = tunnel->saddr_l.saddr4.sin_addr;
 
 		memset( &id2, 0, sizeof( id2 ) );
 		id2.type = ISAKMP_ID_IPV4_ADDR;
-		id2.addr1 = tunnel->saddr_l.saddr4.sin_addr;
+		id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
-		policy_create( tunnel, IPSEC_POLICY_BYPASS, id1, id2 );
+		policy_create( tunnel, IPSEC_POLICY_NONE, id1, id2 );
 
 		tunnel->force_all = true;
 	}
@@ -254,7 +254,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	id1.addr2.s_addr = 0;
 
 	//
-	// create a discard or bypass policy
+	// create a discard or none policy
 	// pair for each id in our exclude list
 	//
 
@@ -263,7 +263,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	while( tunnel->idlist_excl.get( id2, index++ ) )
 	{
 		if( initiator )
-			policy_create( tunnel, IPSEC_POLICY_BYPASS, id1, id2 );
+			policy_create( tunnel, IPSEC_POLICY_NONE, id1, id2 );
 		else
 			policy_create( tunnel, IPSEC_POLICY_DISCARD, id2, id1 );
 	}
@@ -317,7 +317,7 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	}
 
 	//
-	// remove the discard or bypass policy
+	// remove the discard or none policy
 	// pair for each id in our exclude list
 	//
 
@@ -326,13 +326,13 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	while( tunnel->idlist_excl.get( id2, index++ ) )
 	{
 		if( initiator )
-			policy_remove( tunnel, IPSEC_POLICY_BYPASS, id1, id2 );
+			policy_remove( tunnel, IPSEC_POLICY_NONE, id1, id2 );
 		else
 			policy_remove( tunnel, IPSEC_POLICY_DISCARD, id2, id1 );
 	}
 
 	//
-	// if we added bypass policies, remove
+	// if we added none policies, remove
 	// them now
 	//
 
@@ -340,13 +340,13 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	{
 		memset( &id1, 0, sizeof( id1 ) );
 		id1.type = ISAKMP_ID_IPV4_ADDR;
-		id1.addr1 = tunnel->saddr_r.saddr4.sin_addr;
+		id1.addr1 = tunnel->saddr_l.saddr4.sin_addr;
 
 		memset( &id2, 0, sizeof( id2 ) );
 		id2.type = ISAKMP_ID_IPV4_ADDR;
-		id2.addr1 = tunnel->saddr_l.saddr4.sin_addr;
+		id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
-		policy_remove( tunnel, IPSEC_POLICY_BYPASS, id1, id2 );
+		policy_remove( tunnel, IPSEC_POLICY_NONE, id1, id2 );
 
 		tunnel->force_all = false;
 	}
@@ -451,7 +451,7 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 						tunnel->xconf.addr.s_addr );
 		}
 
-		if( type == IPSEC_POLICY_BYPASS )
+		if( type == IPSEC_POLICY_NONE )
 		{
 			in_addr			iaddr;
 			bool			local;
@@ -597,7 +597,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 				id2.addr2.s_addr );
 		}
 
-		if( type == IPSEC_POLICY_BYPASS )
+		if( type == IPSEC_POLICY_NONE )
 		{
 			in_addr			iaddr;
 			bool			local;
