@@ -56,7 +56,7 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 	recvtick = 0;
 	natttick = 0;
 
-	route = false;
+	force_all = false;
 
 	//
 	// initialize the tunnel id

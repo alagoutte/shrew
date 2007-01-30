@@ -280,12 +280,12 @@ typedef class _IDB_TUNNEL : public IDB
 	IKE_SADDR	saddr_l;
 	IKE_SADDR	saddr_r;
 
+	bool		force_all;
 	IKE_ILIST	idlist_incl;
 	IKE_ILIST	idlist_excl;
 	IKE_DLIST	dlist;
 
 	BDATA		banner;
-	bool		route;
 
 	long		state;
 	long		close;

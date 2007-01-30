@@ -501,6 +501,17 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 										if( attr->atype == UNITY_SPLIT_INCLUDE )
 										{
+											//
+											// we need to perform special
+											// operations if we have been
+											// instructed by our peer to
+											// force all via this tunnel
+											//
+
+											if( !unity_net->addr.s_addr &&
+												!unity_net->mask.s_addr )
+												cfg->tunnel->force_all = true;
+
 											cfg->tunnel->idlist_incl.add( ph2id );
 											log.txt( LOG_DEBUG, "ii : - IP4 Split Network Include = %s\n", txtid );
 										}
@@ -1277,6 +1288,17 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					text_ph2id( txtid, &ph2id );
 
 					log.txt( LOG_DEBUG, "ii : - IP4 Split Network Include = %s\n", txtid );
+
+					//
+					// we need to perform special
+					// operations if we instruct
+					// our peer to force all via
+					// this tunnel
+					//
+
+					if( !unity_net.addr.s_addr &&
+						!unity_net.mask.s_addr )
+						cfg->tunnel->force_all = true;
 				}
 
 				index = 0;
