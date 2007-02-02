@@ -435,73 +435,60 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 
 	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
 	{
-		bool routed = false;
+		bool	routed = false;
 
 		switch( type )
 		{
 			case IPSEC_POLICY_IPSEC:
 			{
-				iproute.increment(
-					id2.addr1.s_addr,
-					id2.addr2.s_addr );
+				in_addr addr = id2.addr1;
+				in_addr mask = id2.addr2;
 
 				if( id2.type == ISAKMP_ID_IPV4_ADDR )
-				{
-					routed = iproute.add(
-								tunnel->xconf.addr,
-								true,
-								id2.addr1.s_addr,
-								0xffffffff,
-								tunnel->xconf.addr.s_addr );
-				}
-				else
-				{
-					routed = iproute.add(
-								tunnel->xconf.addr,
-								true,
-								id2.addr1.s_addr,
-								id2.addr2.s_addr,
-								tunnel->xconf.addr.s_addr );
-				}
+					mask.s_addr = 0xffffffff;
 
+				iproute.increment(
+					addr,
+					mask );
+
+				routed = iproute.add(
+							tunnel->xconf.addr,
+							true,
+							addr,
+							mask,
+							tunnel->xconf.addr );
 				break;
 			}
 
 			case IPSEC_POLICY_NONE:
 			{
-				in_addr			iaddr;
-				bool			local;
-				unsigned long	addr = id2.addr1.s_addr;
-				unsigned long	mask;
-				unsigned long	next;
+				in_addr	cur_iaddr;
+				bool	cur_local;
+				in_addr	cur_addr = id2.addr1;
+				in_addr	cur_mask;
+				in_addr	cur_next;
 
 				routed = iproute.best(
-							iaddr,
-							local,
-							addr,
-							mask,
-							next );
+							cur_iaddr,
+							cur_local,
+							cur_addr,
+							cur_mask,
+							cur_next );
 
 				if( routed )
 				{
+					in_addr addr = id2.addr1;
+					in_addr mask = id2.addr2;
+
 					if( id2.type == ISAKMP_ID_IPV4_ADDR )
-					{
-						routed = iproute.add(
-									iaddr,
-									local,
-									id2.addr1.s_addr,
-									0xffffffff,
-									next );
-					}
-					else
-					{
-						routed = iproute.add(
-									iaddr,
-									local,
-									id2.addr1.s_addr,
-									id2.addr2.s_addr,
-									next );
-					}
+						mask.s_addr = 0xffffffff;
+
+					routed = iproute.add(
+								cur_iaddr,
+								cur_local,
+								addr,
+								mask,
+								cur_next );
 				}
 
 				break;
@@ -612,70 +599,63 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 
 	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
 	{
-		bool routed = false;
+		bool	routed = false;
 
-		if( type == IPSEC_POLICY_IPSEC )
+		switch( type )
 		{
-			if( id2.type == ISAKMP_ID_IPV4_ADDR )
+			case IPSEC_POLICY_IPSEC:
 			{
-				routed = iproute.del(
-							tunnel->xconf.addr,
-							true,
-							id2.addr1.s_addr,
-							0xffffffff,
-							tunnel->xconf.addr.s_addr );
-			}
-			else
-			{
-				routed = iproute.del(
-							tunnel->xconf.addr,
-							true,
-							id2.addr1.s_addr,
-							id2.addr2.s_addr,
-							tunnel->xconf.addr.s_addr );
-			}
+				in_addr addr = id2.addr1;
+				in_addr mask = id2.addr2;
 
-			iproute.decrement(
-				id2.addr1.s_addr,
-				id2.addr2.s_addr );
-		}
-
-		if( type == IPSEC_POLICY_NONE )
-		{
-			in_addr			iaddr;
-			bool			local;
-			unsigned long	addr = id2.addr1.s_addr;
-			unsigned long	mask;
-			unsigned long	next;
-
-			routed = iproute.best(
-						iaddr,
-						local,
-						addr,
-						mask,
-						next );
-
-			if( routed &&
-				addr == id2.addr1.s_addr &&
-				mask == id2.addr2.s_addr )
-			{
 				if( id2.type == ISAKMP_ID_IPV4_ADDR )
+					mask.s_addr = 0xffffffff;
+
+				routed = iproute.del(
+							tunnel->xconf.addr,
+							true,
+							addr,
+							mask,
+							tunnel->xconf.addr );
+
+				iproute.decrement(
+					addr,
+					mask );
+			}
+
+			case IPSEC_POLICY_NONE:
+			{
+				in_addr	cur_iaddr;
+				bool	cur_local;
+				in_addr	cur_addr = id2.addr1;
+				in_addr	cur_mask;
+				in_addr	cur_next;
+
+				routed = iproute.best(
+							cur_iaddr,
+							cur_local,
+							cur_addr,
+							cur_mask,
+							cur_next );
+
+				if( routed )
 				{
-					routed = iproute.del(
-								iaddr,
-								local,
-								id2.addr1.s_addr,
-								0xffffffff,
-								next );
-				}
-				else
-				{
-					routed = iproute.del(
-								iaddr,
-								local,
-								id2.addr1.s_addr,
-								id2.addr2.s_addr,
-								next );
+					in_addr addr = id2.addr1;
+					in_addr mask = id2.addr2;
+
+					if( id2.type == ISAKMP_ID_IPV4_ADDR )
+						mask.s_addr = 0xffffffff;
+
+					if( ( cur_addr.s_addr == addr.s_addr ) &&
+						( cur_mask.s_addr == mask.s_addr ) )
+					{
+						routed = iproute.del(
+									cur_iaddr,
+									cur_local,
+									addr,
+									mask,
+									cur_next );
+					}
 				}
 			}
 		}

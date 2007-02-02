@@ -542,14 +542,14 @@ typedef class DLX _IPROUTE
 
 	_IPROUTE();
 
-	bool add( in_addr & iface, bool local, unsigned long addr, unsigned long mask, unsigned long next );
-	bool del( in_addr & iface, bool local, unsigned long addr, unsigned long mask, unsigned long next );
-	bool get( in_addr & iface, bool & local, unsigned long & addr, unsigned long & mask, unsigned long & next );
+	bool add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next );
+	bool del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next );
+	bool get( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next );
 
-	bool best( in_addr & iface, bool & local, unsigned long & addr, unsigned long & mask, unsigned long & next );
+	bool best( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next );
 
-	bool increment( unsigned long addr, unsigned long mask );
-	bool decrement( unsigned long addr, unsigned long mask );
+	bool increment( in_addr addr, in_addr mask );
+	bool decrement( in_addr addr, in_addr mask );
 
 	bool flusharp( in_addr &iface );
 

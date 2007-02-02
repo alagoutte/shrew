@@ -143,7 +143,7 @@ bool _IPROUTE::addr_2_iface( unsigned long & iindex, in_addr & iface )
 // add a route
 //
 
-bool _IPROUTE::add( in_addr & iface, bool local, unsigned long addr, unsigned long mask, unsigned long next )
+bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
 {
 	unsigned long iindex;
 	addr_2_iface( iindex, iface );
@@ -151,10 +151,10 @@ bool _IPROUTE::add( in_addr & iface, bool local, unsigned long addr, unsigned lo
 	MIB_IPFORWARDROW ipfwdrow;
 	memset( &ipfwdrow, 0, sizeof( ipfwdrow ) );
 
-	ipfwdrow.dwForwardDest = addr;
-	ipfwdrow.dwForwardMask = mask;
+	ipfwdrow.dwForwardDest = addr.s_addr;
+	ipfwdrow.dwForwardMask = mask.s_addr;
 	ipfwdrow.dwForwardIfIndex = iindex;
-	ipfwdrow.dwForwardNextHop = next;
+	ipfwdrow.dwForwardNextHop = next.s_addr;
 	ipfwdrow.dwForwardProto = PROTO_IP_OTHER;
 	ipfwdrow.dwForwardMetric1 = 1;
 	ipfwdrow.dwForwardMetric2 = 1;
@@ -178,7 +178,7 @@ bool _IPROUTE::add( in_addr & iface, bool local, unsigned long addr, unsigned lo
 // delete a route 
 //
 
-bool _IPROUTE::del( in_addr & iface, bool local, unsigned long addr, unsigned long mask, unsigned long next )
+bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
 {
 	bool removed = false;
 
@@ -218,9 +218,9 @@ bool _IPROUTE::del( in_addr & iface, bool local, unsigned long addr, unsigned lo
 		for( ; index < count; index++ )
 		{
 			if( ( ipfwdtable->table[ index ].dwForwardIfIndex == iindex ) &&
-				( ipfwdtable->table[ index ].dwForwardDest == addr ) &&
-				( ipfwdtable->table[ index ].dwForwardMask == mask ) &&
-				( ipfwdtable->table[ index ].dwForwardNextHop == next ) &&
+				( ipfwdtable->table[ index ].dwForwardDest == addr.s_addr ) &&
+				( ipfwdtable->table[ index ].dwForwardMask == mask.s_addr ) &&
+				( ipfwdtable->table[ index ].dwForwardNextHop == next.s_addr ) &&
 				( ipfwdtable->table[ index ].dwForwardType == type ) &&
 				( ipfwdtable->table[ index ].dwForwardProto == PROTO_IP_OTHER ) )
 			{
@@ -245,7 +245,7 @@ bool _IPROUTE::del( in_addr & iface, bool local, unsigned long addr, unsigned lo
 // get a route ( by addr and mask )
 //
 
-bool _IPROUTE::get( in_addr & iface, bool & local, unsigned long & addr, unsigned long & mask, unsigned long & next )
+bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
 {
 	bool found = false;
 
@@ -277,8 +277,8 @@ bool _IPROUTE::get( in_addr & iface, bool & local, unsigned long & addr, unsigne
 
 		for( ; index < count; index++ )
 		{
-			if( ( ipfwdtable->table[ index ].dwForwardDest == addr ) &&
-				( ipfwdtable->table[ index ].dwForwardMask == mask ) )
+			if( ( ipfwdtable->table[ index ].dwForwardDest == addr.s_addr ) &&
+				( ipfwdtable->table[ index ].dwForwardMask == mask.s_addr ) )
 			{
 				//
 				// obtain the interface address
@@ -290,7 +290,7 @@ bool _IPROUTE::get( in_addr & iface, bool & local, unsigned long & addr, unsigne
 				// obtain the next hop and type
 				//
 
-				next  = ipfwdtable->table[ index ].dwForwardNextHop;
+				next.s_addr = ipfwdtable->table[ index ].dwForwardNextHop;
 
 				if( ipfwdtable->table[ index ].dwForwardType == 3 )
 					local = true;
@@ -312,13 +312,13 @@ bool _IPROUTE::get( in_addr & iface, bool & local, unsigned long & addr, unsigne
 // best route ( by address )
 //
 
-bool _IPROUTE::best( in_addr & iface, bool & local, unsigned long & addr, unsigned long & mask, unsigned long & next )
+bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
 {
 	MIB_IPFORWARDROW ipfwdrow;
 	memset( &ipfwdrow, 0, sizeof( ipfwdrow ) );
 
 	long result = GetBestRoute(
-					addr,
+					addr.s_addr,
 					0,
 					&ipfwdrow );
 
@@ -329,9 +329,9 @@ bool _IPROUTE::best( in_addr & iface, bool & local, unsigned long & addr, unsign
 	// obtain the route information
 	//
 
-	addr = ipfwdrow.dwForwardDest;
-	mask = ipfwdrow.dwForwardMask;
-	next = ipfwdrow.dwForwardNextHop;
+	addr.s_addr = ipfwdrow.dwForwardDest;
+	mask.s_addr = ipfwdrow.dwForwardMask;
+	next.s_addr = ipfwdrow.dwForwardNextHop;
 
 	if( ipfwdrow.dwForwardType == 3 )
 		local = true;
@@ -351,7 +351,7 @@ bool _IPROUTE::best( in_addr & iface, bool & local, unsigned long & addr, unsign
 // decrement route costs
 //
 
-bool _IPROUTE::increment( unsigned long addr, unsigned long mask )
+bool _IPROUTE::increment( in_addr addr, in_addr mask )
 {
 	//
 	// get the route specified
@@ -388,8 +388,8 @@ bool _IPROUTE::increment( unsigned long addr, unsigned long mask )
 
 		for( ; index < count; index++ )
 		{
-			if( ( ipfwdtable->table[ index ].dwForwardDest == addr ) &&
-				( ipfwdtable->table[ index ].dwForwardMask == mask ) )
+			if( ( ipfwdtable->table[ index ].dwForwardDest == addr.s_addr ) &&
+				( ipfwdtable->table[ index ].dwForwardMask == mask.s_addr ) )
 			{
 				//
 				// modify the route metric
@@ -416,7 +416,7 @@ bool _IPROUTE::increment( unsigned long addr, unsigned long mask )
 // increment route costs
 //
 
-bool _IPROUTE::decrement( unsigned long addr, unsigned long mask )
+bool _IPROUTE::decrement( in_addr addr, in_addr mask )
 {
 	//
 	// get the route specified
@@ -453,8 +453,8 @@ bool _IPROUTE::decrement( unsigned long addr, unsigned long mask )
 
 		for( ; index < count; index++ )
 		{
-			if( ( ipfwdtable->table[ index ].dwForwardDest == addr ) &&
-				( ipfwdtable->table[ index ].dwForwardMask == mask ) )
+			if( ( ipfwdtable->table[ index ].dwForwardDest == addr.s_addr ) &&
+				( ipfwdtable->table[ index ].dwForwardMask == mask.s_addr ) )
 			{
 				//
 				// modify the route metric

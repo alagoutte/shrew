@@ -885,10 +885,10 @@ bool _IKED::find_addr_l( IKE_SADDR & saddr_r, IKE_SADDR & saddr_l, unsigned shor
 	// reach the remote host address
 	//
 
-	bool			local;
-	unsigned long	addr = saddr_r.saddr4.sin_addr.s_addr;
-	unsigned long	mask;
-	unsigned long	next;
+	bool	local;
+	in_addr	addr = saddr_r.saddr4.sin_addr;
+	in_addr	mask;
+	in_addr	next;
 
 	bool found = iproute.best(
 					saddr_l.saddr4.sin_addr,
