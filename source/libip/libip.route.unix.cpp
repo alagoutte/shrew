@@ -17,7 +17,7 @@ _IPROUTE::_IPROUTE()
 // add a route
 //
 
-bool _IPROUTE::add( in_addr & iface, bool local, unsigned long addr, unsigned long mask, unsigned long next )
+bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
 {
 	return true;
 }
@@ -26,7 +26,7 @@ bool _IPROUTE::add( in_addr & iface, bool local, unsigned long addr, unsigned lo
 // delete a route 
 //
 
-bool _IPROUTE::del( in_addr & iface, bool local, unsigned long addr, unsigned long mask, unsigned long next )
+bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
 {
 	return true;
 }
@@ -35,7 +35,7 @@ bool _IPROUTE::del( in_addr & iface, bool local, unsigned long addr, unsigned lo
 // get a route ( by addr and mask )
 //
 
-bool _IPROUTE::get( in_addr & iface, bool & local, unsigned long & addr, unsigned long & mask, unsigned long & next )
+bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
 {
 	return true;
 }
@@ -44,7 +44,7 @@ bool _IPROUTE::get( in_addr & iface, bool & local, unsigned long & addr, unsigne
 // best route ( by address )
 //
 
-bool _IPROUTE::best( in_addr & iface, bool & local, unsigned long & addr, unsigned long & mask, unsigned long & next )
+bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
 {
 	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
 	if( s == -1 )
@@ -63,7 +63,7 @@ bool _IPROUTE::best( in_addr & iface, bool & local, unsigned long & addr, unsign
 
 	dst->sin_family = AF_INET;
 	dst->sin_len = sizeof( sockaddr_in );
-	dst->sin_addr.s_addr = addr;
+	dst->sin_addr = addr;
 
 	sockaddr_dl * ifp = ( sockaddr_dl * )( rtmsg.msg + sizeof( sockaddr_in ) ) ;
 
@@ -199,7 +199,7 @@ bool _IPROUTE::best( in_addr & iface, bool & local, unsigned long & addr, unsign
 // decrement route costs
 //
 
-bool _IPROUTE::increment( unsigned long addr, unsigned long mask )
+bool _IPROUTE::increment( in_addr addr, in_addr mask )
 {
 	return true;
 }
@@ -208,7 +208,7 @@ bool _IPROUTE::increment( unsigned long addr, unsigned long mask )
 // increment route costs
 //
 
-bool _IPROUTE::decrement( unsigned long addr, unsigned long mask )
+bool _IPROUTE::decrement( in_addr addr, in_addr mask )
 {
 	return true;
 }
