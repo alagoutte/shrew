@@ -223,9 +223,9 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	}
 
 	//
-	// if we will be forcing all traffic via
-	// this tunnel, add none policies that
-	// will ensure we can still communicate
+	// if we will be forcing all traffic
+	// via this tunnel, add none policies
+	// to ensure we will still communicate
 	// with our peer
 	//
 
@@ -437,43 +437,74 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	{
 		bool routed = false;
 
-		if( type == IPSEC_POLICY_IPSEC )
+		switch( type )
 		{
-			iproute.increment(
-				id2.addr1.s_addr,
-				id2.addr2.s_addr );
-
-			routed = iproute.add(
-						tunnel->xconf.addr,
-						true,
-						id2.addr1.s_addr,
-						id2.addr2.s_addr,
-						tunnel->xconf.addr.s_addr );
-		}
-
-		if( type == IPSEC_POLICY_NONE )
-		{
-			in_addr			iaddr;
-			bool			local;
-			unsigned long	addr = id2.addr1.s_addr;
-			unsigned long	mask;
-			unsigned long	next;
-
-			routed = iproute.best(
-						iaddr,
-						local,
-						addr,
-						mask,
-						next );
-
-			if( routed )
+			case IPSEC_POLICY_IPSEC:
 			{
-				routed = iproute.add(
+				iproute.increment(
+					id2.addr1.s_addr,
+					id2.addr2.s_addr );
+
+				if( id2.type == ISAKMP_ID_IPV4_ADDR )
+				{
+					routed = iproute.add(
+								tunnel->xconf.addr,
+								true,
+								id2.addr1.s_addr,
+								0xffffffff,
+								tunnel->xconf.addr.s_addr );
+				}
+				else
+				{
+					routed = iproute.add(
+								tunnel->xconf.addr,
+								true,
+								id2.addr1.s_addr,
+								id2.addr2.s_addr,
+								tunnel->xconf.addr.s_addr );
+				}
+
+				break;
+			}
+
+			case IPSEC_POLICY_NONE:
+			{
+				in_addr			iaddr;
+				bool			local;
+				unsigned long	addr = id2.addr1.s_addr;
+				unsigned long	mask;
+				unsigned long	next;
+
+				routed = iproute.best(
 							iaddr,
 							local,
-							id2.addr1.s_addr,
-							id2.addr2.s_addr,
+							addr,
+							mask,
 							next );
+
+				if( routed )
+				{
+					if( id2.type == ISAKMP_ID_IPV4_ADDR )
+					{
+						routed = iproute.add(
+									iaddr,
+									local,
+									id2.addr1.s_addr,
+									0xffffffff,
+									next );
+					}
+					else
+					{
+						routed = iproute.add(
+									iaddr,
+									local,
+									id2.addr1.s_addr,
+									id2.addr2.s_addr,
+									next );
+					}
+				}
+
+				break;
 			}
 		}
 
@@ -585,12 +616,24 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 
 		if( type == IPSEC_POLICY_IPSEC )
 		{
-			routed = iproute.del(
-						tunnel->xconf.addr,
-						true,
-						id2.addr1.s_addr,
-						id2.addr2.s_addr,
-						tunnel->xconf.addr.s_addr );
+			if( id2.type == ISAKMP_ID_IPV4_ADDR )
+			{
+				routed = iproute.del(
+							tunnel->xconf.addr,
+							true,
+							id2.addr1.s_addr,
+							0xffffffff,
+							tunnel->xconf.addr.s_addr );
+			}
+			else
+			{
+				routed = iproute.del(
+							tunnel->xconf.addr,
+							true,
+							id2.addr1.s_addr,
+							id2.addr2.s_addr,
+							tunnel->xconf.addr.s_addr );
+			}
 
 			iproute.decrement(
 				id2.addr1.s_addr,
@@ -616,12 +659,24 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 				addr == id2.addr1.s_addr &&
 				mask == id2.addr2.s_addr )
 			{
-				routed = iproute.del(
-							iaddr,
-							local,
-							id2.addr1.s_addr,
-							id2.addr2.s_addr,
-							next );
+				if( id2.type == ISAKMP_ID_IPV4_ADDR )
+				{
+					routed = iproute.del(
+								iaddr,
+								local,
+								id2.addr1.s_addr,
+								0xffffffff,
+								next );
+				}
+				else
+				{
+					routed = iproute.del(
+								iaddr,
+								local,
+								id2.addr1.s_addr,
+								id2.addr2.s_addr,
+								next );
+				}
 			}
 		}
 
