@@ -1,0 +1,86 @@
+.\"
+.\" Copyright (c) 2007
+.\"      Shrew Soft Inc.  All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Redistributions in any form must be accompanied by information on
+.\"    how to obtain complete source code for the software and any
+.\"    accompanying software that uses the software.  The source code
+.\"    must either be included in the distribution or be available for no
+.\"    more than the cost of distribution plus a nominal fee, and must be
+.\"    freely redistributable under reasonable conditions.  For an
+.\"    executable file, complete source code means the source code for all
+.\"    modules it contains.  It does not include source code for modules or
+.\"    files that typically accompany the major components of the operating
+.\"    system on which the executable file runs.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY SHREW SOFT INC ``AS IS'' AND ANY EXPRESS
+.\" OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+.\" NON-INFRINGEMENT, ARE DISCLAIMED.  IN NO EVENT SHALL SHREW SOFT INC
+.\" BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+.\" CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+.\" SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+.\" INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+.\" CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+.\" ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+.\" THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" AUTHOR : Matthew Grooms
+.\"          mgrooms@shrew.net
+.\"
+.\"
+.Dd Febuary 2, 2007
+.Dt IKED 8
+.Os
+.Sh NAME
+.Nm iked
+.Nd Internet Key Exchange Daemon
+.Sh SYNOPSIS
+.Nm
+.Op Fl f Ar cfgfile
+.Op Fl l Ar logfile
+.Op Fl d Ar level
+.Op Fl F
+.Sh DESCRIPTION
+The
+.Nm
+program communicates using the IKE protocol ( RFC 2409 ) to provide
+automatic keying for an IPSEC capable host. The daemon communicates
+with the host os via PF_KEY ( RFC 2367 ) to obtain the local policy
+configuration and to receive key aquisition requests. The daemon is
+also capable of acting as a client or client gateway and can create
+appropriate ipsec policy entries on bahalf of the host or peer to 
+faclilitate remote access vpn connectivity.
+.Pp
+The options are as follows:
+.Bl -tag -width Fl
+.It Fl f Ar cfgfile
+Specify an alternate configuration file.
+.It Fl l Ar logfile
+Specify a log output file.
+.It Fl d Ar level
+Specify debug output level between 0-6.
+.It Fl F
+Run the program as a foreground application.
+.Sh RETURN VALUES
+The command exits with 0 on success, and non-zero on errors.
+.Sh FILES
+The default configuration file is
+.Pa /usr/local/etc/iked.conf
+.Sh SEE ALSO
+.Xr ipsec 4 ,
+.Xr iked.conf 5 ,
+.Xr setkey 8
+.Sh HISTORY
+The
+.Nm
+program was written by Matthew Grooms ( mgrooms@shrew.net ) as part
+of the Shrew Soft ( http://www.shrew.net ) family of IPSEC products.

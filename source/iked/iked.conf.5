@@ -1,0 +1,209 @@
+.\"
+.\" Copyright (c) 2007
+.\"      Shrew Soft Inc.  All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Redistributions in any form must be accompanied by information on
+.\"    how to obtain complete source code for the software and any
+.\"    accompanying software that uses the software.  The source code
+.\"    must either be included in the distribution or be available for no
+.\"    more than the cost of distribution plus a nominal fee, and must be
+.\"    freely redistributable under reasonable conditions.  For an
+.\"    executable file, complete source code means the source code for all
+.\"    modules it contains.  It does not include source code for modules or
+.\"    files that typically accompany the major components of the operating
+.\"    system on which the executable file runs.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY SHREW SOFT INC ``AS IS'' AND ANY EXPRESS
+.\" OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+.\" NON-INFRINGEMENT, ARE DISCLAIMED.  IN NO EVENT SHALL SHREW SOFT INC
+.\" BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+.\" CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+.\" SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+.\" INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+.\" CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+.\" ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+.\" THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" AUTHOR : Matthew Grooms
+.\"          mgrooms@shrew.net
+.\"
+.\"
+.Dd Febuary 2, 2007
+.Dt IKED 8
+.Os
+.Sh NAME
+.Nm iked.conf
+.Nd Internet Key Exchange Daemon Configuration File
+.Sh DESCRIPTION
+The
+.Nm
+file is used to configure
+.Xr iked 8
+( Internet Key Exchange Daemon ). The parameters supplied are used to
+negotiate ISAKMP ( phase1 ) and IPSEC ( phase2 ) SAs for IPSEC capable
+hosts.
+.Sh SYNTAX
+.Pp
+The configuration parameters are expressed as a series of sections
+containing a number of statements. Sections begin with a keyword
+optionally followed by a parameter list. All statements for a section
+are enclosed using the
+.Ql \&{
+and
+.Ql \&}
+charachters. Statements begin with a keyword optionally followed by
+a parameter list and are terminated with the
+.Ql \&;
+charachter. Lines that begin with the 
+.Ql \&#
+charachter are treated as comments.
+.Pp
+.Lp
+This document denotes keywords using
+.Ic this
+font and user supplied parameters using
+.Ar this
+font. Optional parameters are enclosed using the
+.Ql \&[
+and
+.Ql \&]
+charachters. Multiple keywords that may be valid for a single parameter
+are enclosed using the 
+.Ql \&(
+and
+.Ql \&)
+charachters and separated using the
+.Ql \&|
+charachter.
+.Pp
+The defined parameter types are as follows ...
+.Pp
+.Bl -tag -width addressx -compact
+.It Ar number
+A decimal number
+.It Ar label
+A string comprised of alphanumeric charachters
+.It Ar quoted
+A quoted string enclosed in
+.Ql \&"
+charachters
+.It Ar address
+An IP address expressed as x.x.x.x
+.It Ar network
+An IP network and prefix length expressed as x.x.x.x/y
+.El
+.Ss Daemon Section
+.Bl -tag -width Ds -compact
+.It Ic daemon { Ar statements Ic }
+Specifies the general configuration for
+.Xr iked 8
+operation. This includes parameters related to the basic network
+configuration, log file and debug output. Only one
+.Ic deamon
+section should be defined.
+.Pp
+.Bl -tag -width Ds -compact
+.It Ic socket ( ike | natt ) Ar [ address ] number ;
+An address and port number that should be used for ike or natt
+communications. If the address parameter is omitted, the daemon will
+attempt to bind to any address for the given port number. If no
+socket statements are specified, the daemon will attempt to bind to all
+interfaces for both ike and natt using the default port numbers ( 500 &
+4500 respectively ). Note, the
+.Ar natt
+keyword can only be specified if the daemon was compiled with natt support.
+.It Ic log_file Ar quoted ;
+The path and file name that should be used for log output.
+.It Ic log_level (none | error | info | debug | loud | decode) ;
+The log output detail level. The default value for this parameter is
+.Ic none .
+.It Ic pcap_ike Ar quoted;
+The path and file name that should be used to dump decrypted ike packets
+in pcap format. If no 
+.Ic pcap_ike
+statement is specified, this feature is disabled.
+.It Ic pcap_pub Ar quoted;
+The path and file name that should be used to dump encrypted ike packets
+in pcap format. If no 
+.Ic pcap_pub
+statement is specified, this feature is disabled.
+.El
+.El
+.Ss Network Group Section
+.Bl -tag -width Ds -compact
+.It Ic netgroup { Ar statements Ic }
+Specifies a group of networks that can be refferred to by the assigned
+label. Multiple
+.Ic netgroup
+sections may be defined.
+.Pp
+.Bl -tag -width Ds -compact
+.It Ic network ;
+A network to be associated with this network group.
+.El
+.El
+.Ss XAuth LDAP Section
+.Bl -tag -width Ds -compact
+.It Ic xauth_ldap { Ar statements Ic }
+Specifies the LDAP configuration to be used for when the
+.Ic xauth_type
+is set to
+.Ic ldap
+for a given peer section. Only one
+.Ic xauth_ldap
+section should be defined. Note, an
+.Ic xauth_ldap
+section only be defined if the daemon was compiled with LDAP support.
+.Pp
+.Bl -tag -width Ds -compact
+.It Ic version Ar number ;
+The LDAP protocol version to be used ( 2 or 3 ). The default value for this
+parameter is 3.
+.It Ic url Ar quoted ;
+The LDAP server url. For example, a url may look like "ldap://ldap.shrew.net:389".
+.It Ic base Ar quoted ;
+The base dn to be used for LDAP searches. For example, a base dn may look like
+"ou=users,dc=shrew,dc=net".
+.It Ic subtree (enable | disable);
+The search scope to be used for LDAP searches. If enabled, searches will be
+performed using the subtree search scope. If disabled, searches will be performed
+using the one level search scope. The default value for this parameter is
+.Ic disable .
+.It Ic bind_dn Ar quoted;
+The dn to bind as before performing LDAP searches. If this parameter is omitted,
+searches will be performed using anonymous binds.
+.It Ic bind_pw quoted;
+The password to use when a
+.Ic bind_dn
+is specified.
+.It Ic attr_user Ar quoted;
+The attribute used to specify a user name in the LDAP directory.  For example, if
+a user dn is "cn=user,dc=shrew,dc=net" then the attribute would be "cn". The default
+value for this parameter is "cn".
+.It Ic attr_group Ar quoted;
+The attribute used to specify a group name in the LDAP directory.  For example, if
+a group dn is "cn=group,dc=shrew,dc=net" then the attribute would be "cn". The default
+value for this parameter is "cn".
+.It Ic attr_member Ar quoted;
+The attribute used to specify a group member in the LDAP directory. The default
+value for this parameter is "member".
+.El
+.El
+.Sh SEE ALSO
+.Xr ipsec 4 ,
+.Xr iked 8 ,
+.Xr setkey 8
+.Sh HISTORY
+The
+.Nm
+parser was written by Matthew Grooms ( mgrooms@shrew.net ) as part
+of the Shrew Soft ( http://www.shrew.net ) family of IPSEC products.
