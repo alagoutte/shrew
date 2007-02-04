@@ -136,8 +136,9 @@ X Split DNS Transparent proxy support into dtpd
 X Remove optional esp packet pre-fragmentation from ipsecd
 X Review all db locking and entry removal
 X Improve phase2 rekey in ipsecd
-. Add tunnel route to peer with default route
-. Modify existing default route metric
+X Add tunnel route to peer with default route
+X Modify existing default route metric
+X Add iked and iked.conf man pages
 . Fix initial vnet device usage
 . Test all client features against iked
 . !!! All reported bugs !!!
