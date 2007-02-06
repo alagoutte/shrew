@@ -635,14 +635,20 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 						{
 							log.txt( LOG_INFO, "ii : adjusted phase2 sa lifetime to %i seconds\n", lsecs );
 
-							IKE_PROPOSAL * proposal;
+							IKE_PROPOSAL * proposal_l;
+							IKE_PROPOSAL * proposal_r;
 							long pindex = 0;
 
-							while( ph2_notify->plist_l.get( &proposal, pindex++ ) )
-								proposal->life_sec = lsecs;
+							while( ph2_notify->plist_l.get( &proposal_l, pindex ) &&
+								   ph2_notify->plist_r.get( &proposal_r, pindex ) )
+							{
+								proposal_l->life_sec = lsecs;
+								proposal_r->life_sec = lsecs;
 
-							while( ph2_notify->plist_r.get( &proposal, pindex++ ) )
-								proposal->life_sec = lsecs;
+								log.txt( LOG_DEBUG, "XX : spi_l = 0x%08x\n", ntohl( proposal_l->spi.spi ) );
+								log.txt( LOG_DEBUG, "XX : spi_r = 0x%08x\n", ntohl( proposal_r->spi.spi ) );
+								pindex++;
+							}
 						}
 
 						if( ldata )

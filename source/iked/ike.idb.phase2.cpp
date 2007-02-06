@@ -251,13 +251,14 @@ bool _IKED::get_phase2( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, long lst
 		{
 			IKE_PROPOSAL * proposal;
 			long pindex = 0;
+			bool found;
 
-			while( tmp_ph2->plist_l.get( &proposal, pindex++ ) )
+			while( found = tmp_ph2->plist_l.get( &proposal, pindex++ ) )
 				if( proposal->spi.size == spi_l->size )
 					if( !memcmp( &proposal->spi, spi_l, spi_l->size ) )
 						break;
 
-			if( proposal == NULL )
+			if( !found )
 				continue;
 		}
 
@@ -269,13 +270,14 @@ bool _IKED::get_phase2( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, long lst
 		{
 			IKE_PROPOSAL * proposal;
 			long pindex = 0;
+			bool found;
 
-			while( tmp_ph2->plist_r.get( &proposal, pindex++ ) )
+			while( found = tmp_ph2->plist_r.get( &proposal, pindex++ ) )
 				if( proposal->spi.size == spi_r->size )
 					if( !memcmp( &proposal->spi, spi_r, spi_r->size ) )
 						break;
 
-			if( proposal == NULL )
+			if( !found )
 				continue;
 		}
 
