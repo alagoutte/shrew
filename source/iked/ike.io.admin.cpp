@@ -738,8 +738,11 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 			// disable the adapter
 			//
 
-			vnet_set( adapter, false );
-			vnet_rel( adapter );
+			if( adapter != NULL )
+			{
+				vnet_set( adapter, false );
+				vnet_rel( adapter );
+			}
 		}
 
 		//
