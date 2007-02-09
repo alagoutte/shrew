@@ -899,67 +899,104 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 	return LIBIKE_OK;
 }
 
-long _IKED::config_xconf_set( IDB_CFG * cfg, long allowmask, long & setmask )
+long _IKED::config_xconf_set( IDB_CFG * cfg, long nullmask, long & setmask )
 {
 	if( setmask & IPSEC_OPTS_ADDR )
 	{
-		cfg->attr_add_v( INTERNAL_IP4_ADDRESS,
-			&cfg->tunnel->xconf.addr,
-			sizeof( cfg->tunnel->xconf.addr ) );
+		if( nullmask & IPSEC_OPTS_ADDR )
+		{
+			cfg->attr_add_v( INTERNAL_IP4_ADDRESS, NULL, 0 );
+			log.txt( LOG_DEBUG,	"ii : - IP4 Address\n" );
+		}
+		else
+		{
+			cfg->attr_add_v( INTERNAL_IP4_ADDRESS,
+				&cfg->tunnel->xconf.addr,
+				sizeof( cfg->tunnel->xconf.addr ) );
 
-		char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-		text_addr( txtaddr, cfg->tunnel->xconf.addr );
+			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+			text_addr( txtaddr, cfg->tunnel->xconf.addr );
 
-		log.txt( LOG_DEBUG,
-			"ii : - IP4 Address = %s\n",
-			txtaddr );
+			log.txt( LOG_DEBUG,
+				"ii : - IP4 Address = %s\n",
+				txtaddr );
+		}
 	}
 
 	if( setmask & IPSEC_OPTS_MASK )
 	{
-		cfg->attr_add_v( INTERNAL_IP4_NETMASK,
-			&cfg->tunnel->xconf.mask,
-			sizeof( cfg->tunnel->xconf.mask ) );
+		if( nullmask & IPSEC_OPTS_MASK )
+		{
+			cfg->attr_add_v( INTERNAL_IP4_NETMASK, NULL, 0 );
+			log.txt( LOG_DEBUG,	"ii : - IP4 Netamask\n" );
+		}
+		else
+		{
+			cfg->attr_add_v( INTERNAL_IP4_NETMASK,
+				&cfg->tunnel->xconf.mask,
+				sizeof( cfg->tunnel->xconf.mask ) );
 
-		char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-		text_addr( txtaddr, cfg->tunnel->xconf.mask );
+			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+			text_addr( txtaddr, cfg->tunnel->xconf.mask );
 
-		log.txt( LOG_DEBUG,
-			"ii : - IP4 Netamask = %s\n",
-			txtaddr );
+			log.txt( LOG_DEBUG,
+				"ii : - IP4 Netamask = %s\n",
+				txtaddr );
+		}
 	}
 
 	if( setmask & IPSEC_OPTS_DNSS )
 	{
-		cfg->attr_add_v( INTERNAL_IP4_DNS,
-			&cfg->tunnel->xconf.dnss,
-			sizeof( cfg->tunnel->xconf.dnss ) );
+		if( nullmask & IPSEC_OPTS_DNSS )
+		{
+			cfg->attr_add_v( INTERNAL_IP4_DNS, NULL, 0 );
+			log.txt( LOG_DEBUG, "ii : - IP4 DNS Server\n" );
+		}
+		else
+		{
+			cfg->attr_add_v( INTERNAL_IP4_DNS,
+				&cfg->tunnel->xconf.dnss,
+				sizeof( cfg->tunnel->xconf.dnss ) );
 
-		char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-		text_addr( txtaddr, cfg->tunnel->xconf.dnss );
+			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+			text_addr( txtaddr, cfg->tunnel->xconf.dnss );
 
-		log.txt( LOG_DEBUG,
-			"ii : - IP4 DNS Server = %s\n",
-			txtaddr );
+			log.txt( LOG_DEBUG,
+				"ii : - IP4 DNS Server = %s\n",
+				txtaddr );
+		}
 	}
 
 	if( setmask & IPSEC_OPTS_DOMAIN )
 	{
-		cfg->attr_add_v( UNITY_DEF_DOMAIN,
-			&cfg->tunnel->xconf.suffix,
-			strlen( cfg->tunnel->xconf.suffix ) );
+		if( nullmask & IPSEC_OPTS_DOMAIN )
+		{
+			cfg->attr_add_v( UNITY_DEF_DOMAIN, NULL, 0 );
+			log.txt( LOG_DEBUG,	"ii : - IP4 DNS Suffix\n" );
+		}
+		else
+		{
+			cfg->attr_add_v( UNITY_DEF_DOMAIN,
+				&cfg->tunnel->xconf.suffix,
+				strlen( cfg->tunnel->xconf.suffix ) );
 
-		char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-		text_addr( txtaddr, cfg->tunnel->xconf.dnss );
+			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+			text_addr( txtaddr, cfg->tunnel->xconf.dnss );
 
-		log.txt( LOG_DEBUG,
-			"ii : - IP4 DNS Suffix = %s\n",
-			cfg->tunnel->xconf.suffix );
+			log.txt( LOG_DEBUG,
+				"ii : - IP4 DNS Suffix = %s\n",
+				cfg->tunnel->xconf.suffix );
+		}
 	}
 
 	if( setmask & IPSEC_OPTS_SPLITDNS )
 	{
-		if( cfg->tunnel->dlist.count() )
+		if( nullmask & IPSEC_OPTS_SPLITDNS )
+		{
+			cfg->attr_add_v( UNITY_SPLIT_DOMAIN, NULL, 0 );
+			log.txt( LOG_DEBUG, "ii : - Split DNS Domain\n" );
+		}
+		else
 		{
 			BDATA suffix;
 
@@ -979,35 +1016,45 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long allowmask, long & setmask )
 					suffix.size() );
 			}
 		}
-		else
-		{
-			cfg->attr_add_v( UNITY_SPLIT_DOMAIN, NULL, 0 );
-
-			log.txt( LOG_DEBUG,
-				"ii : - Split DNS Domain = \n" );
-		}
 	}
 
 	if( setmask & IPSEC_OPTS_NBNS )
 	{
-		cfg->attr_add_v( INTERNAL_IP4_NBNS,
-			&cfg->tunnel->xconf.nbns,
-			sizeof( cfg->tunnel->xconf.nbns ) );
+		if( nullmask & IPSEC_OPTS_NBNS )
+		{
+			cfg->attr_add_v( INTERNAL_IP4_NBNS, NULL, 0 );
+			log.txt( LOG_DEBUG,	"ii : - IP4 WINS Server\n" );
+		}
+		else
+		{
+			cfg->attr_add_v( INTERNAL_IP4_NBNS,
+				&cfg->tunnel->xconf.nbns,
+				sizeof( cfg->tunnel->xconf.nbns ) );
 
-		char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-		text_addr( txtaddr, cfg->tunnel->xconf.nbns );
+			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+			text_addr( txtaddr, cfg->tunnel->xconf.nbns );
 
-		log.txt( LOG_DEBUG,
-			"ii : - IP4 WINS Server = %s\n",
-			txtaddr );
+			log.txt( LOG_DEBUG,
+				"ii : - IP4 WINS Server = %s\n",
+				txtaddr );
+		}
 	}
 
 	if( setmask & IPSEC_OPTS_SPLITNET )
 	{
-		IKE_PH2ID ph2id;
-
-		if( cfg->tunnel->idlist_incl.count() )
+		if( nullmask & IPSEC_OPTS_SPLITNET )
 		{
+			cfg->attr_add_v( UNITY_SPLIT_INCLUDE, NULL, 0 );
+			cfg->attr_add_v( UNITY_SPLIT_EXCLUDE, NULL, 0 );
+
+			log.txt( LOG_DEBUG,
+				"ii : - IP4 Split Network Include =\n"
+				"ii : - IP4 Split Network Exclude =\n" );
+		}
+		else
+		{
+			IKE_PH2ID ph2id;
+
 			long index = 0;
 
 			while( cfg->tunnel->idlist_incl.get( ph2id, index++ ) )
@@ -1040,18 +1087,8 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long allowmask, long & setmask )
 					!unity_net.mask.s_addr )
 					cfg->tunnel->force_all = true;
 			}
-		}
-		else
-		{
-			cfg->attr_add_v( UNITY_SPLIT_INCLUDE, NULL, 0 );
 
-			log.txt( LOG_DEBUG,
-				"ii : - IP4 Split Network Include =\n" );
-		}
-
-		if( cfg->tunnel->idlist_excl.count() )
-		{
-			long index = 0;
+			index = 0;
 
 			while( cfg->tunnel->idlist_excl.get( ph2id, index++ ) )
 			{
@@ -1073,42 +1110,51 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long allowmask, long & setmask )
 					txtid );
 			}
 		}
-		else
-		{
-			cfg->attr_add_v( UNITY_SPLIT_EXCLUDE, NULL, 0 );
-
-			log.txt( LOG_DEBUG,
-				"ii : - IP4 Split Network Exclude = \n" );
-		}
 	}
 
 	if( setmask & IPSEC_OPTS_BANNER )
 	{
-		cfg->attr_add_v( UNITY_BANNER,
-			cfg->tunnel->banner.buff(),
-			cfg->tunnel->banner.size() );
+		if( nullmask & IPSEC_OPTS_BANNER )
+		{
+			cfg->attr_add_v( UNITY_BANNER, NULL, 0 );
+			log.txt( LOG_DEBUG,	"ii : Login Banner\n" );
+		}
+		else
+		{
+			cfg->attr_add_v( UNITY_BANNER,
+				cfg->tunnel->banner.buff(),
+				cfg->tunnel->banner.size() );
 
-		cfg->tunnel->banner.add( 0, 1 );
+			cfg->tunnel->banner.add( 0, 1 );
 
-		log.txt( LOG_DEBUG,
-			"ii : - Login Banner ( %i bytes )\n",
-			cfg->tunnel->banner.size() );
+			log.txt( LOG_DEBUG,
+				"ii : - Login Banner ( %i bytes )\n",
+				cfg->tunnel->banner.size() );
+		}
 	}
 
 	if( setmask & IPSEC_OPTS_PFS )
 	{
-		cfg->attr_add_b( UNITY_PFS,
-			cfg->tunnel->xconf.dhgr );
+		if( nullmask & IPSEC_OPTS_PFS )
+		{
+			cfg->attr_add_v( UNITY_PFS, NULL, 0 );
+			log.txt( LOG_DEBUG,	"ii : - PFS Group\n" );
+		}
+		else
+		{
+			cfg->attr_add_b( UNITY_PFS,
+				cfg->tunnel->xconf.dhgr );
 
-		log.txt( LOG_DEBUG,
-			"ii : - PFS Group = %i\n",
-			cfg->tunnel->xconf.dhgr );
+			log.txt( LOG_DEBUG,
+				"ii : - PFS Group = %i\n",
+				cfg->tunnel->xconf.dhgr );
+		}
 	}
 
 	return LIBIKE_OK;
 }
 
-long _IKED::config_xconf_get( IDB_CFG * cfg, long allowmask, long & getmask )
+long _IKED::config_xconf_get( IDB_CFG * cfg, long readmask, long & getmask )
 {
 	long count = cfg->attr_count();
 	long index = 0;
@@ -1136,7 +1182,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long allowmask, long & getmask )
 					"ii : - IP4 Address = %s\n",
 					txtaddr );
 
-				if( allowmask & IPSEC_OPTS_ADDR )
+				if( readmask & IPSEC_OPTS_ADDR )
 					cfg->tunnel->xconf.addr = addr;
 
 				break;
@@ -1159,7 +1205,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long allowmask, long & getmask )
 					"ii : - IP4 Netmask = %s\n",
 					txtaddr );
 
-				if( allowmask & IPSEC_OPTS_MASK )
+				if( readmask & IPSEC_OPTS_MASK )
 					cfg->tunnel->xconf.mask = mask;
 
 				break;
@@ -1182,7 +1228,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long allowmask, long & getmask )
 					"ii : - IP4 WINS Server = %s\n",
 					txtaddr );
 
-				if( allowmask & IPSEC_OPTS_NBNS )
+				if( readmask & IPSEC_OPTS_NBNS )
 					cfg->tunnel->xconf.nbns = nbns;
 
 				break;
@@ -1205,7 +1251,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long allowmask, long & getmask )
 					"ii : - IP4 DNS Server = %s\n",
 					txtaddr );
 
-				if( allowmask & IPSEC_OPTS_DNSS )
+				if( readmask & IPSEC_OPTS_DNSS )
 					cfg->tunnel->xconf.dnss = dnss;
 
 				break;
@@ -1229,7 +1275,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long allowmask, long & getmask )
 					"ii : - IP4 DNS Suffix = %s\n",
 					suffix );
 
-				if( allowmask & IPSEC_OPTS_DOMAIN )
+				if( readmask & IPSEC_OPTS_DOMAIN )
 					memcpy( cfg->tunnel->xconf.suffix, suffix, CONF_STRLEN );
 
 				break;
@@ -1264,7 +1310,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long allowmask, long & getmask )
 					dnslen += tmplen;
 					dnsstr += tmplen;
 
-					if( allowmask & IPSEC_OPTS_SPLITDNS )
+					if( readmask & IPSEC_OPTS_SPLITDNS )
 						cfg->tunnel->dlist.add( suffix );
 				}
 
@@ -1300,7 +1346,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long allowmask, long & getmask )
 							"ii : - IP4 Split Network Include = %s\n",
 							txtid );
 
-						if( allowmask & IPSEC_OPTS_SPLITNET )
+						if( readmask & IPSEC_OPTS_SPLITNET )
 							cfg->tunnel->idlist_incl.add( ph2id );
 
 						//
@@ -1319,7 +1365,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long allowmask, long & getmask )
 							"ii : - IP4 Split Network Exclude = %s\n",
 							txtid );
 
-						if( allowmask & IPSEC_OPTS_SPLITNET )
+						if( readmask & IPSEC_OPTS_SPLITNET )
 							cfg->tunnel->idlist_excl.add( ph2id );
 					}
 				}
@@ -1344,7 +1390,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long allowmask, long & getmask )
 					"ii : - Login Banner = %s ...\n",
 					text );
 
-				if( allowmask & IPSEC_OPTS_BANNER )
+				if( readmask & IPSEC_OPTS_BANNER )
 					cfg->tunnel->banner.set( attr->vdata );
 
 				break;
@@ -1358,7 +1404,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long allowmask, long & getmask )
 					"ii : - PFS Group = %d\n",
 					attr->bdata );
 
-				if( allowmask & IPSEC_OPTS_PFS )
+				if( readmask & IPSEC_OPTS_PFS )
 					cfg->tunnel->xconf.dhgr = attr->bdata;
 
 				break;
