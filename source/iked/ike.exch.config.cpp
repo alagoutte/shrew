@@ -356,8 +356,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					long getmask = 0;
 
 					config_xconf_get( cfg,
-						cfg->tunnel->xconf.rqst,
-						getmask );
+						getmask,
+						cfg->tunnel->xconf.rqst );
 
 					//
 					// update state and flag for removal
@@ -411,8 +411,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					log.txt( LOG_INFO, "ii : received config request\n" );
 
 					config_xconf_get( cfg,
-						cfg->tunnel->xconf.opts,
-						cfg->tunnel->xconf.rqst );
+						cfg->tunnel->xconf.rqst,
+						0 );
 
 					cfg->attr_reset();
 
@@ -631,8 +631,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			cfg->attr_reset();
 
 			config_xconf_set( cfg,
-				0xffffffff,
-				cfg->tunnel->xconf.rqst );
+				cfg->tunnel->xconf.rqst,
+				0xffffffff );
 
 			//
 			// flag as sent and release
@@ -873,8 +873,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			log.txt( LOG_INFO, "ii : building config response attributes\n" );
 
 			config_xconf_set( cfg,
-				0,
-				cfg->tunnel->xconf.opts );
+				cfg->tunnel->xconf.opts,
+				0 );
 
 			//
 			// send config packet
@@ -899,7 +899,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 	return LIBIKE_OK;
 }
 
-long _IKED::config_xconf_set( IDB_CFG * cfg, long nullmask, long & setmask )
+long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 {
 	if( setmask & IPSEC_OPTS_ADDR )
 	{
@@ -1048,8 +1048,8 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long nullmask, long & setmask )
 			cfg->attr_add_v( UNITY_SPLIT_EXCLUDE, NULL, 0 );
 
 			log.txt( LOG_DEBUG,
-				"ii : - IP4 Split Network Include =\n"
-				"ii : - IP4 Split Network Exclude =\n" );
+				"ii : - IP4 Split Network Include\n"
+				"ii : - IP4 Split Network Exclude\n" );
 		}
 		else
 		{
@@ -1154,7 +1154,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long nullmask, long & setmask )
 	return LIBIKE_OK;
 }
 
-long _IKED::config_xconf_get( IDB_CFG * cfg, long readmask, long & getmask )
+long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 {
 	long count = cfg->attr_count();
 	long index = 0;
