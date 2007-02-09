@@ -602,6 +602,10 @@ peer_section
 		peer->saddr.saddr4.sin_port = htons( LIBIKE_IKE_PORT );
 		peer->saddr.saddr4.sin_addr.s_addr = inet_addr( $2->text() );
 
+		peer->xauth_source = &iked.xauth_local;
+		peer->xconf_source = &iked.xconf_local;
+		peer->xconf_mode = CONFIG_MODE_PULL;
+
 		delete $2;
 	}
 	BCB peer_lines ECB
