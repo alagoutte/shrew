@@ -338,6 +338,11 @@ _IKE_DLIST::~_IKE_DLIST()
 	}
 }
 
+long _IKE_DLIST::count()
+{
+	return list_suffix.get_count();
+}
+
 bool _IKE_DLIST::add( BDATA & suffix )
 {
 	BDATA * tmp_suffix = new BDATA;

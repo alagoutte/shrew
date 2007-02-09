@@ -336,15 +336,7 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		// check the result
 		//
 
-		if( result == LIBIKE_OK )
-		{
-			//
-			// update tunnel recv tick
-			//
-
-			ph1->tunnel->recvtick = lasttick;
-		}
-		else
+		if( result != LIBIKE_OK )
 			return result;
 
 		//

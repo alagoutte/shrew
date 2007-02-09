@@ -52,10 +52,6 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 	close = 0;
 	natt_v = IPSEC_NATT_NONE;
 
-	sendtick = 0;
-	recvtick = 0;
-	natttick = 0;
-
 	force_all = false;
 
 	//

@@ -292,11 +292,6 @@ typedef class _IDB_TUNNEL : public IDB
 	long		close;
 	long		natt_v;
 
-	long		sendtick;
-	long		recvtick;
-	long		natttick;
-	long		stattick;
-
 	_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r );
 	virtual ~_IDB_TUNNEL();
 

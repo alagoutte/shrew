@@ -294,12 +294,6 @@ long _IKED::packet_ike_xmit( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 		txtaddr_r );
 
 	//
-	// store the last tunnel transmit time
-	//
-
-	ph1->tunnel->sendtick = lasttick;
-
-	//
 	// send ike packet
 	//
 

@@ -442,12 +442,6 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		}
 
 		//
-		// update ph1->tunnel recv tick
-		//
-
-		ph1->tunnel->recvtick = lasttick;
-
-		//
 		// read next payload
 		//
 
