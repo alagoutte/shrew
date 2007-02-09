@@ -624,6 +624,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			// set xconf attributes
 			//
 
+			log.txt( LOG_INFO, "ii : building config request attributes\n" );
+
 			cfg->mtype = ISAKMP_CFG_REQUEST;
 
 			cfg->attr_reset();
