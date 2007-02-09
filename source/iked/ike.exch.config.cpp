@@ -864,7 +864,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			if( cfg->tunnel->peer->plcy_mode == POLICY_MODE_CONFIG )
 				policy_list_create( cfg->tunnel, false );
 
-			if( cfg->tunnel->peer->plcy_mode != POLICY_MODE_CONFIG )
+			if( cfg->tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
 				cfg->tunnel->xconf.opts |= IPSEC_OPTS_SPLITNET;
 
 			//
