@@ -864,6 +864,9 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			if( cfg->tunnel->peer->plcy_mode == POLICY_MODE_CONFIG )
 				policy_list_create( cfg->tunnel, false );
 
+			if( cfg->tunnel->peer->plcy_mode != POLICY_MODE_CONFIG )
+				cfg->tunnel->xconf.opts |= IPSEC_OPTS_SPLITNET;
+
 			//
 			// set result attributes
 			//
@@ -1458,7 +1461,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 			{
 				getmask |= IPSEC_OPTS_PFS;
 
-				if( ( readmask & IPSEC_OPTS_BANNER ) && attr->vdata.size() )
+				if( ( readmask & IPSEC_OPTS_PFS ) && attr->vdata.size() )
 				{
 					log.txt( LOG_DEBUG,
 						"ii : - PFS Group = %d\n",
