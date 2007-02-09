@@ -1169,21 +1169,30 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 			{
 				getmask |= IPSEC_OPTS_ADDR;
 
-				in_addr addr;
-				memset( &addr, 0, sizeof( addr ) );
+				if( ( readmask & IPSEC_OPTS_ADDR ) && attr->vdata.size() )
+				{
+					if( attr->vdata.size() != 4 )
+					{
+						log.txt( LOG_ERROR,
+							"!! : - IP4 Address has invalid size ( %i bytes )\n",
+							attr->vdata.size() );
 
-				if( attr->vdata.size() == 4 )
-					memcpy( &addr, attr->vdata.buff(), 4 );
+						break;
+					}
 
-				char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-				text_addr( txtaddr, addr );
+					memcpy(
+						&cfg->tunnel->xconf.addr,
+						attr->vdata.buff(), 4 );
 
-				log.txt( LOG_DEBUG,
-					"ii : - IP4 Address = %s\n",
-					txtaddr );
+					char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+					text_addr( txtaddr, cfg->tunnel->xconf.addr );
 
-				if( readmask & IPSEC_OPTS_ADDR )
-					cfg->tunnel->xconf.addr = addr;
+					log.txt( LOG_DEBUG,
+						"ii : - IP4 Address = %s\n",
+						txtaddr );
+				}
+				else
+					log.txt( LOG_DEBUG,	"ii : - IP4 Address\n" );
 
 				break;
 			}
@@ -1192,21 +1201,30 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 			{
 				getmask |= IPSEC_OPTS_MASK;
 
-				in_addr mask;
-				memset( &mask, 0, sizeof( mask ) );
+				if( ( readmask & IPSEC_OPTS_MASK ) && attr->vdata.size() )
+				{
+					if( attr->vdata.size() != 4 )
+					{
+						log.txt( LOG_ERROR,
+							"!! : - IP4 Netmask has invalid size ( %i bytes )\n",
+							attr->vdata.size() );
 
-				if( attr->vdata.size() == 4 )
-					memcpy( &mask, attr->vdata.buff(), 4 );
+						break;
+					}
 
-				char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-				text_addr( txtaddr, mask );
+					memcpy(
+						&cfg->tunnel->xconf.mask,
+						attr->vdata.buff(), 4 );
 
-				log.txt( LOG_DEBUG,
-					"ii : - IP4 Netmask = %s\n",
-					txtaddr );
+					char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+					text_addr( txtaddr, cfg->tunnel->xconf.mask );
 
-				if( readmask & IPSEC_OPTS_MASK )
-					cfg->tunnel->xconf.mask = mask;
+					log.txt( LOG_DEBUG,
+						"ii : - IP4 Netmask = %s\n",
+						txtaddr );
+				}
+				else
+					log.txt( LOG_DEBUG,	"ii : - IP4 Netmask\n" );
 
 				break;
 			}
@@ -1215,44 +1233,62 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 			{
 				getmask |= IPSEC_OPTS_NBNS;
 
-				in_addr nbns;
-				memset( &nbns, 0, sizeof( nbns ) );
+				if( ( readmask & IPSEC_OPTS_NBNS ) && attr->vdata.size() )
+				{
+					if( attr->vdata.size() != 4 )
+					{
+						log.txt( LOG_ERROR,
+							"!! : - IP4 WINS Server has invalid size ( %i bytes )\n",
+							attr->vdata.size() );
 
-				if( attr->vdata.size() == 4 )
-					memcpy( &nbns, attr->vdata.buff(), 4 );
+						break;
+					}
 
-				char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-				text_addr( txtaddr, nbns );
+					memcpy(
+						&cfg->tunnel->xconf.nbns,
+						attr->vdata.buff(), 4 );
 
-				log.txt( LOG_DEBUG,
-					"ii : - IP4 WINS Server = %s\n",
-					txtaddr );
+					char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+					text_addr( txtaddr, cfg->tunnel->xconf.nbns );
 
-				if( readmask & IPSEC_OPTS_NBNS )
-					cfg->tunnel->xconf.nbns = nbns;
+					log.txt( LOG_DEBUG,
+						"ii : - IP4 WINS Server = %s\n",
+						txtaddr );
+				}
+				else
+					log.txt( LOG_DEBUG, "ii : - IP4 WINS Server\n" );
 
 				break;
 			}
 
 			case INTERNAL_IP4_DNS:
 			{
-				getmask |= IPSEC_OPTS_DNSS;
+				getmask |= INTERNAL_IP4_DNS;
 
-				in_addr dnss;
-				memset( &dnss, 0, sizeof( dnss ) );
+				if( ( readmask & INTERNAL_IP4_DNS ) && attr->vdata.size() )
+				{
+					if( attr->vdata.size() != 4 )
+					{
+						log.txt( LOG_ERROR,
+							"!! : - IP4 DNS Server has invalid size ( %i bytes )\n",
+							attr->vdata.size() );
 
-				if( attr->vdata.size() == 4 )
-					memcpy( &dnss, attr->vdata.buff(), 4 );
+						break;
+					}
 
-				char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-				text_addr( txtaddr, dnss );
+					memcpy(
+						&cfg->tunnel->xconf.dnss,
+						attr->vdata.buff(), 4 );
 
-				log.txt( LOG_DEBUG,
-					"ii : - IP4 DNS Server = %s\n",
-					txtaddr );
+					char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+					text_addr( txtaddr, cfg->tunnel->xconf.dnss );
 
-				if( readmask & IPSEC_OPTS_DNSS )
-					cfg->tunnel->xconf.dnss = dnss;
+					log.txt( LOG_DEBUG,
+						"ii : - IP4 DNS Server = %s\n",
+						txtaddr );
+				}
+				else
+					log.txt( LOG_DEBUG, "ii : - IP4 DNS Server\n" );
 
 				break;
 			}
@@ -1261,22 +1297,24 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 			{
 				getmask |= IPSEC_OPTS_DOMAIN;
 
-				char suffix[ CONF_STRLEN ];
-				memset( suffix, 0, sizeof( suffix ) );
+				if( ( readmask & IPSEC_OPTS_DOMAIN ) && attr->vdata.size() )
+				{
+					long nlen = attr->vdata.size();
+					if( nlen > ( CONF_STRLEN - 1 ) )
+						nlen = ( CONF_STRLEN - 1 );
 
-				long nlen = attr->vdata.size();
-				if( nlen > ( CONF_STRLEN - 1 ) )
-					nlen = ( CONF_STRLEN - 1 );
+					memcpy(
+						cfg->tunnel->xconf.suffix,
+						attr->vdata.buff(), nlen );
 
-				memcpy( suffix, attr->vdata.buff(), nlen );
-				suffix[ nlen ] = 0;
+					cfg->tunnel->xconf.suffix[ nlen ] = 0;
 
-				log.txt( LOG_DEBUG,
-					"ii : - IP4 DNS Suffix = %s\n",
-					suffix );
-
-				if( readmask & IPSEC_OPTS_DOMAIN )
-					memcpy( cfg->tunnel->xconf.suffix, suffix, CONF_STRLEN );
+					log.txt( LOG_DEBUG,
+						"ii : - DNS Suffix = %s\n",
+						cfg->tunnel->xconf.suffix );
+				}
+				else
+					log.txt( LOG_DEBUG, "ii : - DNS Suffix\n" );
 
 				break;
 			}
@@ -1285,34 +1323,39 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 			{
 				getmask |= IPSEC_OPTS_SPLITDNS;
 
-				attr->vdata.add( 0, 1 );
-
-				unsigned char *	dnsstr = attr->vdata.buff();
-				long			dnslen = 0;
-
-				while( dnslen < ( attr->vdata.size() - 1 ) )
+				if( ( readmask & IPSEC_OPTS_SPLITDNS ) && attr->vdata.size() )
 				{
-					if( *dnsstr == ',' )
+					attr->vdata.add( 0, 1 );
+
+					unsigned char *	dnsstr = attr->vdata.buff();
+					long			dnslen = 0;
+
+					while( dnslen < ( attr->vdata.size() - 1 ) )
 					{
-						dnslen += 1;
-						dnsstr += 1;
+						if( *dnsstr == ',' )
+						{
+							dnslen += 1;
+							dnsstr += 1;
+						}
+
+						long tmplen = strlen( ( char * ) dnsstr ) + 1;
+
+						BDATA suffix;
+						suffix.set( dnsstr, tmplen );
+
+						log.txt( LOG_DEBUG,
+							"ii : - Split Domain = %s\n",
+							dnsstr );
+
+						dnslen += tmplen;
+						dnsstr += tmplen;
+
+						if( readmask & IPSEC_OPTS_SPLITDNS )
+							cfg->tunnel->dlist.add( suffix );
 					}
-
-					long tmplen = strlen( ( char * ) dnsstr ) + 1;
-
-					BDATA suffix;
-					suffix.set( dnsstr, tmplen );
-
-					log.txt( LOG_DEBUG,
-						"ii : - Split Domain = %s\n",
-						dnsstr );
-
-					dnslen += tmplen;
-					dnsstr += tmplen;
-
-					if( readmask & IPSEC_OPTS_SPLITDNS )
-						cfg->tunnel->dlist.add( suffix );
 				}
+				else
+					log.txt( LOG_DEBUG, "ii : - Split Domain\n" );
 
 				break;
 			}
@@ -1322,52 +1365,63 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 			{
 				getmask |= IPSEC_OPTS_SPLITNET;
 
-				int net_count = attr->vdata.size() / sizeof( IKE_UNITY_NET );
-				int net_index = 0;
-
-				for( ; net_index < net_count; net_index++ )
+				if( ( readmask & IPSEC_OPTS_SPLITNET ) && attr->vdata.size() )
 				{
-					long offset = sizeof( IKE_UNITY_NET ) * net_index;
-					IKE_UNITY_NET * unity_net = ( IKE_UNITY_NET * ) ( attr->vdata.buff() + offset );
+					int net_count = attr->vdata.size() / sizeof( IKE_UNITY_NET );
+					int net_index = 0;
 
-					IKE_PH2ID ph2id;
-					memset( &ph2id, 0, sizeof( ph2id ) );
+					for( ; net_index < net_count; net_index++ )
+					{
+						long offset = sizeof( IKE_UNITY_NET ) * net_index;
+						IKE_UNITY_NET * unity_net = ( IKE_UNITY_NET * ) ( attr->vdata.buff() + offset );
 
-					ph2id.type = ISAKMP_ID_IPV4_ADDR_SUBNET;
-					ph2id.addr1 = unity_net->addr;
-					ph2id.addr2 = unity_net->mask;
+						IKE_PH2ID ph2id;
+						memset( &ph2id, 0, sizeof( ph2id ) );
 
-					char txtid[ LIBIKE_MAX_TEXTP2ID ];
-					text_ph2id( txtid, &ph2id );
+						ph2id.type = ISAKMP_ID_IPV4_ADDR_SUBNET;
+						ph2id.addr1 = unity_net->addr;
+						ph2id.addr2 = unity_net->mask;
 
+						char txtid[ LIBIKE_MAX_TEXTP2ID ];
+						text_ph2id( txtid, &ph2id );
+
+						if( attr->atype == UNITY_SPLIT_INCLUDE )
+						{
+							log.txt( LOG_DEBUG,
+								"ii : - IP4 Split Network Include = %s\n",
+								txtid );
+
+							if( readmask & IPSEC_OPTS_SPLITNET )
+								cfg->tunnel->idlist_incl.add( ph2id );
+
+							//
+							// we need to perform special
+							// operations if we force all
+							// taffic via this tunnel
+							//
+
+							if( !unity_net->addr.s_addr &&
+								!unity_net->mask.s_addr )
+								cfg->tunnel->force_all = true;
+						}
+						else
+						{
+							log.txt( LOG_DEBUG,
+								"ii : - IP4 Split Network Exclude = %s\n",
+								txtid );
+
+							if( readmask & IPSEC_OPTS_SPLITNET )
+								cfg->tunnel->idlist_excl.add( ph2id );
+						}
+					}
+				}
+				else
+				{
 					if( attr->atype == UNITY_SPLIT_INCLUDE )
-					{
-						log.txt( LOG_DEBUG,
-							"ii : - IP4 Split Network Include = %s\n",
-							txtid );
+						log.txt( LOG_DEBUG,	"ii : - IP4 Split Network Include\n" );
 
-						if( readmask & IPSEC_OPTS_SPLITNET )
-							cfg->tunnel->idlist_incl.add( ph2id );
-
-						//
-						// we need to perform special
-						// operations if we force all
-						// taffic via this tunnel
-						//
-
-						if( !unity_net->addr.s_addr &&
-							!unity_net->mask.s_addr )
-							cfg->tunnel->force_all = true;
-					}
-					else
-					{
-						log.txt( LOG_DEBUG,
-							"ii : - IP4 Split Network Exclude = %s\n",
-							txtid );
-
-						if( readmask & IPSEC_OPTS_SPLITNET )
-							cfg->tunnel->idlist_excl.add( ph2id );
-					}
+					if( attr->atype == UNITY_SPLIT_EXCLUDE )
+						log.txt( LOG_DEBUG,	"ii : - IP4 Split Network Exclude\n" );
 				}
 
 				break;
@@ -1377,21 +1431,25 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 			{
 				getmask |= IPSEC_OPTS_BANNER;
 
-				cfg->tunnel->banner.add( 0, 1 );
+				if( ( readmask & IPSEC_OPTS_BANNER ) && attr->vdata.size() )
+				{
+					cfg->tunnel->banner.add( 0, 1 );
 
-				long size = 15;
-				char text[ 16 ] = { 0 };
-				if( size > attr->vdata.size() )
-					size = attr->vdata.size();
+					long size = 15;
+					char text[ 16 ] = { 0 };
+					if( size > attr->vdata.size() )
+						size = attr->vdata.size();
 
-				memcpy( text, attr->vdata.buff(), size );
+					memcpy( text, attr->vdata.buff(), size );
 
-				log.txt( LOG_DEBUG,
-					"ii : - Login Banner = %s ...\n",
-					text );
+					log.txt( LOG_DEBUG,
+						"ii : - Login Banner = %s ...\n",
+						text );
 
-				if( readmask & IPSEC_OPTS_BANNER )
 					cfg->tunnel->banner.set( attr->vdata );
+				}
+				else
+					log.txt( LOG_DEBUG,	"ii : - Login Banner\n" );
 
 				break;
 			}
@@ -1400,12 +1458,16 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 			{
 				getmask |= IPSEC_OPTS_PFS;
 
-				log.txt( LOG_DEBUG,
-					"ii : - PFS Group = %d\n",
-					attr->bdata );
+				if( ( readmask & IPSEC_OPTS_BANNER ) && attr->vdata.size() )
+				{
+					log.txt( LOG_DEBUG,
+						"ii : - PFS Group = %d\n",
+						attr->bdata );
 
-				if( readmask & IPSEC_OPTS_PFS )
 					cfg->tunnel->xconf.dhgr = attr->bdata;
+				}
+				else
+					log.txt( LOG_DEBUG,	"ii : - PFS Group\n" );
 
 				break;
 			}
