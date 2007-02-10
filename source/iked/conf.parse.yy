@@ -118,6 +118,8 @@ IDB_PEER *	peer;
 %token		EXACT		"exact"
 %token		XAUTH_SOURCE	"xauth source"
 %token		XCONF_SOURCE	"xconf source"
+%token		PULL		"pull"
+%token		PUSH		"push"
 %token		LDAP		"ldap"
 %token		PLCY_MODE	"policy mode"
 %token		CONFIG		"config"
@@ -636,6 +638,10 @@ peer_section
 		peer->saddr.saddr4.sin_port = htons( $3 );
 		peer->saddr.saddr4.sin_addr.s_addr = inet_addr( $2->text() );
 
+		peer->xauth_source = &iked.xauth_local;
+		peer->xconf_source = &iked.xconf_local;
+		peer->xconf_mode = CONFIG_MODE_PULL;
+
 		delete $2;
 	}
 	BCB peer_lines ECB
@@ -968,6 +974,19 @@ peer_line
   |	XCONF_SOURCE LOCAL
 	{
 		peer->xconf_source = &iked.xconf_local;
+		peer->xconf_mode = CONFIG_MODE_PULL;
+	}
+	EOS
+  |	XCONF_SOURCE LOCAL PULL
+	{
+		peer->xconf_source = &iked.xconf_local;
+		peer->xconf_mode = CONFIG_MODE_PULL;
+	}
+	EOS
+  |	XCONF_SOURCE LOCAL PUSH
+	{
+		peer->xconf_source = &iked.xconf_local;
+		peer->xconf_mode = CONFIG_MODE_PUSH;
 	}
 	EOS
   |	PLCY_MODE DISABLE

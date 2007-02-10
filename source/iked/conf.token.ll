@@ -153,6 +153,8 @@ if( yy_first_time )
 <SEC_PEER>exact			{ return( token::EXACT ); }
 <SEC_PEER>xauth_source		{ return( token::XAUTH_SOURCE ); }
 <SEC_PEER>xconf_source		{ return( token::XCONF_SOURCE ); }
+<SEC_PEER>pull			{ return( token::PULL ); }
+<SEC_PEER>push			{ return( token::PUSH ); }
 <SEC_PEER>system		{ return( token::LOCAL ); }
 <SEC_PEER>ldap			{ return( token::LDAP ); }
 <SEC_PEER>plcy_mode		{ return( token::PLCY_MODE ); }
