@@ -760,12 +760,6 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				log.txt( LOG_INFO, "ii : sending config push acknowledge\n" );
 
 				//
-				// calculate iv for this config
-				//
-
-				phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
-
-				//
 				// send config packet
 				//
 
@@ -1011,7 +1005,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
 		{
-			if( !( cfg->tunnel->state & TSTATE_SENT_CONFIG ) )
+			if(  ( cfg->tunnel->state & TSTATE_SENT_XRSLT ) &&
+				!( cfg->tunnel->state & TSTATE_SENT_CONFIG ) )
 			{
 				//
 				// obtain the client xconf config
@@ -1048,6 +1043,12 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				//
 
 				rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
+
+				//
+				// generate message iv
+				//
+
+				phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
 
 				//
 				// send config packet
