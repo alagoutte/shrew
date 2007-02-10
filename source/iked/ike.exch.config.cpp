@@ -486,13 +486,6 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						log.txt( LOG_ERROR, "!! : missing required password attribute\n" );
 
 					cfg->tunnel->state |= TSTATE_RECV_XAUTH;
-
-					//
-					// the reason we do not flag the  xauth
-					// config handle for deletion here is
-					// becuse we want to recycle it for use
-					// in the config transaction if needed
-					//
 				}
 
 				break;
@@ -639,6 +632,10 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->mtype = ISAKMP_CFG_ACK;
 
+				//
+				// send config packet
+				//
+
 				config_message_send( ph1, cfg );
 
 				log.txt( LOG_INFO, "ii : sent xauth acknowledge\n" );
@@ -648,6 +645,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				//
 
 				cfg->tunnel->state |= TSTATE_SENT_XRSLT;
+
+				cfg->lstate |= LSTATE_DELETE;
 			}
 		}
 		else
@@ -1043,6 +1042,12 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.opts,
 					0 );
+
+				//
+				// make sure the msgid is unique
+				//
+
+				rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
 
 				//
 				// send config packet

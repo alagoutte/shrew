@@ -140,6 +140,7 @@ X Add tunnel route to peer with default route
 X Modify existing default route metric
 X Add iked and iked.conf man pages
 X Fix initial vnet device usage
+X Add support for config push mode
 . Test all client features against racoon and iked
 . !!! All reported bugs !!!
 
