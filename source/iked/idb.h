@@ -250,7 +250,6 @@ typedef class _IDB_PEER : public IKE_PEER, public IDB
 	BDATA			xauth_group;
 	IKED_XAUTH *	xauth_source;
 	IKED_XCONF *	xconf_source;
-	long			xconf_mode;
 
 	IKE_PLIST		prop_list;
 

@@ -584,6 +584,7 @@ typedef struct _IKE_PEER
 	unsigned char	idtype_r;
 
 	long			plcy_mode;
+	long			xconf_mode;
 
 }IKE_PEER;
 
