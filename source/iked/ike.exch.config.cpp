@@ -761,10 +761,9 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->attr_reset();
 
-				long getmask = 0;
-				config_xconf_get( cfg,
-					getmask,
-					cfg->tunnel->xconf.rqst );
+				config_xconf_set( cfg,
+					cfg->tunnel->xconf.rqst,
+					0xffffffff );
 
 				//
 				// flag as sent and release
