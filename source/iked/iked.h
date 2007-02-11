@@ -325,6 +325,7 @@ typedef class _IKED
 	long	state;				// daemon run state
 	long	refcount;			// reference count
 	long	tunnelid;			// next tunnel id
+	long	pfkreqid;			// next request id
 	long	lasttick;			// last send operation
 	
 	PFKI		pfki;			// pfkey interface

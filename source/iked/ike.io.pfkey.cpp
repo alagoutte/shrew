@@ -1025,11 +1025,42 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 				break;
 		}
 
+		//
+		// step through all proposals and
+		// store the request id to be used
+		// when sending the update message.
+		// we also need to acquire the spi
+		// to be used for outbound sas
+		//
+
+		if( policy->sp.dir == IPSEC_DIR_INBOUND )
+		{
+			IKE_PROPOSAL * proposal;
+			long pindex = 0;
+
+			while( ph2->plist_l.get( &proposal, pindex++ ) )
+			{
+				//
+				// match the protocol type
+				//
+
+				if( proposal->proto == proto )
+				{
+					//
+					// copy the request id
+					//
+
+					proposal->reqid = getspi.sa2.reqid;
+				}
+			}
+		}
+
 		if( policy->sp.dir == IPSEC_DIR_OUTBOUND )
 		{
 			//
-			// outbound spis are dictated by
-			// the peer
+			// step through all proposals and
+			// store the request id to be used
+			// when sending the update message
 			//
 
 			IKE_PROPOSAL * proposal;
@@ -1038,12 +1069,23 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 			while( ph2->plist_r.get( &proposal, pindex++ ) )
 			{
 				//
-				// set the spi value based on the
-				// accepted proposal spi value
+				// if the protocol type matches
+				// then store the request id and
+				// obtain the spi value
 				//
 
 				if( proposal->proto == proto )
 				{
+					//
+					// copy the request id
+					//
+
+					proposal->reqid = getspi.sa2.reqid;
+
+					//
+					// copy the spi value
+					//
+
 					if( proto != ISAKMP_PROTO_IPCOMP )
 					{
 						getspi.range.min = ntohl( proposal->spi.spi );
@@ -1124,6 +1166,12 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 			sainfo.sa2.mode = IPSEC_MODE_TUNNEL;
 			break;
 	}
+
+	//
+	// copy the request id
+	//
+
+	sainfo.sa2.reqid = proposal->reqid;
 
 	//
 	// convert encryption and message

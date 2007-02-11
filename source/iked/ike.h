@@ -551,6 +551,7 @@ typedef struct _IKE_PROPOSAL
 	uint8_t		proto;
 	uint8_t		xform;
 	uint16_t	encap;
+	uint16_t	reqid;
 
 	IKE_SPI		spi;
 
