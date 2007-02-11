@@ -503,8 +503,6 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 					cfg->tunnel->state |= TSTATE_RECV_XRSLT;
 
-					cfg->lstate |= LSTATE_DELETE;
-
 					break;
 				}
 
@@ -514,13 +512,23 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
 				{
-					if( !( cfg->tunnel->state & TSTATE_RECV_XRSLT ) )
+					if( !( cfg->tunnel->state & TSTATE_RECV_CONFIG ) )
 					{
+						//
+						// get xconf attributes
+						//
+
 						log.txt( LOG_INFO, "ii : received config push acknowledge\n" );
 
-						cfg->tunnel->state |= TSTATE_RECV_XRSLT;
+						long readmask = 0;
 
-						cfg->lstate |= LSTATE_DELETE;
+						config_xconf_get( cfg,
+							readmask,
+							0 );
+
+						cfg->attr_reset();
+
+						cfg->tunnel->state |= TSTATE_RECV_CONFIG;
 					}
 
 					break;
@@ -655,6 +663,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			// xauth not required
 			//
 
+			log.txt( LOG_INFO, "ii : xauth is not required\n" );
+
 			cfg->tunnel->state |= TSTATE_RECV_XAUTH;
 			cfg->tunnel->state |= TSTATE_SENT_XAUTH;
 			cfg->tunnel->state |= TSTATE_RECV_XRSLT;
@@ -720,12 +730,14 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				}
 				else
 				{
-					log.txt( LOG_INFO, "ii : config pull request is not required\n" );
+					//
+					// config not required
+					//
+
+					log.txt( LOG_INFO, "ii : config is not required\n" );
 
 					cfg->tunnel->state |= TSTATE_SENT_CONFIG;
 					cfg->tunnel->state |= TSTATE_RECV_CONFIG;
-
-					cfg->lstate |= LSTATE_DELETE;
 				}
 			}
 		}
@@ -749,9 +761,10 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->attr_reset();
 
-				config_xconf_set( cfg,
-					cfg->tunnel->xconf.rqst,
-					0xffffffff );
+				long getmask = 0;
+				config_xconf_get( cfg,
+					getmask,
+					cfg->tunnel->xconf.rqst );
 
 				//
 				// flag as sent and release
@@ -940,6 +953,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			// xauth not required
 			//
 
+			log.txt( LOG_INFO, "ii : xauth is not required\n" );
+
 			cfg->tunnel->state |= TSTATE_RECV_XAUTH;
 			cfg->tunnel->state |= TSTATE_SENT_XAUTH;
 			cfg->tunnel->state |= TSTATE_RECV_XRSLT;
@@ -1011,9 +1026,16 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
 		{
-			if(  ( cfg->tunnel->state & TSTATE_SENT_XRSLT ) &&
+			if(  ( cfg->tunnel->state & TSTATE_RECV_XRSLT ) &&
 				!( cfg->tunnel->state & TSTATE_SENT_CONFIG ) )
 			{
+				//
+				// in push mode the client doesnt
+				// request its desired attributes
+				//
+
+				cfg->tunnel->xconf.rqst = cfg->tunnel->peer->xconf_source->config.opts;
+
 				//
 				// obtain the client xconf config
 				//
@@ -1074,6 +1096,18 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			}
 		}
 	}
+
+	//
+	// if all required operations are
+	// complete, make sure the config
+	// handle is flagged for deletion
+	//
+
+	if( ( cfg->tunnel->state & TSTATE_RECV_XRSLT ) &&
+		( cfg->tunnel->state & TSTATE_SENT_XRSLT ) &&
+		( cfg->tunnel->state & TSTATE_SENT_CONFIG ) &&
+		( cfg->tunnel->state & TSTATE_RECV_CONFIG ) )
+		cfg->lstate |= LSTATE_DELETE;
 
 	return LIBIKE_OK;
 }

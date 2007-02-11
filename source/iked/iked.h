@@ -387,8 +387,6 @@ typedef class _IKED
 	IKED_XAUTH_LDAP		xauth_ldap;
 #endif
 
-	IKED_XCONF *		xconf;
-
 	// id name helper functions
 
 	char *	find_name( long type, long id );
