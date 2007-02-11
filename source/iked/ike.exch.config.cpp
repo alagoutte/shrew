@@ -674,7 +674,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// set attributes
 				//
 
-				log.txt( LOG_INFO, "ii : building config request attributes\n" );
+				log.txt( LOG_INFO, "ii : building config attribute list\n" );
 
 				cfg->mtype = ISAKMP_CFG_REQUEST;
 
@@ -743,9 +743,9 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// set attributes
 				//
 
-				log.txt( LOG_INFO, "ii : building config response attributes\n" );
+				log.txt( LOG_INFO, "ii : building config attribute list\n" );
 
-				cfg->mtype = ISAKMP_CFG_REQUEST;
+				cfg->mtype = ISAKMP_CFG_ACK;
 
 				cfg->attr_reset();
 
@@ -900,6 +900,12 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					cfg->attr_add_b( XAUTH_STATUS, 0 );
 
 				//
+				// make sure the msgid is unique
+				//
+
+				rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
+
+				//
 				// generate message iv
 				//
 
@@ -973,7 +979,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->mtype = ISAKMP_CFG_REPLY;
 
-				log.txt( LOG_INFO, "ii : building config response attributes\n" );
+				log.txt( LOG_INFO, "ii : building config attribute list\n" );
 
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.opts,
@@ -1032,7 +1038,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->mtype = ISAKMP_CFG_SET;
 
-				log.txt( LOG_INFO, "ii : building config request attributes\n" );
+				log.txt( LOG_INFO, "ii : building config attribute list\n" );
 
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.opts,
