@@ -1,6 +1,6 @@
 
 /*
-7 * Copyright (c) 2007
+ * Copyright (c) 2007
  *      Shrew Soft Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
