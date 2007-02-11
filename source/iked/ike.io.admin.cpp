@@ -229,9 +229,11 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					{
 						case UNITY_SPLIT_INCLUDE:
 							tunnel->idlist_incl.add( ph2id );
+							break;
 
 						case UNITY_SPLIT_EXCLUDE:
 							tunnel->idlist_excl.add( ph2id );
+							break;
 					}
 
 					ikei->send_msg_result( IKEI_OK );
