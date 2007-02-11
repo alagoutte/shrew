@@ -529,6 +529,14 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 					cfg->tunnel->state |= TSTATE_RECV_XRSLT;
 
+					//
+					// if the config mode is not push, we
+					// can flag this handle for deletion
+					//
+
+					if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_PUSH )
+						cfg->lstate |= LSTATE_DELETE;
+
 					break;
 				}
 
@@ -680,7 +688,13 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->tunnel->state |= TSTATE_SENT_XRSLT;
 
-				cfg->lstate |= LSTATE_DELETE;
+				//
+				// if the config mode is not pull, we
+				// can flag this handle for deletion
+				//
+
+				if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_PULL )
+					cfg->lstate |= LSTATE_DELETE;
 			}
 		}
 		else
