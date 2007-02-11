@@ -46,8 +46,7 @@ _IKED::_IKED()
 	state = DSTATE_ACTIVE;
 	refcount = 0;
 	tunnelid = 2;
-	pfkreqid = 1;
-	lasttick = 0;
+	policyid = 1;
 
 	sock_ike_open = 0;
 	sock_natt_open = 0;

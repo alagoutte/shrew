@@ -1050,7 +1050,7 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 					// copy the request id
 					//
 
-					proposal->reqid = getspi.sa2.reqid;
+					proposal->reqid = ( uint16_t ) getspi.sa2.reqid;
 				}
 			}
 		}
@@ -1080,7 +1080,7 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 					// copy the request id
 					//
 
-					proposal->reqid = getspi.sa2.reqid;
+					proposal->reqid = ( uint16_t ) getspi.sa2.reqid;
 
 					//
 					// copy the spi value

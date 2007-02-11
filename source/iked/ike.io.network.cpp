@@ -64,27 +64,6 @@ long _IKED::loop_ike_nwork()
 	while( state == DSTATE_ACTIVE )
 	{
 		//
-		// only process once a second
-		//
-
-		long thistick = time( NULL );
-
-		if( lasttick < thistick  )
-		{
-			//
-			// store new tick time
-			//
-
-			lasttick = thistick;
-
-			//
-			// process outbound ike packets
-			//
-
-			process_ike_send();
-		}
-
-		//
 		// wait for packet availablility
 		//
 
