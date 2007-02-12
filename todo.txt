@@ -141,7 +141,8 @@ X Modify existing default route metric
 X Add iked and iked.conf man pages
 X Fix initial vnet device usage
 X Add support for config push mode
-X Fix manual policy config for include/exclude
+X Modify the client gui for manual policy include/exclude
+X Modify the client gui for config push or pull
 . Test all client features against racoon and iked
 . !!! All reported bugs !!!
 
