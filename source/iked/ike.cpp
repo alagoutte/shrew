@@ -140,18 +140,9 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	bool packet_frag = false;
 	long packet_left = packet.size();
 
-	if( ph1->initiator )
-	{
-		if( ph1->frag_l )
-			if( ( packet_left + encap_size ) > ph1->tunnel->peer->frag_size )
-				packet_frag = true;
-	}
-	else
-	{
-		if( ph1->frag_l && ph1->frag_r )
-			if( ( packet_left + encap_size ) > ph1->tunnel->peer->frag_size )
-				packet_frag = true;
-	}
+	if( ph1->frag_l && ph1->frag_r )
+		if( ( packet_left + encap_size ) > ph1->tunnel->peer->frag_ike_size )
+			packet_frag = true;
 
 	//
 	// fragment and send the packet
@@ -164,7 +155,7 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 		// calculate the max fragment payload size
 		//
 
-		long frag_max = ph1->tunnel->peer->frag_size - encap_size;
+		long frag_max = ph1->tunnel->peer->frag_ike_size - encap_size;
 		long frag_sent = packet.size() - packet_left;
 
 		//

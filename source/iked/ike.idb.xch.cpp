@@ -47,7 +47,7 @@
 
 bool _ITH_EVENT_RESEND::func()
 {
-	if( attempt >= 2 )
+	if( attempt >= iked.retry_count )
 	{
 		iked.log.txt( LOG_INFO,
 				"ii : exchange packet resend limit exceeded\n" );
@@ -138,7 +138,7 @@ bool _IDB_XCH::resend_sched()
 	//
 
 	inc( true );
-	event_resend.delay = RETRY_DELAY * 1000;
+	event_resend.delay = iked.retry_delay * 1000;
 
 	iked.ith_timer.add( &event_resend );
 	

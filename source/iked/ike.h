@@ -575,8 +575,10 @@ typedef struct _IKE_PEER
 	long			natt_mode;
 	unsigned short	natt_port;
 	long			natt_rate;
-	long			frag_mode;
-	long			frag_size;
+	long			frag_ike_mode;
+	long			frag_ike_size;
+	long			frag_esp_mode;
+	long			frag_esp_size;
 	long			dpd_mode;
 	long			dpd_rate;
 	long			life_check;

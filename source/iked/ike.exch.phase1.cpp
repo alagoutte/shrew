@@ -606,7 +606,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 				unsigned char last = ISAKMP_PAYLOAD_NONE;
 
-				if( ph1->natt_l && ph1->natt_r )
+				if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
 				{
 					phase1_gen_natd( ph1 );
 
@@ -635,7 +635,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				// optionally add nat discovery hash payloads
 				//
 
-				if( ph1->natt_l && ph1->natt_r )
+				if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
 				{
 					phase1_gen_natd( ph1 );
 					payload_add_natd( packet, ph1->natd_ld, last );
@@ -1193,7 +1193,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 							unsigned char last = ISAKMP_PAYLOAD_NONE;
 
-							if( ph1->natt_l && ph1->natt_r )
+							if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
 							{
 								phase1_gen_natd( ph1 );
 
@@ -1257,7 +1257,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 							unsigned char last = ISAKMP_PAYLOAD_NONE;
 
-							if( ph1->natt_l && ph1->natt_r )
+							if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
 							{
 								phase1_gen_natd( ph1 );
 
@@ -1342,7 +1342,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 				unsigned char last = ISAKMP_PAYLOAD_NONE;
 
-				if( ph1->natt_l && ph1->natt_r )
+				if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
 				{
 					phase1_gen_natd( ph1 );
 
@@ -1489,7 +1489,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				// optionally add natt vendor id payload
 				//
 
-				if( ph1->natt_l )
+				if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
 				{
 					payload_add_vend( packet, vend_natt_v02, ISAKMP_PAYLOAD_VEND );
 					payload_add_vend( packet, vend_natt_rfc, next );
@@ -1717,10 +1717,11 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		// add pahse1 dpd event
 		//
 
-		if( ph1->dpd_l && ph1->dpd_r )
+		if( ( ph1->tunnel->peer->dpd_mode == IPSEC_DPD_FORCE ) ||
+			( ph1->dpd_l && ph1->dpd_r ) )
 		{
 			ph1->inc( true );
-			ph1->event_dpd.delay = RETRY_DELAY * 1000;
+			ph1->event_dpd.delay = ph1->tunnel->peer->dpd_rate * 1000;
 
 			ith_timer.add( &ph1->event_dpd );
 		}

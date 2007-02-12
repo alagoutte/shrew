@@ -237,13 +237,11 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	// determine ike fragmentation negotiation
 	//
 
-	if( tunnel->peer->frag_size )
-	{
-		if( tunnel->peer->exchange == ISAKMP_EXCH_AGGRESSIVE )
-			frag_r = true;
-
+	if( tunnel->peer->frag_ike_mode >= IPSEC_FRAG_ENABLE )
 		frag_l = true;
-	}
+
+	if( tunnel->peer->frag_ike_mode == IPSEC_FRAG_FORCE )
+		frag_r = true;
 
 	//
 	// determine natt negotiation
@@ -267,6 +265,9 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 		dpd_req = dpdseq;
 		dpd_res = dpdseq;
 	}
+
+	if( tunnel->peer->dpd_mode == IPSEC_DPD_FORCE )
+		dpd_r = true;
 
 	//
 	// locate the first isakmp proposal

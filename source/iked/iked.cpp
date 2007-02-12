@@ -48,6 +48,9 @@ _IKED::_IKED()
 	tunnelid = 2;
 	policyid = 1;
 
+	retry_count = 2;
+	retry_delay = 10;
+
 	sock_ike_open = 0;
 	sock_natt_open = 0;
 
