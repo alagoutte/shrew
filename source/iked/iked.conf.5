@@ -121,6 +121,12 @@ interfaces for both ike and natt using the default port numbers ( 500 &
 4500 respectively ). Note, the
 .Ar natt
 keyword can only be specified if the daemon was compiled with natt support.
+.It Ic retry_count Ar number;
+The number of times an exchange packet should be resent to a peer. The
+default value for this parameter is 2.
+.It Ic retry_delay Ar number;
+The number of seconds to wait between packet resend attempts. The
+default value for this parameter is 10.
 .It Ic log_file Ar quoted ;
 The path and file name that should be used for log output.
 .It Ic log_level (none | error | info | debug | loud | decode) ;
@@ -379,7 +385,7 @@ LDAP source configuration is defined in the
 .Ic xauth_ldap
 section. The default value for this parameter is
 .Ic local .
-.It Ic xconf_source local ;
+.It Ic xconf_source local Ic [(push | pull)];
 Sepcifies the Transactional Configuration source to be used when responding to peer
 configuration requests. If
 .Ic local
@@ -522,7 +528,7 @@ Define the lifetime in kilobytes for this proposal.
 .Sh EXAMPLES
 .Pp
 The first example shows a configuration that supports simple peer to peer negotiations using
-mutual preshared key authentication and dead peer detection.
+mutual preshared key authentication.
 
  peer 1.2.3.4
  {
@@ -531,9 +537,6 @@ mutual preshared key authentication and dead peer detection.
      peerid local address;
      peerid remote address;
 
-     dpd_mode enable;
-     dpd_rate 60;
-
      authdata psk "sharedsecret";
 
      life_check claim;
@@ -541,10 +544,6 @@ mutual preshared key authentication and dead peer detection.
      proposal isakmp
      {
          auth mutual_psk;
-
-         ciph 3des;
-         hash md5;
-         dhgr 2;
 
          life_sec 28800;
          life_kbs 0;

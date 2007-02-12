@@ -83,6 +83,8 @@ if( yy_first_time )
 <SEC_DAEMON>log_file		{ return( token::LOG_FILE ); }
 <SEC_DAEMON>pcap_ike		{ return( token::PCAP_IKE ); }
 <SEC_DAEMON>pcap_pub		{ return( token::PCAP_PUB ); }
+<SEC_DAEMON>retry_delay		{ return( token::RETRY_DELAY ); }
+<SEC_DAEMON>retry_count		{ return( token::RETRY_COUNT ); }
 <SEC_DAEMON>{ecb}		{ BEGIN SEC_ROOT; return( token::ECB ); }
 
 <SEC_ROOT>netgroup		{ BEGIN SEC_NETGROUP; return( token::NETGROUP ); }

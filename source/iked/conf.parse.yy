@@ -61,6 +61,8 @@ IDB_PEER *	peer;
 %token		LOG_FILE	"log file"
 %token		PCAP_IKE	"ike pcap file"
 %token		PCAP_PUB	"pub pcap file"
+%token		RETRY_COUNT	"retry count"
+%token		RETRY_DELAY	"retry delay"
 
 %token		NETGROUP	"netgroup section"
 
@@ -310,6 +312,16 @@ daemon_line
 		snprintf( iked.path_pub, MAX_PATH, $2->text() );
 		iked.dump_pub = true;
 		delete $2;
+	}
+	EOS
+  |	RETRY_DELAY NUMBER
+	{
+		iked.retry_delay = $2;
+	}
+	EOS
+  |	RETRY_COUNT NUMBER
+	{
+		iked.retry_count = $2;
 	}
 	EOS
   ;
@@ -596,7 +608,8 @@ peer_section
 		peer->contact = IPSEC_CONTACT_BOTH;
 		peer->natt_rate = 30;
 		peer->dpd_rate = 15;
-		peer->frag_size = 520;
+		peer->frag_ike_size = 520;
+		peer->frag_esp_size = 520;
 		peer->life_check = LTIME_CLAIM;
 
 		peer->saddr.saddr4.sin_family = AF_INET;
@@ -630,7 +643,8 @@ peer_section
 		peer->contact = IPSEC_CONTACT_BOTH;
 		peer->natt_rate = 30;
 		peer->dpd_rate = 15;
-		peer->frag_size = 520;
+		peer->frag_ike_size = 520;
+		peer->frag_esp_size = 520;
 		peer->life_check = LTIME_CLAIM;
 
 		peer->saddr.saddr4.sin_family = AF_INET;
@@ -717,34 +731,37 @@ peer_line
 	EOS
   |	FRAG_IKE_MODE ENABLE
 	{
-		peer->frag_mode = IPSEC_FRAG_ENABLE;
+		peer->frag_ike_mode = IPSEC_FRAG_ENABLE;
 	}
 	EOS
   |	FRAG_IKE_MODE DISABLE
 	{
-		peer->frag_mode = IPSEC_FRAG_DISABLE;
+		peer->frag_ike_mode = IPSEC_FRAG_DISABLE;
 	}
 	EOS
   |	FRAG_IKE_MODE FORCE
 	{
-		peer->frag_mode = IPSEC_FRAG_FORCE;
+		peer->frag_ike_mode = IPSEC_FRAG_FORCE;
 	}
 	EOS
   |	FRAG_IKE_SIZE NUMBER
 	{
-		peer->frag_size = $2;
+		peer->frag_ike_size = $2;
 	}
 	EOS
   |	FRAG_ESP_MODE ENABLE
 	{
+		peer->frag_esp_mode = IPSEC_FRAG_ENABLE;
 	}
 	EOS
   |	FRAG_ESP_MODE DISABLE
 	{
+		peer->frag_esp_mode = IPSEC_FRAG_DISABLE;
 	}
 	EOS
   |	FRAG_ESP_SIZE NUMBER
 	{
+		peer->frag_esp_size = $2;
 	}
 	EOS
   |	PEERID LOCAL ADDR
