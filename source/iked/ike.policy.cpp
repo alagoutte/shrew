@@ -387,7 +387,7 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	text_addr( txtid_src, &spinfo.paddr_src, false, true );
 	text_addr( txtid_dst, &spinfo.paddr_dst, false, true );
 
-	log.txt( LOG_ERROR, 
+	log.txt( LOG_INFO, 
 		"ii : creating %s %s policy %s -> %s\n",
 		pfki.name( NAME_SPTYPE, spinfo.sp.type ),
 		pfki.name( NAME_SPDIR, spinfo.sp.dir ),
@@ -422,7 +422,7 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	text_addr( txtid_src, &spinfo.paddr_src, false, true );
 	text_addr( txtid_dst, &spinfo.paddr_dst, false, true );
 
-	log.txt( LOG_ERROR, 
+	log.txt( LOG_INFO, 
 		"ii : creating %s %s policy %s -> %s\n",
 		pfki.name( NAME_SPTYPE, spinfo.sp.type ),
 		pfki.name( NAME_SPDIR, spinfo.sp.dir ),
@@ -544,7 +544,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		text_addr( txtid_src, &policy->paddr_src, false, true );
 		text_addr( txtid_dst, &policy->paddr_dst, false, true );
 
-		log.txt( LOG_ERROR, 
+		log.txt( LOG_INFO, 
 			"ii : removing %s %s policy %s -> %s\n",
 			pfki.name( NAME_SPTYPE, policy->sp.type ),
 			pfki.name( NAME_SPDIR, policy->sp.dir ),
@@ -583,7 +583,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		text_addr( txtid_src, &policy->paddr_src, false, true );
 		text_addr( txtid_dst, &policy->paddr_dst, false, true );
 
-		log.txt( LOG_ERROR, 
+		log.txt( LOG_INFO, 
 			"ii : removing %s %s policy %s -> %s\n",
 			pfki.name( NAME_SPTYPE, policy->sp.type ),
 			pfki.name( NAME_SPDIR, policy->sp.dir ),
