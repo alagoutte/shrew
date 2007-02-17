@@ -1,6 +1,6 @@
 The build system is very basic at the moment. The make files use BSD style
 rules so the project will need to be autotooled before it will build on
-other platforms. The main make file is located in the unix directory. To
+other platforms. The root make file is located in the unix directory. To
 build and install the ike daemon, enter the following commands using the
 root login ...
 
@@ -14,8 +14,11 @@ DEBUG	preserve debug symbols
 NATT	enable natt support ( requires kernel support )
 LDAP	enable ldap support ( requires openldap client )
 
-So to build iked with all options, you would specify ...
+To build iked with all options, you would specify ...
 
 cd unix
 make -DDEBUG -DNATT -DLDAP
 make install
+
+This software does require Bison version 2.3 or higher as it uses the new
+c++ parser model.
