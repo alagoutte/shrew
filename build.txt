@@ -1,0 +1,21 @@
+The build system is very basic at the moment. The make files use BSD style
+rules so the project will need to be autotooled before it will build on
+other platforms. The main make file is located in the unix directory. To
+build and install the ike daemon, enter the following commands using the
+root login ...
+
+cd unix
+make
+make install
+
+You can also specify a few build options. Here is a brief list ...
+
+DEBUG	preserve debug symbols
+NATT	enable natt support ( requires kernel support )
+LDAP	enable ldap support ( requires openldap client )
+
+So to build iked with all options, you would specify ...
+
+cd unix
+make -DDEBUG -DNATT -DLDAP
+make install
