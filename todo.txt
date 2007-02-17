@@ -143,6 +143,9 @@ X Fix initial vnet device usage
 X Add support for config push mode
 X Modify the client gui for manual policy include/exclude
 X Modify the client gui for config push or pull
+. Update the client gui network tab
+. Fix the vpn trace sdb output tabs
+. Update the documentation
 . Test all client features against racoon and iked
 . !!! All reported bugs !!!
 
