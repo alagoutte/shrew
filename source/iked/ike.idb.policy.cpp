@@ -90,7 +90,7 @@ bool _IKED::get_policy( bool lock, IDB_POLICY ** policy, long dir, u_int16_t typ
 			continue;
 
 		//
-		// compare policy id
+		// compare policy type
 		//
 
 		if( tmp_policy->sp.type != type )
