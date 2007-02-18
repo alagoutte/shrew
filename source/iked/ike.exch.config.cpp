@@ -1515,9 +1515,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 
 			case INTERNAL_IP4_DNS:
 			{
-				getmask |= INTERNAL_IP4_DNS;
+				getmask |= IPSEC_OPTS_DNSS;
 
-				if( ( readmask & INTERNAL_IP4_DNS ) && attr->vdata.size() )
+				if( ( readmask & IPSEC_OPTS_DNSS ) && attr->vdata.size() )
 				{
 					if( attr->vdata.size() != 4 )
 					{
