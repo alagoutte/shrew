@@ -936,8 +936,8 @@ long _IKED::pfkey_recv_spdel( PFKI_MSG & msg )
 
 long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 {
-	PFKI_GETSPI getspi;
-	memset( &getspi, 0, sizeof( getspi ) );
+	PFKI_SAINFO sainfo;
+	memset( &sainfo, 0, sizeof( sainfo ) );
 
 	//
 	// determine natt port usage
@@ -951,19 +951,19 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 	// convert source and destination
 	//
 
-	getspi.paddr_src.proto = IPSEC_PROTO_ANY;
-	getspi.paddr_dst.proto = IPSEC_PROTO_ANY;
+	sainfo.paddr_src.proto = IPSEC_PROTO_ANY;
+	sainfo.paddr_dst.proto = IPSEC_PROTO_ANY;
 
 	switch( policy->sp.dir )
 	{
 		case IPSEC_DIR_INBOUND:
-			cpy_sockaddr( ph2->tunnel->saddr_r.saddr, getspi.paddr_src.saddr, use_ports );
-			cpy_sockaddr( ph2->tunnel->saddr_l.saddr, getspi.paddr_dst.saddr, use_ports );
+			cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_src.saddr, use_ports );
+			cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_dst.saddr, use_ports );
 			break;
 
 		case IPSEC_DIR_OUTBOUND:
-			cpy_sockaddr( ph2->tunnel->saddr_l.saddr, getspi.paddr_src.saddr, use_ports );
-			cpy_sockaddr( ph2->tunnel->saddr_r.saddr, getspi.paddr_dst.saddr, use_ports );
+			cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_src.saddr, use_ports );
+			cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_dst.saddr, use_ports );
 			break;
 	}
 
@@ -975,9 +975,9 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 	//
 
 	if( policy->sp.dir == IPSEC_DIR_INBOUND )
-		getspi.seq = ph2->seqid;
+		sainfo.seq = ph2->seqid;
 	else
-		getspi.seq = ph2->seqid + 1;
+		sainfo.seq = ph2->seqid + 1;
 
 	//
 	// configure the spiinfo parameters
@@ -986,8 +986,8 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 	char txtid_src[ LIBIKE_MAX_TEXTP2ID ];
 	char txtid_dst[ LIBIKE_MAX_TEXTP2ID ];
 
-	text_addr( txtid_src, &getspi.paddr_src, true, true );
-	text_addr( txtid_dst, &getspi.paddr_dst, true, true );
+	text_addr( txtid_src, &sainfo.paddr_src, true, true );
+	text_addr( txtid_dst, &sainfo.paddr_dst, true, true );
 
 	//
 	// send a getspi request for
@@ -1000,8 +1000,8 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 		if( !policy->xforms[ xindex ].proto )
 			break;
 
-		getspi.sa2.mode = policy->xforms[ xindex ].mode;
-		getspi.sa2.reqid = policy->xforms[ xindex ].reqid;
+		sainfo.sa2.mode = policy->xforms[ xindex ].mode;
+		sainfo.sa2.reqid = policy->xforms[ xindex ].reqid;
 
 		unsigned char proto;
 
@@ -1009,19 +1009,19 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 		{
 			case PROTO_IP_AH:
 				proto = ISAKMP_PROTO_IPSEC_AH;
-				getspi.satype = SADB_SATYPE_AH;
+				sainfo.satype = SADB_SATYPE_AH;
 				break;
 
 			case PROTO_IP_ESP:
 				proto = ISAKMP_PROTO_IPSEC_ESP;
-				getspi.satype = SADB_SATYPE_ESP;
+				sainfo.satype = SADB_SATYPE_ESP;
 				break;
 
 			case PROTO_IP_IPCOMP:
 				proto = ISAKMP_PROTO_IPCOMP;
-				getspi.satype = SADB_X_SATYPE_IPCOMP;
-				getspi.range.min = 0x100;
-				getspi.range.max = 0xffff;
+				sainfo.satype = SADB_X_SATYPE_IPCOMP;
+				sainfo.range.min = 0x100;
+				sainfo.range.max = 0xffff;
 				break;
 		}
 
@@ -1050,7 +1050,7 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 					// copy the request id
 					//
 
-					proposal->reqid = ( uint16_t ) getspi.sa2.reqid;
+					proposal->reqid = ( uint16_t ) sainfo.sa2.reqid;
 				}
 			}
 		}
@@ -1080,7 +1080,7 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 					// copy the request id
 					//
 
-					proposal->reqid = ( uint16_t ) getspi.sa2.reqid;
+					proposal->reqid = ( uint16_t ) sainfo.sa2.reqid;
 
 					//
 					// copy the spi value
@@ -1088,13 +1088,13 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 
 					if( proto != ISAKMP_PROTO_IPCOMP )
 					{
-						getspi.range.min = ntohl( proposal->spi.spi );
-						getspi.range.max = ntohl( proposal->spi.spi );
+						sainfo.range.min = ntohl( proposal->spi.spi );
+						sainfo.range.max = ntohl( proposal->spi.spi );
 					}
 					else
 					{
-						getspi.range.min = ntohs( proposal->spi.cpi );
-						getspi.range.max = ntohs( proposal->spi.cpi );
+						sainfo.range.min = ntohs( proposal->spi.cpi );
+						sainfo.range.max = ntohs( proposal->spi.cpi );
 					}
 				}
 			}
@@ -1117,7 +1117,7 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 		log.txt( LOG_DEBUG,
 			"K> : send %s %s pfkey message\n",
 			pfki.name( NAME_MSGTYPE, SADB_GETSPI ),
-			pfki.name( NAME_SATYPE, getspi.satype ) );
+			pfki.name( NAME_SATYPE, sainfo.satype ) );
 
 		log.txt( LOG_DECODE,
 			"ii : - seq   = 0x%08x\n"
@@ -1127,15 +1127,15 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 			"ii : - max   = 0x%08x\n"
 			"ii : - src   = %s\n"
 			"ii : - dst   = %s\n",
-			getspi.seq,
-			pfki.name( NAME_SPMODE, getspi.sa2.mode ),
-			getspi.sa2.reqid,
-			ntohl( getspi.range.min ),
-			ntohl( getspi.range.max ),
+			sainfo.seq,
+			pfki.name( NAME_SPMODE, sainfo.sa2.mode ),
+			sainfo.sa2.reqid,
+			ntohl( sainfo.range.min ),
+			ntohl( sainfo.range.max ),
 			txtid_src,
 			txtid_dst );
 
-		pfki.send_getspi( getspi );
+		pfki.send_getspi( sainfo );
 
 		xindex++;
 	}
@@ -1479,8 +1479,8 @@ long _IKED::pfkey_send_delete( IDB_PH2 * ph2 )
 
 	while( ph2->plist_r.get( &proposal, pindex++ ) )
 	{
-		PFKI_REMOVE remove;
-		memset( &remove, 0, sizeof( remove ) );
+		PFKI_SAINFO sainfo;
+		memset( &sainfo, 0, sizeof( sainfo ) );
 
 		//
 		// determine the sa endpoint addresses
@@ -1490,14 +1490,14 @@ long _IKED::pfkey_send_delete( IDB_PH2 * ph2 )
 		if( ph2->tunnel->natt_v != IPSEC_NATT_NONE )
 			use_ports = true;
 
-		cpy_sockaddr( ph2->tunnel->saddr_l.saddr, remove.paddr_src.saddr, use_ports );
-		cpy_sockaddr( ph2->tunnel->saddr_r.saddr, remove.paddr_dst.saddr, use_ports );
+		cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_src.saddr, use_ports );
+		cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_dst.saddr, use_ports );
 
 		char txtid_src[ LIBIKE_MAX_TEXTP2ID ];
 		char txtid_dst[ LIBIKE_MAX_TEXTP2ID ];
 
-		text_addr( txtid_src, &remove.paddr_src, true, true );
-		text_addr( txtid_dst, &remove.paddr_dst, true, true );
+		text_addr( txtid_src, &sainfo.paddr_src, true, true );
+		text_addr( txtid_dst, &sainfo.paddr_dst, true, true );
 
 		//
 		// determine the sa type and spi
@@ -1506,43 +1506,43 @@ long _IKED::pfkey_send_delete( IDB_PH2 * ph2 )
 		switch( proposal->proto )
 		{
 			case ISAKMP_PROTO_IPSEC_AH:
-				remove.satype = SADB_SATYPE_AH;
-				remove.sa.spi = proposal->spi.spi;
+				sainfo.satype = SADB_SATYPE_AH;
+				sainfo.sa.spi = proposal->spi.spi;
 				break;
 
 			case ISAKMP_PROTO_IPSEC_ESP:
-				remove.satype = SADB_SATYPE_ESP;
-				remove.sa.spi = proposal->spi.spi;
+				sainfo.satype = SADB_SATYPE_ESP;
+				sainfo.sa.spi = proposal->spi.spi;
 				break;
 
 			case ISAKMP_PROTO_IPCOMP:
-				remove.satype = SADB_X_SATYPE_IPCOMP;
-				remove.sa.spi = htonl( ntohs( proposal->spi.cpi ) );
+				sainfo.satype = SADB_X_SATYPE_IPCOMP;
+				sainfo.sa.spi = htonl( ntohs( proposal->spi.cpi ) );
 				break;
 		}
 
 		log.txt( LOG_DEBUG,
 			"K> : send %s %s pfkey message\n",
 			pfki.name( NAME_MSGTYPE, SADB_DELETE ),
-			pfki.name( NAME_SATYPE, remove.satype ) );
+			pfki.name( NAME_SATYPE, sainfo.satype ) );
 
 		log.txt( LOG_DECODE,
 			"ii : - spi   = 0x%08x\n"
 			"ii : - src   = %s\n"
 			"ii : - dst   = %s\n",
-			htonl( remove.sa.spi ),
+			htonl( sainfo.sa.spi ),
 			txtid_src,
 			txtid_dst );
 
-		pfki.send_del( remove );
+		pfki.send_del( sainfo );
 	}
 
 	pindex = 0;
 
 	while( ph2->plist_l.get( &proposal, pindex++ ) )
 	{
-		PFKI_REMOVE remove;
-		memset( &remove, 0, sizeof( remove ) );
+		PFKI_SAINFO sainfo;
+		memset( &sainfo, 0, sizeof( sainfo ) );
 
 		//
 		// determine the sa endpoint addresses
@@ -1552,14 +1552,14 @@ long _IKED::pfkey_send_delete( IDB_PH2 * ph2 )
 		if( ph2->tunnel->natt_v != IPSEC_NATT_NONE )
 			use_ports = true;
 
-		cpy_sockaddr( ph2->tunnel->saddr_r.saddr, remove.paddr_src.saddr, use_ports );
-		cpy_sockaddr( ph2->tunnel->saddr_l.saddr, remove.paddr_dst.saddr, use_ports );
+		cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_src.saddr, use_ports );
+		cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_dst.saddr, use_ports );
 
 		char txtid_src[ LIBIKE_MAX_TEXTP2ID ];
 		char txtid_dst[ LIBIKE_MAX_TEXTP2ID ];
 
-		text_addr( txtid_src, &remove.paddr_src, true, true );
-		text_addr( txtid_dst, &remove.paddr_dst, true, true );
+		text_addr( txtid_src, &sainfo.paddr_src, true, true );
+		text_addr( txtid_dst, &sainfo.paddr_dst, true, true );
 
 		//
 		// determine the sa type and spi
@@ -1568,35 +1568,35 @@ long _IKED::pfkey_send_delete( IDB_PH2 * ph2 )
 		switch( proposal->proto )
 		{
 			case ISAKMP_PROTO_IPSEC_AH:
-				remove.satype = SADB_SATYPE_AH;
-				remove.sa.spi = proposal->spi.spi;
+				sainfo.satype = SADB_SATYPE_AH;
+				sainfo.sa.spi = proposal->spi.spi;
 				break;
 
 			case ISAKMP_PROTO_IPSEC_ESP:
-				remove.satype = SADB_SATYPE_ESP;
-				remove.sa.spi = proposal->spi.spi;
+				sainfo.satype = SADB_SATYPE_ESP;
+				sainfo.sa.spi = proposal->spi.spi;
 				break;
 
 			case ISAKMP_PROTO_IPCOMP:
-				remove.satype = SADB_X_SATYPE_IPCOMP;
-				remove.sa.spi = htonl( ntohs( proposal->spi.cpi ) );
+				sainfo.satype = SADB_X_SATYPE_IPCOMP;
+				sainfo.sa.spi = htonl( ntohs( proposal->spi.cpi ) );
 				break;
 		}
 
 		log.txt( LOG_DEBUG,
 			"K> : send %s %s pfkey message\n",
 			pfki.name( NAME_MSGTYPE, SADB_DELETE ),
-			pfki.name( NAME_SATYPE, remove.satype ) );
+			pfki.name( NAME_SATYPE, sainfo.satype ) );
 
 		log.txt( LOG_DECODE,
 			"ii : - spi   = 0x%08x\n"
 			"ii : - src   = %s\n"
 			"ii : - dst   = %s\n",
-			htonl( remove.sa.spi ),
+			htonl( sainfo.sa.spi ),
 			txtid_src,
 			txtid_dst );
 
-		pfki.send_del( remove );
+		pfki.send_del( sainfo );
 	}
 
 	return LIBIKE_OK;
@@ -1623,7 +1623,7 @@ long _IKED::pfkey_send_spdel( PFKI_SPINFO * spinfo )
 		pfki.name( NAME_MSGTYPE, SADB_X_SPDDELETE2 ),
 		pfki.name( NAME_SATYPE, SADB_SATYPE_UNSPEC ) );
 
-	long result = pfki.send_spdel( spinfo->sp );
+	long result = pfki.send_spdel( *spinfo );
 	if( result != PFKI_OK )
 		return LIBIKE_FAILED;
 

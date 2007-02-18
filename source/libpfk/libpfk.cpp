@@ -685,7 +685,7 @@ long _PFKI::buff_add_ipsec( PFKI_MSG & msg, PFKI_SPINFO & spinfo )
 	return PFKI_OK;
 }
 
-long _PFKI::send_sainfo( u_int8_t sadb_msg_type, PFKI_SAINFO & sainfo )
+long _PFKI::send_sainfo( u_int8_t sadb_msg_type, PFKI_SAINFO & sainfo, bool serv )
 {
 	PFKI_MSG msg;
 	msg.append( sizeof( sadb_msg ) );
@@ -695,157 +695,333 @@ long _PFKI::send_sainfo( u_int8_t sadb_msg_type, PFKI_SAINFO & sainfo )
 	sadb_address *xas, *xad;
 	sadb_lifetime *xlh, *xls, *xlc;
 	sadb_key *xke, *xka;
+	sadb_spirange *xsr;
 
 	long result;
 
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xsa, sizeof( sadb_sa ) );
-	if( result != PFKI_OK )
-		return result;
+	//
+	// sa extension
+	//
 
-	xsa->sadb_sa_exttype = SADB_EXT_SA;
-	xsa->sadb_sa_spi = sainfo.sa.spi;
-	xsa->sadb_sa_replay = sainfo.sa.replay;
-	xsa->sadb_sa_state = sainfo.sa.state;
-	xsa->sadb_sa_auth = sainfo.sa.auth;
-	xsa->sadb_sa_encrypt = sainfo.sa.encrypt;
-	xsa->sadb_sa_flags = sainfo.sa.flags;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xsa2, sizeof( sadb_x_sa2 ) );
-	if( result != PFKI_OK )
-		return result;
-
-	xsa2->sadb_x_sa2_exttype = SADB_X_EXT_SA2;
-	xsa2->sadb_x_sa2_mode = sainfo.sa2.mode;
-	xsa2->sadb_x_sa2_reqid = sainfo.sa2.reqid;
-	xsa2->sadb_x_sa2_sequence = sainfo.sa2.sequence;
-
-	int salen_src;
-	if( !sockaddr_len( sainfo.paddr_src.saddr.sa_family, salen_src ) )
-		return PFKI_FAILED;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xas, sizeof( sadb_address ) + salen_src );
-	if( result != PFKI_OK )
-		return result;
-
-	xas->sadb_address_exttype = SADB_EXT_ADDRESS_SRC;
-	result = buff_set_address( xas, sainfo.paddr_src );
-	if( result != PFKI_OK )
-		return result;
-
-	int salen_dst;
-	if( !sockaddr_len( sainfo.paddr_dst.saddr.sa_family, salen_dst ) )
-		return PFKI_FAILED;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xad, sizeof( sadb_address ) + salen_dst );
-	if( result != PFKI_OK )
-		return result;
-
-	xad->sadb_address_exttype = SADB_EXT_ADDRESS_DST;
-	result = buff_set_address( xad, sainfo.paddr_dst );
-	if( result != PFKI_OK )
-		return result;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xlh, sizeof( sadb_lifetime ) );
-	if( result != PFKI_OK )
-		return result;
-
-	xlh->sadb_lifetime_exttype = SADB_EXT_LIFETIME_HARD;
-	xlh->sadb_lifetime_allocations = sainfo.ltime_hard.allocations;
-	xlh->sadb_lifetime_bytes = sainfo.ltime_hard.bytes;
-	xlh->sadb_lifetime_addtime = sainfo.ltime_hard.addtime;
-	xlh->sadb_lifetime_usetime = sainfo.ltime_hard.usetime;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xls, sizeof( sadb_lifetime ) );
-	if( result != PFKI_OK )
-		return result;
-
-	xls->sadb_lifetime_exttype = SADB_EXT_LIFETIME_SOFT;
-	xls->sadb_lifetime_allocations = sainfo.ltime_soft.allocations;
-	xls->sadb_lifetime_bytes = sainfo.ltime_soft.bytes;
-	xls->sadb_lifetime_addtime = sainfo.ltime_soft.addtime;
-	xls->sadb_lifetime_usetime = sainfo.ltime_soft.usetime;
-
-	if( sadb_msg_type == SADB_DUMP )
+	switch( sadb_msg_type )
 	{
-		result = buff_add_ext( msg, ( sadb_ext ** ) &xlc, sizeof( sadb_lifetime ) );
-		if( result != PFKI_OK )
-			return result;
+		case SADB_DUMP:
+		case SADB_ADD:
+		case SADB_GET:
+		case SADB_DELETE:
+		case SADB_GETSPI:
+		case SADB_UPDATE:
 
-		xlc->sadb_lifetime_exttype = SADB_EXT_LIFETIME_CURRENT;
-		xlc->sadb_lifetime_allocations = sainfo.ltime_curr.allocations;
-		xlc->sadb_lifetime_bytes = sainfo.ltime_curr.bytes;
-		xlc->sadb_lifetime_addtime = sainfo.ltime_curr.addtime;
-		xlc->sadb_lifetime_usetime = sainfo.ltime_curr.usetime;
+			if( ( sadb_msg_type == SADB_DUMP ) && !serv )
+				break;
+
+			if( ( sadb_msg_type == SADB_GETSPI ) && !serv )
+				break;
+
+			result = buff_add_ext( msg, ( sadb_ext ** ) &xsa, sizeof( sadb_sa ) );
+			if( result != PFKI_OK )
+				return result;
+
+			xsa->sadb_sa_exttype = SADB_EXT_SA;
+			xsa->sadb_sa_spi = sainfo.sa.spi;
+			xsa->sadb_sa_replay = sainfo.sa.replay;
+			xsa->sadb_sa_state = sainfo.sa.state;
+			xsa->sadb_sa_auth = sainfo.sa.auth;
+			xsa->sadb_sa_encrypt = sainfo.sa.encrypt;
+			xsa->sadb_sa_flags = sainfo.sa.flags;
+
+			break;
 	}
 
-	if( sainfo.ekey.length )
-	{
-		result = buff_add_ext( msg, ( sadb_ext ** ) &xke, sizeof( sadb_key ) + sainfo.ekey.length );
-		if( result != PFKI_OK )
-			return result;
+	if( sainfo.error )
+		goto sainfo_error;
 
-		xke->sadb_key_exttype = SADB_EXT_KEY_ENCRYPT;
-		result = buff_set_key( xke, sainfo.ekey );
-		if( result != PFKI_OK )
-			return result;
+	//
+	// sa2 extension
+	//
+
+	switch( sadb_msg_type )
+	{
+		case SADB_DUMP:
+		case SADB_ADD:
+		case SADB_GET:
+		case SADB_GETSPI:
+		case SADB_UPDATE:
+
+			if( ( sadb_msg_type == SADB_DUMP ) && !serv )
+				break;
+
+			if( ( sadb_msg_type == SADB_GET ) && !serv )
+				break;
+
+			if( ( sadb_msg_type == SADB_GETSPI ) && serv )
+				break;
+
+			result = buff_add_ext( msg, ( sadb_ext ** ) &xsa2, sizeof( sadb_x_sa2 ) );
+			if( result != PFKI_OK )
+				return result;
+
+			xsa2->sadb_x_sa2_exttype = SADB_X_EXT_SA2;
+			xsa2->sadb_x_sa2_mode = sainfo.sa2.mode;
+			xsa2->sadb_x_sa2_reqid = sainfo.sa2.reqid;
+			xsa2->sadb_x_sa2_sequence = sainfo.sa2.sequence;
+
+			break;
 	}
 
-	if( sainfo.akey.length )
-	{
-		result = buff_add_ext( msg, ( sadb_ext ** ) &xka, sizeof( sadb_key ) + sainfo.akey.length );
-		if( result != PFKI_OK )
-			return result;
+	//
+	// address extensions
+	//
 
-		xka->sadb_key_exttype = SADB_EXT_KEY_AUTH;
-		result = buff_set_key( xka, sainfo.akey );
-		if( result != PFKI_OK )
-			return result;
+	switch( sadb_msg_type )
+	{
+		case SADB_DUMP:
+		case SADB_ADD:
+		case SADB_GET:
+		case SADB_DELETE:
+		case SADB_GETSPI:
+		case SADB_UPDATE:
+
+			if( ( sadb_msg_type == SADB_DUMP ) && !serv )
+				break;
+
+			if( ( sadb_msg_type == SADB_GET ) && !serv )
+				break;
+
+			int salen_src;
+			if( !sockaddr_len( sainfo.paddr_src.saddr.sa_family, salen_src ) )
+				return PFKI_FAILED;
+
+			result = buff_add_ext( msg, ( sadb_ext ** ) &xas, sizeof( sadb_address ) + salen_src );
+			if( result != PFKI_OK )
+				return result;
+
+			xas->sadb_address_exttype = SADB_EXT_ADDRESS_SRC;
+			result = buff_set_address( xas, sainfo.paddr_src );
+			if( result != PFKI_OK )
+				return result;
+
+			int salen_dst;
+			if( !sockaddr_len( sainfo.paddr_dst.saddr.sa_family, salen_dst ) )
+				return PFKI_FAILED;
+
+			result = buff_add_ext( msg, ( sadb_ext ** ) &xad, sizeof( sadb_address ) + salen_dst );
+			if( result != PFKI_OK )
+				return result;
+
+			xad->sadb_address_exttype = SADB_EXT_ADDRESS_DST;
+			result = buff_set_address( xad, sainfo.paddr_dst );
+			if( result != PFKI_OK )
+				return result;
+
+			break;
+	}
+
+	//
+	// soft and hard lifetime extensions
+	//
+
+	switch( sadb_msg_type )
+	{
+		case SADB_DUMP:
+		case SADB_ADD:
+		case SADB_GET:
+		case SADB_UPDATE:
+
+			if( ( sadb_msg_type == SADB_DUMP ) && !serv )
+				break;
+
+			if( ( sadb_msg_type == SADB_GET ) && !serv )
+				break;
+
+			result = buff_add_ext( msg, ( sadb_ext ** ) &xlh, sizeof( sadb_lifetime ) );
+			if( result != PFKI_OK )
+				return result;
+
+			xlh->sadb_lifetime_exttype = SADB_EXT_LIFETIME_HARD;
+			xlh->sadb_lifetime_allocations = sainfo.ltime_hard.allocations;
+			xlh->sadb_lifetime_bytes = sainfo.ltime_hard.bytes;
+			xlh->sadb_lifetime_addtime = sainfo.ltime_hard.addtime;
+			xlh->sadb_lifetime_usetime = sainfo.ltime_hard.usetime;
+
+			result = buff_add_ext( msg, ( sadb_ext ** ) &xls, sizeof( sadb_lifetime ) );
+			if( result != PFKI_OK )
+				return result;
+
+			xls->sadb_lifetime_exttype = SADB_EXT_LIFETIME_SOFT;
+			xls->sadb_lifetime_allocations = sainfo.ltime_soft.allocations;
+			xls->sadb_lifetime_bytes = sainfo.ltime_soft.bytes;
+			xls->sadb_lifetime_addtime = sainfo.ltime_soft.addtime;
+			xls->sadb_lifetime_usetime = sainfo.ltime_soft.usetime;
+
+			break;
+	}
+
+	//
+	// current lifetime extension
+	//
+
+	switch( sadb_msg_type )
+	{
+		case SADB_DUMP:
+		case SADB_ADD:
+		case SADB_GET:
+		case SADB_UPDATE:
+
+			if( ( sadb_msg_type == SADB_DUMP ) && !serv )
+				break;
+
+			if( ( sadb_msg_type == SADB_GET ) && !serv )
+				break;
+
+			result = buff_add_ext( msg, ( sadb_ext ** ) &xlc, sizeof( sadb_lifetime ) );
+			if( result != PFKI_OK )
+				return result;
+
+			xlc->sadb_lifetime_exttype = SADB_EXT_LIFETIME_CURRENT;
+			xlc->sadb_lifetime_allocations = sainfo.ltime_curr.allocations;
+			xlc->sadb_lifetime_bytes = sainfo.ltime_curr.bytes;
+			xlc->sadb_lifetime_addtime = sainfo.ltime_curr.addtime;
+			xlc->sadb_lifetime_usetime = sainfo.ltime_curr.usetime;
+
+			break;
+	}
+
+	//
+	// key data extension
+	//
+
+	switch( sadb_msg_type )
+	{
+		case SADB_DUMP:
+		case SADB_ADD:
+		case SADB_GET:
+		case SADB_UPDATE:
+
+			if( ( sadb_msg_type == SADB_DUMP ) && !serv )
+				break;
+
+			if( ( sadb_msg_type == SADB_GET ) && !serv )
+				break;
+
+			if( sainfo.ekey.length )
+			{
+				result = buff_add_ext( msg, ( sadb_ext ** ) &xke, sizeof( sadb_key ) + sainfo.ekey.length );
+				if( result != PFKI_OK )
+					return result;
+
+				xke->sadb_key_exttype = SADB_EXT_KEY_ENCRYPT;
+				result = buff_set_key( xke, sainfo.ekey );
+				if( result != PFKI_OK )
+					return result;
+			}
+
+			if( sainfo.akey.length )
+			{
+				result = buff_add_ext( msg, ( sadb_ext ** ) &xka, sizeof( sadb_key ) + sainfo.akey.length );
+				if( result != PFKI_OK )
+					return result;
+
+				xka->sadb_key_exttype = SADB_EXT_KEY_AUTH;
+				result = buff_set_key( xka, sainfo.akey );
+				if( result != PFKI_OK )
+					return result;
+			}
+
+			break;
 	}
 
 #ifdef OPT_NATT
 
-	if( sainfo.natt.type )
+	//
+	// natt extension
+	//
+
+	switch( sadb_msg_type )
 	{
-		sadb_x_nat_t_type *xnt;
-		sadb_x_nat_t_port *xnps, *xnpd;
+		case SADB_DUMP:
+		case SADB_ADD:
+		case SADB_GET:
+		case SADB_UPDATE:
 
-		result = buff_add_ext( msg, ( sadb_ext ** ) &xnt, sizeof( sadb_x_nat_t_type ) );
-		if( result != PFKI_OK )
-			return result;
+			if( ( sadb_msg_type == SADB_DUMP ) && !serv )
+				break;
 
-		xnt->sadb_x_nat_t_type_exttype = SADB_X_EXT_NAT_T_TYPE;
-		xnt->sadb_x_nat_t_type_type = sainfo.natt.type;
+			if( ( sadb_msg_type == SADB_GET ) && !serv )
+				break;
 
-		result = buff_add_ext( msg, ( sadb_ext ** ) &xnps, sizeof( sadb_x_nat_t_port ) );
-		if( result != PFKI_OK )
-			return result;
+			if( sainfo.natt.type )
+			{
+				sadb_x_nat_t_type *xnt;
+				sadb_x_nat_t_port *xnps, *xnpd;
 
-		xnps->sadb_x_nat_t_port_exttype = SADB_X_EXT_NAT_T_SPORT;
-		xnps->sadb_x_nat_t_port_port = sainfo.natt.port_src;
+				result = buff_add_ext( msg, ( sadb_ext ** ) &xnt, sizeof( sadb_x_nat_t_type ) );
+				if( result != PFKI_OK )
+					return result;
 
-		result = buff_add_ext( msg, ( sadb_ext ** ) &xnpd, sizeof( sadb_x_nat_t_port ) );
-		if( result != PFKI_OK )
-			return result;
+				xnt->sadb_x_nat_t_type_exttype = SADB_X_EXT_NAT_T_TYPE;
+				xnt->sadb_x_nat_t_type_type = sainfo.natt.type;
 
-		xnpd->sadb_x_nat_t_port_exttype = SADB_X_EXT_NAT_T_DPORT;
-		xnpd->sadb_x_nat_t_port_port = sainfo.natt.port_dst;
+				result = buff_add_ext( msg, ( sadb_ext ** ) &xnps, sizeof( sadb_x_nat_t_port ) );
+				if( result != PFKI_OK )
+					return result;
+
+				xnps->sadb_x_nat_t_port_exttype = SADB_X_EXT_NAT_T_SPORT;
+				xnps->sadb_x_nat_t_port_port = sainfo.natt.port_src;
+
+				result = buff_add_ext( msg, ( sadb_ext ** ) &xnpd, sizeof( sadb_x_nat_t_port ) );
+				if( result != PFKI_OK )
+					return result;
+
+				xnpd->sadb_x_nat_t_port_exttype = SADB_X_EXT_NAT_T_DPORT;
+				xnpd->sadb_x_nat_t_port_port = sainfo.natt.port_dst;
+			}
+
+			break;
 	}
 
 #endif
 
+	//
+	// spi range extension
+	//
+
+	switch( sadb_msg_type )
+	{
+		case SADB_GETSPI:
+
+			if( sainfo.range.min || sainfo.range.max )
+			{
+				result = buff_add_ext( msg, ( sadb_ext ** ) &xsr, sizeof( sadb_spirange ) );
+				if( result != PFKI_OK )
+					return result;
+				
+				xsr->sadb_spirange_exttype = SADB_EXT_SPIRANGE;
+				xsr->sadb_spirange_min = sainfo.range.min;
+				xsr->sadb_spirange_max = sainfo.range.max;
+			}
+
+			break;
+	}
+
+	sainfo_error:
+
+	if( !serv )
+		sainfo.pid = getpid();
+
 	msg.hdr->sadb_msg_version = PF_KEY_V2;
 	msg.hdr->sadb_msg_type = sadb_msg_type;
-	msg.hdr->sadb_msg_errno = 0;
+	msg.hdr->sadb_msg_errno = sainfo.error;
 	msg.hdr->sadb_msg_satype = sainfo.satype;
 	msg.hdr->sadb_msg_len = ( u_int16_t ) PFKEY_UNIT64( msg.msg_size );
 	msg.hdr->sadb_msg_reserved = 0;
 	msg.hdr->sadb_msg_seq = sainfo.seq;
-	msg.hdr->sadb_msg_pid = getpid();
+	msg.hdr->sadb_msg_pid = sainfo.pid;
 
 	return send_msg( msg );
 }
 
-long _PFKI::send_spinfo( u_int8_t sadb_msg_type, PFKI_SPINFO & spinfo )
+long _PFKI::send_spinfo( u_int8_t sadb_msg_type, PFKI_SPINFO & spinfo, bool serv )
 {
 	PFKI_MSG msg;
 	msg.append( sizeof( sadb_msg ) );
@@ -855,52 +1031,93 @@ long _PFKI::send_spinfo( u_int8_t sadb_msg_type, PFKI_SPINFO & spinfo )
 
 	long result;
 
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xpl, sizeof( sadb_x_policy ) );
-	if( result != PFKI_OK )
-		return result;
+	if( spinfo.error )
+		goto spinfo_error;
 
-	xpl->sadb_x_policy_exttype = SADB_X_EXT_POLICY;
-	xpl->sadb_x_policy_type = spinfo.sp.type;
-	xpl->sadb_x_policy_id = spinfo.sp.id;
-	xpl->sadb_x_policy_dir = spinfo.sp.dir;
+	//
+	// sp extension
+	//
 
-	if( spinfo.sp.type == IPSEC_POLICY_IPSEC )
+	switch( sadb_msg_type )
 	{
-		result = buff_add_ipsec( msg, spinfo );
-		if( result != PFKI_OK )
-			return result;
+		case SADB_ACQUIRE:
+		case SADB_X_SPDDUMP:
+		case SADB_X_SPDADD:
+		case SADB_X_SPDDELETE2:
+
+			if( ( sadb_msg_type == SADB_X_SPDDUMP ) && !serv )
+				break;
+
+			result = buff_add_ext( msg, ( sadb_ext ** ) &xpl, sizeof( sadb_x_policy ) );
+			if( result != PFKI_OK )
+				return result;
+
+			xpl->sadb_x_policy_exttype = SADB_X_EXT_POLICY;
+			xpl->sadb_x_policy_type = spinfo.sp.type;
+			xpl->sadb_x_policy_id = spinfo.sp.id;
+			xpl->sadb_x_policy_dir = spinfo.sp.dir;
+
+			if( spinfo.sp.type == IPSEC_POLICY_IPSEC )
+			{
+				result = buff_add_ipsec( msg, spinfo );
+				if( result != PFKI_OK )
+					return result;
+			}
+
+			break;
 	}
 
-	int salen_src;
-	if( !sockaddr_len( spinfo.paddr_src.saddr.sa_family, salen_src ) )
-		return PFKI_FAILED;
+	//
+	// address extensions
+	//
 
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xas, sizeof( sadb_address ) + salen_src );
-	if( result != PFKI_OK )
-		return result;
+	switch( sadb_msg_type )
+	{
+		case SADB_ACQUIRE:
+		case SADB_X_SPDDUMP:
+		case SADB_X_SPDADD:
 
-	xas->sadb_address_exttype = SADB_EXT_ADDRESS_SRC;
-	result = buff_set_address( xas, spinfo.paddr_src );
-	if( result != PFKI_OK )
-		return result;
+			if( ( sadb_msg_type == SADB_X_SPDDUMP ) && !serv )
+				break;
 
-	int salen_dst;
-	if( !sockaddr_len( spinfo.paddr_dst.saddr.sa_family, salen_dst ) )
-		return PFKI_FAILED;
+			int salen_src;
+			if( !sockaddr_len( spinfo.paddr_src.saddr.sa_family, salen_src ) )
+				return PFKI_FAILED;
 
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xad, sizeof( sadb_address ) + salen_dst );
-	if( result != PFKI_OK )
-		return result;
+			result = buff_add_ext( msg, ( sadb_ext ** ) &xas, sizeof( sadb_address ) + salen_src );
+			if( result != PFKI_OK )
+				return result;
 
-	xad->sadb_address_exttype = SADB_EXT_ADDRESS_DST;
-	result = buff_set_address( xad, spinfo.paddr_dst );
-	if( result != PFKI_OK )
-		return result;
+			xas->sadb_address_exttype = SADB_EXT_ADDRESS_SRC;
+			result = buff_set_address( xas, spinfo.paddr_src );
+			if( result != PFKI_OK )
+				return result;
+
+			int salen_dst;
+			if( !sockaddr_len( spinfo.paddr_dst.saddr.sa_family, salen_dst ) )
+				return PFKI_FAILED;
+
+			result = buff_add_ext( msg, ( sadb_ext ** ) &xad, sizeof( sadb_address ) + salen_dst );
+			if( result != PFKI_OK )
+				return result;
+
+			xad->sadb_address_exttype = SADB_EXT_ADDRESS_DST;
+			result = buff_set_address( xad, spinfo.paddr_dst );
+			if( result != PFKI_OK )
+				return result;
+
+			break;
+	}
+
+	spinfo_error:
+
+	if( !serv )
+		spinfo.pid = getpid();
 
 	msg.hdr->sadb_msg_version = PF_KEY_V2;
 	msg.hdr->sadb_msg_type = sadb_msg_type;
-	msg.hdr->sadb_msg_errno = 0;
-	msg.hdr->sadb_msg_satype = 0;
+	msg.hdr->sadb_msg_errno = spinfo.error;
+	msg.hdr->sadb_msg_satype = SADB_SATYPE_UNSPEC;
 	msg.hdr->sadb_msg_len = ( u_int16_t ) PFKEY_UNIT64( msg.msg_size );
 	msg.hdr->sadb_msg_reserved = 0;
 	msg.hdr->sadb_msg_seq = spinfo.seq;
@@ -1276,316 +1493,9 @@ long _PFKI::next_msg( PFKI_MSG & msg )
 	return PFKI_OK;
 }
 
-long _PFKI::send_register( u_int8_t satype )
-{
-	PFKI_MSG msg;
-	msg.append( sizeof( sadb_msg ) );
-
-	msg.hdr->sadb_msg_version = PF_KEY_V2;
-	msg.hdr->sadb_msg_type = SADB_REGISTER;
-	msg.hdr->sadb_msg_errno = 0;
-	msg.hdr->sadb_msg_satype = satype;
-	msg.hdr->sadb_msg_len = ( u_int16_t ) PFKEY_UNIT64( msg.msg_size );
-	msg.hdr->sadb_msg_reserved = 0;
-	msg.hdr->sadb_msg_seq = 0;
-	msg.hdr->sadb_msg_pid = getpid();
-
-	return send_msg( msg );
-}
-
-long _PFKI::send_dump()
-{
-	PFKI_MSG msg;
-	msg.append( sizeof( sadb_msg ) );
-
-	msg.hdr->sadb_msg_version = PF_KEY_V2;
-	msg.hdr->sadb_msg_type = SADB_DUMP;
-	msg.hdr->sadb_msg_errno = 0;
-	msg.hdr->sadb_msg_satype = 0;
-	msg.hdr->sadb_msg_len = ( u_int16_t ) PFKEY_UNIT64( msg.msg_size );
-	msg.hdr->sadb_msg_reserved = 0;
-	msg.hdr->sadb_msg_seq = 0;
-	msg.hdr->sadb_msg_pid = getpid();
-
-	return send_msg( msg );
-}
-
-long _PFKI::send_getspi( PFKI_GETSPI & getspi )
-{
-	PFKI_MSG msg;
-	msg.append( sizeof( sadb_msg ) );
-
-	sadb_x_sa2 * xsa;
-	sadb_address *xas, *xad;
-	sadb_spirange *xsr;
-
-	long result;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xsa, sizeof( sadb_x_sa2 ) );
-	if( result != PFKI_OK )
-		return result;
-
-	xsa->sadb_x_sa2_exttype = SADB_X_EXT_SA2;
-	xsa->sadb_x_sa2_mode = getspi.sa2.mode;
-	xsa->sadb_x_sa2_reqid = getspi.sa2.reqid;
-	xsa->sadb_x_sa2_sequence = getspi.sa2.sequence;
-
-	int salen_src;
-	if( !sockaddr_len( getspi.paddr_src.saddr.sa_family, salen_src ) )
-		return PFKI_FAILED;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xas, sizeof( sadb_address ) + salen_src );
-	if( result != PFKI_OK )
-		return result;
-
-	xas->sadb_address_exttype = SADB_EXT_ADDRESS_SRC;
-	result = buff_set_address( xas, getspi.paddr_src );
-	if( result != PFKI_OK )
-		return result;
-
-	int salen_dst;
-	if( !sockaddr_len( getspi.paddr_dst.saddr.sa_family, salen_dst ) )
-		return PFKI_FAILED;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xad, sizeof( sadb_address ) + salen_dst );
-	if( result != PFKI_OK )
-		return result;
-
-	xad->sadb_address_exttype = SADB_EXT_ADDRESS_DST;
-	result = buff_set_address( xad, getspi.paddr_dst );
-	if( result != PFKI_OK )
-		return result;
-
-	if( getspi.range.min || getspi.range.max )
-	{
-		result = buff_add_ext( msg, ( sadb_ext ** ) &xsr, sizeof( sadb_spirange ) );
-		if( result != PFKI_OK )
-			return result;
-		
-		xsr->sadb_spirange_exttype = SADB_EXT_SPIRANGE;
-		xsr->sadb_spirange_min = getspi.range.min;
-		xsr->sadb_spirange_max = getspi.range.max;
-	}
-
-	msg.hdr->sadb_msg_version = PF_KEY_V2;
-	msg.hdr->sadb_msg_type = SADB_GETSPI;
-	msg.hdr->sadb_msg_errno = 0;
-	msg.hdr->sadb_msg_satype = getspi.satype;
-	msg.hdr->sadb_msg_len = ( u_int16_t ) PFKEY_UNIT64( msg.msg_size );
-	msg.hdr->sadb_msg_reserved = 0;
-	msg.hdr->sadb_msg_seq = getspi.seq;
-	msg.hdr->sadb_msg_pid = getpid();
-
-	return send_msg( msg );
-}
-
-long _PFKI::send_del( PFKI_REMOVE & remove )
-{
-	PFKI_MSG msg;
-	msg.append( sizeof( sadb_msg ) );
-
-	sadb_sa * xsa;
-	sadb_address *xas, *xad;
-
-	long result;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xsa, sizeof( sadb_sa ) );
-	if( result != PFKI_OK )
-		return result;
-
-	xsa->sadb_sa_exttype = SADB_EXT_SA;
-	xsa->sadb_sa_spi = remove.sa.spi;
-	xsa->sadb_sa_replay = remove.sa.replay;
-	xsa->sadb_sa_state = remove.sa.state;
-	xsa->sadb_sa_auth = remove.sa.auth;
-	xsa->sadb_sa_encrypt = remove.sa.encrypt;
-	xsa->sadb_sa_flags = remove.sa.flags;
-
-	int salen_src;
-	if( !sockaddr_len( remove.paddr_src.saddr.sa_family, salen_src ) )
-		return PFKI_FAILED;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xas, sizeof( sadb_address ) + salen_src );
-	if( result != PFKI_OK )
-		return result;
-
-	xas->sadb_address_exttype = SADB_EXT_ADDRESS_SRC;
-	result = buff_set_address( xas, remove.paddr_src );
-	if( result != PFKI_OK )
-		return result;
-
-	int salen_dst;
-	if( !sockaddr_len( remove.paddr_dst.saddr.sa_family, salen_dst ) )
-		return PFKI_FAILED;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xad, sizeof( sadb_address ) + salen_dst );
-	if( result != PFKI_OK )
-		return result;
-
-	xad->sadb_address_exttype = SADB_EXT_ADDRESS_DST;
-	result = buff_set_address( xad, remove.paddr_dst );
-	if( result != PFKI_OK )
-		return result;
-
-	msg.hdr->sadb_msg_version = PF_KEY_V2;
-	msg.hdr->sadb_msg_type = SADB_DELETE;
-	msg.hdr->sadb_msg_errno = 0;
-	msg.hdr->sadb_msg_satype = remove.satype;
-	msg.hdr->sadb_msg_len = ( u_int16_t ) PFKEY_UNIT64( msg.msg_size );
-	msg.hdr->sadb_msg_reserved = 0;
-	msg.hdr->sadb_msg_seq = remove.seq;
-	msg.hdr->sadb_msg_pid = getpid();
-
-	return send_msg( msg );
-}
-
-long _PFKI::serv_del( PFKI_REMOVE & remove )
-{
-	return send_del( remove );
-}
-
-long _PFKI::serv_acquire( PFKI_SPINFO & spinfo )
-{
-	return send_spinfo( SADB_ACQUIRE, spinfo );
-}
-
-long _PFKI::serv_getspi( PFKI_SAINFO & sainfo )
-{
-	PFKI_MSG msg;
-	msg.append( sizeof( sadb_msg ) );
-
-	sadb_sa * xsa;
-	sadb_address *xas, *xad;
-
-	long result;
-	
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xsa, sizeof( sadb_x_sa2 ) );
-	if( result != PFKI_OK )
-		return result;
-
-	xsa->sadb_sa_exttype = SADB_EXT_SA;
-	xsa->sadb_sa_spi = sainfo.sa.spi;
-	xsa->sadb_sa_flags = sainfo.sa.flags;
-
-	int salen_src;
-	if( !sockaddr_len( sainfo.paddr_src.saddr.sa_family, salen_src ) )
-		return result;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xas, sizeof( sadb_address ) + salen_src );
-	if( result != PFKI_OK )
-		return result;
-
-	xas->sadb_address_exttype = SADB_EXT_ADDRESS_SRC;
-	result = buff_set_address( xas, sainfo.paddr_src );
-	if( result != PFKI_OK )
-		return result;
-
-	int salen_dst;
-	if( !sockaddr_len( sainfo.paddr_dst.saddr.sa_family, salen_dst ) )
-		return result;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xad, sizeof( sadb_address ) + salen_dst );
-	if( result != PFKI_OK )
-		return result;
-
-	xad->sadb_address_exttype = SADB_EXT_ADDRESS_DST;
-	result = buff_set_address( xad, sainfo.paddr_dst );
-	if( result != PFKI_OK )
-		return result;
-
-	msg.hdr->sadb_msg_version = PF_KEY_V2;
-	msg.hdr->sadb_msg_type = SADB_GETSPI;
-	msg.hdr->sadb_msg_errno = 0;
-	msg.hdr->sadb_msg_satype = sainfo.satype;
-	msg.hdr->sadb_msg_len = ( u_int16_t ) PFKEY_UNIT64( msg.msg_size );
-	msg.hdr->sadb_msg_reserved = 0;
-	msg.hdr->sadb_msg_seq = sainfo.seq;
-	msg.hdr->sadb_msg_pid = sainfo.pid;
-
-	return send_msg( msg );
-}
-
-long _PFKI::serv_dump( PFKI_SAINFO & sainfo )
-{
- 	return send_sainfo( SADB_DUMP, sainfo );
-}
-
-long _PFKI::send_add( PFKI_SAINFO & sainfo )
-{
-	return send_sainfo( SADB_ADD, sainfo );
-}
-
-long _PFKI::send_update( PFKI_SAINFO & sainfo )
-{
-	return send_sainfo( SADB_UPDATE, sainfo );
-}
-
-long _PFKI::serv_spdump( PFKI_SPINFO & spinfo )
-{
- 	return send_spinfo( SADB_X_SPDDUMP, spinfo );
-}
-
-long _PFKI::send_spadd( PFKI_SPINFO & spinfo )
-{
-	return send_spinfo( SADB_X_SPDADD, spinfo );
-}
-
-long _PFKI::serv_spadd( PFKI_SPINFO & spinfo )
-{
-	return send_spadd( spinfo );
-}
-
-long _PFKI::send_spdel( PFKI_SP & sp )
-{
-	PFKI_MSG msg;
-	msg.append( sizeof( sadb_msg ) );
-
-	sadb_x_policy * xpl;
-
-	long result;
-
-	result = buff_add_ext( msg, ( sadb_ext ** ) &xpl, sizeof( sadb_x_policy ) );
-	if( result != PFKI_OK )
-		return result;
-
-	xpl->sadb_x_policy_exttype = SADB_X_EXT_POLICY;
-	xpl->sadb_x_policy_type = sp.type;
-	xpl->sadb_x_policy_id = sp.id;
-	xpl->sadb_x_policy_dir = sp.dir;
-
-	msg.hdr->sadb_msg_version = PF_KEY_V2;
-	msg.hdr->sadb_msg_type = SADB_X_SPDDELETE2;
-	msg.hdr->sadb_msg_errno = 0;
-	msg.hdr->sadb_msg_satype = 0;
-	msg.hdr->sadb_msg_len = ( u_int16_t ) PFKEY_UNIT64( msg.msg_size );
-	msg.hdr->sadb_msg_reserved = 0;
-	msg.hdr->sadb_msg_seq = 0;
-	msg.hdr->sadb_msg_pid = getpid();
-
-	return send_msg( msg );
-}
-
-long _PFKI::serv_spdel( PFKI_SP & sp )
-{
-	return send_spdel( sp );
-}
-
-long _PFKI::send_spdump()
-{
-	PFKI_MSG msg;
-	msg.append( sizeof( sadb_msg ) );
-
-	msg.hdr->sadb_msg_version = PF_KEY_V2;
-	msg.hdr->sadb_msg_type = SADB_X_SPDDUMP;
-	msg.hdr->sadb_msg_errno = 0;
-	msg.hdr->sadb_msg_satype = 0;
-	msg.hdr->sadb_msg_len = ( u_int16_t ) PFKEY_UNIT64( msg.msg_size );
-	msg.hdr->sadb_msg_reserved = 0;
-	msg.hdr->sadb_msg_seq = 0;
-	msg.hdr->sadb_msg_pid = getpid();
-
-	return send_msg( msg );
-}
+//
+// extension functions
+//
 
 long _PFKI::read_sa( PFKI_MSG & msg, PFKI_SA & sa )
 {
@@ -1862,6 +1772,121 @@ long _PFKI::read_policy( PFKI_MSG & msg, PFKI_SPINFO & spinfo )
 	}
 
 	return PFKI_OK;
+}
+
+//
+// client functions
+//
+
+long _PFKI::send_register( u_int8_t satype )
+{
+	PFKI_SAINFO sainfo;
+	memset( &sainfo, 0, sizeof( sainfo ) );
+	sainfo.satype = satype;
+	return send_sainfo( SADB_REGISTER, sainfo, false );
+}
+
+long _PFKI::send_dump()
+{
+	PFKI_SAINFO sainfo;
+	memset( &sainfo, 0, sizeof( sainfo ) );
+	return send_sainfo( SADB_DUMP, sainfo, false );
+}
+
+long _PFKI::send_add( PFKI_SAINFO & sainfo )
+{
+	return send_sainfo( SADB_ADD, sainfo, false );
+}
+
+long _PFKI::send_get( PFKI_SAINFO & sainfo )
+{
+	return send_sainfo( SADB_GET, sainfo, false );
+}
+
+long _PFKI::send_del( PFKI_SAINFO & sainfo )
+{
+	return send_sainfo( SADB_DELETE, sainfo, false );
+}
+
+long _PFKI::send_getspi( PFKI_SAINFO & sainfo )
+{
+	return send_sainfo( SADB_GETSPI, sainfo, false );
+}
+
+long _PFKI::send_update( PFKI_SAINFO & sainfo )
+{
+	return send_sainfo( SADB_UPDATE, sainfo, false );
+}
+
+long _PFKI::send_spdump()
+{
+	PFKI_SPINFO spinfo;
+	memset( &spinfo, 0, sizeof( spinfo ) );
+	return send_spinfo( SADB_X_SPDDUMP, spinfo, false );
+}
+
+long _PFKI::send_spadd( PFKI_SPINFO & spinfo )
+{
+	return send_spinfo( SADB_X_SPDADD, spinfo, false );
+}
+
+long _PFKI::send_spdel( PFKI_SPINFO & spinfo )
+{
+	return send_spinfo( SADB_X_SPDDELETE2, spinfo, false );
+}
+
+//
+// server functions
+//
+
+long _PFKI::serv_dump( PFKI_SAINFO & sainfo )
+{
+ 	return send_sainfo( SADB_DUMP, sainfo, true );
+}
+
+long _PFKI::serv_add( PFKI_SAINFO & sainfo )
+{
+	return send_sainfo( SADB_ADD, sainfo, true );
+}
+
+long _PFKI::serv_get( PFKI_SAINFO & sainfo )
+{
+	return send_sainfo( SADB_GET, sainfo, true );
+}
+
+long _PFKI::serv_del( PFKI_SAINFO & sainfo )
+{
+	return send_sainfo( SADB_DELETE, sainfo, true );
+}
+
+long _PFKI::serv_acquire( PFKI_SPINFO & spinfo )
+{
+	return send_spinfo( SADB_ACQUIRE, spinfo, true );
+}
+
+long _PFKI::serv_getspi( PFKI_SAINFO & sainfo )
+{
+	return send_sainfo( SADB_GETSPI, sainfo, true );
+}
+
+long _PFKI::serv_update( PFKI_SAINFO & sainfo )
+{
+	return send_sainfo( SADB_UPDATE, sainfo, true );
+}
+
+long _PFKI::serv_spdump( PFKI_SPINFO & spinfo )
+{
+ 	return send_spinfo( SADB_X_SPDDUMP, spinfo, true );
+}
+
+long _PFKI::serv_spadd( PFKI_SPINFO & spinfo )
+{
+	return send_spinfo( SADB_X_SPDADD, spinfo, true );
+}
+
+long _PFKI::serv_spdel( PFKI_SPINFO & spinfo )
+{
+	return send_spinfo( SADB_X_SPDDELETE2, spinfo, true );
 }
 
 #ifdef WIN32

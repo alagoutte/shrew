@@ -102,19 +102,6 @@
 #define PFKI_FAILED			2
 #define PFKI_NODATA			3
 
-typedef struct _PFKI_ADDR
-{
-	u_int8_t proto;
-	u_int8_t prefix;
-	
-	union
-	{
-		sockaddr	saddr;
-		sockaddr_in	saddr4;
-	};
-
-}PFKI_ADDR;
-
 typedef struct _PFKI_SA
 {
 	u_int32_t	spi;
@@ -133,6 +120,19 @@ typedef struct _PFKI_SA2
 	u_int32_t	reqid;
 
 }PFKI_SA2;
+
+typedef struct _PFKI_ADDR
+{
+	u_int8_t proto;
+	u_int8_t prefix;
+	
+	union
+	{
+		sockaddr	saddr;
+		sockaddr_in	saddr4;
+	};
+
+}PFKI_ADDR;
 
 typedef struct _PFKI_LTIME
 {
@@ -156,30 +156,6 @@ typedef struct _PFKI_RANGE
 	u_int32_t	max;
 
 }PFKI_RANGE;
-
-typedef struct _PFKI_REMOVE
-{
-	u_int8_t	satype;
-	u_int32_t	seq;
-	u_int32_t	pid;
-
-	PFKI_SA		sa;
-	PFKI_ADDR	paddr_src;
-	PFKI_ADDR	paddr_dst;
-
-}PFKI_REMOVE;
-
-typedef struct _PFKI_GETSPI
-{
-	u_int8_t	satype;
-	u_int32_t	seq;
-
-	PFKI_SA2	sa2;
-	PFKI_ADDR	paddr_src;
-	PFKI_ADDR	paddr_dst;
-	PFKI_RANGE	range;
-
-}PFKI_GETSPI;
 
 typedef struct _PFKI_SP
 {
@@ -205,6 +181,7 @@ typedef struct _PFKI_SAINFO
 	u_int8_t	satype;
 	u_int32_t	seq;
 	u_int32_t	pid;
+	u_int8_t	error;
 
 	PFKI_SA		sa;
 	PFKI_SA2	sa2;
@@ -216,6 +193,7 @@ typedef struct _PFKI_SAINFO
 	PFKI_KEY	ekey;
 	PFKI_KEY	akey;
 	PFKI_NATT	natt;
+	PFKI_RANGE	range;
 
 }PFKI_SAINFO;
 
@@ -235,6 +213,7 @@ typedef struct _PFKI_SPINFO
 {
 	u_int32_t	seq;
 	u_int32_t	pid;
+	u_int8_t	error;
 
 	PFKI_SP		sp;
 	PFKI_ADDR	paddr_src;
@@ -306,53 +285,15 @@ typedef class DLX _PFKI
 	long buff_get_key( sadb_key * ext, PFKI_KEY & key );
 	long buff_set_key( sadb_key * ext, PFKI_KEY & key );
 
-	long send_sainfo( u_int8_t sadb_msg_type, PFKI_SAINFO & sainfo );
-	long send_spinfo( u_int8_t sadb_msg_type, PFKI_SPINFO & spinfo );
+	long send_sainfo( u_int8_t sadb_msg_type, PFKI_SAINFO & sainfo, bool serv );
+	long send_spinfo( u_int8_t sadb_msg_type, PFKI_SPINFO & spinfo, bool serv );
 
 	public:
 
 	_PFKI();
 	~_PFKI();
 
-	long	open();
-	void	close();
-
-	char *	name( long type, long value );
-
-	long	next_msg( PFKI_MSG & msg );
-
-	long	send_register( u_int8_t satype );
-
-	// client functions
-
-	long	send_flush();
-	long	send_dump();
-	long	send_add( PFKI_SAINFO & sainfo );
-	long	send_del( PFKI_REMOVE & remove );
-	long	send_getspi( PFKI_GETSPI & getspi );
-	long	send_update( PFKI_SAINFO & sainfo );
-
-	long	send_spflush();
-	long	send_spdump();
-	long	send_spadd( PFKI_SPINFO & spinfo );
-	long	send_spdel( PFKI_SP & sp );
-
-	// server functions
-
-	long	serv_dump( PFKI_SAINFO & sainfo );
-	long	serv_add( PFKI_SAINFO & sainfo );
-	long	serv_del( PFKI_REMOVE & remove );
-	long	serv_acquire( PFKI_SPINFO & spinfo );
-	long	serv_getspi( PFKI_SAINFO & sainfo );
-	long	serv_update( PFKI_SAINFO & sainfo );
-
-	long	serv_spdump( PFKI_SPINFO & spinfo );
-	long	serv_spadd( PFKI_SPINFO & spinfo );
-	long	serv_spdel( PFKI_SP & sp );
-
-	//
 	// extention functions
-	//
 
 	long	read_sa( PFKI_MSG & msg, PFKI_SA & sa );
 	long	read_sa2( PFKI_MSG & msg, PFKI_SA2 & sa2 );
@@ -366,6 +307,43 @@ typedef class DLX _PFKI
 	long	read_address_dst( PFKI_MSG & msg, PFKI_ADDR & addr );
 	long	read_natt( PFKI_MSG & msg, PFKI_NATT & natt );
 	long	read_policy( PFKI_MSG & msg, PFKI_SPINFO & spinfo );
+
+	long	open();
+	void	close();
+
+	char *	name( long type, long value );
+
+	long	next_msg( PFKI_MSG & msg );
+
+	// client functions
+
+	long	send_register( u_int8_t satype );
+	long	send_flush();
+	long	send_dump();
+	long	send_add( PFKI_SAINFO & sainfo );
+	long	send_get( PFKI_SAINFO & sainfo );
+	long	send_del( PFKI_SAINFO & sainfo );
+	long	send_getspi( PFKI_SAINFO & sainfo );
+	long	send_update( PFKI_SAINFO & sainfo );
+
+	long	send_spflush();
+	long	send_spdump();
+	long	send_spadd( PFKI_SPINFO & spinfo );
+	long	send_spdel( PFKI_SPINFO & spinfo );
+
+	// server functions
+
+	long	serv_dump( PFKI_SAINFO & sainfo );
+	long	serv_add( PFKI_SAINFO & sainfo );
+	long	serv_get( PFKI_SAINFO & sainfo );
+	long	serv_del( PFKI_SAINFO & sainfo );
+	long	serv_acquire( PFKI_SPINFO & spinfo );
+	long	serv_getspi( PFKI_SAINFO & sainfo );
+	long	serv_update( PFKI_SAINFO & sainfo );
+
+	long	serv_spdump( PFKI_SPINFO & spinfo );
+	long	serv_spadd( PFKI_SPINFO & spinfo );
+	long	serv_spdel( PFKI_SPINFO & spinfo );
 
 }PFKI;
 
