@@ -146,20 +146,6 @@ long _IKED::init( long setlevel )
 	log.open( NULL, LOG_DEBUG, true );
 
 	//
-	// output our identity
-	//
-
-	log.txt( LOG_NONE,
-		"## : IKE Daemon, ver %d.%d.%d\n"
-		"## : Copyright %i Shrew Soft Inc.\n"
-		"## : This product linked %s\n",
-		CLIENT_VER_MAJ,
-		CLIENT_VER_MIN,
-		CLIENT_VER_BLD,
-		CLIENT_YEAR,
-		SSLeay_version( SSLEAY_VERSION ) );
-
-	//
 	// load our configuration
 	//
 
@@ -173,11 +159,24 @@ long _IKED::init( long setlevel )
 	if( setlevel )
 		level = setlevel;
 
-	if( !log.open( path_log, level, true ) )
-	{
+	bool logging = log.open( path_log, level, true );
+	
+	//
+	// output our identity
+	//
+
+	log.txt( LOG_NONE,
+		"## : IKE Daemon, ver %d.%d.%d\n"
+		"## : Copyright %i Shrew Soft Inc.\n"
+		"## : This product linked %s\n",
+		CLIENT_VER_MAJ,
+		CLIENT_VER_MIN,
+		CLIENT_VER_BLD,
+		CLIENT_YEAR,
+		SSLeay_version( SSLEAY_VERSION ) );
+
+	if( !logging )
 		log.txt( LOG_ERROR, "!! : failed to open %s\n", path_log );
-		return LIBIKE_FAILED;
-	}
 	else
 		log.txt( LOG_INFO, "ii : opened %s\'\n", path_log );
 
