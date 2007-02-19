@@ -615,12 +615,12 @@ long _IKED::process_phase2_send( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 			//
 
 			unsigned char next = ISAKMP_PAYLOAD_IDENT;
-			if( ph2->dhgrp )
+			if( ph2->dhgr_id )
 				next = ISAKMP_PAYLOAD_KEX;
 
 			payload_add_nonce( packet, ph2->nonce_l, next );
 
-			if( ph2->dhgrp )
+			if( ph2->dhgr_id )
 				payload_add_kex( packet, ph2->xl, ISAKMP_PAYLOAD_IDENT );
 
 			payload_add_ph2id( packet, ph2->ph2id_ls, ISAKMP_PAYLOAD_IDENT );
@@ -1330,7 +1330,7 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 	BDATA shared;
 
-	if( ph2->dhgrp )
+	if( ph2->dhgr_id )
 	{
 		BIGNUM * gx = BN_new();
 		BN_bin2bn( ph2->xr.buff(), ph2->dh_size, gx );
@@ -1517,7 +1517,7 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2, long dir, IKE_PROPOSA
 
 	HMAC_Init( &ctx_prf, ph1->skeyid_d.buff(), ph1->skeyid_d.size(), ph1->evp_hash );
 
-	if( ph2->dhgrp )
+	if( ph2->dhgr_id )
 		HMAC_Update( &ctx_prf, shared.buff(), shared.size() );
 
 	HMAC_Update( &ctx_prf, ( unsigned char * ) &proposal->proto, 1 );
@@ -1541,7 +1541,7 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2, long dir, IKE_PROPOSA
 		HMAC_Init( &ctx_prf, ph1->skeyid_d.buff(), ph1->skeyid_d.size(), ph1->evp_hash );
 		HMAC_Update( &ctx_prf, key_data + size - skeyid_size, skeyid_size );
 
-		if( ph2->dhgrp )
+		if( ph2->dhgr_id )
 			HMAC_Update( &ctx_prf, shared.buff(), shared.size() );
 
 		HMAC_Update( &ctx_prf, ( unsigned char * ) &proposal->proto, 1 );

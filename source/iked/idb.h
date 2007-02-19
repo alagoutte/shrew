@@ -527,7 +527,7 @@ typedef class _IDB_PH2 : public IDB_XCH
 	public:
 
 	unsigned long	seqid;
-	long			dhgrp;
+	long			dhgr_id;
 	long			spi_count;
 
 	IKE_PH2ID		ph2id_ls;

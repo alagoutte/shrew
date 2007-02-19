@@ -76,7 +76,7 @@ _IDB_PH2::_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, unsigned long s
 {
 	msgid = 0;
 	seqid = 0;
-	dhgrp = 0;
+	dhgr_id = 0;
 	spi_count = 0;
 
 	//
@@ -144,9 +144,9 @@ bool _IDB_PH2::setup_dhgrp()
 	// if we are performing pfs, initialize dh group
 	//
 
-	if( dhgrp )
+	if( dhgr_id )
 	{
-		dh = dh_setup_group( dhgrp );
+		dh = dh_setup_group( dhgr_id );
 		dh_size = BN_num_bytes( dh->p );
 		dh_create_e( dh, dh_size );
 

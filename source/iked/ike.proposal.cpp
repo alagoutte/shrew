@@ -885,10 +885,22 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 							proposal.ciph_kl = klen;
 							proposal.hash_id = alist[ aindex ];
 
-							proposal.dhgr_id = peerprop->dhgr_id;
+							//
+							// the config pfs group overrides
+							// the proposal setting
+							//
+
+							if( ph2->tunnel->xconf.dhgr )
+								proposal.dhgr_id = ph2->tunnel->xconf.dhgr;
+							else
+								proposal.dhgr_id = peerprop->dhgr_id;
 
 							if( proposal.dhgr_id )
-								ph2->dhgrp = proposal.dhgr_id;
+								ph2->dhgr_id = proposal.dhgr_id;
+
+							//
+							// set proposal lifetime values
+							//
 
 							proposal.life_sec = peerprop->life_sec;
 							proposal.life_kbs = peerprop->life_kbs;

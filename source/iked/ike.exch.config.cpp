@@ -1710,7 +1710,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 			{
 				getmask |= IPSEC_OPTS_PFS;
 
-				if( ( readmask & IPSEC_OPTS_PFS ) && attr->vdata.size() )
+				if( ( readmask & IPSEC_OPTS_PFS ) && attr->basic )
 				{
 					log.txt( LOG_DEBUG,
 						"ii : - PFS Group = %d\n",
