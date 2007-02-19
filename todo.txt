@@ -144,7 +144,7 @@ X Add support for config push mode
 X Modify the client gui for manual policy include/exclude
 X Modify the client gui for config push or pull
 X Fix the vpn trace sdb output tabs
-. Update the client gui network tab
+X Update the client gui network tab
 . Update the documentation
 . Test all client features against racoon and iked
 . !!! All reported bugs !!!
