@@ -1332,6 +1332,20 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 	if( ph2->dhgr_id )
 	{
+		//
+		// validate the dh group size
+		//
+
+		if( ph2->xr.size() != ph2->dh_size )
+		{
+			log.txt( LOG_ERROR,
+				"!! : dh group size mismatch ( %d != %d )\n",
+				ph2->xr.size(),
+				ph2->dh_size );
+
+			return LIBIKE_FAILED;
+		}
+
 		BIGNUM * gx = BN_new();
 		BN_bin2bn( ph2->xr.buff(), ph2->dh_size, gx );
 
