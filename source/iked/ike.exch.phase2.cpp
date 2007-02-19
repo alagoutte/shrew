@@ -68,12 +68,6 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		ph2->add( true );
 
 		//
-		// configure the phase2 dh group
-		//
-
-		ph2->setup_dhgrp();
-
-		//
 		// calculate iv for this
 		// pahse2 exchange
 		//
@@ -309,7 +303,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				else
 				{
 					long beg = packet.oset() - 4;
-					result = payload_get_kex( packet, ph2->xr, ph2->dh_size );
+					result = payload_get_kex( packet, ph2->xr );
 					long end = packet.oset();
 					ph2->hda.add( packet.buff() + beg, end - beg );
 				}
@@ -1272,6 +1266,12 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 		//
 
 		phase2_gen_prop( ph2, policy_out );
+
+		//
+		// configure the phase2 dh group
+		//
+
+		ph2->setup_dhgrp();
 
 		//
 		// select an acceptable proposal

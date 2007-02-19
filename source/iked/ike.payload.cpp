@@ -979,7 +979,7 @@ long _IKED::payload_add_kex( PACKET_IKE & packet, BDATA & gx, uint8_t next )
 	return LIBIKE_OK;
 }
 
-long _IKED::payload_get_kex( PACKET_IKE & packet, BDATA & gx, long gx_size )
+long _IKED::payload_get_kex( PACKET_IKE & packet, BDATA & gx )
 {
 	log.txt( LOG_DEBUG, "<< : key exchange payload\n" );
 
@@ -990,19 +990,19 @@ long _IKED::payload_get_kex( PACKET_IKE & packet, BDATA & gx, long gx_size )
 	long size;
 	packet.chk_payload( size );
 
-	if( size != gx_size )
+	if( size > LIBIKE_MAX_DHGRP )
 	{
 		log.txt( LOG_ERROR,
-			"<< : invalid dh size ( %i != %i )\n",
+			"<< : invalid dh size ( %i > %i )\n",
 			size,
-			gx_size );
+			LIBIKE_MAX_DHGRP );
 
 		packet.notify = ISAKMP_N_INVALID_HASH_INFORMATION;
 
 		return LIBIKE_DECODE;
 	}
 
-	packet.get( gx, gx_size );
+	packet.get( gx, size );
 
 	return LIBIKE_OK;
 }

@@ -126,15 +126,12 @@ YY_DECL;
 
 #define LIBIKE_IKE_PORT			500		// default isakmp port
 #define LIBIKE_NATT_PORT		4500	// default nat-t port
+
 #define LIBIKE_MAX_TEXTADDR		24		// max text address length
 #define LIBIKE_MAX_TEXTP1ID		128		// max text phase1 id length
 #define LIBIKE_MAX_TEXTP2ID		50		// max text phase2 id length
-#define LIBIKE_MAX_BIGNUM		512		// max dh group bn size
-#define LIBIKE_MAX_LOGLINE		2048	// max log line length
-#define LIBIKE_MAX_VARID		512		// max variable identity string
-#define LIBIKE_EXPIRE_DIFF		5		// lifetime seconds divisor
-#define LIBIKE_DOOMED_DIFF		10		// lifetime seconds divisor
-#define LIBIKE_REMOVE_WAIT		30		// seconds to wait before removal
+#define LIBIKE_MAX_VARID		512		// max variable id length
+#define LIBIKE_MAX_DHGRP		512		// max dh group size
 
 #define LIBIKE_OK				0
 #define LIBIKE_FAILED			-1
@@ -572,7 +569,7 @@ typedef class _IKED
 	long	payload_get_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal );
 
 	long	payload_add_kex( PACKET_IKE & packet, BDATA & gx, uint8_t next );
-	long	payload_get_kex( PACKET_IKE & packet, BDATA & gx, long size );
+	long	payload_get_kex( PACKET_IKE & packet, BDATA & gx );
 
 	long	payload_add_nonce( PACKET_IKE & packet, BDATA & nonce, uint8_t next );
 	long	payload_get_nonce( PACKET_IKE & packet, BDATA & nonce );

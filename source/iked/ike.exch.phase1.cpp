@@ -157,7 +157,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				if( ph1->xstate & XSTATE_RECV_KE )
 					log.txt( LOG_INFO, "<< : ignoring duplicate key excahnge payload\n" );
 				else
-					result = payload_get_kex( packet, ph1->xr, ph1->dh_size );
+					result = payload_get_kex( packet, ph1->xr );
 
 				ph1->xstate |= XSTATE_RECV_KE;
 
