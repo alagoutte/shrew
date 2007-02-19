@@ -443,12 +443,21 @@ bool _IDB_PH2::dec( bool lock )
 			iked.list_phase2.get_count() );
 
 		if( lstate & LSTATE_MATURE )
+		{
 			iked.pfkey_send_delete( this );
+			tunnel->stats.sa_dead++;
+		}
+		else
+			tunnel->stats.sa_fail++;
 	}
 	else
+	{
 		iked.log.txt( LOG_INFO,
 			"DB : phase2 deleted after expire time ( phase2 count = %i )\n",
 			iked.list_phase2.get_count() );
+
+		tunnel->stats.sa_dead++;
+	}
 
 	//
 	// free

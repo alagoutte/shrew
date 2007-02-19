@@ -273,15 +273,15 @@ long _IKEI::send_msg_status( long status, char * str, long * msgres )
 	return send_basic( IKEI_MSGID_STATUS, status, str, strlen( str ) );
 }
 
-long _IKEI::recv_msg_stats( IPSEC_STATS * stats )
+long _IKEI::recv_msg_stats( IKEI_STATS * stats )
 {
-	long length = sizeof( IPSEC_STATS );
+	long length = sizeof( IKEI_STATS );
 	return recv_basic( IKEI_MSGID_STATS, NULL, stats, &length ); 
 }
 
-long _IKEI::send_msg_stats( IPSEC_STATS * stats, long * msgres )
+long _IKEI::send_msg_stats( IKEI_STATS * stats, long * msgres )
 {
-	return send_basic( IKEI_MSGID_STATS, 0, stats, sizeof( IPSEC_STATS ) );
+	return send_basic( IKEI_MSGID_STATS, 0, stats, sizeof( IKEI_STATS ) );
 }
 
 long _IKEI::send_msg_enable( long enable )

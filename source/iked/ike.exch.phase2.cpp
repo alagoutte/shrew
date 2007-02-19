@@ -1394,7 +1394,7 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	ph2->event_soft.delay *= 1000;
 	ith_timer.add( &ph2->event_soft );
 
-	ph1->tunnel->stats.sacount++;
+	ph1->tunnel->stats.sa_good++;
 
 	return LIBIKE_OK;
 }

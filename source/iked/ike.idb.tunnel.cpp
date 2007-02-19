@@ -64,6 +64,12 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 	saddr_r = *set_saddr_r;
 
 	//
+	// initialize stats
+	//
+
+	memset( &stats, 0, sizeof( stats ) );
+
+	//
 	// set the default xconf addr
 	//
 

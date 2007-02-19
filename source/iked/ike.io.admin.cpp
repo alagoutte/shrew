@@ -64,6 +64,8 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	DTPI dtpi;
 #endif
 
+	long stattick = 0;
+
 	//
 	// enter client ctrl loop
 	//
@@ -677,43 +679,18 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 			// check tunnel status and send
 			// message once every second
 			//
-/*
-			if( !( tunnel->close ) && ( tunnel->state & TSTATE_VNET_ENABLE ) )
+
+			if( !( tunnel->close ) &&
+			     ( tunnel->state & TSTATE_VNET_ENABLE ) )
 			{
-				if( tunnel->stattick < lasttick )
+				if( stattick < time( NULL ) )
 				{
-					//
-					// locate the phase1 sa and set the
-					// tunnel stats init and dead time
-					//
-
-					if( !tunnel->stats.time_init )
-					{
-						IDB_PH1 * ph1;
-						if( get_phase1( true, &ph1, NULL, LSTATE_MATURE, 0, NULL ) )
-						{
-							tunnel->stats.time_init = ph1->init_time;
-							tunnel->stats.time_dead = ph1->init_time + ph1->life_time;
-
-							rel_phase1( true, ph1 );
-						}
-					}
-
-					//
-					// update other tunnel statistics
-					//
-
-					if( tunnel->natt_v != IPSEC_NATT_NONE )
-						tunnel->stats.natt = true;
-					else
-						tunnel->stats.natt = false;
-
 					ikei->send_msg_stats( &tunnel->stats );
 
-					tunnel->stattick = lasttick;
+					stattick = time( NULL );
 				}
 			}
-*/		}
+		}
 	}
 
 	//

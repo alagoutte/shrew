@@ -108,20 +108,17 @@ typedef struct _IKEI_MSG_BASIC
 
 }IKEI_MSG_BASIC;
 
-typedef struct _IPSEC_STATS
+typedef struct _IKEI_STATS
 {
-	unsigned long	pkts_sent;
-	unsigned long	pkts_recv;
-	unsigned long	bytes_sent;
-	unsigned long	bytes_recv;
+	long	sa_good;
+	long	sa_fail;
+	long	sa_dead;
 
-	long			time_init;
-	long			time_dead;
+	bool	natt;
+	bool	frag;
+	bool	dpd;
 
-	bool			natt;
-	long			sacount;
-
-}IPSEC_STATS;
+}IKEI_STATS;
 
 typedef class DLX _IKEI
 {
@@ -169,8 +166,8 @@ typedef class DLX _IKEI
 	long	recv_msg_status( long * status, char * str, long & len );
 	long	send_msg_status( long status, char * str, long * msgres = NULL );
 
-	long	recv_msg_stats( IPSEC_STATS * stats );
-	long	send_msg_stats( IPSEC_STATS * stats, long * msgres = NULL );
+	long	recv_msg_stats( IKEI_STATS * stats );
+	long	send_msg_stats( IKEI_STATS * stats, long * msgres = NULL );
 
 	long	recv_msg_enable( long * enable );
 	long	send_msg_enable( long enable );

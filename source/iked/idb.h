@@ -275,7 +275,7 @@ typedef class _IDB_TUNNEL : public IDB
 
 	IKE_XAUTH	xauth;
 	IKE_XCONF	xconf;
-	IPSEC_STATS	stats;
+	IKEI_STATS	stats;
 
 	IKE_SADDR	saddr_l;
 	IKE_SADDR	saddr_r;

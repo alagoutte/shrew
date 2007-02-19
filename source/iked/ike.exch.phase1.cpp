@@ -1707,6 +1707,8 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 		if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
 		{
+			ph1->tunnel->stats.natt = true;
+
 			ph1->inc( true );
 			ph1->event_natt.delay = ph1->tunnel->peer->natt_rate * 1000;
 
@@ -1720,11 +1722,16 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		if( ( ph1->tunnel->peer->dpd_mode == IPSEC_DPD_FORCE ) ||
 			( ph1->dpd_l && ph1->dpd_r ) )
 		{
+			ph1->tunnel->stats.dpd = true;
+
 			ph1->inc( true );
 			ph1->event_dpd.delay = ph1->tunnel->peer->dpd_rate * 1000;
 
 			ith_timer.add( &ph1->event_dpd );
 		}
+
+		if( ph1->frag_l && ph1->frag_r )
+			ph1->tunnel->stats.frag = true;
 
 		//
 		// locate any pending phase2
