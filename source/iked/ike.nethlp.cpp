@@ -597,15 +597,28 @@ bool _IKED::vnet_set( VNET_ADAPTER * adapter, bool enable )
 
 bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 {
-	long flags = VNET_CFG_NBNS | VNET_CFG_DNSS | VNET_CFG_DNSD;
+	long flags = 0;
+
+	if( xconf.opts & IPSEC_OPTS_ADDR )
+		flags |= VNET_CFG_ADDR;
+
+	if( xconf.opts & IPSEC_OPTS_DNSS )
+		flags |= VNET_CFG_DNSS;
+
 	if( xconf.opts & IPSEC_OPTS_SPLITDNS )
 		flags &= ~VNET_CFG_DNSS;
+
+	if( xconf.opts & IPSEC_OPTS_DOMAIN )
+		flags |= VNET_CFG_DNSD;
+
+	if( xconf.opts & IPSEC_OPTS_NBNS )
+		flags |= VNET_CFG_NBNS;
 
 	return vnet.setup(
 			adapter,
 			flags,
-			xconf.addr,
-			xconf.mask,
+			&xconf.addr,
+			&xconf.mask,
 			&xconf.nbns,
 			&xconf.dnss,
 			xconf.suffix );
