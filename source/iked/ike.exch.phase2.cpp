@@ -739,11 +739,33 @@ long _IKED::process_phase2_send( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 			long beg = packet.size();
 
 			payload_add_sa( packet, ph2->plist_l, ISAKMP_PAYLOAD_NONCE );
-			payload_add_nonce( packet, ph2->nonce_l, ISAKMP_PAYLOAD_IDENT );
+
+			//
+			// if we are using pfs, the payload
+			// order changes to include a kex
+			//
+			// NOTE : if nonce is omitted,
+			//        racoon crashes
+			//
+
+			unsigned char next = ISAKMP_PAYLOAD_IDENT;
+			if( ph2->dhgr_id )
+				next = ISAKMP_PAYLOAD_KEX;
+
+			payload_add_nonce( packet, ph2->nonce_l, next );
+
+			if( ph2->dhgr_id )
+				payload_add_kex( packet, ph2->xl, ISAKMP_PAYLOAD_IDENT );
 
 			payload_add_ph2id( packet, ph2->ph2id_ld, ISAKMP_PAYLOAD_IDENT );
 
-			unsigned char next = ISAKMP_PAYLOAD_NONE;
+			//
+			// if we are claiming the lifetime,
+			// the payload order changes to include
+			// a notification payload
+			//
+
+			next = ISAKMP_PAYLOAD_NONE;
 			if( ph2->lstate & LSTATE_CLAIMLT )
 				next = ISAKMP_PAYLOAD_NOTIFY;
 
