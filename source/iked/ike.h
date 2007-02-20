@@ -337,10 +337,6 @@
 
 // ike fragmentation extension
 
-#define IKE_FRAG_BASE				0x40000000
-#define IKE_FRAG_IDENT_PROTECT		0x80000000
-#define IKE_FRAG_AGGRESSIVE			0x80000000
-
 #define IKE_FRAG_FLAG_LAST			0x01
 
 // dead peer detection extension
