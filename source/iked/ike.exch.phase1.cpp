@@ -792,7 +792,6 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				{
 					case IKE_AUTH_PRESHARED_KEY:
 					case XAUTH_AUTH_INIT_PSK:
-					case HYBRID_AUTH_INIT_RSA:
 					{
 						if( !( ph1->xstate & XSTATE_RECV_HA ) )
 							break;
@@ -828,9 +827,26 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 					case IKE_AUTH_SIG_RSA:
 					case XAUTH_AUTH_INIT_RSA:
+					case HYBRID_AUTH_INIT_RSA:
 					{
-						if(	!( ph1->xstate & XSTATE_RECV_SI ) )
-							break;
+						if( proposal->auth_id == XAUTH_AUTH_INIT_RSA )
+						{
+							//
+							// mutual rsa modes we should see a signature
+							//
+
+							if(	!( ph1->xstate & XSTATE_RECV_SI ) )
+								break;
+						}
+						else
+						{
+							//
+							// hybrid rsa modes we should see a hash
+							//
+
+							if(	!( ph1->xstate & XSTATE_RECV_HA ) )
+								break;
+						}
 
 						PACKET_IKE packet;
 
@@ -1273,14 +1289,16 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		IKE_PROPOSAL * proposal;
 		ph1->plist_l.get( &proposal, 0 );
 
-		switch( proposal->auth_id )
-		{
-			case IKE_AUTH_PRESHARED_KEY:
-			case XAUTH_AUTH_INIT_PSK:
-			{
-				if( !( ph1->xstate & XSTATE_RECV_HA ) )
-					break;
+		//
+		// check the peers hash value
+		//
 
+		if( ( proposal->auth_id == IKE_AUTH_PRESHARED_KEY ) ||
+			( proposal->auth_id == XAUTH_AUTH_INIT_PSK ) ||
+			( proposal->auth_id == HYBRID_AUTH_INIT_RSA && !ph1->initiator ) )
+		{
+			if( ph1->xstate & XSTATE_RECV_HA )
+			{
 				if( phase1_chk_hash( ph1 ) == LIBIKE_OK )
 				{
 					ph1->clean();
@@ -1300,17 +1318,19 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 					if( ph1->tunnel->peer->notify )
 						inform_new_notify( ph1, NULL, ISAKMP_N_AUTHENTICATION_FAILED );
 				}
-
-				break;
 			}
+		}
 
-			case IKE_AUTH_SIG_RSA:
-			case HYBRID_AUTH_INIT_RSA:
-			case XAUTH_AUTH_INIT_RSA:
+		//
+		// check the peers signature value
+		//
+
+		if( ( proposal->auth_id == IKE_AUTH_SIG_RSA ) ||
+			( proposal->auth_id == XAUTH_AUTH_INIT_RSA ) ||
+			( proposal->auth_id == HYBRID_AUTH_INIT_RSA && ph1->initiator ) )
+		{
+			if( ph1->xstate & XSTATE_RECV_SI )
 			{
-				if( !( ph1->xstate & XSTATE_RECV_SI ) )
-					break;
-
 				if( phase1_chk_sign( ph1 ) == LIBIKE_OK )
 				{
 					ph1->clean();
@@ -1329,11 +1349,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 					if( ph1->tunnel->peer->notify )
 						inform_new_notify( ph1, NULL, ISAKMP_N_AUTHENTICATION_FAILED );
-
-					ph1->clean();
 				}
-
-				break;
 			}
 		}
 	}
@@ -1951,7 +1967,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for fragmentation vendor id
 	//
 
-	if( vend.size() == ( vend_frag.size() + 4 ) )
+	if( vend.size() == vend_frag.size() )
 		if( !memcmp( vend.buff(), vend_frag.buff(), vend_frag.size() ) )
 		{
 			ph1->frag_r = true;

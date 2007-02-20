@@ -850,11 +850,11 @@ peer_line
 	{
 		peer->fpass.del();
 
-		if( !iked.cert_load_pem(
+		if( iked.cert_load_pem(
 			peer->cert_r,
 			$3->text(),
 			true,
-			peer->fpass ) )
+			peer->fpass ) != FILE_OK )
 			error( @$, std::string( "unable to load file " ) + $3->text() );
 		delete $3;
 	}
@@ -863,11 +863,11 @@ peer_line
 	{
 		peer->fpass.set( *$4 );
 
-		if( !iked.cert_load_pem(
+		if( iked.cert_load_pem(
 			peer->cert_r,
 			$3->text(),
 			true,
-			peer->fpass ) )
+			peer->fpass ) != FILE_OK )
 			error( @$, std::string( "unable to load file " ) + $3->text() );
 
 		delete $3;
@@ -878,11 +878,11 @@ peer_line
 	{
 		peer->fpass.del();
 		
-		if( !iked.cert_load_pem(
+		if( iked.cert_load_pem(
 			peer->cert_l,
 			$3->text(),
 			false,
-			peer->fpass ) )
+			peer->fpass ) != FILE_OK )
 			error( @$, std::string( "unable to load file " ) + $3->text() );
 
 		delete $3;
@@ -892,11 +892,11 @@ peer_line
 	{
 		peer->fpass.set( *$4 );
 		
-		if( !iked.cert_load_pem(
+		if( iked.cert_load_pem(
 			peer->cert_l,
 			$3->text(),
 			false,
-			peer->fpass ) )
+			peer->fpass ) != FILE_OK )
 			error( @$, std::string( "unable to load file " ) + $3->text() );
 
 		delete $3;
@@ -907,10 +907,10 @@ peer_line
 	{
 		peer->fpass.del();
 		
-		if( !iked.prvkey_rsa_load_pem(
+		if( iked.prvkey_rsa_load_pem(
 			$3->text(),
 			&peer->key,
-			peer->fpass ) )
+			peer->fpass ) != FILE_OK )
 			error( @$, std::string( "unable to load file " ) + $3->text() );
 
 		delete $3;
@@ -920,10 +920,10 @@ peer_line
 	{
 		peer->fpass.set( *$4 );
 		
-		if( !iked.prvkey_rsa_load_pem(
+		if( iked.prvkey_rsa_load_pem(
 			$3->text(),
 			&peer->key,
-			peer->fpass ) )
+			peer->fpass ) != FILE_OK )
 			error( @$, std::string( "unable to load file " ) + $3->text() );
 
 		delete $3;
