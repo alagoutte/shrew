@@ -780,21 +780,21 @@ peer_line
   |	PEERID LOCAL FQDN QUOTED
 	{
 		peer->idtype_l = ISAKMP_ID_FQDN;
-		peer->iddata_l.set( *$4 );
+		peer->iddata_l.set( $4->buff(), $4->size() - 1 );
 		delete $4;
 	}
 	EOS
   |	PEERID LOCAL UFQDN QUOTED
 	{
 		peer->idtype_l = ISAKMP_ID_USER_FQDN;
-		peer->iddata_l.set( *$4 );
+		peer->iddata_l.set( $4->buff(), $4->size() - 1 );
 		delete $4;
 	}
 	EOS
   |	PEERID LOCAL KEYID QUOTED
 	{
 		peer->idtype_l = ISAKMP_ID_KEY_ID;
-		peer->iddata_l.set( *$4 );
+		peer->iddata_l.set( $4->buff(), $4->size() - 1 );
 		delete $4;
 	}
 	EOS
@@ -825,21 +825,21 @@ peer_line
   |	PEERID REMOTE FQDN QUOTED
 	{
 		peer->idtype_r = ISAKMP_ID_FQDN;
-		peer->iddata_r.set( *$4 );
+		peer->iddata_r.set( $4->buff(), $4->size() - 1 );
 		delete $4;
 	}
 	EOS
   |	PEERID REMOTE UFQDN QUOTED
 	{
 		peer->idtype_r = ISAKMP_ID_USER_FQDN;
-		peer->iddata_r.set( *$4 );
+		peer->iddata_r.set( $4->buff(), $4->size() - 1 );
 		delete $4;
 	}
 	EOS
   |	PEERID REMOTE KEYID QUOTED
 	{
 		peer->idtype_r = ISAKMP_ID_KEY_ID;
-		peer->iddata_r.set( *$4 );
+		peer->iddata_r.set( $4->buff(), $4->size() - 1 );
 		delete $4;
 	}
 	EOS

@@ -741,7 +741,8 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 			snprintf(
 				text,
 				LIBIKE_MAX_TEXTP1ID,
-				"%s",
+				"%s %s",
+				find_name( NAME_IDENT, ph1id->type ),
 				txtaddr );
 
 			break;
@@ -757,7 +758,8 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 			snprintf(
 				text,
 				LIBIKE_MAX_TEXTP1ID,
-				"%s",
+				"%s %s",
+				find_name( NAME_IDENT, ph1id->type ),
 				varid.buff() );
 
 			break;
@@ -773,7 +775,8 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 			snprintf(
 				text,
 				LIBIKE_MAX_TEXTP1ID,
-				"%s",
+				"%s %s",
+				find_name( NAME_IDENT, ph1id->type ),
 				varid.buff() );
 
 			break;
@@ -784,7 +787,8 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 			snprintf(
 				text,
 				LIBIKE_MAX_TEXTP1ID,
-				"keyid[ %lu bytes ]",
+				"%s [ %lu bytes ]",
+				find_name( NAME_IDENT, ph1id->type ),
 				ph1id->varid.size() );
 
 			break;
