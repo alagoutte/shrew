@@ -108,6 +108,7 @@ IDB_PEER *	peer;
 %token		FQDN		"fqdn"
 %token		UFQDN		"ufqdn"
 %token		ASN1DN		"asn1dn"
+%token		KEYID		"keyid"
 %token		AUTHDATA	"authdata"
 %token		PSK		"psk"
 %token		CA		"ca"
@@ -790,6 +791,13 @@ peer_line
 		delete $4;
 	}
 	EOS
+  |	PEERID LOCAL KEYID QUOTED
+	{
+		peer->idtype_l = ISAKMP_ID_KEY_ID;
+		peer->iddata_l.set( *$4 );
+		delete $4;
+	}
+	EOS
   |	PEERID LOCAL ASN1DN
 	{
 		peer->idtype_l = ISAKMP_ID_ASN1_DN;
@@ -810,21 +818,28 @@ peer_line
   |	PEERID REMOTE ADDR ADDRESS
 	{
 		peer->idtype_r = ISAKMP_ID_IPV4_ADDR;
-		peer->iddata_l.set( *$4 );
+		peer->iddata_r.set( *$4 );
 		delete $4;
 	}
 	EOS
   |	PEERID REMOTE FQDN QUOTED
 	{
 		peer->idtype_r = ISAKMP_ID_FQDN;
-		peer->iddata_l.set( *$4 );
+		peer->iddata_r.set( *$4 );
 		delete $4;
 	}
 	EOS
   |	PEERID REMOTE UFQDN QUOTED
 	{
 		peer->idtype_r = ISAKMP_ID_USER_FQDN;
-		peer->iddata_l.set( *$4 );
+		peer->iddata_r.set( *$4 );
+		delete $4;
+	}
+	EOS
+  |	PEERID REMOTE KEYID QUOTED
+	{
+		peer->idtype_r = ISAKMP_ID_KEY_ID;
+		peer->iddata_r.set( *$4 );
 		delete $4;
 	}
 	EOS

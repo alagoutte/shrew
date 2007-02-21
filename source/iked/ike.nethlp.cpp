@@ -784,7 +784,7 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 			snprintf(
 				text,
 				LIBIKE_MAX_TEXTP1ID,
-				"keyid[ %i bytes ]",
+				"keyid[ %lu bytes ]",
 				ph1id->varid.size() );
 
 			break;

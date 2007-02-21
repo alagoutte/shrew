@@ -142,6 +142,7 @@ if( yy_first_time )
 <SEC_PEER>address		{ return( token::ADDR ); }
 <SEC_PEER>fqdn			{ return( token::FQDN ); }
 <SEC_PEER>ufqdn			{ return( token::UFQDN ); }
+<SEC_PEER>keyid			{ return( token::KEYID ); }
 <SEC_PEER>asn1dn		{ return( token::ASN1DN ); }
 <SEC_PEER>authdata		{ return( token::AUTHDATA ); }
 <SEC_PEER>psk			{ return( token::PSK ); }
