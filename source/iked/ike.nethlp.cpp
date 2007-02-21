@@ -779,6 +779,17 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 			break;
 		}
 
+		case ISAKMP_ID_KEY_ID:
+		{
+			snprintf(
+				text,
+				LIBIKE_MAX_TEXTP1ID,
+				"keyid[ %i bytes ]",
+				ph1id->varid.size() );
+
+			break;
+		}
+
 		default:
 
 			sprintf( text, "<UNKNOWN P1ID>" );

@@ -1069,6 +1069,7 @@ long _IKED::payload_add_ph1id( PACKET_IKE & packet, IKE_PH1ID & ph1id, uint8_t n
 		case ISAKMP_ID_USER_FQDN:
 		case ISAKMP_ID_ASN1_DN:
 		case ISAKMP_ID_ASN1_GN:
+		case ISAKMP_ID_KEY_ID:
 
 			packet.add( ph1id.varid );						// string ids
 
@@ -1127,6 +1128,7 @@ long _IKED::payload_get_ph1id( PACKET_IKE & packet, IKE_PH1ID & ph1id )
 		case ISAKMP_ID_USER_FQDN:
 		case ISAKMP_ID_ASN1_DN:
 		case ISAKMP_ID_ASN1_GN:
+		case ISAKMP_ID_KEY_ID:
 
 			packet.chk_payload( size );
 			if( size < LIBIKE_MAX_VARID )

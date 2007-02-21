@@ -83,14 +83,6 @@ bool _IKED::gen_ph1id_l( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 			break;
 		}
 
-		case ISAKMP_ID_FQDN:
-		case ISAKMP_ID_USER_FQDN:
-		{
-			ph1id.varid.set( ph1->tunnel->peer->iddata_l );
-
-			break;
-		}
-
 		case ISAKMP_ID_IPV4_ADDR:
 		{
 			if( ph1->tunnel->peer->iddata_l.size() )
@@ -107,9 +99,14 @@ bool _IKED::gen_ph1id_l( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 			break;
 		}
 
+		case ISAKMP_ID_FQDN:
+		case ISAKMP_ID_USER_FQDN:
 		case ISAKMP_ID_KEY_ID:
-			// TODO !!!
+		{
+			ph1id.varid.set( ph1->tunnel->peer->iddata_l );
+
 			break;
+		}
 	}
 
 	return true;
@@ -147,14 +144,6 @@ bool _IKED::gen_ph1id_r( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 			break;
 		}
 
-		case ISAKMP_ID_FQDN:
-		case ISAKMP_ID_USER_FQDN:
-		{
-			ph1id.varid.set( ph1->tunnel->peer->iddata_r );
-
-			break;
-		}
-
 		case ISAKMP_ID_IPV4_ADDR:
 		{
 			if( ph1->tunnel->peer->iddata_r.size() )
@@ -171,9 +160,14 @@ bool _IKED::gen_ph1id_r( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 			break;
 		}
 
+		case ISAKMP_ID_FQDN:
+		case ISAKMP_ID_USER_FQDN:
 		case ISAKMP_ID_KEY_ID:
-			// TODO !!!
+		{
+			ph1id.varid.set( ph1->tunnel->peer->iddata_r );
+
 			break;
+		}
 	}
 
 	return true;
@@ -232,6 +226,7 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 
 		case ISAKMP_ID_FQDN:
 		case ISAKMP_ID_USER_FQDN:
+		case ISAKMP_ID_KEY_ID:
 		{
 			ids.varid.add( 0, 1 );
 			idt.varid.add( 0, 1 );
