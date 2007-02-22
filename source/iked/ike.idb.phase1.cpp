@@ -913,6 +913,40 @@ bool _IDB_PH1::dec( bool lock )
 			tunnel->close = TERM_PEER_DEAD;
 
 	//
+	// if this sa never reached maturity,
+	// locate any pending phase2 handles
+	// for this tunnel and delete them
+	//
+
+	if( !( lstate & LSTATE_MATURE ) )
+	{
+		long count = iked.list_config.get_count();
+		long index = 0;
+
+		for( ; index < count; index++ )
+		{
+			//
+			// get the next phase2 in our list
+			// and attempt to match tunnel ids
+			// 
+
+			IDB_PH2 * ph2 = ( IDB_PH2 * ) iked.list_phase2.get_item( index );
+			if( ( ph2->tunnel == tunnel ) &&
+				( ph2->lstate & LSTATE_PENDING ) )
+			{
+				ph2->inc( false );
+				ph2->lstate |= LSTATE_DELETE;
+
+				if( ph2->dec( false ) )
+				{
+					index--;
+					count--;
+				}
+			}
+		}
+	}
+
+	//
 	// derefrence our tunnel
 	//
 
