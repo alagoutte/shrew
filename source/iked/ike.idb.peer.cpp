@@ -175,9 +175,6 @@ bool _IDB_PEER::dec( bool lock )
 
 	iked.list_peer.del_item( this );
 
-	if( lock )
-		iked.lock_sdb.unlock();
-
 	//
 	// log deletion
 	//
@@ -185,6 +182,9 @@ bool _IDB_PEER::dec( bool lock )
 	iked.log.txt( LOG_DEBUG,
 		"DB : peer deleted ( peer count = %i )\n",
 		iked.list_peer.get_count() );
+
+	if( lock )
+		iked.lock_sdb.unlock();
 
 	delete this;
 

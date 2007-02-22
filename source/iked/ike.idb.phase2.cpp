@@ -418,19 +418,10 @@ bool _IDB_PH2::dec( bool lock )
 	}
 
 	//
-	// dereference our tunnel
-	//
-
-	tunnel->dec( false );
-
-	//
 	// remove from our list
 	//
 
 	iked.list_phase2.del_item( this );
-
-	if( lock )
-		iked.lock_sdb.unlock();
 
 	//
 	// log deletion
@@ -458,6 +449,15 @@ bool _IDB_PH2::dec( bool lock )
 
 		tunnel->stats.sa_dead++;
 	}
+
+	//
+	// dereference our tunnel
+	//
+
+	tunnel->dec( false );
+
+	if( lock )
+		iked.lock_sdb.unlock();
 
 	//
 	// free

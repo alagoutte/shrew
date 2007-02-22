@@ -920,7 +920,7 @@ bool _IDB_PH1::dec( bool lock )
 
 	if( !( lstate & LSTATE_MATURE ) )
 	{
-		long count = iked.list_config.get_count();
+		long count = iked.list_phase2.get_count();
 		long index = 0;
 
 		for( ; index < count; index++ )
@@ -947,19 +947,10 @@ bool _IDB_PH1::dec( bool lock )
 	}
 
 	//
-	// derefrence our tunnel
-	//
-
-	tunnel->dec( false );
-
-	//
 	// remove from our list
 	//
 
 	iked.list_phase1.del_item( this );
-
-	if( lock )
-		iked.lock_sdb.unlock();
 
 	//
 	// log deletion
@@ -973,6 +964,15 @@ bool _IDB_PH1::dec( bool lock )
 		iked.log.txt( LOG_INFO,
 			"DB : phase1 deleted after expire time ( phase1 count = %i )\n",
 			iked.list_phase1.get_count() );
+
+	//
+	// derefrence our tunnel
+	//
+
+	tunnel->dec( false );
+
+	if( lock )
+		iked.lock_sdb.unlock();
 
 	//
 	// free

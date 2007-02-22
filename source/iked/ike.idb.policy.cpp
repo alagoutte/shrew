@@ -235,9 +235,6 @@ bool _IDB_POLICY::dec( bool lock )
 
 	iked.list_policy.del_item( this );
 
-	if( lock )
-		iked.lock_sdb.unlock();
-
 	//
 	// log deletion
 	//
@@ -245,6 +242,9 @@ bool _IDB_POLICY::dec( bool lock )
 	iked.log.txt( LOG_DEBUG,
 		"DB : policy deleted ( policy count = %i )\n",
 		iked.list_policy.get_count() );
+
+	if( lock )
+		iked.lock_sdb.unlock();
 
 	//
 	// free

@@ -282,19 +282,10 @@ bool _IDB_CFG::dec( bool lock )
 	}
 
 	//
-	// dereference our tunnel
-	//
-
-	tunnel->dec( false );
-
-	//
 	// remove from our list
 	//
 
 	iked.list_config.del_item( this );
-
-	if( lock )
-		iked.lock_sdb.unlock();
 
 	//
 	// log deletion
@@ -303,6 +294,15 @@ bool _IDB_CFG::dec( bool lock )
 	iked.log.txt( LOG_DEBUG,
 		"DB : config deleted ( config count %i )\n",
 		iked.list_config.get_count() );
+
+	//
+	// dereference our tunnel
+	//
+
+	tunnel->dec( false );
+
+	if( lock )
+		iked.lock_sdb.unlock();
 
 	//
 	// free
