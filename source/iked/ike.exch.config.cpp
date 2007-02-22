@@ -303,13 +303,12 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 					long count = cfg->attr_count();
 					long index = 0;
+					long authed = 0;
 
+					IKE_ATTR * attr = cfg->attr_get( index );
 					for( ; index < count; index++ )
-					{
-						IKE_ATTR * attr = cfg->attr_get( index );
-						if( attr->atype == XAUTH_STATUS )
-							result = attr->basic;
-					}
+						if( ( attr->atype == XAUTH_STATUS ) && attr->basic )
+							authed = attr->bdata;
 
 					//
 					// unfortunately, not all gateways
@@ -326,7 +325,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						// check xauth result
 						//
 
-						if( result == 1 )
+						if( authed == 1 )
 						{
 							log.txt( LOG_INFO,
 								"ii : user %s authentication succeeded\n",
