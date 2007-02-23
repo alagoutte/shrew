@@ -214,7 +214,7 @@ void __stdcall service_main( DWORD argc, LPTSTR * argv )
 		return; 
 	} 
 
-	if( iked.init( LOG_INFO ) == LIBIKE_OK )
+	if( iked.init( 0 ) == LIBIKE_OK )
 	{
 		//
 		// daemon initialized
