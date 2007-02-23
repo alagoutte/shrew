@@ -1698,6 +1698,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 						text );
 
 					cfg->tunnel->banner.set( attr->vdata );
+					cfg->tunnel->banner.add( 0, 1 );
 				}
 				else
 					log.txt( LOG_DEBUG,	"ii : - Login Banner\n" );
