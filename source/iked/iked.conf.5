@@ -76,8 +76,8 @@ font. Optional parameters are enclosed using the
 .Ql \&[
 and
 .Ql \&]
-charachters. Multiple keywords that may be valid for a single parameter
-are enclosed using the 
+charachters. Multiple keywords that may be valid for a single parameter are
+enclosed using the 
 .Ql \&(
 and
 .Ql \&)
@@ -106,40 +106,39 @@ An IP network and prefix length expressed as x.x.x.x/y
 .It Ic daemon { Ar statements Ic }
 Specifies the general configuration for
 .Xr iked 8
-operation. This includes parameters related to the basic network
-configuration, log file and debug output. Only one
+operation. This includes parameters related to the basic network configuration,
+log file and debug output. Only one
 .Ic deamon
 section should be defined.
 .Pp
 .Bl -tag -width Ds -compact
 .It Ic socket ( ike | natt ) Ar [ address ] number ;
-An address and port number that should be used for ike or natt
-communications. If the address parameter is omitted, the daemon will
-attempt to bind to any address for the given port number. If no
-socket statements are specified, the daemon will attempt to bind to all
-interfaces for both ike and natt using the default port numbers ( 500 &
-4500 respectively ). Note, the
+An address and port number that should be used for ike or natt communications.
+If the address parameter is omitted, the daemon will attempt to bind to any
+address for the given port number. If no socket statements are specified, the
+daemon will attempt to bind to all interfaces for both ike and natt using the
+default port numbers ( 500 & 4500 respectively ). Note, the
 .Ar natt
 keyword can only be specified if the daemon was compiled with natt support.
 .It Ic retry_count Ar number;
-The number of times an exchange packet should be resent to a peer. The
-default value for this parameter is 2.
+The number of times an exchange packet should be resent to a peer. The default
+value for this parameter is 2.
 .It Ic retry_delay Ar number;
-The number of seconds to wait between packet resend attempts. The
-default value for this parameter is 10.
+The number of seconds to wait between packet resend attempts. The default
+value for this parameter is 10.
 .It Ic log_file Ar quoted ;
 The path and file name that should be used for log output.
 .It Ic log_level (none | error | info | debug | loud | decode) ;
 The log output detail level. The default value for this parameter is
 .Ic none .
 .It Ic pcap_ike Ar quoted;
-The path and file name that should be used to dump decrypted ike packets
-in pcap format. If no 
+The path and file name that should be used to dump decrypted ike packets in
+pcap format. If no 
 .Ic pcap_ike
 statement is specified, this feature is disabled.
 .It Ic pcap_pub Ar quoted;
-The path and file name that should be used to dump encrypted ike packets
-in pcap format. If no 
+The path and file name that should be used to dump encrypted ike packets in
+pcap format. If no 
 .Ic pcap_pub
 statement is specified, this feature is disabled.
 .El
@@ -147,8 +146,8 @@ statement is specified, this feature is disabled.
 .Ss Network Group Section
 .Bl -tag -width Ds -compact
 .It Ic netgroup Ar label Ic { Ar statements Ic }
-Specifies a group of networks that can be refferred to by the assigned
-label. Multiple
+Specifies a group of networks that can be refferred to by the assigned label.
+Multiple
 .Ic netgroup
 sections may be defined.
 .Pp
@@ -175,14 +174,16 @@ section can only be defined if the daemon was compiled with LDAP support.
 The LDAP protocol version to be used ( 2 or 3 ). The default value for this
 parameter is 3.
 .It Ic url Ar quoted ;
-The LDAP server url. For example, a url may look like "ldap://ldap.shrew.net:389".
+The LDAP server url. For example, a url may look like
+"ldap://ldap.shrew.net:389".
 .It Ic base Ar quoted ;
 The base dn to be used for LDAP searches. For example, a base dn may look like
 "ou=users,dc=shrew,dc=net".
 .It Ic subtree (enable | disable);
 The search scope to be used for LDAP searches. If enabled, searches will be
-performed using the subtree search scope. If disabled, searches will be performed
-using the one level search scope. The default value for this parameter is
+performed using the subtree search scope. If disabled, searches will be
+performed using the one level search scope. The default value for this
+parameter is
 .Ic disable .
 .It Ic bind_dn Ar quoted;
 The dn to bind as before performing LDAP searches. If this parameter is omitted,
@@ -192,13 +193,13 @@ The password to use when a
 .Ic bind_dn
 is specified.
 .It Ic attr_user Ar quoted;
-The attribute used to specify a user name in the LDAP directory.  For example, if
-a user dn is "cn=user,dc=shrew,dc=net" then the attribute would be "cn". The default
-value for this parameter is "cn".
+The attribute used to specify a user name in the LDAP directory.  For example,
+if a user dn is "cn=user,dc=shrew,dc=net" then the attribute would be "cn".
+The default value for this parameter is "cn".
 .It Ic attr_group Ar quoted;
-The attribute used to specify a group name in the LDAP directory.  For example, if
-a group dn is "cn=group,dc=shrew,dc=net" then the attribute would be "cn". The default
-value for this parameter is "cn".
+The attribute used to specify a group name in the LDAP directory.  For example,
+if a group dn is "cn=group,dc=shrew,dc=net" then the attribute would be "cn".
+The default value for this parameter is "cn".
 .It Ic attr_member Ar quoted;
 The attribute used to specify a group member in the LDAP directory. The default
 value for this parameter is "member".
@@ -207,7 +208,7 @@ value for this parameter is "member".
 .Ss XConf Local Section
 .Bl -tag -width Ds -compact
 .It Ic xconf_local { Ar statements Ic }
-Specifies the Transactional Configuration settings to be used when the
+Specifies the Configuration Exchange settings to be used when the
 .Ic xconf_source
 is set to
 .Ic local
@@ -227,12 +228,13 @@ The netbios name server address to be passed to a peer when requested.
 .It Ic dns_suffix Ar quoted;
 The dns suffix to be passed to a peer when requested.
 .It Ic dns_list Ar quoted quoted ... ;
-A list of split dns suffixes to be passed to a peer when requested. A peer can use
-this list to selectivly forward dns requests to the
+A list of split dns suffixes to be passed to a peer when requested. A peer can
+use this list to selectivly forward dns requests to the
 .Ic dnss4
 server when a query matches one of the supplied split dns suffixes.
 .It Ic banner Ar quoted;
-The path to a file that contains a login banner to be passed to a peer when requested.
+The path to a file that contains a login banner to be passed to a peer when
+requested.
 .It Ic pfs_group Ar number;
 The pfs group number to be passed to a peer when requested.
 .El
@@ -241,9 +243,9 @@ The pfs group number to be passed to a peer when requested.
 .Bl -tag -width Ds -compact
 .It Ic peer Ar address [ number ] Ic { Ar statements Ic }
 Specifies the parameters used to communicate with a given peer by address and
-optional port number. If the port value is omitted, the default isakmp port number will
-be used ( 500 ). If an address of 0.0.0.0 is used, the peer section can be used for any
-remote host. Multiple 
+optional port number. If the port value is omitted, the default isakmp port
+number will be used ( 500 ). If an address of 0.0.0.0 is used, the peer
+section can be used for any remote host. Multiple 
 .Ic peer
 sections may be defined.
 .Pp
@@ -251,32 +253,37 @@ sections may be defined.
 .It Ic contact (initiator | responder | both) ;
 Specifies the contact type when establishing phase1 negotiations with a peer. If
 .Ic initiator
-is used, the daemon will initiate contact but deny contact initiated by the peer. If
+is used, the daemon will initiate contact but deny contact initiated by the
+peer. If
 .Ic responder
-is used, the deamon will allow contact initiated by the peer but will not initiate
-contact. If
+is used, the deamon will allow contact initiated by the peer but will not
+initiate contact. If
 .Ic both
-is specified, the daemon will initiate contact and allow the peer to initiate contact.
-.It Ic contact (main | aggressive) ;
-Specifies the exchange type to be used for phase1 negotiations with a peer. The default
-value for this paramater is
+is specified, the daemon will initiate contact and allow the peer to initiate
+contact.
+.It Ic exchange (main | aggressive) ;
+Specifies the exchange type to be used for phase1 negotiations with a peer.
+The default value for this paramater is
 .Ic main .
 .It Ic natt_mode (disable | enable | force) ;
-Specifies the NAT Traversal mode to be used for phase1 negotiations with a peer. If
+Specifies the NAT Traversal mode to be used for phase1 negotiations with a
+peer. If
 .Ic disable
 is used, natt negotiations will not be attempted. If
 .Ic enable
-is used, the daemon will attempt to negotiate and use NAT Traversal when appropriate. If
+is used, the daemon will attempt to negotiate and use NAT Traversal when
+appropriate. If
 .Ic force
-is used, the daemon will use NAT Traversal even if the peer does not negotiate support
-for this feature. The default value for this parameter is
+is used, the daemon will use NAT Traversal even if the peer does not negotiate
+ support for this feature. The default value for this parameter is
 .Ic disable .
 .It Ic natt_port Ar number ;
-Specifies the NAT Traversal port number to be used for phase1 negotiations with a peer
-when acting as an initiator. The default value for this parameter is 4500.
+Specifies the NAT Traversal port number to be used for phase1 negotiations
+with a peer when acting as an initiator. The default value for this parameter
+is 4500.
 .It Ic natt_rate Ar number ;
-Specifies the number of seconds between sending NAT Traversal keep-alive messages. The
-default value for this parameter is 15.
+Specifies the number of seconds between sending NAT Traversal keep-alive
+messages. The default value for this parameter is 15.
 .It Ic dpd_mode (disable | enable | force) ;
 Specifies the Dead Peer Detection mode to be used with a peer. If
 .Ic disable
@@ -288,105 +295,115 @@ is used, the daemon will use DPD even if the peer does not negotiate support
 for this feature. The default value for this parameter is
 .Ic disable .
 .It Ic dpd_rate Ar number ;
-Specifies the number of seconds between sending DPD are-you-there messages. The default
-value for this parameter is 30.
+Specifies the number of seconds between sending DPD are-you-there messages. The
+default value for this parameter is 30.
 .It Ic frag_ike_mode (disable | enable | force) ;
 Specifies the IKE Fragmentation mode to be used with a peer. If
 .Ic disable
 is used, IKE Fragmentation negotiations will not be attemted. If 
 .Ic enable
-is used, the daemon will attempt to negotiate and use IKE Fragmentation when appropriate. If
+is used, the daemon will attempt to negotiate and use IKE Fragmentation when
+appropriate. If
 .Ic force
-is used, the daemon will use IKE Fragmentation even if the peer does not negotiate support
-for this feature. The default value for this parameter is
+is used, the daemon will use IKE Fragmentation even if the peer does not
+negotiate support for this feature. The default value for this parameter is
 .Ic disable .
 .It Ic frag_ike_size Ar number ;
-Specifies the maximum number of bytes for an IKE Fragment. The default value for this
-parameter is 520.
+Specifies the maximum number of bytes for an IKE Fragment. The default value
+for this parameter is 520.
 .It Ic frag_esp_mode (disable | enable) ;
 Specifies the ESP Fragmentation mode to be used with a peer. If
 .Ic disable
-is used, the daemon will create IPSEC SAs without the ESP Fragmentation option. If 
+is used, the daemon will create IPSEC SAs without the ESP Fragmentation option.
+If 
 .Ic enable
-is used, the daemon will create IPSEC SAs with the ESP Fragmentation option. The default
-value for this parameter is
+is used, the daemon will create IPSEC SAs with the ESP Fragmentation option.
+The default value for this parameter is
 .Ic disable .
-Note, ESP Fragmentation is only valid for IPSEC SAs using NAT Traversal. The operating
-system must also have support for this feature. ( currently only NetBSD )
+Note, ESP Fragmentation is only valid for IPSEC SAs using NAT Traversal. The
+operating system must also have support for this feature. ( NetBSD Only )
 .It Ic frag_esp_size Ar number ;
-Specifies the maximum number of bytes for an ESP Fragment. The default value for this
-parameter is 520.
+Specifies the maximum number of bytes for an ESP Fragment. The default value
+for this parameter is 520.
 .It Ic peerid (local | remote) Ar type ... ;
 Specifies either the
 .Ic local
 identity to be sent to a peer or the
 .Ic remote
-identity to be compared with the value recieved from a peer during phase1 negotiations.
-The valid identity
+identity to be compared with the value recieved from a peer during phase1
+negotiations. The valid identity
 .Ar types
 are as follows ...
 .Bl -tag -width Ds -compact
 .It Ic address Ar [address] ;
-An IP Address. If the address value is omitted, the network address used during phase1
-negotiations is used.
+An IP Address. If the address value is omitted, the network address used
+during phase1 negotiations is used.
 .It Ic fqdn Ar quoted ;
 A Fully Qualified Domain Name string.
 .It Ic ufqdn Ar quoted ;
 A User Fully Qualified Domain Name string.
 .It Ic asn1dn Ar [quoted] ;
-An ASN.1 Distinguished Name string. If the quoted value is omitted, the daemon will aquire
-the DN from the subject field contained within the certificate.
+An ASN.1 Distinguished Name string. If the quoted value is omitted, the daemon
+will aquire the DN from the subject field contained within the certificate.
 .El
 .It Ic authdata Ar type ... ;
-Specifies the authentication data to use during phase1 negotiations. The valid authentication
-data
+Specifies the authentication data to use during phase1 negotiations. The valid
+authentication data
 .Ar types
 are as follows ...
 .Bl -tag -width Ds -compact
 .It Ic psk Ar quoted ;
 A Pre Shared Secret.
 .It Ic ca Ar quoted [quoted];
-A path to a OpenSSL PEM or PSK12 file that contains the Remote Certificate Autority. In the
-case where a PSK12 file is encrypted, the second quoted parameter specifies the file password.
+A path to a OpenSSL PEM or PSK12 file that contains the Remote Certificate
+Autority. In the case where a PSK12 file is encrypted, the second quoted
+parameter specifies the file password.
 .It Ic cert Ar quoted [quoted];
-A path to a OpenSSL PEM or PSK12 file that contains the Local Public Certificate. In the case
-where a PSK12 file is encrypted, the second quoted parameter specifies the file password.
+A path to a OpenSSL PEM or PSK12 file that contains the Local Public
+Certificate. In the case where a PSK12 file is encrypted, the second quoted
+parameter specifies the file password.
 .It Ic pkey Ar quoted [quoted];
-A path to a OpenSSL PEM or PSK12 file that contains the Local Private Key. In the case where a
-PSK12 file is encrypted, the second quoted parameter specifies the password.
+A path to a OpenSSL PEM or PSK12 file that contains the Local Private Key. In
+the case where a PSK12 file is encrypted, the second quoted parameter specifies
+the password.
 .El
 .It Ic life_check Ar level ;
-Specifies the behavior when validating peer lifetime proposal values. The default level is
+Specifies the behavior when validating peer lifetime proposal values. The
+default level is
 .Ic claim .
 The valid levels are as follows ...
 .Bl -tag -width Ds -compact
 .It Ic obey
 A responder will always use the initiators value.
 .It Ic strict
-A responder will use the initiators value if it is shorter than the responders. A responder
-will reject the proposal if the initiators value is greater than the responders.
+A responder will use the initiators value if it is shorter than the responders.
+A responder will reject the proposal if the initiators value is greater than
+the responders.
 .It Ic claim
-A responder will use the initiators value if it is shorter than the responders. A responder
-will use its own value if it is shorter than the initiators. In the second case, the
-responder will send a RESPONDER-LIFETIME notification to the initiator when responding to
-phase2 proposals.
+A responder will use the initiators value if it is shorter than the responders.
+A responder will use its own value if it is shorter than the initiators. In
+the second case, the responder will send a RESPONDER-LIFETIME notification to
+the initiator when responding to phase2 proposals.
 .It Ic exact ;
-A responder will reject the proposal if the initiators value is not equal to the responders.
+A responder will reject the proposal if the initiators value is not equal to
+the responders.
 .El
 .It Ic xauth_source (local | ldap) Ar [quoted] ;
-Sepcifies the Extended Authentication source to be used for user authentication post phase1
-negotitations. The optional quoted value specifies a group name that can be used to restrict
-access to only users that are valid members of the group. If
+Sepcifies the Extended Authentication source to be used for user authentication
+post phase1 negotitations. The optional quoted value specifies a group name
+that can be used to restrict access to only users that are valid members of the
+group. If
 .Ic local
-is used, the peer supplied credentials will be compared to the local account database. If
+is used, the peer supplied credentials will be compared to the local account
+database. If
 .Ic ldap
-is used, the peer supplied credentials will be compared to an LDAP account database. The
-LDAP source configuration is defined in the
+is used, the peer supplied credentials will be compared to an LDAP account
+database. The LDAP source configuration is defined in the
 .Ic xauth_ldap
 section. The default value for this parameter is
 .Ic local .
 .It Ic xconf_source local Ic [(push | pull)];
-Sepcifies the Transactional Configuration source to be used when responding to peer
+Sepcifies the Configuration Exchange source to be used when responding to peer
 configuration requests. If
 .Ic local
 is used, the daemon will supply configuration information defined in the
@@ -398,14 +415,16 @@ Specifies the policy generation mode. When
 .Ic disable
 is used, no policy generation is performed. When
 .Ic config
-mode is used, policy generation is performed during Transactional Configuration. This allows
-the daemon to generate polices using the peers private tunnel address. When
+mode is used, policy generation is performed during Configuration Exchange.
+This allows the daemon to generate polices using the peers private tunnel
+address. When
 .Ic compat
-mode is used, policy generation is performed post phase1 negotiations. This allows the daemon
-to interoperate with peers that do not support Transactional Configuration.
+mode is used, policy generation is performed post phase1 negotiations. This
+allows the daemon to interoperate with peers that do not support Configuration
+Exchanges.
 .It Ic plcy_list { Ar statements Ic }
-Specifies a list of network groups and parameters that can be used to perform policy generation.
-If no
+Specifies a list of network groups and parameters that can be used to perform
+policy generation. If no
 .Ic plcy_list
 is defined but
 .Ic plcy_mode
@@ -424,33 +443,36 @@ by label for use with policy generation. When
 .Ic include
 is used, the daemon will generate appropriate ipsec policies and pass all
 .Ic netgroup
-defined networks during Transactional Config if requested. A peer would use this configuration
-information to selectively tunnel all traffic destined for any one of these networks. If
+defined networks during the Configuration Exchange if requested. A peer would
+use this configuration information to selectively tunnel all traffic destined
+for any one of these networks. If
 .Ic exlcude
 is used, the daemon will generate appropriate discard policies and pass all
 .Ic netgroup
-defined networks during Transactional Config if requested. A peer would use this configuration
-information to selectively bypass ipsec processing for all traffic destined to any one of
-these networks. The optional quoted string specifies a group name that can be used to restrict
-processing of this netgroup to only users that are valid members of the group. If XAuth is
-not performed, statements that define a group name are skipped.
+defined networks during the Configuration Exchange if requested. A peer would
+use this configuration information to selectively bypass ipsec processing for
+all traffic destined to any one of these networks. The optional quoted string
+specifies a group name that can be used to restrict processing of this
+netgroup to only users that are valid members of the group. If XAuth is not
+performed, statements that define a group name are skipped.
 .El
 .It Ic proposal Ar type { statements }
-Specifies a proposal to be used during SA negotiations with a peer. The valid proposal types
-are as follows ...
+Specifies a proposal to be used during SA negotiations with a peer. The valid
+proposal types are as follows ...
 .Bl -tag -width Ds -compact
 .Pp
 .It Ic isakmp
 An ISAKMP proposal supports the following ...
 .Bl -tag -width Ds -compact
 .It Ic auth Ar type ;
-Define the authentication mechanism for the ISAKMP proposal. The accepted types are
+Define the authentication mechanism for the ISAKMP proposal. The accepted types
+are
 .Ic hybrid_xauth_rsa , mutual_xauth_rsa , mutual_xauth_psk , mutual_rsa
 and
 .Ic mutual_psk .
 .It Ic ciph Ar type [number] ;
-Define the cipher algorithm for this proposal. The optional number specifies the
-keylength for algorithms that support it. The accepted types are
+Define the cipher algorithm for this proposal. The optional number specifies
+the keylength for algorithms that support it. The accepted types are
 .Ic aes , blowfish , 3des , cast
 and
 .Ic des .
@@ -485,13 +507,14 @@ and
 An ESP proposal supports the following ...
 .Bl -tag -width Ds -compact
 .It Ic ciph Ar type [number] ;
-Define the cipher algorithm for this proposal. The optional number specifies the
-keylength for algorithms that support it. The accepted types are
+Define the cipher algorithm for this proposal. The optional number specifies
+the keylength for algorithms that support it. The accepted types are
 .Ic aes , blowfish , 3des , cast
 and
 .Ic des .
 .It Ic hmac Ar type ;
-Define the message authentication algorithm for this proposal. The accepted types are
+Define the message authentication algorithm for this proposal. The accepted
+types are
 .Ic md5
 and
 .Ic sha1 .
@@ -527,8 +550,8 @@ Define the lifetime in kilobytes for this proposal.
 .Pp
 .Sh EXAMPLES
 .Pp
-The first example shows a configuration that supports simple peer to peer negotiations using
-mutual preshared key authentication.
+The first example shows a configuration that supports simple peer to peer
+negotiations using mutual preshared key authentication.
 
  peer 1.2.3.4
  {
@@ -556,14 +579,15 @@ mutual preshared key authentication.
      }
  }
 
-The second example shows a configuration that supports client gateway negotiations using
-mutual preshared key authentication with xauth, nat traversal, dead peer detection, ike
-fragmentation and policy generation. The daemon would allow xauth users that are
-members of the "remote" group to connect to the gateway. Policies would be generated to
-allow a peer access to the 10.1.1.0/24 and 1.3.3.0/24 networks with the exception of
-1.1.1.15/32 which would need to be accessed directly. Peers that use an xauth user account
-that is a member of the "netadmin" group would have additional policies generated to allow
-access to the 10.4.4.0/24 network.
+The second example shows a configuration that supports client gateway
+negotiations using mutual preshared key authentication with xauth, nat
+traversal, dead peer detection, ike fragmentation and policy generation. The
+daemon would allow xauth users that are members of the "remote" group to
+connect to the gateway. Policies would be generated to allow a peer access to
+the 10.1.1.0/24 and 1.3.3.0/24 networks with the exception of 1.1.1.15/32
+which would need to be accessed directly. Peers that use an xauth user account
+that is a member of the "netadmin" group would have additional policies
+generated to allow access to the 10.4.4.0/24 network.
 
  netgroup allow
  {
