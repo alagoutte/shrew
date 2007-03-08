@@ -1,0 +1,328 @@
+<!DOCTYPE UI><UI version="3.3" stdsetdef="1">
+<class>root</class>
+<widget class="QMainWindow">
+    <property name="name">
+        <cstring>root</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>355</width>
+            <height>286</height>
+        </rect>
+    </property>
+    <property name="font">
+        <font>
+            <pointsize>8</pointsize>
+        </font>
+    </property>
+    <property name="caption">
+        <string>Shrew Soft VPN Access Manager</string>
+    </property>
+    <property name="icon">
+        <pixmap>ikea.png</pixmap>
+    </property>
+    <property name="usesBigPixmaps">
+        <bool>false</bool>
+    </property>
+    <property name="usesTextLabel">
+        <bool>true</bool>
+    </property>
+    <vbox>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <property name="margin">
+            <number>1</number>
+        </property>
+        <widget class="QIconView">
+            <property name="name">
+                <cstring>iconViewSites</cstring>
+            </property>
+            <property name="frameShape">
+                <enum>GroupBoxPanel</enum>
+            </property>
+            <property name="frameShadow">
+                <enum>Plain</enum>
+            </property>
+            <property name="lineWidth">
+                <number>1</number>
+            </property>
+            <property name="spacing">
+                <number>5</number>
+            </property>
+        </widget>
+    </vbox>
+</widget>
+<menubar>
+    <property name="name">
+        <cstring>MenuBar</cstring>
+    </property>
+    <item text="&amp;File" name="fileMenu">
+        <action name="fileConnectAction"/>
+        <separator/>
+        <action name="fileImportAction"/>
+        <action name="fileExportAction"/>
+        <separator/>
+        <action name="fileExitAction"/>
+    </item>
+    <item text="&amp;Edit" name="editMenu">
+        <action name="editAddAction"/>
+        <action name="editDeleteAction"/>
+        <action name="editRenameAction"/>
+        <separator/>
+        <action name="editPropertiesAction"/>
+    </item>
+    <item text="&amp;Help" name="helpMenu">
+        <action name="helpContentsAction"/>
+        <action name="helpIndexAction"/>
+        <separator/>
+        <action name="helpAboutAction"/>
+    </item>
+</menubar>
+<toolbars>
+    <toolbar dock="2">
+        <property name="name">
+            <cstring>toolBar</cstring>
+        </property>
+        <property name="frameShape">
+            <enum>Box</enum>
+        </property>
+        <property name="frameShadow">
+            <enum>Plain</enum>
+        </property>
+        <property name="margin">
+            <number>4</number>
+        </property>
+        <property name="movingEnabled">
+            <bool>false</bool>
+        </property>
+        <property name="horizontallyStretchable">
+            <bool>false</bool>
+        </property>
+        <property name="label">
+            <string>Tools</string>
+        </property>
+        <action name="fileConnectAction"/>
+        <separator/>
+        <action name="editAddAction"/>
+        <action name="editPropertiesAction"/>
+        <action name="editDeleteAction"/>
+    </toolbar>
+</toolbars>
+<actions>
+    <action>
+        <property name="name">
+            <cstring>fileSaveAsAction</cstring>
+        </property>
+        <property name="text">
+            <string>Save As</string>
+        </property>
+        <property name="menuText">
+            <string>Save &amp;As...</string>
+        </property>
+        <property name="accel">
+            <string></string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>fileExitAction</cstring>
+        </property>
+        <property name="on">
+            <bool>false</bool>
+        </property>
+        <property name="text">
+            <string>Exit</string>
+        </property>
+        <property name="menuText">
+            <string>E&amp;xit</string>
+        </property>
+        <property name="accel">
+            <string></string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>helpContentsAction</cstring>
+        </property>
+        <property name="text">
+            <string>Contents</string>
+        </property>
+        <property name="menuText">
+            <string>&amp;Contents...</string>
+        </property>
+        <property name="accel">
+            <string></string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>helpIndexAction</cstring>
+        </property>
+        <property name="text">
+            <string>Index</string>
+        </property>
+        <property name="menuText">
+            <string>&amp;Index...</string>
+        </property>
+        <property name="accel">
+            <string></string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>helpAboutAction</cstring>
+        </property>
+        <property name="text">
+            <string>About</string>
+        </property>
+        <property name="menuText">
+            <string>&amp;About</string>
+        </property>
+        <property name="accel">
+            <string></string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>fileConnectAction</cstring>
+        </property>
+        <property name="iconSet">
+            <iconset>site_con.png</iconset>
+        </property>
+        <property name="text">
+            <string>Connect</string>
+        </property>
+        <property name="menuText">
+            <string>Connect</string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>fileImportAction</cstring>
+        </property>
+        <property name="text">
+            <string>Import</string>
+        </property>
+        <property name="menuText">
+            <string>Import</string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>fileExportAction</cstring>
+        </property>
+        <property name="text">
+            <string>Export</string>
+        </property>
+        <property name="menuText">
+            <string>Export</string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>editAddAction</cstring>
+        </property>
+        <property name="iconSet">
+            <iconset>site_add.png</iconset>
+        </property>
+        <property name="text">
+            <string>Add</string>
+        </property>
+        <property name="menuText">
+            <string>Add</string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>editDeleteAction</cstring>
+        </property>
+        <property name="iconSet">
+            <iconset>site_del.png</iconset>
+        </property>
+        <property name="text">
+            <string>Delete</string>
+        </property>
+        <property name="menuText">
+            <string>Delete</string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>editRenameAction</cstring>
+        </property>
+        <property name="text">
+            <string>Rename</string>
+        </property>
+        <property name="menuText">
+            <string>Rename</string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>editPropertiesAction</cstring>
+        </property>
+        <property name="iconSet">
+            <iconset>site_mod.png</iconset>
+        </property>
+        <property name="text">
+            <string>Properties</string>
+        </property>
+        <property name="menuText">
+            <string>Properties</string>
+        </property>
+    </action>
+</actions>
+<connections>
+    <connection>
+        <sender>fileExitAction</sender>
+        <signal>activated()</signal>
+        <receiver>root</receiver>
+        <slot>close()</slot>
+    </connection>
+    <connection>
+        <sender>editAddAction</sender>
+        <signal>activated()</signal>
+        <receiver>root</receiver>
+        <slot>AddSite()</slot>
+    </connection>
+    <connection>
+        <sender>editPropertiesAction</sender>
+        <signal>activated()</signal>
+        <receiver>root</receiver>
+        <slot>ModSite()</slot>
+    </connection>
+    <connection>
+        <sender>editDeleteAction</sender>
+        <signal>activated()</signal>
+        <receiver>root</receiver>
+        <slot>DelSite()</slot>
+    </connection>
+    <connection>
+        <sender>iconViewSites</sender>
+        <signal>contextMenuRequested(QIconViewItem*,const QPoint&amp;)</signal>
+        <receiver>root</receiver>
+        <slot>ContextSite(QIconViewItem*,const QPoint&amp;)</slot>
+    </connection>
+    <connection>
+        <sender>helpAboutAction</sender>
+        <signal>activated()</signal>
+        <receiver>root</receiver>
+        <slot>About()</slot>
+    </connection>
+</connections>
+<includes>
+    <include location="local" impldecl="in implementation">root.ui.h</include>
+</includes>
+<slots>
+    <slot>AddSite()</slot>
+    <slot>ModSite()</slot>
+    <slot>DelSite()</slot>
+    <slot>ContextSite( QIconViewItem * item, const QPoint &amp; pos )</slot>
+    <slot>About()</slot>
+</slots>
+<pixmapinproject/>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>
