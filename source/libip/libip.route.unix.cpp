@@ -4,9 +4,52 @@
 typedef struct _RTMSG
 {
 	rt_msghdr	hdr;
-	char		msg[ 512 ];
+	char		msg[ 1024 ];
 
 }RTMSG;
+
+bool rtmsg_result( RTMSG * rtmsg, in_addr * dst, in_addr * gwy, in_addr * msk, in_addr * ifa )
+{
+	char *	cp = rtmsg->msg;
+
+	for( int i = 1; i; i <<= 1 )
+	{
+		if( i & rtmsg->hdr.rtm_addrs )
+		{
+			struct sockaddr * sa = ( struct sockaddr * ) cp;
+
+			switch( i )
+			{
+				case RTA_DST:
+					if( dst != NULL )
+						*dst = ( ( sockaddr_in * ) cp )->sin_addr;
+					break;
+
+				case RTA_GATEWAY:
+					if( gwy != NULL )
+						*gwy = ( ( sockaddr_in * ) cp )->sin_addr;
+					break;
+
+				case RTA_NETMASK:
+					if( msk != NULL )
+						*msk = ( ( sockaddr_in * ) cp )->sin_addr;
+					break;
+
+				case RTA_IFP:
+					break;
+
+				case RTA_IFA:
+					if( ifa != NULL )
+						*ifa = ( ( sockaddr_in * ) cp )->sin_addr;
+					break;
+			}
+
+			cp += SA_SIZE( sa );
+		}
+	}
+
+	return true;
+}
 
 _IPROUTE::_IPROUTE()
 {
@@ -53,8 +96,8 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	RTMSG rtmsg;
 	memset( &rtmsg, 0, sizeof( rtmsg ) );
 
-	rtmsg.hdr.rtm_type = RTM_GET;  
-	rtmsg.hdr.rtm_flags = RTF_UP | RTF_GATEWAY | RTF_HOST | RTF_STATIC;
+	rtmsg.hdr.rtm_type = RTM_GET;
+	rtmsg.hdr.rtm_flags = RTF_UP | RTF_HOST | RTF_STATIC;
 	rtmsg.hdr.rtm_version = RTM_VERSION;
 	rtmsg.hdr.rtm_seq = ++seq;
 	rtmsg.hdr.rtm_addrs = RTA_DST | RTA_IFP;
@@ -70,10 +113,10 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	ifp->sdl_family = AF_LINK;
 	ifp->sdl_len = sizeof( sockaddr_dl );
 
-	long l = 0;
-	l += sizeof( rtmsg.hdr );
-	l += sizeof( sockaddr_in );
-	l += sizeof( sockaddr_dl );
+	rtmsg.hdr.rtm_msglen += sizeof( rtmsg.hdr );
+	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
+	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_dl );
+	long l = rtmsg.hdr.rtm_msglen;
 
 	if( write( s, ( char * ) &rtmsg, l ) < 0 )
 	{
@@ -95,63 +138,14 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	while( ( rtmsg.hdr.rtm_seq != seq ) ||
 		   ( rtmsg.hdr.rtm_pid != pid ) );
 
+	close( s );
+
 	if( ( rtmsg.hdr.rtm_errno ) ||
 		( rtmsg.hdr.rtm_msglen > l ) ||
 		( rtmsg.hdr.rtm_version != RTM_VERSION ) )
-	{
-		close( s );
 		return false;
-	}
 
-	dst = NULL;
-	ifp = NULL;
-
-	sockaddr_in * msk = NULL;
-	sockaddr_in * nxt = NULL;
-
-	char * cp = rtmsg.msg;
-
-	for( int i = 1; i; i <<= 1 )
-	{
-		if( i & rtmsg.hdr.rtm_addrs )
-		{
-			switch( i )
-			{
-				case RTA_DST:
-					dst = ( sockaddr_in * ) cp;
-					break;
-
-				case RTA_GATEWAY:
-					nxt = ( sockaddr_in * ) cp;
-					break;
-
-				case RTA_NETMASK:
-					msk = ( sockaddr_in * ) cp;
-					break;
-
-				case RTA_IFP:
-					ifp = ( sockaddr_dl * ) cp;
-					break;
-			}
-
-			cp += ( ( sockaddr * ) cp )->sa_len;
-		}
-	}
-
-	if( dst )
-		printf( "XX : dst = %s\n", inet_ntoa( dst->sin_addr ) );
-		
-	if( nxt )
-		printf( "XX : nxt = %s\n", inet_ntoa( nxt->sin_addr ) );
-		
-	if( msk )
-		printf( "XX : msk = %s\n", inet_ntoa( msk->sin_addr ) );
-		
-	if( ifp )
-		printf( "XX : ifp = %s\n", ifp->sdl_data );
-		
-	close( s );
-	return true;
+	return rtmsg_result( &rtmsg, NULL, NULL, NULL, &iface );
 }
 
 /*

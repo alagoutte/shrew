@@ -1,5 +1,20 @@
+PLATFORM NOTES
+--------------
+
+The only platforms that have been tested at present are FreeBSD i386 and
+amd64. This software also compiles on NetBSD but does not work as there
+are threading issues. For FreeBSD amd64 builds, you must first specify
+the -fPIC compiler option in the C_FLAGS environment variable before
+attempting to compile. For example, from a bash shell you enter the
+following command ...
+
+export C_FLAGS=-fPIC
+
+COMPILING
+---------
+
 The build system is very basic at the moment. The make files use BSD style
-rules so the project will need to be autotooled before it will build on
+rules so the project will need to be re-tooled before it will build on
 other platforms. The root make file is located in the unix directory. To
 build and install the ike daemon, enter the following commands using the
 root login ...
@@ -8,17 +23,24 @@ cd unix
 make
 make install
 
-You can also specify a few build options. Here is a brief list ...
+OPTIONS
+-------
+
+A few build options may be specified. Here is a brief list ...
 
 DEBUG	preserve debug symbols
 NATT	enable natt support ( requires kernel support )
 LDAP	enable ldap support ( requires openldap client )
 
-To build iked with all options, you would specify ...
+For example, to build iked with all options, you would specify ...
 
 cd unix
 make -DDEBUG -DNATT -DLDAP
 make install
 
-This software does require Bison version 2.3 or higher as it uses the new
-c++ parser model.
+REQUIREMENTS
+------------
+
+This software requires Bison version 2.3 or higher as it uses the new
+c++ parser model. The c++ model was introduced in 2.1 but appears to
+be broken in that release.

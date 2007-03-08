@@ -391,85 +391,6 @@ long _IKEI::send_msg_cfgstr( long type, char * str, long len, long * msgres )
 	return send_bidir( IKEI_MSGID_CFGSTR, type, str, len, msgres );
 }
 
-#ifdef UNIX
-
-_IKES::_IKES()
-{
-	sock = -1;
-}
-
-_IKES::~_IKES()
-{
-	if( sock != -1 )
-		close( sock );
-}
-
-bool _IKES::init()
-{
-	unlink( IKEI_SOCK_NAME );
-
-	sock = socket( AF_UNIX, SOCK_STREAM, 0 );
-	if( sock == -1 )
-		return false;
-
-	struct sockaddr_un saddr;
-	saddr.sun_family = AF_UNIX;
-	saddr.sun_len = strlen( IKEI_SOCK_NAME ) +
-			sizeof( saddr.sun_len ) +
-			sizeof( saddr.sun_family );
-
-	strcpy( saddr.sun_path, IKEI_SOCK_NAME );
-
-	if( bind( sock, ( struct sockaddr * ) &saddr, saddr.sun_len ) < 0 )
-		return false;
-
-	if( listen( sock, 5 ) < 0 )
-		return false;
-
-	return true;
-}
-
-IKEI * _IKES::inbound()
-{
-	fd_set fdset;
-	FD_ZERO( &fdset );
-	FD_SET( sock, &fdset );
-
-	struct timeval tv;
-	tv.tv_sec = 1;
-	tv.tv_usec = 10000;
-
-	printf( "XX : waiting on connections\n" );
-
-	if( select( sock + 1, &fdset, NULL, NULL, &tv ) <= 0 )
-		return NULL;
-
-	printf( "XX : inbound connection available\n" );
-
-	struct sockaddr_un saddr;
-	saddr.sun_len = sizeof( saddr );
-	socklen_t len = saddr.sun_len;
-
-	int csock = accept( sock, NULL, NULL );
-
-	printf( "XX : accept returned\n" );
-
-	if( csock < 0 )
-	{
-		printf( "XX : inbound connection is defunct\n" );
-		return NULL;
-	}
-
-	IKEI * ikei = new IKEI;
-	ikei->sock = csock;
-
-	printf( "XX : accepted\n" );
-
-	return ikei;
-}
-
-#endif
-
 #ifdef WIN32
 
 _IKES::_IKES()
@@ -610,6 +531,88 @@ IKEI * _IKES::inbound()
 	}
 
 	return NULL;
+}
+
+#endif
+
+#ifdef UNIX
+
+_IKES::_IKES()
+{
+	sock = -1;
+}
+
+_IKES::~_IKES()
+{
+	if( sock != -1 )
+		close( sock );
+}
+
+bool _IKES::init()
+{
+	unlink( IKEI_SOCK_NAME );
+
+	sock = socket( AF_UNIX, SOCK_STREAM, 0 );
+	if( sock == -1 )
+		return false;
+
+	struct sockaddr_un saddr;
+	saddr.sun_family = AF_UNIX;
+	saddr.sun_len = strlen( IKEI_SOCK_NAME ) +
+			sizeof( saddr.sun_len ) +
+			sizeof( saddr.sun_family );
+
+	strcpy( saddr.sun_path, IKEI_SOCK_NAME );
+
+	if( bind( sock, ( struct sockaddr * ) &saddr, saddr.sun_len ) < 0 )
+		return false;
+
+	if( chmod( IKEI_SOCK_NAME, S_IRWXU | S_IRWXG | S_IRWXO ) < 0 )
+		return false;
+
+	if( listen( sock, 5 ) < 0 )
+		return false;
+
+	return true;
+}
+
+IKEI * _IKES::inbound()
+{
+	fd_set fdset;
+	FD_ZERO( &fdset );
+	FD_SET( sock, &fdset );
+
+	struct timeval tv;
+	tv.tv_sec = 1;
+	tv.tv_usec = 10000;
+
+	printf( "XX : waiting on connections\n" );
+
+	if( select( sock + 1, &fdset, NULL, NULL, &tv ) <= 0 )
+		return NULL;
+
+	printf( "XX : inbound connection available\n" );
+
+	struct sockaddr_un saddr;
+	saddr.sun_len = sizeof( saddr );
+	socklen_t len = saddr.sun_len;
+
+	int csock = accept( sock, NULL, NULL );
+
+	printf( "XX : accept returned\n" );
+
+	if( csock < 0 )
+	{
+		printf( "XX : inbound connection is defunct\n" );
+		return NULL;
+	}
+
+	IKEI * ikei = new IKEI;
+	ikei->sock = csock;
+
+	printf( "XX : accepted\n" );
+
+	return ikei;
 }
 
 #endif

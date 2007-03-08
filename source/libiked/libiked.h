@@ -52,6 +52,7 @@
 #ifdef UNIX
 
 #include <sys/un.h>
+#include <sys/stat.h>
 
 #endif
 

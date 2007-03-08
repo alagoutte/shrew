@@ -27,8 +27,8 @@ all: $(LIBIKED_O)
 	$(CC) -c $(C_FLAGS) $(D_FLAGS) $(H_FLAGS) $<
 	
 clean:
-	-test -z "$(LIBIP_O)" || rm -f $(LIBIKED_O)
-	-test -z "$(LIBIP_B)" || rm -f $(LIBIKED_B)
+	-test -z "$(LIBIKED_O)" || rm -f $(LIBIKED_O)
+	-test -z "$(LIBIKED_B)" || rm -f $(LIBIKED_B)
 
 install:
 	-install -c $(LIBIKED_B) /usr/local/lib/
