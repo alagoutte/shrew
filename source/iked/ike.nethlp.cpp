@@ -932,19 +932,22 @@ bool _IKED::find_addr_l( IKE_SADDR & saddr_r, IKE_SADDR & saddr_l, unsigned shor
 	// log the result
 	//
 
-	char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-	text_addr( txtaddr, &saddr_l, true );
-
 	if( found )
 	{
+		char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+		text_addr( txtaddr, &saddr_l, true );
+
 		log.txt( LOG_DEBUG,
 				"ii : local address %s selected for peer\n",
 				txtaddr );
 	}
 	else
 	{
+		char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+		text_addr( txtaddr, &saddr_r, true );
+
 		log.txt( LOG_DEBUG,
-				"ii : unable to select address for peer at %s\n",
+				"ii : unable to select local address for peer %s\n",
 				txtaddr );
 	}
 

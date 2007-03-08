@@ -344,6 +344,7 @@ int main( int argc, char * argv[], char * envp[] )
 	//
 
 	signal( SIGINT, daemon_stop );
+	signal( SIGPIPE, SIG_IGN );
 
 	//
 	// are we running as a deamon

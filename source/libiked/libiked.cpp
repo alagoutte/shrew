@@ -150,6 +150,7 @@ long _IKEI::send_msg( void * data, unsigned long size )
 
 _IKEI::_IKEI()
 {
+	sock = -1;
 }
 
 _IKEI::~_IKEI()
@@ -158,6 +159,21 @@ _IKEI::~_IKEI()
 
 long _IKEI::open( long timeout )
 {
+	sock = socket( AF_UNIX, SOCK_STREAM, 0 );
+	if( sock == -1 )
+		return IKEI_FAILED;
+
+	struct sockaddr_un saddr;
+	saddr.sun_family = AF_UNIX;
+	saddr.sun_len = strlen( IKEI_SOCK_NAME ) +
+			sizeof( saddr.sun_len ) +
+			sizeof( saddr.sun_family );
+
+	strcpy( saddr.sun_path, IKEI_SOCK_NAME );
+
+	if( connect( sock, ( struct sockaddr * ) &saddr, saddr.sun_len ) < 0 )
+		return IKEI_FAILED;
+
 	return IKEI_OK;
 }
 
@@ -167,16 +183,39 @@ void _IKEI::close()
 
 long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
 {
-	return IKEI_NODATA;
+	fd_set fdset;
+	FD_ZERO( &fdset );
+	FD_SET( sock, &fdset );
+
+	struct timeval tv;
+	tv.tv_sec = 0;
+	tv.tv_usec = timeout * 1000;
+
+	if( select( sock + 1, &fdset, NULL, NULL, &tv ) <= 0 )
+		return IKEI_NODATA;
+
+	ssize_t size = recv( sock, &msg, sizeof( msg ), MSG_PEEK );
+	if( size != sizeof( msg ) )
+		return IKEI_FAILED;
+
+	return IKEI_OK;
 }
 
 long _IKEI::recv_msg( void * data, unsigned long & size, bool wait )
 {
+	size = recv( sock, data, size, 0 );
+	if( size != size )
+		return IKEI_FAILED;
+
 	return IKEI_OK;
 }
 
 long _IKEI::send_msg( void * data, unsigned long size )
 {
+	ssize_t sent = send( sock, data, size, 0 );
+	if( sent != size )
+		return IKEI_FAILED;
+
 	return IKEI_OK;
 }
 
@@ -356,20 +395,77 @@ long _IKEI::send_msg_cfgstr( long type, char * str, long len, long * msgres )
 
 _IKES::_IKES()
 {
+	sock = -1;
 }
 
 _IKES::~_IKES()
 {
+	if( sock != -1 )
+		close( sock );
 }
 
 bool _IKES::init()
 {
+	unlink( IKEI_SOCK_NAME );
+
+	sock = socket( AF_UNIX, SOCK_STREAM, 0 );
+	if( sock == -1 )
+		return false;
+
+	struct sockaddr_un saddr;
+	saddr.sun_family = AF_UNIX;
+	saddr.sun_len = strlen( IKEI_SOCK_NAME ) +
+			sizeof( saddr.sun_len ) +
+			sizeof( saddr.sun_family );
+
+	strcpy( saddr.sun_path, IKEI_SOCK_NAME );
+
+	if( bind( sock, ( struct sockaddr * ) &saddr, saddr.sun_len ) < 0 )
+		return false;
+
+	if( listen( sock, 5 ) < 0 )
+		return false;
+
 	return true;
 }
 
-IKEI * _IKES::accept()
+IKEI * _IKES::inbound()
 {
-	return NULL;
+	fd_set fdset;
+	FD_ZERO( &fdset );
+	FD_SET( sock, &fdset );
+
+	struct timeval tv;
+	tv.tv_sec = 1;
+	tv.tv_usec = 10000;
+
+	printf( "XX : waiting on connections\n" );
+
+	if( select( sock + 1, &fdset, NULL, NULL, &tv ) <= 0 )
+		return NULL;
+
+	printf( "XX : inbound connection available\n" );
+
+	struct sockaddr_un saddr;
+	saddr.sun_len = sizeof( saddr );
+	socklen_t len = saddr.sun_len;
+
+	int csock = accept( sock, NULL, NULL );
+
+	printf( "XX : accept returned\n" );
+
+	if( csock < 0 )
+	{
+		printf( "XX : inbound connection is defunct\n" );
+		return NULL;
+	}
+
+	IKEI * ikei = new IKEI;
+	ikei->sock = csock;
+
+	printf( "XX : accepted\n" );
+
+	return ikei;
 }
 
 #endif
@@ -422,7 +518,7 @@ bool _IKES::init()
 // accept connections on the named pipe
 //
 
-IKEI * _IKES::accept()
+IKEI * _IKES::inbound()
 {
 	if( hpipe == INVALID_HANDLE_VALUE )
 	{

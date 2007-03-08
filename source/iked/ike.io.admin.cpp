@@ -842,7 +842,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 void _IKED::attach_ike_admin()
 {
-	IKEI * ikei = ikes.accept();
+	IKEI * ikei = ikes.inbound();
 
 	if( ikei != NULL )
 		ith_admin.exec( ikei );

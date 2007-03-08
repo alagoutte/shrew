@@ -49,6 +49,12 @@
 
 #endif
 
+#ifdef UNIX
+
+#include <sys/un.h>
+
+#endif
+
 #include <assert.h>
 #include <string.h>
 #include <time.h>
@@ -57,6 +63,7 @@
 
 #define IKEI_EVENT_NAME				"ikedi"
 #define IKEI_PIPE_NAME				"\\\\.\\pipe\\ikedi"
+#define IKEI_SOCK_NAME				"/var/run/ikedi"
 #define IKEI_MAX_BDATA				2048
 
 #define IKEI_MSGID_RESULT			1
@@ -213,7 +220,7 @@ typedef class DLX _IKES
 	~_IKES();
 
 	bool	init();
-	IKEI *	accept();
+	IKEI *	inbound();
 
 }IKES;
 
