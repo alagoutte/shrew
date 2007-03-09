@@ -57,7 +57,7 @@ _IKEI::~_IKEI()
 	CloseHandle( olapp.hEvent );
 }
 
-long _IKEI::open( long timeout )
+long _IKEI::attach( long timeout )
 {
 	if( !WaitNamedPipe( IKEI_PIPE_NAME, timeout ) )
 		return IKEI_FAILED;
@@ -77,7 +77,7 @@ long _IKEI::open( long timeout )
 	return IKEI_OK;
 }
 
-void _IKEI::close()
+void _IKEI::detach()
 {
 	if( hpipe )
 	{
@@ -155,9 +155,10 @@ _IKEI::_IKEI()
 
 _IKEI::~_IKEI()
 {
+	detach();
 }
 
-long _IKEI::open( long timeout )
+long _IKEI::attach( long timeout )
 {
 	sock = socket( AF_UNIX, SOCK_STREAM, 0 );
 	if( sock == -1 )
@@ -177,8 +178,13 @@ long _IKEI::open( long timeout )
 	return IKEI_OK;
 }
 
-void _IKEI::close()
+void _IKEI::detach()
 {
+	if( sock != -1 )
+	{
+		close( sock );
+		sock = -1;
+	}
 }
 
 long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
@@ -187,9 +193,13 @@ long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
 	FD_ZERO( &fdset );
 	FD_SET( sock, &fdset );
 
+	long milisecs = timeout * 1000;
 	struct timeval tv;
-	tv.tv_sec = 0;
-	tv.tv_usec = timeout * 1000;
+	tv.tv_sec = milisecs / 100000;
+	tv.tv_usec = milisecs % 100000;
+
+//	tv.tv_sec = 1;
+//	tv.tv_usec = 0;
 
 	if( select( sock + 1, &fdset, NULL, NULL, &tv ) <= 0 )
 		return IKEI_NODATA;
@@ -203,17 +213,19 @@ long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
 
 long _IKEI::recv_msg( void * data, unsigned long & size, bool wait )
 {
-	size = recv( sock, data, size, 0 );
-	if( size != size )
+	long result = recv( sock, data, size, 0 );
+	if( result < 0 )
 		return IKEI_FAILED;
+
+	size = result;
 
 	return IKEI_OK;
 }
 
 long _IKEI::send_msg( void * data, unsigned long size )
 {
-	ssize_t sent = send( sock, data, size, 0 );
-	if( sent != size )
+	long result = send( sock, data, size, 0 );
+	if( result < 0 )
 		return IKEI_FAILED;
 
 	return IKEI_OK;
@@ -243,7 +255,7 @@ long _IKEI::recv_basic( long type, long * value, void * bdata, long * bsize, boo
 	if( bdata && bsize )
 	{
 		if( *bsize < msg_head->bsize )
-			return false;
+			return IKEI_FAILED;
 
 		memcpy( bdata, msg_data, msg_head->bsize );
 
@@ -586,31 +598,15 @@ IKEI * _IKES::inbound()
 	tv.tv_sec = 1;
 	tv.tv_usec = 10000;
 
-	printf( "XX : waiting on connections\n" );
-
 	if( select( sock + 1, &fdset, NULL, NULL, &tv ) <= 0 )
 		return NULL;
 
-	printf( "XX : inbound connection available\n" );
-
-	struct sockaddr_un saddr;
-	saddr.sun_len = sizeof( saddr );
-	socklen_t len = saddr.sun_len;
-
 	int csock = accept( sock, NULL, NULL );
-
-	printf( "XX : accept returned\n" );
-
 	if( csock < 0 )
-	{
-		printf( "XX : inbound connection is defunct\n" );
 		return NULL;
-	}
 
 	IKEI * ikei = new IKEI;
 	ikei->sock = csock;
-
-	printf( "XX : accepted\n" );
 
 	return ikei;
 }

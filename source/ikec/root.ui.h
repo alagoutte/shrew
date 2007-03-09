@@ -14,24 +14,83 @@
 
 void root::SiteConnect()
 {
-	// if enabled, verify that a valid
-	// username and password was supplied
-
-	if( !groupBoxCredentials->isHidden() )
+	if( ikec.active )
+		ikec.cancel = true;
+	else
 	{
-		if( !lineEditUsername->text().length() ||
-		    !lineEditPassword->text().length() )
-		{
-			ikec.log( 0, "please enter a valid username and password\n" );
-			return;
-		}
-	}
+		// if enabled, verify that a valid
+		// username and password was supplied
 
-	ikec.start();
+		if( !groupBoxCredentials->isHidden() )
+		{
+			if( !lineEditUsername->text().length() ||
+			    !lineEditPassword->text().length() )
+			{
+				ikec.log( 0, "please enter a valid username and password\n" );
+				return;
+			}
+		}
+
+		// start our thread
+
+		ikec.start();
+	}
 }
 
 
 void root::SiteDisconnect()
 {
-	close();
+	if( ikec.active )
+		ikec.cancel = true;
+	else
+		close();
+}
+
+void root::customEvent( QCustomEvent * e )
+{
+	if( e->type() == EVENT_CONNECTING )
+	{
+		textLabelStatusValue->setText( "Connecting" );
+
+		lineEditUsername->setEnabled( false );
+		lineEditPassword->setEnabled( false );
+
+		pushButtonConnect->setEnabled( false );
+		pushButtonExit->setEnabled( true );
+                                                
+		pushButtonConnect->setText( "Connect" );
+		pushButtonExit->setText( "Cancel" );
+	}
+
+	if( e->type() == EVENT_CONNECTED )
+	{
+		textLabelStatusValue->setText( "Connected" );
+
+		pushButtonConnect->setEnabled( true );
+		pushButtonExit->setEnabled( false );
+                                                
+		pushButtonConnect->setText( "Disconnect" );
+		pushButtonExit->setText( "Cancel" );
+	}
+
+	if( e->type() == EVENT_DISCONNECTED )
+	{
+		textLabelStatusValue->setText( "Disabled" );
+
+		lineEditUsername->setEnabled( true );
+		lineEditPassword->setEnabled( true );
+
+		pushButtonConnect->setEnabled( true );
+		pushButtonExit->setEnabled( true );
+                                                
+		pushButtonConnect->setText( "Connect" );
+		pushButtonExit->setText( "Exit" );
+	}
+
+	if( e->type() == EVENT_BANNER )
+	{
+		banner b( this );
+		b.textBrowserMOTD->setText( ikec.banner );
+		b.exec();
+	}
 }

@@ -164,8 +164,8 @@ typedef class DLX _IKEI
 	_IKEI();
 	~_IKEI();
 
-	long	open( long timeout );
-	void	close();
+	long	attach( long timeout );
+	void	detach();
 
 	long	next_msg( IKEI_MSG & msg );
 

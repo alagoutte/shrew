@@ -2,6 +2,7 @@
 
 _IKEC::_IKEC()
 {
+	active = false;
 	cancel = false;
 }
 
@@ -669,16 +670,23 @@ void _IKEC::run()
 	}
 
 	//
-	// ---------- UPLOAD CONFIG ----------
+	// ---------- UPDATE STATE ----------
 	//
 
+	active = true;
 	cancel = false;
+
+	QApplication::postEvent( r, new QCustomEvent( EVENT_CONNECTING ) );
+
+	//
+	// ---------- UPLOAD CONFIG ----------
+	//
 
 	IKEI	ikei;
 	long	result;
 	long	msgres;
 
-	result = ikei.open( 10000 );
+	result = ikei.attach( 10000 );
 
 	if( result != IKEI_OK )
 	{
@@ -1136,17 +1144,15 @@ void _IKEC::run()
 				switch( status )
 				{
 					case STATUS_BANNER:
-/*
-						DialogBoxParam(
-							hinst,
-							( LPCTSTR ) IDD_BANNER,
-							hw_main,
-							( DLGPROC ) dproc_banner,
-							( long ) txtmsg );
-*/
+
+						ikec.banner = txtmsg;
+						QApplication::postEvent( r, new QCustomEvent( EVENT_BANNER ) );
+
 						break;
 
 					case STATUS_ENABLED:
+
+						QApplication::postEvent( r, new QCustomEvent( EVENT_CONNECTED ) );
 
 						log( status, txtmsg );
 
@@ -1173,9 +1179,18 @@ void _IKEC::run()
 
 	config_failed:
 
-	ikei.close();
+	ikei.detach();
 
 	log( STATUS_INFO, "detached from key daemon ...\n" );
+
+	//
+	// ---------- UPDATE STATE ----------
+	//
+
+	active = false;
+	cancel = false;
+
+	QApplication::postEvent( r, new QCustomEvent( EVENT_DISCONNECTED ) );
 
 	return;
 }

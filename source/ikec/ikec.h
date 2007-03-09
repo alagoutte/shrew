@@ -8,6 +8,7 @@
 #include <qlineedit.h>
 #include <qlabel.h>
 #include <qthread.h>
+#include <qevent.h>
 
 #include <pwd.h>
 #include <netinet/in.h>
@@ -16,8 +17,14 @@
 #include <netdb.h>
 #include <stdarg.h>
 #include "root.h"
+#include "banner.h"
 #include "libiked.h"
 #include "config.h"
+
+#define EVENT_CONNECTING	QEvent::User + 1
+#define EVENT_CONNECTED		QEvent::User + 2
+#define EVENT_DISCONNECTED	QEvent::User + 3
+#define EVENT_BANNER		QEvent::User + 4
 
 typedef class _IKEC : public QThread
 {
@@ -40,7 +47,10 @@ typedef class _IKEC : public QThread
 	public:
 
 	CONFIG	config;
+	bool	active;
 	bool	cancel;
+
+	QString	banner;
 
 	_IKEC();
 	~_IKEC();

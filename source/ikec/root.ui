@@ -401,7 +401,7 @@
                                     </widget>
                                     <widget class="QLabel" row="0" column="1">
                                         <property name="name">
-                                            <cstring>textLabel14</cstring>
+                                            <cstring>textLabelStatusValue</cstring>
                                         </property>
                                         <property name="text">
                                             <string>Disconnected</string>
@@ -512,6 +512,7 @@
 <slots>
     <slot>SiteConnect()</slot>
     <slot>SiteDisconnect()</slot>
+    <slot access="protected">customEvent( QCustomEvent * e )</slot>
 </slots>
 <pixmapinproject/>
 <layoutdefaults spacing="6" margin="11"/>

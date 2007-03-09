@@ -833,7 +833,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	//
 
 	ikei->send_msg_status( STATUS_DISABLED, "tunnel disabled\n" );
-	ikei->close();
+	ikei->detach();
 
 	log.txt( LOG_INFO, "ii : admin process thread exit ...\n" );
 
