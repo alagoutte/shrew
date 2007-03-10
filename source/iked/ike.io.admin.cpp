@@ -126,6 +126,8 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					{
 						log.txt( LOG_ERROR, "!! : unable to add peer object\n" );
 
+						delete peer;
+
 						ikei->send_msg_result( IKEI_FAILED );
 
 						break;
@@ -155,6 +157,8 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					if( !tunnel->add( true ) )
 					{
 						log.txt( LOG_ERROR, "!! : unable to add tunnel object\n" );
+
+						delete tunnel;
 
 						ikei->send_msg_result( IKEI_FAILED );
 
@@ -628,7 +632,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					// transparent proxy
 					//
 
-					if( dtpi.open( 3 ) == DTPI_OK )
+					if( dtpi.attach( 3 ) == DTPI_OK )
 					{
 						//
 						// set dns redirect target
@@ -825,7 +829,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	// close dns proxy interface
 	//
 #ifdef OPT_DTP
-	dtpi.close();
+	dtpi.detach();
 #endif
 
 	//
