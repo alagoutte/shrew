@@ -10,7 +10,7 @@ BC = bison
 LC = lex
 
 C_FLAGS += -DUNIX -Wall
-H_FLAGS += -I./ -I../ -I../libiked -I../libith -I../libip -I../liblog -I../libpfk -I/usr/include -I/usr/include/netinet6 -I/usr/local/include -I/usr/include/openssl
+H_FLAGS += -I./ -I../ -I../libiked -I../libith -I../libip -I../liblog -I../libpfk -I/usr/include -I/usr/local/include -I/usr/include/openssl -I/usr/include/netinet6
 L_FLAGS += -L./ -L../ -L../libiked -L../libith -L../libip -L../liblog -L../libpfk -L/usr/lib -L/usr/local/lib -lstdc++ -lm -lpthread -lcrypt -lcrypto -liked -lpfk
 D_FLAGS += 
 
