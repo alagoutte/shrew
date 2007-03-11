@@ -536,23 +536,86 @@ long _IKED::send_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 
 #ifdef UNIX
 
+#define BASENAME "/dev/tap"
+         
 //
 // UNIX virtual adapter code
 //
 
 bool _IKED::vnet_init()
 {
-	return false;
+	return true;
 }
 
 bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 {
-	return false;
+	// create adapter struct
+
+	*adapter = new VNET_ADAPTER;
+	if( !*adapter )
+		return false;
+
+	int index = 0;
+
+	for( ; index < 16; index++ )
+	{
+		// check for existing device
+
+		struct stat sb;
+		sprintf( (*adapter)->name, "%s%i", BASENAME, index );
+
+		// attempt to stat device
+
+		if( stat( (*adapter)->name, &sb ) )
+		{
+                        log.txt( LOG_DEBUG, "ii : unable to stat %s\n",
+				(*adapter)->name );
+			break;
+		}
+
+		// attempt to open device
+
+		(*adapter)->fp = fopen( (*adapter)->name, "rw" );
+		if( (*adapter)->fp == NULL )
+		{
+			log.txt( LOG_DEBUG, "ii : unable to open %s\n",
+				(*adapter)->name );
+			continue;
+		}
+
+		break;
+	}
+
+	// if no existing device has been opened,
+	// attempt to open a new device
+
+	if( (*adapter)->fp == NULL )
+		(*adapter)->fp = fopen( BASENAME, "rw" );
+
+	if( (*adapter)->fp == NULL )
+	{
+		log.txt( LOG_ERROR, "!! : failed to open tap device\n" );
+		return false;
+	}
+
+	log.txt( LOG_INFO, "ii : opened tap device %s\n", (*adapter)->name );
+
+	return true;
 }
 
 bool _IKED::vnet_rel( VNET_ADAPTER * adapter )
 {
-	return false;
+	// close adapter
+
+	fclose( adapter->fp );
+
+	log.txt( LOG_INFO, "ii : closed tap device %s\n", adapter->name );
+
+	// free adapter struct
+
+	delete adapter;
+
+	return true;
 }
 
 bool _IKED::vnet_set( VNET_ADAPTER * adapter, bool enable )
@@ -562,7 +625,55 @@ bool _IKED::vnet_set( VNET_ADAPTER * adapter, bool enable )
 
 bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 {
-	return false;
+	if( xconf.opts & IPSEC_OPTS_ADDR )
+	{
+		struct ifreq ifr;
+		memset( &ifr, 0, sizeof( struct ifreq ) );
+
+		struct sockaddr_in * addr;
+		addr = ( struct sockaddr_in * ) &( ifr.ifr_addr );
+		addr->sin_len=sizeof( struct sockaddr_in );
+		addr->sin_family = AF_INET;
+
+		int sock = socket( PF_INET, SOCK_DGRAM, 0 );
+		if( sock == -1 )
+		{
+			log.txt( LOG_ERROR, "!! : failed to create adapter socket ( %s )\n",
+				strerror( errno ) );
+			return false;
+		}
+
+		strncpy( ifr.ifr_name, strrchr( adapter->name, '/' ) + 1, IFNAMSIZ );
+
+		addr->sin_addr = xconf.addr;
+
+		if( ioctl( sock, SIOCSIFADDR, &ifr ) != 0 )
+		{
+			log.txt( LOG_ERROR, "!! : failed to configure address for %s ( %s )\n",
+				adapter->name, strerror( errno ) );
+
+			close( sock );
+			return false;
+		}
+
+		addr->sin_addr = xconf.mask;
+
+		if( ioctl( sock, SIOCSIFNETMASK, &ifr ) != 0 )
+		{
+			log.txt( LOG_ERROR, "!! : failed to configure netmask for %s ( %s )\n",
+				adapter->name, strerror( errno ) );
+
+			close( sock );
+			return false;
+		}
+
+		log.txt( LOG_INFO, "ii : configured adapter %s\n", adapter->name );
+
+		close( sock );
+		return true;
+	}
+
+	return true;
 }
 
 #endif

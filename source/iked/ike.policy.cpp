@@ -498,10 +498,19 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		}
 
 		if( routed )
+		{
 			log.txt( LOG_INFO,
 				"ii : created %s policy route for %s\n",
 				pfki.name( NAME_SPTYPE, type ),
 				txtid_dst );
+		}
+		else
+		{
+			log.txt( LOG_ERROR,
+				"!! : failed to create %s policy route for %s\n",
+				pfki.name( NAME_SPTYPE, type ),
+				txtid_dst );
+		}
 	}
 
 	return true;
@@ -668,6 +677,15 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 
 			log.txt( LOG_INFO,
 				"ii : removed %s policy route for %s\n",
+				pfki.name( NAME_SPTYPE, type ),
+				txtid_dst );
+		}
+		else
+		{
+			text_ph2id( txtid_dst, &id2 );
+
+			log.txt( LOG_INFO,
+				"ii : failed to remove %s policy route for %s\n",
 				pfki.name( NAME_SPTYPE, type ),
 				txtid_dst );
 		}

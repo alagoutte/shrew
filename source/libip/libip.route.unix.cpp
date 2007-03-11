@@ -62,6 +62,71 @@ _IPROUTE::_IPROUTE()
 
 bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
 {
+	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
+	if( s == -1 )
+		return false;
+
+	// set route message header
+
+	RTMSG rtmsg;
+	memset( &rtmsg, 0, sizeof( rtmsg ) );
+
+	rtmsg.hdr.rtm_version = RTM_VERSION;
+	rtmsg.hdr.rtm_seq = ++seq;
+	rtmsg.hdr.rtm_type = RTM_ADD;
+	rtmsg.hdr.rtm_flags = RTF_UP | RTF_STATIC | RTF_GATEWAY;
+	rtmsg.hdr.rtm_addrs = RTA_DST | RTA_GATEWAY;
+
+//	if( mask.s_addr == 0xffffffff )
+//		rtmsg.hdr.rtm_flags |= RTF_HOST;
+//	else
+		rtmsg.hdr.rtm_addrs |= RTA_NETMASK;
+		
+	// add route destination
+
+	sockaddr_in * dst = ( sockaddr_in * ) rtmsg.msg;
+
+	dst->sin_family = AF_INET;
+	dst->sin_len = sizeof( sockaddr_in );
+	dst->sin_addr = addr;
+
+	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
+
+	// add route gateway
+
+	sockaddr_in * gwy = ( sockaddr_in * )( rtmsg.msg + rtmsg.hdr.rtm_msglen );
+
+	gwy->sin_family = AF_INET;
+	gwy->sin_len = sizeof( sockaddr_in );
+	gwy->sin_addr = next;
+
+	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
+
+	// add route netmask
+
+//	if( mask.s_addr != 0xffffffff )
+	{
+		sockaddr_in * msk = ( sockaddr_in * )( rtmsg.msg + rtmsg.hdr.rtm_msglen );
+
+		msk->sin_family = AF_INET;
+		msk->sin_len = sizeof( sockaddr_in );
+		msk->sin_addr = mask;
+
+		rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
+	}
+
+	// send route add message
+
+	long l = rtmsg.hdr.rtm_msglen += sizeof( rtmsg.hdr );
+
+	if( write( s, ( char * ) &rtmsg, l ) < 0 )
+	{
+		close( s );
+		return false;
+	}
+
+	close( s );
+
 	return true;
 }
 
@@ -71,6 +136,71 @@ bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
 {
+	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
+	if( s == -1 )
+		return false;
+
+	// set route message header
+
+	RTMSG rtmsg;
+	memset( &rtmsg, 0, sizeof( rtmsg ) );
+
+	rtmsg.hdr.rtm_version = RTM_VERSION;
+	rtmsg.hdr.rtm_seq = ++seq;
+	rtmsg.hdr.rtm_type = RTM_DELETE;
+	rtmsg.hdr.rtm_flags = RTF_UP | RTF_STATIC | RTF_GATEWAY;
+	rtmsg.hdr.rtm_addrs = RTA_DST | RTA_GATEWAY;
+
+//	if( mask.s_addr == 0xffffffff )
+//		rtmsg.hdr.rtm_flags |= RTF_HOST;
+//	else
+		rtmsg.hdr.rtm_addrs |= RTA_NETMASK;
+		
+	// add route destination
+
+	sockaddr_in * dst = ( sockaddr_in * ) rtmsg.msg;
+
+	dst->sin_family = AF_INET;
+	dst->sin_len = sizeof( sockaddr_in );
+	dst->sin_addr = addr;
+
+	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
+
+	// add route gateway
+
+	sockaddr_in * gwy = ( sockaddr_in * )( rtmsg.msg + rtmsg.hdr.rtm_msglen );
+
+	gwy->sin_family = AF_INET;
+	gwy->sin_len = sizeof( sockaddr_in );
+	gwy->sin_addr = next;
+
+	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
+
+	// add route netmask
+
+//	if( mask.s_addr != 0xffffffff )
+	{
+		sockaddr_in * msk = ( sockaddr_in * )( rtmsg.msg + rtmsg.hdr.rtm_msglen );
+
+		msk->sin_family = AF_INET;
+		msk->sin_len = sizeof( sockaddr_in );
+		msk->sin_addr = mask;
+
+		rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
+	}
+
+	// send route delete message
+
+	long l = rtmsg.hdr.rtm_msglen += sizeof( rtmsg.hdr );
+
+	if( write( s, ( char * ) &rtmsg, l ) < 0 )
+	{
+		close( s );
+		return false;
+	}
+
+	close( s );
+
 	return true;
 }
 
@@ -93,14 +223,18 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	if( s == -1 )
 		return false;
 
+	// set route message header
+
 	RTMSG rtmsg;
 	memset( &rtmsg, 0, sizeof( rtmsg ) );
 
-	rtmsg.hdr.rtm_type = RTM_GET;
-	rtmsg.hdr.rtm_flags = RTF_UP | RTF_HOST | RTF_STATIC;
 	rtmsg.hdr.rtm_version = RTM_VERSION;
+	rtmsg.hdr.rtm_type = RTM_GET;
 	rtmsg.hdr.rtm_seq = ++seq;
+	rtmsg.hdr.rtm_flags = RTF_UP | RTF_HOST | RTF_STATIC;
 	rtmsg.hdr.rtm_addrs = RTA_DST | RTA_IFP;
+
+	// add route destination
 
 	sockaddr_in * dst = ( sockaddr_in * ) rtmsg.msg;
 
@@ -108,15 +242,20 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	dst->sin_len = sizeof( sockaddr_in );
 	dst->sin_addr = addr;
 
-	sockaddr_dl * ifp = ( sockaddr_dl * )( rtmsg.msg + sizeof( sockaddr_in ) ) ;
+	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
+
+	// add route interface
+
+	sockaddr_dl * ifp = ( sockaddr_dl * )( rtmsg.msg + rtmsg.hdr.rtm_msglen );
 
 	ifp->sdl_family = AF_LINK;
 	ifp->sdl_len = sizeof( sockaddr_dl );
 
-	rtmsg.hdr.rtm_msglen += sizeof( rtmsg.hdr );
-	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
 	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_dl );
-	long l = rtmsg.hdr.rtm_msglen;
+
+	// send route get message
+
+	long l = rtmsg.hdr.rtm_msglen += sizeof( rtmsg.hdr );
 
 	if( write( s, ( char * ) &rtmsg, l ) < 0 )
 	{
@@ -125,6 +264,8 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	}
 
 	int pid = getpid();
+
+	// read route result message
 
 	do
 	{
@@ -145,49 +286,8 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 		( rtmsg.hdr.rtm_version != RTM_VERSION ) )
 		return false;
 
-	return rtmsg_result( &rtmsg, NULL, NULL, NULL, &iface );
+	return rtmsg_result( &rtmsg, &addr, &next, &mask, &iface );
 }
-
-/*
-
-1180            char *cp = m_rtmsg.m_space;
-1191            if (cmd == 'a')
-1193            else if (cmd == 'c')
-1195            else if (cmd == 'g') {
-1197                    if (so_ifp.sa.sa_family == 0) {
-1196                    cmd = RTM_GET;
-1197                    if (so_ifp.sa.sa_family == 0) {
-1198                            so_ifp.sa.sa_family = AF_LINK;
-1199                            so_ifp.sa.sa_len = sizeof(struct sockaddr_dl);
-1200                            rtm_addrs |= RTA_IFP;
-1205            rtm.rtm_type = cmd;
-1206            rtm.rtm_flags = flags;
-1208            rtm.rtm_seq = ++seq;
-1210            rtm.rtm_rmx = rt_metrics;
-1211            rtm.rtm_inits = rtm_inits;
-1210            rtm.rtm_rmx = rt_metrics;
-1209            rtm.rtm_addrs = rtm_addrs;
-1207            rtm.rtm_version = RTM_VERSION;
-1210            rtm.rtm_rmx = rt_metrics;
-1211            rtm.rtm_inits = rtm_inits;
-1213            printf( "flags = %i\n", rtm.rtm_flags );
-1216            if (rtm_addrs & RTA_NETMASK)
-1218            NEXTADDR(RTA_DST, so_dst);
-1219            NEXTADDR(RTA_GATEWAY, so_gate);
-1220            NEXTADDR(RTA_NETMASK, so_mask);
-1221            NEXTADDR(RTA_GENMASK, so_genmask);
-1222            NEXTADDR(RTA_IFP, so_ifp);
-1223            NEXTADDR(RTA_IFA, so_ifa);
-1224            rtm.rtm_msglen = l = cp - (char *)&m_rtmsg;
-1225            if (verbose)
-1224            rtm.rtm_msglen = l = cp - (char *)&m_rtmsg;
-1225            if (verbose)
-1227            if (debugonly)
-1228                    return (0);
-1227            if (debugonly)
-1229            if ((rlen = write(s, (char *)&m_rtmsg, l)) < 0) {
-*/
-
 
 //
 // decrement route costs

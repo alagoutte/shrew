@@ -66,8 +66,11 @@
 #include <signal.h>
 #include <ctype.h>
 #include <netdb.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
+#include <sys/ioctl.h>
 #include <arpa/inet.h>
+#include <net/if.h>
 #include <netinet/in.h>
 #include <pwd.h>
 #include <grp.h>
@@ -248,6 +251,9 @@ typedef struct _SOCK_INFO
 
 typedef struct _VNET_ADAPTER
 {
+	FILE *	fp;
+	char	name[ IFNAMSIZ ];
+
 }VNET_ADAPTER;
 
 #endif
