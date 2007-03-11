@@ -670,15 +670,6 @@ void _IKEC::run()
 	}
 
 	//
-	// ---------- UPDATE STATE ----------
-	//
-
-	active = true;
-	cancel = false;
-
-	QApplication::postEvent( r, new QCustomEvent( EVENT_CONNECTING ) );
-
-	//
 	// ---------- UPLOAD CONFIG ----------
 	//
 
@@ -695,6 +686,15 @@ void _IKEC::run()
 	}
 
 	log( STATUS_INFO, "attached to key daemon ...\n" );
+
+	//
+	// ---------- UPDATE STATE ----------
+	//
+
+	active = true;
+	cancel = false;
+
+	QApplication::postEvent( r, new QCustomEvent( EVENT_CONNECTING ) );
 
 	//
 	// send the peer configuration message

@@ -8,6 +8,7 @@
 #include <qfiledialog.h>
 #include <qlineedit.h>
 #include <qmessagebox.h>
+#include <qprocess.h>
 #include "netinet/in.h"
 #include "arpa/inet.h"
 #include "config.h"

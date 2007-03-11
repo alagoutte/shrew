@@ -1,5 +1,5 @@
 #
-# LIBIP Makefile
+# IKED Makefile
 #
 # author : Matthew Grooms
 #        : mgrooms@shrew.net
@@ -83,7 +83,7 @@ IKED_P = ../libip/libip.bdata.o \
 	 
 IKED_H = crypto.h ike.h iked.h idb.h xauth.h xconf.h
 
-debug: $(IKED_O)
+all: $(IKED_O)
 	$(CC) $(L_FLAGS) $(D_FLAGS) -o $(IKED_B) $(IKED_O) $(IKED_P)
 
 .yy.cpp: $(IKED_H)
@@ -104,8 +104,6 @@ clean:
 	-test -z "conf.token.cpp" || rm -f conf.token.cpp
 	-test -z "$(IKED_O)" || rm -f $(IKED_O)
 	-test -z "$(IKED_B)" || rm -f $(IKED_B)
-	-test -z /usr/local/man/man8/iked.8.gz || rm -f /usr/local/man/man8/iked.8.gz
-	-test -z /usr/local/man/man5/iked.conf.5.gz || rm -f /usr/local/man/man5/iked.conf.5.gz
 
 install:
 	-install -c $(IKED_B) /usr/local/sbin/

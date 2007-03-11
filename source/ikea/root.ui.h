@@ -12,6 +12,23 @@
 
 #include "ikea.h"
 
+void root::ConnectSite()
+{
+	QIconViewItem * i = iconViewSites->currentItem();
+	if( i != NULL )
+	{
+		// launch ikec with site name as parameter
+
+		QProcess proc( this );
+
+		proc.addArgument( "ikec" );
+		proc.addArgument( "-r" );
+		proc.addArgument( i->text().ascii() );
+
+		proc.start();
+	}
+}
+
 void root::AddSite()
 {
 	site s( this );
@@ -96,7 +113,6 @@ void root::DelSite()
 		delete i;
 	}
 }
-
 
 void root::ContextSite( QIconViewItem * item, const QPoint & pos )
 {

@@ -312,11 +312,24 @@
         <receiver>root</receiver>
         <slot>About()</slot>
     </connection>
+    <connection>
+        <sender>fileConnectAction</sender>
+        <signal>activated()</signal>
+        <receiver>root</receiver>
+        <slot>ConnectSite()</slot>
+    </connection>
+    <connection>
+        <sender>iconViewSites</sender>
+        <signal>doubleClicked(QIconViewItem*)</signal>
+        <receiver>root</receiver>
+        <slot>ConnectSite()</slot>
+    </connection>
 </connections>
 <includes>
     <include location="local" impldecl="in implementation">root.ui.h</include>
 </includes>
 <slots>
+    <slot>ConnectSite()</slot>
     <slot>AddSite()</slot>
     <slot>ModSite()</slot>
     <slot>DelSite()</slot>

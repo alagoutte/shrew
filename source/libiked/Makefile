@@ -1,5 +1,5 @@
 #
-# LIBIP Makefile
+# LIBIKED Makefile
 #
 # author : Matthew Grooms
 #        : mgrooms@shrew.net

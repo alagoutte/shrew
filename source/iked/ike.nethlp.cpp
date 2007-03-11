@@ -595,6 +595,10 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 	if( (*adapter)->fp == NULL )
 	{
 		log.txt( LOG_ERROR, "!! : failed to open tap device\n" );
+
+		delete *adapter;
+		*adapter = NULL;
+
 		return false;
 	}
 
