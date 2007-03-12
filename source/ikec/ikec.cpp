@@ -607,7 +607,7 @@ void _IKEC::run()
 
 	// enable dns options
 
-	if( config.get_number( "client-dns-used", &numb ) )
+	if( config.get_number( "client-dns-enable", &numb ) )
 	{
 		if( numb )
 		{
@@ -637,19 +637,6 @@ void _IKEC::run()
 					strncpy( xconf.suffix, text, CONF_STRLEN );
 					xconf.rqst &= ~IPSEC_OPTS_DOMAIN;
 				}
-			}
-
-			numb = 0;
-			config.get_number( "client-splitdns-used", &numb );
-			if( numb )
-			{
-				xconf.opts |= IPSEC_OPTS_SPLITDNS;
-				xconf.rqst |= IPSEC_OPTS_SPLITDNS;
-
-				numb = 0;
-				config.get_number( "client-splitdns-auto", &numb );
-				if( !numb )
-					xconf.rqst &= ~IPSEC_OPTS_SPLITDNS;
 			}
 		}
 	}

@@ -544,6 +544,7 @@ long _IKED::send_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 
 bool _IKED::vnet_init()
 {
+	kldload( "/boot/kernel/if_tap.ko" );
 	return true;
 }
 
@@ -609,6 +610,10 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 
 bool _IKED::vnet_rel( VNET_ADAPTER * adapter )
 {
+	// restore the previous resolv.conf file
+
+	rename( "/etc/resolv.iked", "/etc/resolv.conf" );
+
 	// close adapter
 
 	fclose( adapter->fp );
@@ -674,7 +679,25 @@ bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 		log.txt( LOG_INFO, "ii : configured adapter %s\n", adapter->name );
 
 		close( sock );
-		return true;
+	}
+
+	if( xconf.opts & ( IPSEC_OPTS_DNSS | IPSEC_OPTS_DOMAIN ) )
+	{
+		// backup the current resolv.conf file
+
+		rename( "/etc/resolv.conf", "/etc/resolv.iked" );
+
+		FILE * fp = fopen( "/etc/resolv.conf", "w+" );
+		if( fp != NULL )
+		{
+			if( xconf.opts & IPSEC_OPTS_DOMAIN )
+				fprintf( fp, "domain\t%s\n", xconf.suffix );
+
+			if( xconf.opts & IPSEC_OPTS_DNSS )
+				fprintf( fp, "nameserver\t%s\n", inet_ntoa( xconf.dnss ) );
+
+			fclose( fp );
+		}
 	}
 
 	return true;

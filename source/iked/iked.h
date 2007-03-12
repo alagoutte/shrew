@@ -69,6 +69,8 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <sys/param.h>
+#include <sys/linker.h>
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <netinet/in.h>

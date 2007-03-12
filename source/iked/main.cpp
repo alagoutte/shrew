@@ -286,13 +286,14 @@ void daemon_stop( int sig_num )
 
 int main( int argc, char * argv[], char * envp[] )
 {
+
+#ifdef WIN32
+
 	//
 	// check command line parameters
 	//
 
 	bool service = false;
-
-#ifdef WIN32
 
 	for( long count = 1; count < argc; count++ )
 	{
@@ -338,6 +339,19 @@ int main( int argc, char * argv[], char * envp[] )
 #endif
 
 #ifdef UNIX
+
+	//
+	// check command line parameters
+	//
+
+	bool service = true;
+
+	for( long count = 1; count < argc; count++ )
+	{
+		if( !strcmp( argv[ count ], "-F" ) )
+			service = false;
+
+	}
 
 	//
 	// setup stop signal
