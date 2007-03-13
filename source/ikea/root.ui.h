@@ -12,6 +12,8 @@
 
 #include "ikea.h"
 
+static QString selected;
+
 void root::ConnectSite()
 {
 	QIconViewItem * i = iconViewSites->currentItem();
@@ -51,11 +53,12 @@ void root::AddSite()
 		QIconViewItem * i = new QIconViewItem( iconViewSites );
 		if( i == NULL )
 			return;
-	
+
 		i->setPixmap( QPixmap::fromMimeSource( "site.png" ) );
 		i->setSelected( true );
 		i->setText( s.lineEditHost->text() );
 		i->setRenameEnabled( true );
+		selected = i->text();
 		i->rename();
 	}
 }
@@ -158,6 +161,58 @@ void root::ContextSite( QIconViewItem * item, const QPoint & pos )
 	}
 }
 
+void root::SelectSite( QIconViewItem * item )
+{
+	//
+	// HACK : QIconView item renaming is
+	// brain dead. It doesn't offer any
+	// kind of validation before modify.
+	// We are forced to store the name
+	// manulally and revert the value if
+	// there is a problem.
+	//
+
+	selected = item->text();
+}
+
+void root::RenameSite( QIconViewItem * item, const QString & name )
+{
+	if( selected == name )
+		return;
+
+	char path1[ 1024 ];
+	snprintf( path1, 1024, "%s/%s",
+		ikea.site_path(),
+		selected.ascii() );
+
+	char path2[ 1024 ];
+	snprintf( path2, 1024, "%s/%s",
+		ikea.site_path(),
+		name.ascii() );
+
+	struct stat sb;
+	if( !stat( path2, &sb ) )
+	{
+		QMessageBox m;
+		if( m.warning( this,
+			   "Warning",
+			   "A site with the same name already exists. Are your sure you want to overwrite?",
+			   QMessageBox::Yes,
+			   QMessageBox::Cancel ) != QMessageBox::Yes )
+		{
+			//
+			// aborted
+			//
+
+			item->setText( selected );
+			return;
+		}
+
+		delete item;
+	}
+
+	rename( path1, path2 );
+}
 
 void root::About()
 {

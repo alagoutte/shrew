@@ -324,6 +324,18 @@
         <receiver>root</receiver>
         <slot>ConnectSite()</slot>
     </connection>
+    <connection>
+        <sender>iconViewSites</sender>
+        <signal>itemRenamed(QIconViewItem*,const QString&amp;)</signal>
+        <receiver>root</receiver>
+        <slot>RenameSite(QIconViewItem*,const QString&amp;)</slot>
+    </connection>
+    <connection>
+        <sender>iconViewSites</sender>
+        <signal>currentChanged(QIconViewItem*)</signal>
+        <receiver>root</receiver>
+        <slot>SelectSite(QIconViewItem*)</slot>
+    </connection>
 </connections>
 <includes>
     <include location="local" impldecl="in implementation">root.ui.h</include>
@@ -334,7 +346,9 @@
     <slot>ModSite()</slot>
     <slot>DelSite()</slot>
     <slot>ContextSite( QIconViewItem * item, const QPoint &amp; pos )</slot>
+    <slot>RenameSite( QIconViewItem * item, const QString &amp; name )</slot>
     <slot>About()</slot>
+    <slot>SelectSite( QIconViewItem * item )</slot>
 </slots>
 <pixmapinproject/>
 <layoutdefaults spacing="6" margin="11"/>
