@@ -190,7 +190,7 @@ typedef class DLX _IKEI
 	long	send_msg_client( IKE_XCONF * xconf, long * msgres = NULL );
 
 	long	recv_msg_network( IKE_PH2ID * ph2id, long * type );
-	long	recv_msg_network( IKE_PH2ID * ph2id, long type, long * msgres = NULL );
+	long	send_msg_network( IKE_PH2ID * ph2id, long type, long * msgres = NULL );
 
 	long	recv_msg_cfgstr( long * type, char * str, long * len );
 	long	send_msg_cfgstr( long type, char * str, long len, long * msgres = NULL );

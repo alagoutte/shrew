@@ -21,10 +21,60 @@
 #include "libiked.h"
 #include "config.h"
 
-#define EVENT_CONNECTING	QEvent::User + 1
-#define EVENT_CONNECTED		QEvent::User + 2
-#define EVENT_DISCONNECTED	QEvent::User + 3
-#define EVENT_BANNER		QEvent::User + 4
+#define EVENT_RUNNING		QEvent::User + 1
+#define EVENT_ENABLE		QEvent::User + 2
+#define EVENT_STATUS		QEvent::User + 3
+#define EVENT_STATS		QEvent::User + 4
+
+class RunningEvent : public QCustomEvent
+{
+	public:
+
+	bool running;
+
+	RunningEvent( bool value ) : QCustomEvent( EVENT_RUNNING )
+	{
+		running = value;
+	}
+};
+
+class EnableEvent : public QCustomEvent
+{
+	public:
+
+	bool enabled;
+
+	EnableEvent( bool value ) : QCustomEvent( EVENT_ENABLE )
+	{
+		enabled = value;
+	}
+};
+
+class StatusEvent : public QCustomEvent
+{
+	public:
+
+	QString text;
+	long	status;
+
+	StatusEvent( QString value, long level ) : QCustomEvent( EVENT_STATUS )
+	{
+		text = value;
+		status = level;
+	}
+};
+
+class StatsEvent : public QCustomEvent
+{
+	public:
+
+	IKEI_STATS stats;
+
+	StatsEvent( IKEI_STATS value ) : QCustomEvent( EVENT_STATS )
+	{
+		stats = value;
+	}
+};
 
 typedef class _IKEC : public QThread
 {
@@ -50,7 +100,8 @@ typedef class _IKEC : public QThread
 	bool	active;
 	bool	cancel;
 
-	QString	banner;
+	QString	username;
+	QString	password;
 
 	_IKEC();
 	~_IKEC();

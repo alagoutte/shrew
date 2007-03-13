@@ -137,6 +137,7 @@ void root::ContextSite( QIconViewItem * item, const QPoint & pos )
 	switch( result )
 	{
 		case 0:
+			ConnectSite();
 			break;
 
 		case 1:

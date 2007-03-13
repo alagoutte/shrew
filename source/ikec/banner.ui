@@ -37,11 +37,17 @@
                     <property name="name">
                         <cstring>textBrowserMOTD</cstring>
                     </property>
+                    <property name="enabled">
+                        <bool>true</bool>
+                    </property>
                     <property name="font">
                         <font>
                             <family>Fixed [Misc]</family>
                             <pointsize>8</pointsize>
                         </font>
+                    </property>
+                    <property name="textFormat">
+                        <enum>AutoText</enum>
                     </property>
                 </widget>
                 <widget class="QLayoutWidget">
@@ -114,6 +120,10 @@
         <slot>accept()</slot>
     </connection>
 </connections>
+<tabstops>
+    <tabstop>buttonOk</tabstop>
+    <tabstop>textBrowserMOTD</tabstop>
+</tabstops>
 <pixmapinproject/>
 <layoutdefaults spacing="6" margin="11"/>
 </UI>

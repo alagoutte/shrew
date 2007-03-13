@@ -31,6 +31,11 @@ void root::SiteConnect()
 			}
 		}
 
+		// store username and password
+
+		ikec.username = lineEditUsername->text().ascii();
+		ikec.password = lineEditPassword->text().ascii();
+
 		// start our thread
 
 		ikec.start();
@@ -48,49 +53,120 @@ void root::SiteDisconnect()
 
 void root::customEvent( QCustomEvent * e )
 {
-	if( e->type() == EVENT_CONNECTING )
+	if( e->type() == EVENT_RUNNING )
 	{
-		textLabelStatusValue->setText( "Connecting" );
+		RunningEvent * event = ( RunningEvent * ) e;
 
-		lineEditUsername->setEnabled( false );
-		lineEditPassword->setEnabled( false );
+		if( event->running )
+		{
+			textLabelStatusValue->setText( "Connecting" );
 
-		pushButtonConnect->setEnabled( false );
-		pushButtonExit->setEnabled( true );
-                                                
-		pushButtonConnect->setText( "Connect" );
-		pushButtonExit->setText( "Cancel" );
+			lineEditUsername->setEnabled( false );
+			lineEditPassword->setEnabled( false );
+
+			pushButtonConnect->setEnabled( false );
+			pushButtonConnect->setText( "Connect" );
+
+			pushButtonExit->setEnabled( true );
+			pushButtonExit->setText( "Cancel" );
+		}
+		else
+		{
+			textLabelStatusValue->setText( "Disconnected" );
+
+			lineEditUsername->setEnabled( true );
+			lineEditPassword->setEnabled( true );
+
+			pushButtonConnect->setEnabled( true );
+			pushButtonConnect->setText( "Connect" );
+
+			pushButtonExit->setEnabled( true );
+			pushButtonExit->setText( "Exit" );
+		}
 	}
 
-	if( e->type() == EVENT_CONNECTED )
+	if( e->type() == EVENT_ENABLE )
 	{
-		textLabelStatusValue->setText( "Connected" );
+		EnableEvent * event = ( EnableEvent * ) e;
 
-		pushButtonConnect->setEnabled( true );
-		pushButtonExit->setEnabled( false );
-                                                
-		pushButtonConnect->setText( "Disconnect" );
-		pushButtonExit->setText( "Cancel" );
+		if( event->enabled )
+			ikec.log( STATUS_WARN, "bringing up tunnel ...\n" );
+		else
+			ikec.log( STATUS_WARN, "bringing down tunnel ...\n" );
 	}
 
-	if( e->type() == EVENT_DISCONNECTED )
+	if( e->type() == EVENT_STATUS )
 	{
-		textLabelStatusValue->setText( "Disabled" );
+		StatusEvent * event = ( StatusEvent * ) e;
 
-		lineEditUsername->setEnabled( true );
-		lineEditPassword->setEnabled( true );
+		switch( event->status )
+		{
+			case STATUS_ENABLED:
 
-		pushButtonConnect->setEnabled( true );
-		pushButtonExit->setEnabled( true );
-                                                
-		pushButtonConnect->setText( "Connect" );
-		pushButtonExit->setText( "Exit" );
+				textLabelStatusValue->setText( "Connected" );
+
+				pushButtonConnect->setEnabled( true );
+				pushButtonConnect->setText( "Disconnect" );
+
+				pushButtonExit->setEnabled( false );
+				pushButtonExit->setText( "Cancel" );
+
+				ikec.log( event->status, ( char * ) event->text.ascii() );
+
+				break;
+
+			case STATUS_BANNER:
+			{
+				banner b( this );
+				b.textBrowserMOTD->setText( event->text );
+				b.exec();
+
+				break;
+			}
+
+			case STATUS_DISABLED:
+			case STATUS_INFO:
+			case STATUS_WARN:
+			case STATUS_FAIL:
+
+				ikec.log( event->status, ( char * ) event->text.ascii() );
+
+				break;
+
+			default:
+
+				ikec.log( STATUS_FAIL, "!!! unknown status message !!!\n" );
+		}
 	}
 
-	if( e->type() == EVENT_BANNER )
+	if( e->type() == EVENT_STATS )
 	{
-		banner b( this );
-		b.textBrowserMOTD->setText( ikec.banner );
-		b.exec();
+		StatsEvent * event = ( StatsEvent * ) e;
+
+		QString n;
+
+		n.setNum( event->stats.sa_good );
+		textLabelEstablishedValue->setText( n );
+
+		n.setNum( event->stats.sa_dead );
+		textLabelExpiredValue->setText( n );
+
+		n.setNum( event->stats.sa_fail );
+		textLabelFailedValue->setText( n );
+
+		if( event->stats.natt )
+			textLabelTransportValue->setText( "NAT-T / IKE | ESP" );
+		else
+			textLabelTransportValue->setText( "IKE | ESP" );
+
+		if( event->stats.frag )
+			textLabelFragValue->setText( "Enabled" );
+		else
+			textLabelFragValue->setText( "Disabled" );
+
+		if( event->stats.dpd )
+			textLabelDPDValue->setText( "Enabled" );
+		else
+			textLabelDPDValue->setText( "Disabled" );
 	}
 }

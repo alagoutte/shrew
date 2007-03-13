@@ -506,6 +506,14 @@
         <slot>SiteConnect()</slot>
     </connection>
 </connections>
+<tabstops>
+    <tabstop>lineEditUsername</tabstop>
+    <tabstop>lineEditPassword</tabstop>
+    <tabstop>pushButtonConnect</tabstop>
+    <tabstop>pushButtonExit</tabstop>
+    <tabstop>tabWidgetRoot</tabstop>
+    <tabstop>textBrowserStatus</tabstop>
+</tabstops>
 <includes>
     <include location="local" impldecl="in implementation">root.ui.h</include>
 </includes>

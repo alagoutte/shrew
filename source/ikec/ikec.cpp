@@ -657,7 +657,7 @@ void _IKEC::run()
 	}
 
 	//
-	// ---------- UPLOAD CONFIG ----------
+	// ---------- CONNECT TO IKED ----------
 	//
 
 	IKEI	ikei;
@@ -681,7 +681,7 @@ void _IKEC::run()
 	active = true;
 	cancel = false;
 
-	QApplication::postEvent( r, new QCustomEvent( EVENT_CONNECTING ) );
+	QApplication::postEvent( r, new RunningEvent( true ) );
 
 	//
 	// send the peer configuration message
@@ -756,15 +756,13 @@ void _IKEC::run()
 		( proposal_isakmp.auth_id == XAUTH_AUTH_INIT_RSA ) ||
 		( proposal_isakmp.auth_id == HYBRID_AUTH_INIT_RSA ) )
 	{
-		r->lineEditUsername->text().ascii();
-
 		ikei.send_msg_cfgstr( CFGSTR_CRED_XAUTH_USER,
-			( char * ) r->lineEditUsername->text().ascii(),
-			r->lineEditUsername->text().length() );
+			( char * ) ikec.username.ascii(),
+			ikec.username.length() );
 
 		ikei.send_msg_cfgstr( CFGSTR_CRED_XAUTH_PASS,
-			( char * ) r->lineEditPassword->text().ascii(),
-			r->lineEditPassword->text().length() );
+			( char * ) ikec.password.ascii(),
+			ikec.password.length() );
 	}
 
 	//
@@ -997,7 +995,7 @@ void _IKEC::run()
 			ph2id.addr1.s_addr = addr;
 			ph2id.addr2.s_addr = mask;
 
-			ikei.recv_msg_network( &ph2id, UNITY_SPLIT_EXCLUDE );
+			ikei.send_msg_network( &ph2id, UNITY_SPLIT_EXCLUDE );
 
 			index++;
 		}
@@ -1017,7 +1015,7 @@ void _IKEC::run()
 			ph2id.addr1.s_addr = addr;
 			ph2id.addr2.s_addr = mask;
 
-			ikei.recv_msg_network( &ph2id, UNITY_SPLIT_INCLUDE );
+			ikei.send_msg_network( &ph2id, UNITY_SPLIT_INCLUDE );
 
 			index++;
 		}
@@ -1065,55 +1063,19 @@ void _IKEC::run()
 
 		switch( msg.type )
 		{
+			//
+			// enable message
+			//
+
 			case IKEI_MSGID_ENABLE:
 			
 				result = ikei.recv_msg_enable( &msgres );
 				if( result != IKEI_OK )
 					break;
 
-				if( msgres )
-					log( STATUS_WARN, "bringing up tunnel ...\n" );
-				else
-					log( STATUS_WARN, "bringing down tunnel ...\n" );
+				QApplication::postEvent( r, new EnableEvent( msgres ) );
 
 				break;
-
-			case IKEI_MSGID_STATS:
-			{
-				IKEI_STATS stats;
-
-				result = ikei.recv_msg_stats( &stats );
-				if( result != IKEI_OK )
-					break;
-
-				QString n;
-
-				n.setNum( stats.sa_good );
-				r->textLabelEstablishedValue->setText( n );
-
-				n.setNum( stats.sa_dead );
-				r->textLabelExpiredValue->setText( n );
-
-				n.setNum( stats.sa_fail );
-				r->textLabelFailedValue->setText( n );
-
-				if( stats.natt )
-					r->textLabelTransportValue->setText( "NAT-T / IKE | ESP" );
-				else
-					r->textLabelTransportValue->setText( "IKE | ESP" );
-
-				if( stats.frag )
-					r->textLabelFragValue->setText( "Enabled" );
-				else
-					r->textLabelFragValue->setText( "Disabled" );
-
-				if( stats.dpd )
-					r->textLabelDPDValue->setText( "Enabled" );
-				else
-					r->textLabelDPDValue->setText( "Disabled" );
-
-				break;
-			}
 
 			//
 			// status message
@@ -1128,36 +1090,24 @@ void _IKEC::run()
 				if( result != IKEI_OK )
 					break;
 
-				switch( status )
-				{
-					case STATUS_BANNER:
+				QApplication::postEvent( r, new StatusEvent( txtmsg, status ) );
 
-						ikec.banner = txtmsg;
-						QApplication::postEvent( r, new QCustomEvent( EVENT_BANNER ) );
+				break;
+			}
 
-						break;
+			//
+			// statistics message
+			//
 
-					case STATUS_ENABLED:
+			case IKEI_MSGID_STATS:
+			{
+				IKEI_STATS stats;
 
-						QApplication::postEvent( r, new QCustomEvent( EVENT_CONNECTED ) );
+				result = ikei.recv_msg_stats( &stats );
+				if( result != IKEI_OK )
+					break;
 
-						log( status, txtmsg );
-
-						break;
-
-					case STATUS_DISABLED:
-					case STATUS_INFO:
-					case STATUS_WARN:
-					case STATUS_FAIL:
-
-						log( status, txtmsg );
-
-						break;
-
-					default:
-
-						log( STATUS_FAIL, "!!! unknown status message !!!\n" );
-				}
+				QApplication::postEvent( r, new StatsEvent( stats ) );
 
 				break;
 			}
@@ -1177,7 +1127,7 @@ void _IKEC::run()
 	active = false;
 	cancel = false;
 
-	QApplication::postEvent( r, new QCustomEvent( EVENT_DISCONNECTED ) );
+	QApplication::postEvent( r, new RunningEvent( false ) );
 
 	return;
 }

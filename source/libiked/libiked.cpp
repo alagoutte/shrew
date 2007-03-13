@@ -388,7 +388,7 @@ long _IKEI::recv_msg_network( IKE_PH2ID * ph2id, long * type )
 	return recv_basic( IKEI_MSGID_NETWORK, type, ph2id, &length ); 
 }
 
-long _IKEI::recv_msg_network( IKE_PH2ID * ph2id, long type, long * msgres )
+long _IKEI::send_msg_network( IKE_PH2ID * ph2id, long type, long * msgres )
 {
 	return send_bidir( IKEI_MSGID_NETWORK, type, ph2id, sizeof( IKE_PH2ID ), msgres );
 }
