@@ -118,8 +118,6 @@ void _IKEC::run()
 		memcpy( &peer.saddr.saddr4.sin_addr, hp->h_addr, hp->h_length );
 	}
 
-	r->textLabelRemoteValue->setText( host );
-
 	// network port
 
 	if( !config.get_number( "network-ike-port", &numb ) )
@@ -679,7 +677,7 @@ void _IKEC::run()
 	active = true;
 	cancel = false;
 
-	QApplication::postEvent( r, new RunningEvent( true ) );
+	QApplication::postEvent( r, new RunningEvent( true, host ) );
 
 	//
 	// send the peer configuration message
@@ -1125,7 +1123,7 @@ void _IKEC::run()
 	active = false;
 	cancel = false;
 
-	QApplication::postEvent( r, new RunningEvent( false ) );
+	QApplication::postEvent( r, new RunningEvent( false, "" ) );
 
 	return;
 }

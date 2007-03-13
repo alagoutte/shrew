@@ -30,11 +30,13 @@ class RunningEvent : public QCustomEvent
 {
 	public:
 
-	bool running;
+	QString	host;
+	bool	running;
 
-	RunningEvent( bool value ) : QCustomEvent( EVENT_RUNNING )
+	RunningEvent( bool value, QString hname ) : QCustomEvent( EVENT_RUNNING )
 	{
 		running = value;
+		host = hname;
 	}
 };
 

@@ -70,6 +70,8 @@ void root::customEvent( QCustomEvent * e )
 
 			pushButtonExit->setEnabled( true );
 			pushButtonExit->setText( "Cancel" );
+
+			textLabelRemoteValue->setText( event->host );
 		}
 		else
 		{
@@ -83,6 +85,8 @@ void root::customEvent( QCustomEvent * e )
 
 			pushButtonExit->setEnabled( true );
 			pushButtonExit->setText( "Exit" );
+
+			textLabelRemoteValue->setText( event->host );
 		}
 	}
 
