@@ -41,10 +41,17 @@ void root::AddSite()
 		CONFIG config;
 		s.Save( config );
 
+		// mangle name if duplicate
+
+		int index = 2;
+		QString name = s.lineEditHost->text().ascii();
+		while( iconViewSites->findItem( name, Qt::ExactMatch ) != NULL )
+			name += " (" + QString::number( index++ ) + ")";
+
 		char path[ 1024 ];
 		snprintf( path, 1024, "%s/%s",
 			ikea.site_path(),
-			s.lineEditHost->text().ascii() );
+			name.ascii() );
 
 		config.file_write( path );
 
@@ -56,9 +63,9 @@ void root::AddSite()
 
 		i->setPixmap( QPixmap::fromMimeSource( "site.png" ) );
 		i->setSelected( true );
-		i->setText( s.lineEditHost->text() );
 		i->setRenameEnabled( true );
-		selected = i->text();
+		i->setText( name );
+		selected = name;
 		i->rename();
 	}
 }
@@ -212,6 +219,8 @@ void root::RenameSite( QIconViewItem * item, const QString & name )
 	}
 
 	rename( path1, path2 );
+
+	selected = name;
 }
 
 void root::About()
