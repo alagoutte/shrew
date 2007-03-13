@@ -26,7 +26,8 @@ void root::SiteConnect()
 			if( !lineEditUsername->text().length() ||
 			    !lineEditPassword->text().length() )
 			{
-				ikec.log( 0, "please enter a valid username and password\n" );
+				textBrowserStatus->append( 
+					"please enter a valid username and password\n" );
 				return;
 			}
 		}
@@ -90,9 +91,9 @@ void root::customEvent( QCustomEvent * e )
 		EnableEvent * event = ( EnableEvent * ) e;
 
 		if( event->enabled )
-			ikec.log( STATUS_WARN, "bringing up tunnel ...\n" );
+			textBrowserStatus->append( "bringing up tunnel ...\n" );
 		else
-			ikec.log( STATUS_WARN, "bringing down tunnel ...\n" );
+			textBrowserStatus->append( "bringing down tunnel ...\n" );
 	}
 
 	if( e->type() == EVENT_STATUS )
@@ -111,7 +112,7 @@ void root::customEvent( QCustomEvent * e )
 				pushButtonExit->setEnabled( false );
 				pushButtonExit->setText( "Cancel" );
 
-				ikec.log( event->status, ( char * ) event->text.ascii() );
+				textBrowserStatus->append( event->text );
 
 				break;
 
@@ -129,13 +130,13 @@ void root::customEvent( QCustomEvent * e )
 			case STATUS_WARN:
 			case STATUS_FAIL:
 
-				ikec.log( event->status, ( char * ) event->text.ascii() );
+				textBrowserStatus->append( event->text );
 
 				break;
 
 			default:
 
-				ikec.log( STATUS_FAIL, "!!! unknown status message !!!\n" );
+				textBrowserStatus->append( "!!! unknown status message !!!\n" );
 		}
 	}
 

@@ -38,7 +38,7 @@ int main( int argc, char ** argv )
 
 	if( syntax_error )
 	{
-		ikec.log( 0,
+		ikec.log( STATUS_FAIL,
 			"invalid parameters specified ...\n"
 			"ikec -r \"name\" [ -u <user> ][ -p <pass> ][ -a ]\n"
 			"  -r\tsite configuration path\n"
@@ -57,14 +57,14 @@ int main( int argc, char ** argv )
 		{
 			// config loaded
 
-			ikec.log( 0, "config loaded for site \'%s\'\n",
+			ikec.log( STATUS_INFO, "config loaded for site \'%s\'\n",
 				ikec.file_spec() );
 		}
 		else
 		{
 			// config load failed
 
-			ikec.log( 0, "failed to load \'%s\'\n",
+			ikec.log( STATUS_INFO, "failed to load \'%s\'\n",
 				ikec.file_spec() );
 
 			w.pushButtonConnect->setHidden( true );

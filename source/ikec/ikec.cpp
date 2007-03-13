@@ -63,7 +63,7 @@ bool _IKEC::log( long code, char * format, ... )
 	va_start( list, format );
 	vsprintf( buff, format, list );
 
-	r->textBrowserStatus->append( buff );
+	QApplication::postEvent( r, new StatusEvent( buff, code ) );
 
 	return true;
 }
@@ -73,8 +73,6 @@ void _IKEC::run()
 	//
 	// load the config into ipsecc
 	//
-
-	log( STATUS_INFO, "configuring client settings ...\n" );
 
 	char text[ MAX_CONFSTRING ];
 	long numb;
@@ -1090,7 +1088,7 @@ void _IKEC::run()
 				if( result != IKEI_OK )
 					break;
 
-				QApplication::postEvent( r, new StatusEvent( txtmsg, status ) );
+				log( status, txtmsg );
 
 				break;
 			}
