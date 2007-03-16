@@ -218,7 +218,7 @@ long _IKED::loop_ike_nwork()
 						// check for NAT-T non-esp marker
 						//
 
-						unsigned long * marker = ( unsigned long * )( packet_udp.buff() + packet_udp.oset() );
+						uint32_t * marker = ( uint32_t * )( packet_udp.buff() + packet_udp.oset() );
 
 						if( !marker[ 0 ] )
 						{
