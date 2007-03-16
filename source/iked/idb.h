@@ -440,17 +440,17 @@ typedef class _IDB_PH1 : public IDB_XCH
 	bool	dpd_l;		// local will support dead peer detect
 	bool	dpd_r;		// remote will support dead peer detect
 
-	long	dpd_req;	// last dpd request sequence
-	long	dpd_res;	// last dpd response sequence
-
 	bool	frag_l;		// local will support fragmentation
 	bool	frag_r;		// remote will support fragmentation
 
 	bool	natted_l;	// local address is natted
 	bool	natted_r;	// remote address is natted
 
-	uint8_t	ctype_l;
-	uint8_t	ctype_r;
+	uint32_t	dpd_req;	// last dpd request sequence
+	uint32_t	dpd_res;	// last dpd response sequence
+
+	uint8_t	ctype_l;	// local certificate type
+	uint8_t	ctype_r;	// remote certificate type
 
 	LIST	frags;
 

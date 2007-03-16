@@ -536,10 +536,19 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 
 				case ISAKMP_N_DPD_R_U_THERE_ACK:
 				{
-					long * dpdseq = ( long * ) notify->data.buff();
 					if( notify->data.size() == sizeof( ph1->dpd_res ) )
-						if( *dpdseq <= ph1->dpd_req )
-							ph1->dpd_res = *dpdseq;
+					{
+						uint32_t * dpdseq = ( uint32_t * ) notify->data.buff();
+
+						if( *dpdseq > ph1->dpd_req )
+						{
+							log.txt( LOG_DEBUG, "ii : DPD sequence rejected\n" );
+							break;
+						}
+
+						log.txt( LOG_DEBUG, "ii : DPD sequence accepted\n" );
+						ph1->dpd_res = *dpdseq;
+					}
 
 					break;
 				}
