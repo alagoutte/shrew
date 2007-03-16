@@ -315,19 +315,20 @@ typedef struct _DHCP_HEADER
 #define PCAP_VERSION_MINOR 4
 
 struct pcap_file_header {
-	unsigned long	magic;
-	unsigned short	version_major;
-	unsigned short	version_minor;
-	long			thiszone;	// gmt to local correction
-	unsigned long	sigfigs;	// accuracy of timestamps
-	unsigned long	snaplen;	// max length saved portion of each pkt
-	unsigned long	linktype;	// data link type (LINKTYPE_*)
+	uint32_t	magic;
+	u_short		version_major;
+	u_short		version_minor;
+	int32_t		thiszone;	// gmt to local correction
+	uint32_t	sigfigs;	// accuracy of timestamps
+	uint32_t	snaplen;	// max length saved portion of each pkt
+	uint32_t	linktype;	// data link type (LINKTYPE_*)
 };
 
 struct pcap_pkthdr {
-	struct timeval	ts;			// time stamp
-	unsigned long	caplen;		// length of portion present
-	unsigned long	len;		// length this packet (off wire)
+	uint32_t	ts_sec;		// time stamp seconds
+	uint32_t	ts_usec;	// time stamp microseconds
+	uint32_t	caplen;		// length of portion present
+	uint32_t	len;		// length this packet (off wire)
 };
 
 //

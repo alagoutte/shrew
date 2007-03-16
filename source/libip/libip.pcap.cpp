@@ -100,8 +100,8 @@ bool _PCAP_DUMP::dump( unsigned char * buff, long size )
 		return false;
 
 	pcap_pkthdr pph;
-	pph.ts.tv_sec = 0;
-	pph.ts.tv_usec = 0;
+	pph.ts_sec = 0;
+	pph.ts_usec = 0;
 	pph.caplen = size;
 	pph.len = size;
 
@@ -117,8 +117,8 @@ bool _PCAP_DUMP::dump( ETH_HEADER & header, PACKET_IP & packet )
 		return false;
 
 	pcap_pkthdr pph;
-	pph.ts.tv_sec = 0;
-	pph.ts.tv_usec = 0;
+	pph.ts_sec = 0;
+	pph.ts_usec = 0;
 	pph.caplen = packet.size() + sizeof( ETH_HEADER );
 	pph.len = packet.size() + sizeof( ETH_HEADER );
 
