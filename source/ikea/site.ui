@@ -388,25 +388,6 @@
                             <string>Keep-Alive Packet Rate</string>
                         </property>
                     </widget>
-                    <widget class="QLineEdit">
-                        <property name="name">
-                            <cstring>lineEditNATTRate</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>150</x>
-                                <y>80</y>
-                                <width>60</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>30</string>
-                        </property>
-                        <property name="alignment">
-                            <set>AlignRight</set>
-                        </property>
-                    </widget>
                     <widget class="QLabel">
                         <property name="name">
                             <cstring>textLabelFragMode</cstring>
@@ -582,6 +563,25 @@
                         </property>
                         <property name="currentItem">
                             <number>1</number>
+                        </property>
+                    </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditNATTRate</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>150</x>
+                                <y>80</y>
+                                <width>60</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>15</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignRight</set>
                         </property>
                     </widget>
                 </widget>
