@@ -82,6 +82,12 @@ void site::init()
 	lineEditDNSServer->setInputMask( "00D . 00D . 00D . 00D" );
 	lineEditDNSServer->setText( "0.0.0.0" );
 
+#ifndef OPT_NATT
+	textLabelNATTMode->setEnabled( false );
+	comboBoxNATTMode->setEnabled( false );
+	combobox_setbytext( "disabled", comboBoxNATTMode );
+#endif
+
 	// update dialog
 
 	Update();

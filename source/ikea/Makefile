@@ -18,6 +18,10 @@ D_FLAGS +=
   C_FLAGS+=-g
 .endif
 
+.ifdef NATT
+  C_FLAGS+=-DOPT_NATT
+.endif
+
 .SUFFIXES: .ui
 
 IKEA_B = ikea
