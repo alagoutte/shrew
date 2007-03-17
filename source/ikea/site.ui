@@ -220,25 +220,6 @@
                             <string>Address Method</string>
                         </property>
                     </widget>
-                    <widget class="QLineEdit">
-                        <property name="name">
-                            <cstring>lineEditNetmask</cstring>
-                        </property>
-                        <property name="enabled">
-                            <bool>false</bool>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>120</x>
-                                <y>120</y>
-                                <width>131</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>0.0.0.0</string>
-                        </property>
-                    </widget>
                     <widget class="QCheckBox">
                         <property name="name">
                             <cstring>checkBoxAddressAuto</cstring>
@@ -290,25 +271,6 @@
                             <string>Client Netmask</string>
                         </property>
                     </widget>
-                    <widget class="QLineEdit">
-                        <property name="name">
-                            <cstring>lineEditAddress</cstring>
-                        </property>
-                        <property name="enabled">
-                            <bool>false</bool>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>121</x>
-                                <y>90</y>
-                                <width>130</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>0.0.0.0</string>
-                        </property>
-                    </widget>
                     <widget class="QComboBox">
                         <item>
                             <property name="text">
@@ -330,6 +292,50 @@
                                 <width>241</width>
                                 <height>21</height>
                             </rect>
+                        </property>
+                    </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditNetmask</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>120</x>
+                                <y>120</y>
+                                <width>131</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>0.0.0.0</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignHCenter</set>
+                        </property>
+                    </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditAddress</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>121</x>
+                                <y>90</y>
+                                <width>130</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>0.0.0.0</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignHCenter</set>
                         </property>
                     </widget>
                 </widget>
@@ -702,25 +708,6 @@
                     </widget>
                     <widget class="QLineEdit">
                         <property name="name">
-                            <cstring>lineEditDNSServer</cstring>
-                        </property>
-                        <property name="enabled">
-                            <bool>false</bool>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>120</x>
-                                <y>50</y>
-                                <width>130</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>0.0.0.0</string>
-                        </property>
-                    </widget>
-                    <widget class="QLineEdit">
-                        <property name="name">
                             <cstring>lineEditDNSSuffix</cstring>
                         </property>
                         <property name="enabled">
@@ -784,6 +771,28 @@
                         </property>
                         <property name="text">
                             <string>DNS Suffix</string>
+                        </property>
+                    </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditDNSServer</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>120</x>
+                                <y>50</y>
+                                <width>130</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>0.0.0.0</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignHCenter</set>
                         </property>
                     </widget>
                 </widget>
@@ -2412,19 +2421,13 @@
         <sender>buttonSave</sender>
         <signal>clicked()</signal>
         <receiver>site</receiver>
-        <slot>accept()</slot>
+        <slot>VerifyAccept()</slot>
     </connection>
     <connection>
         <sender>buttonCancel</sender>
         <signal>clicked()</signal>
         <receiver>site</receiver>
         <slot>reject()</slot>
-    </connection>
-    <connection>
-        <sender>pushButtonPolicyAdd</sender>
-        <signal>clicked()</signal>
-        <receiver>site</receiver>
-        <slot>AddPolicy()</slot>
     </connection>
     <connection>
         <sender>pushButtonPolicyMod</sender>
@@ -2552,6 +2555,12 @@
         <receiver>site</receiver>
         <slot>InputPKeyFile()</slot>
     </connection>
+    <connection>
+        <sender>pushButtonPolicyAdd</sender>
+        <signal>clicked()</signal>
+        <receiver>site</receiver>
+        <slot>AddPolicy()</slot>
+    </connection>
 </connections>
 <tabstops>
     <tabstop>tabWidget</tabstop>
@@ -2614,6 +2623,7 @@
 </includes>
 <slots>
     <slot>AddPolicy()</slot>
+    <slot access="private">init()</slot>
     <slot>ModPolicy()</slot>
     <slot>DelPolicy()</slot>
     <slot>Update()</slot>
@@ -2628,6 +2638,7 @@
     <slot>InputCAFile()</slot>
     <slot>InputCertFile()</slot>
     <slot>InputPKeyFile()</slot>
+    <slot>VerifyAccept()</slot>
 </slots>
 <functions>
     <function returnType="bool">Load( CONFIG &amp; config )</function>

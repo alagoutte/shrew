@@ -106,6 +106,34 @@ void root::customEvent( QCustomEvent * e )
 
 		switch( event->status )
 		{
+			case STATUS_WARN:
+
+				textBrowserStatus->setColor( QColor( 192, 128, 0 ) );
+
+				break;
+
+			case STATUS_FAIL:
+
+				textBrowserStatus->setColor( QColor( 128, 0, 0 ) );
+
+				break;
+
+			default:
+
+				textBrowserStatus->setColor( QColor( 0, 0, 0 ) );
+		}
+
+		switch( event->status )
+		{
+			case STATUS_BANNER:
+			{
+				banner b( this );
+				b.textBrowserMOTD->setText( event->text );
+				b.exec();
+
+				break;
+			}
+
 			case STATUS_ENABLED:
 
 				textLabelStatusValue->setText( "Connected" );
@@ -119,15 +147,6 @@ void root::customEvent( QCustomEvent * e )
 				textBrowserStatus->append( event->text );
 
 				break;
-
-			case STATUS_BANNER:
-			{
-				banner b( this );
-				b.textBrowserMOTD->setText( event->text );
-				b.exec();
-
-				break;
-			}
 
 			case STATUS_DISABLED:
 			case STATUS_INFO:

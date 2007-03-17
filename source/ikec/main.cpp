@@ -39,7 +39,9 @@ int main( int argc, char ** argv )
 	if( syntax_error )
 	{
 		ikec.log( STATUS_FAIL,
-			"invalid parameters specified ...\n"
+			"invalid parameters specified ...\n" );
+
+		ikec.log( STATUS_INFO,
 			"ikec -r \"name\" [ -u <user> ][ -p <pass> ][ -a ]\n"
 			"  -r\tsite configuration path\n"
 			"  -u\tconnection user name\n"

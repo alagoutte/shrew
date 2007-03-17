@@ -42,10 +42,13 @@ void site::AddPolicy()
 	{
 		// address and netmask
 
-		QString n;
-		n = t.lineEditAddress->text();
-		n += " / ";
-		n += t.lineEditNetmask->text();
+		QString Address = t.lineEditAddress->text();
+		Address = Address.replace( ' ', "" );
+
+		QString Netmask = t.lineEditNetmask->text();
+		Netmask = Netmask.replace( ' ', "" );
+
+		QString n = Address + " / " + Netmask;
 
 		// create item
 
@@ -68,6 +71,25 @@ void site::AddPolicy()
 	}
 }
 
+void site::init()
+{
+	lineEditAddress->setInputMask( "00D . 00D . 00D . 00D" );
+	lineEditAddress->setText( "0.0.0.0" );
+
+	lineEditNetmask->setInputMask( "00D . 00D . 00D . 00D" );
+	lineEditNetmask->setText( "255.255.255.255" );
+
+	lineEditDNSServer->setInputMask( "00D . 00D . 00D . 00D" );
+	lineEditDNSServer->setText( "0.0.0.0" );
+
+	// update dialog
+
+	Update();
+	UpdateAuth();
+	UpdateExchange();
+	UpdateCipher();
+	UpdateTransform();
+}
 
 void site::ModPolicy()
 {
@@ -640,15 +662,21 @@ bool site::Save( CONFIG & config )
 
 			// adapter address
 
+			QString Address = lineEditAddress->text();
+			Address = Address.replace( ' ', "" );
+
 			config.set_string( "client-ip-addr",
-				( char * ) lineEditAddress->text().ascii(),
-				lineEditAddress->text().length() );
+				( char * ) Address.ascii(),
+				Address.length() );
 
 			// adapter netmask
 
+			QString Netmask = lineEditNetmask->text();
+			Netmask = Netmask.replace( ' ', "" );
+
 			config.set_string( "client-ip-mask",
-				( char * ) lineEditNetmask->text().ascii(),
-				lineEditNetmask->text().length() );
+				( char * ) Netmask.ascii(),
+				Netmask.length() );
 		}
 	}
 
@@ -740,11 +768,14 @@ bool site::Save( CONFIG & config )
 
 			// dns server address
 
-			config.set_string( "client-dns-addr",
-				( char * ) lineEditDNSServer->text().ascii(),
-				lineEditDNSServer->text().length() );
+			QString DNSServer = lineEditDNSServer->text();
+			DNSServer = DNSServer.replace( ' ', "" );
 
-			// adapter netmask
+			config.set_string( "client-dns-addr",
+				( char * ) DNSServer.ascii(),
+				DNSServer.length() );
+
+			// dns suffix
 
 			config.set_string( "client-dns-suffix",
 				( char * ) lineEditDNSSuffix->text().ascii(),
@@ -1078,6 +1109,69 @@ bool site::Save( CONFIG & config )
 
 bool site::Verify()
 {
+	QString errmsg;
+
+	// check remote host
+
+	if( lineEditHost->text().length() < 1 )
+		errmsg = "Please enter a valid host name or ip address.";
+
+	// check local id data
+
+	if( lineEditLocalIDData->isEnabled() )
+		if( lineEditLocalIDData->text().length() < 1 )
+			errmsg = "Please enter valid local ID data.";
+
+	// check remote id data
+
+	if( lineEditRemoteIDData->isEnabled() )
+		if( lineEditRemoteIDData->text().length() < 1 )
+			errmsg = "Please enter valid remote ID data.";
+
+	// check cert authority file
+
+	if( lineEditCAFile->isEnabled() )
+		if( lineEditCAFile->text().length() < 1 )
+			errmsg = "Please enter valid certificate authority file path.";
+
+	// check cert file
+
+	if( lineEditCertFile->isEnabled() )
+		if( lineEditCertFile->text().length() < 1 )
+			errmsg = "Please enter valid certificate file path.";
+
+	// check private key file
+
+	if( lineEditPKeyFile->isEnabled() )
+		if( lineEditPKeyFile->text().length() < 1 )
+			errmsg = "Please enter valid private key file path.";
+
+	// check pre shared key
+
+	if( lineEditPSK->isEnabled() )
+		if( lineEditPSK->text().length() < 1 )
+			errmsg = "Please enter valid pre-shared key.";
+
+	// verify policy list
+
+	if( !checkBoxPolicyAuto->isChecked() )
+		if( !listViewPolicies->childCount() )
+			errmsg = "You must specify at least one remote network resource.";
+
+	if( errmsg.length() )
+	{
+		QMessageBox m;
+
+		m.critical( this,
+			"Site Configuration Error",
+			errmsg,
+			QMessageBox::Ok,
+			QMessageBox::NoButton,
+			QMessageBox::NoButton );
+
+		return false;
+	}
+
 	return true;
 }
 
@@ -1698,4 +1792,13 @@ void site::InputPKeyFile()
 
 	if( f.exec() == QDialog::Accepted )
 		lineEditPKeyFile->setText( f.selectedFile() );
+}
+
+
+void site::VerifyAccept()
+{
+	if( Verify() )
+		accept();
+
+	return;
 }

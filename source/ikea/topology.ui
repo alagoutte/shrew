@@ -91,6 +91,9 @@
                     <property name="text">
                         <string>0.0.0.0</string>
                     </property>
+                    <property name="alignment">
+                        <set>AlignHCenter</set>
+                    </property>
                 </widget>
             </hbox>
         </widget>
@@ -124,6 +127,9 @@
                     </property>
                     <property name="text">
                         <string>0.0.0.0</string>
+                    </property>
+                    <property name="alignment">
+                        <set>AlignHCenter</set>
                     </property>
                 </widget>
             </hbox>
@@ -206,6 +212,7 @@
     <include location="local" impldecl="in implementation">topology.ui.h</include>
 </includes>
 <slots>
+    <slot access="private">init()</slot>
     <slot>TopologyAccept()</slot>
 </slots>
 <pixmapinproject/>
