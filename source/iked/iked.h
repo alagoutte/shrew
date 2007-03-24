@@ -335,7 +335,6 @@ typedef class _IKED
 	IKES		ikes;			// ike service interface
 	IPROUTE		iproute;		// ip route config interface
 	IPFRAG		ipfrag;			// ip fragment handling interface
-	LOG			log;			// generic log object
 
 	ITH_ADMIN	ith_admin;		// admin thread
 	ITH_NWORK	ith_nwork;		// network thread
@@ -659,6 +658,8 @@ typedef class _IKED
 
 	_IKED();
 	~_IKED();
+
+	LOG	log;	// generic log object
 
 	long	init( long setlevel );
 	long	halt();

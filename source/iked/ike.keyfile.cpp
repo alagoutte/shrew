@@ -56,7 +56,7 @@
 
 // openssl password callback
 
-int keyfile_cb( char *buf, int size, int rwflag, void *userdata )
+int keyfile_cb( char * buf, int size, int rwflag, void * userdata )
 {
 	BDATA * fpass = ( BDATA * ) userdata;
 
@@ -534,10 +534,8 @@ bool _IKED::text_asn1( BDATA & text, BDATA & asn1 )
 	return false;
 }
 
-static int cb( int ok, X509_STORE_CTX * store_ctx )
+static int verify_cb( int ok, X509_STORE_CTX * store_ctx )
 {
-	LOG * log = ( LOG * ) store_ctx->ctx->ex_data.dummy; 
-
 	if( !ok )
 	{
 		long ll = LOG_ERROR;
@@ -558,7 +556,7 @@ static int cb( int ok, X509_STORE_CTX * store_ctx )
 				break;
 		}
 
-		log->txt(
+		iked.log.txt(
 			ll,
 			"ii : %s(%d) at depth:%d\n"
 			"ii : subject :%s\n",
@@ -592,7 +590,7 @@ bool _IKED::cert_verify( BDATA & cert, BDATA & ca )
 	if( store == NULL )
 		return false;
 
-	X509_STORE_set_verify_cb_func( store, cb );
+	X509_STORE_set_verify_cb_func( store, verify_cb );
 	X509_STORE_add_cert( store, x509_ca );
 
 	X509_STORE_CTX * store_ctx;
@@ -603,9 +601,6 @@ bool _IKED::cert_verify( BDATA & cert, BDATA & ca )
 	X509_STORE_CTX_init( store_ctx, store, x509_cert, NULL );
 	X509_STORE_CTX_set_flags( store_ctx, X509_V_FLAG_CRL_CHECK );
 	X509_STORE_CTX_set_flags( store_ctx, X509_V_FLAG_CRL_CHECK_ALL );
-
-	// WTF ??? no param to pass to a callback !?!?!?
-	store_ctx->ctx->ex_data.dummy = ( int ) &log;
 
 	long result = X509_verify_cert( store_ctx );
 

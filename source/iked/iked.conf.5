@@ -550,8 +550,34 @@ Define the lifetime in kilobytes for this proposal.
 .Pp
 .Sh EXAMPLES
 .Pp
-The first example shows a configuration that supports simple peer to peer
+
+The first example shows a configuration that only defines the parameters
+required to support client connectivity mode with NATT and debug options
+enabled.
+
+ daemon
+ {
+     socket ike 500;
+     socket natt 4500;
+
+     log_level debug;
+     log_file "/var/log/iked.log";
+     pcap_ike "/var/log/ike.pcap";
+     pcap_pub "/var/log/pub.pcap";
+     retry_delay 10;
+     retry_count 2;
+ }
+
+The second example shows a configuration that supports simple peer to peer
 negotiations using mutual preshared key authentication.
+
+ daemon
+ {
+     socket ike 500;
+
+     log_level degug;
+     log_file "/var/log/iked.log";
+ }
 
  peer 1.2.3.4
  {
@@ -579,15 +605,25 @@ negotiations using mutual preshared key authentication.
      }
  }
 
-The second example shows a configuration that supports client gateway
+The third example shows a configuration that supports client gateway
 negotiations using mutual preshared key authentication with xauth, nat
 traversal, dead peer detection, ike fragmentation and policy generation. The
 daemon would allow xauth users that are members of the "remote" group to
 connect to the gateway. Policies would be generated to allow a peer access to
 the 10.1.1.0/24 and 1.3.3.0/24 networks with the exception of 1.1.1.15/32
-which would need to be accessed directly. Peers that use an xauth user account
-that is a member of the "netadmin" group would have additional policies
-generated to allow access to the 10.4.4.0/24 network.
+which be accessed directly ( not via IPSEC ). Peers that use an xauth user
+account that is a member of the "netadmin" group would have additional
+policies generated to allow access to the 10.4.4.0/24 network.
+
+ daemon
+ {
+     socket ike 500;
+     socket natt 4500;
+     log_level degug;
+     log_file "/var/log/iked.log";
+     pcap_ike "/var/log/ike.pcap";
+     pcap_pub "/var/log/pub.pcap";
+ }
 
  netgroup allow
  {

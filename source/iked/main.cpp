@@ -335,6 +335,20 @@ int main( int argc, char * argv[], char * envp[] )
 			printf( "ii : StartServiceCtrlDispatcher error = %d\n", GetLastError() );
 	}
 	else
+	{
+		//
+		// running as an application
+		//
+
+		if( iked.init( 0 ) != LIBIKE_OK )
+			return false;
+
+		//
+		// run daemon main loop
+		//
+
+		iked.loop();
+	}
 
 #endif
 
@@ -361,26 +375,26 @@ int main( int argc, char * argv[], char * envp[] )
 	signal( SIGPIPE, SIG_IGN );
 
 	//
+	// initialize
+	//
+
+	if( iked.init( 0 ) != LIBIKE_OK )
+		return -1;
+
+	//
 	// are we running as a deamon
-	// or a foreground application
 	//
 
 	if( service )
 		daemon( 0, 0 );
 
+	//
+	// run daemon main loop
+	//
+
+	iked.loop();
+
 #endif
-
-	{
-		//
-		// running as an application
-		//
-
-		if( iked.init( 0 ) != LIBIKE_OK )
-			return false;
-
-		iked.loop();
-	}
-
 	return 0;
 }
 
