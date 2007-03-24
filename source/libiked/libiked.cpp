@@ -94,6 +94,13 @@ long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
 {
 	if( !wait )
 	{
+		//
+		// begin an overlapped read operation.
+		// if successful, set wait to true so
+		// we remember that the operation is
+		// in progress
+		//
+
 		if( ReadFileEx( hpipe, &tmsg, sizeof( tmsg ), &olapp, &msg_end ) )
 			wait = true;
 
@@ -104,8 +111,18 @@ long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
 		}
 	}
 
+	//
+	// wait for our overlapped read
+	// operation to complete.
+	//
+
 	if( !SleepEx( timeout, true ) )
 		return IKEI_NODATA;
+
+	//
+	// store the message header in a
+	// temporary buffer
+	//
 
 	wait = false;
 	memcpy( &msg, &tmsg, sizeof( tmsg ) );
@@ -113,7 +130,7 @@ long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
 	return IKEI_OK;
 }
 
-long _IKEI::recv_msg( void * data, unsigned long & size, bool wait )
+long _IKEI::recv_msg( void * data, unsigned long & size )
 {
 	//
 	// read the rest of the message
@@ -123,7 +140,11 @@ long _IKEI::recv_msg( void * data, unsigned long & size, bool wait )
 
 	unsigned char * buff = ( unsigned char * ) data;
 
-	long result = ReadFile( hpipe, buff + sizeof( tmsg ), tmsg.size - sizeof( tmsg ), &size, NULL );
+	long result = ReadFile( hpipe,
+					buff + sizeof( IKEI_MSG ),
+					tmsg.size - sizeof( IKEI_MSG ),
+					&size, NULL );
+
 	if( !result )
 	{
 		if( GetLastError() == ERROR_BROKEN_PIPE )
@@ -207,13 +228,22 @@ long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
 	return IKEI_OK;
 }
 
-long _IKEI::recv_msg( void * data, unsigned long & size, bool wait )
+long _IKEI::recv_msg( void * data, unsigned long & size )
 {
-	long result = recv( sock, data, size, 0 );
+	if( recv( sock, data, sizeof( IKEI_MSG ), 0 ) <= 0 )
+		return IKEI_FAILED;
+
+	IKEI_MSG * msg = ( IKEI_MSG * ) data;
+
+	long result = recv( sock,
+					data + sizeof( IKEI_MSG ),
+					msg->size - sizeof( IKEI_MSG ),
+					0 );
+
 	if( result < 0 )
 		return IKEI_FAILED;
 
-	size = result;
+	size = result + sizeof( IKEI_MSG );
 
 	return IKEI_OK;
 }
@@ -221,7 +251,6 @@ long _IKEI::recv_msg( void * data, unsigned long & size, bool wait )
 long _IKEI::send_msg( void * data, unsigned long size )
 {
 	long result = send( sock, data, size, 0 );
-	printf( "XX : send result = %i\n", result );
 	if( result < 0 )
 		return IKEI_FAILED;
 
@@ -230,7 +259,7 @@ long _IKEI::send_msg( void * data, unsigned long size )
 
 #endif
 
-long _IKEI::recv_basic( long type, long * value, void * bdata, long * bsize, bool wait )
+long _IKEI::recv_basic( long type, long * value, void * bdata, long * bsize )
 {
 	char msg_buff[ MAX_BASIC_MSG ];
 
@@ -239,8 +268,8 @@ long _IKEI::recv_basic( long type, long * value, void * bdata, long * bsize, boo
 	unsigned long		msg_size = MAX_BASIC_MSG;
 
 	long result;
-	
-	result = recv_msg( msg_buff, msg_size, wait );
+
+	result = recv_msg( msg_buff, msg_size );
 	if( result != IKEI_OK )
 		return result;
 
@@ -292,7 +321,7 @@ long _IKEI::send_bidir( long type, long value, void * bdata, long bsize, long * 
 	if( result != IKEI_OK )
 		return result;
 
-	return recv_basic( IKEI_MSGID_RESULT, msgres, NULL, NULL, true );
+	return recv_basic( IKEI_MSGID_RESULT, msgres, NULL, NULL );
 }
 
 long _IKEI::next_msg( IKEI_MSG & msg )

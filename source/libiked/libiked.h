@@ -151,11 +151,11 @@ typedef class DLX _IKEI
 	IKEI_MSG	tmsg;
 
 	long	wait_msg( IKEI_MSG & msg, long timeout );
-	long	recv_msg( void * data, unsigned long & size, bool wait = false );
+	long	recv_msg( void * data, unsigned long & size );
 	long	send_msg( void * data, unsigned long size );
 	long	peek_msg( void * data, unsigned long size );
 
-	long	recv_basic( long type, long * value, void * bdata, long * bsize, bool wait = false );
+	long	recv_basic( long type, long * value, void * bdata, long * bsize );
 	long	send_basic( long type, long value, void * bdata, long bsize );
 	long	send_bidir( long type, long value, void * bdata, long bsize, long * msgres );
 
