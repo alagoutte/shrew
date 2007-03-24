@@ -235,8 +235,10 @@ long _IKEI::recv_msg( void * data, unsigned long & size )
 
 	IKEI_MSG * msg = ( IKEI_MSG * ) data;
 
+	unsigned char * buff = ( unsigned char * ) data;
+
 	long result = recv( sock,
-					data + sizeof( IKEI_MSG ),
+					buff + sizeof( IKEI_MSG ),
 					msg->size - sizeof( IKEI_MSG ),
 					0 );
 
