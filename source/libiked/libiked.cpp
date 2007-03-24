@@ -193,13 +193,9 @@ long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
 	FD_ZERO( &fdset );
 	FD_SET( sock, &fdset );
 
-	long milisecs = timeout * 1000;
 	struct timeval tv;
-	tv.tv_sec = milisecs / 100000;
-	tv.tv_usec = milisecs % 100000;
-
-//	tv.tv_sec = 1;
-//	tv.tv_usec = 0;
+	tv.tv_sec = timeout / 100;
+	tv.tv_usec = timeout % 100;
 
 	if( select( sock + 1, &fdset, NULL, NULL, &tv ) <= 0 )
 		return IKEI_NODATA;
@@ -225,6 +221,7 @@ long _IKEI::recv_msg( void * data, unsigned long & size, bool wait )
 long _IKEI::send_msg( void * data, unsigned long size )
 {
 	long result = send( sock, data, size, 0 );
+	printf( "XX : send result = %i\n", result );
 	if( result < 0 )
 		return IKEI_FAILED;
 
@@ -291,7 +288,7 @@ long _IKEI::send_bidir( long type, long value, void * bdata, long bsize, long * 
 	if( result != IKEI_OK )
 		return result;
 
-	result = wait_msg( tmsg, 100000 );
+	result = wait_msg( tmsg, 10000 );
 	if( result != IKEI_OK )
 		return result;
 
@@ -595,7 +592,7 @@ IKEI * _IKES::inbound()
 	FD_SET( sock, &fdset );
 
 	struct timeval tv;
-	tv.tv_sec = 1;
+	tv.tv_sec = 0;
 	tv.tv_usec = 10000;
 
 	if( select( sock + 1, &fdset, NULL, NULL, &tv ) <= 0 )
