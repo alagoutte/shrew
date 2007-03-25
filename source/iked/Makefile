@@ -107,6 +107,6 @@ clean:
 
 install:
 	-install -c $(IKED_B) /usr/local/sbin/
-	cat iked.8 | gzip > /usr/local/man/man8/iked.8.gz
-	cat iked.conf.5 | gzip > /usr/local/man/man5/iked.conf.5.gz
+	-install -c iked.8 /usr/local/man/man8/
+	-install -c iked.conf.5 /usr/local/man/man5/
 

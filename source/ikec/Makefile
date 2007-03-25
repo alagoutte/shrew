@@ -72,4 +72,4 @@ clean:
 	-test -z "images.cpp" || rm -f images.cpp
 
 install:
-	-install -c $(IKEC_B) /usr/X11R6/bin/
+	-install -c $(IKEC_B) /usr/local/bin/
