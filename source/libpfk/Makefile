@@ -6,7 +6,7 @@
 #        : Copyright 2006, Shrew Soft Inc
 #
 
-C_FLAGS += -DUNIX -Wall
+C_FLAGS += -DUNIX -Wall -fPIC
 H_FLAGS += -I../ -I../libith -I../iked -I/usr/include/netinet6 -I/usr/include -I/usr/local/include
 L_FLAGS += -L../ -L/usr/lib -L/usr/local/lib -shared -lpthread
 

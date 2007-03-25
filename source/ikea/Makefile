@@ -9,7 +9,7 @@
 UC = uic
 UM = moc
 
-C_FLAGS += -DUNIX -DQT_THREAD_SUPPORT -DQT_SHARED -Wall
+C_FLAGS += -DUNIX -DQT_THREAD_SUPPORT -DQT_SHARED -Wall -fPIC
 H_FLAGS += -I./ -I../ -I../libiked -I../libip -I/usr/include -I/usr/local/include -I/usr/X11R6/include
 L_FLAGS += -L./ -L../ -L../libiked -L../libip -L/usr/lib -L/usr/local/lib -L/usr/X11R6/lib -lstdc++ -lm -lpthread -liked -lqt-mt
 D_FLAGS += 

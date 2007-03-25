@@ -12,17 +12,10 @@ PLATFORM NOTES
 
 The only platforms that have been tested at present are FreeBSD i386 and
 amd64. This software also compiles on NetBSD but does not work as there
-are threading issues. For FreeBSD amd64 builds, you must first specify
-the -fPIC compiler option in the C_FLAGS environment variable before
-attempting to compile. For example, from a bash shell you enter the
-following command ...
-
-export C_FLAGS=-fPIC
-
-For this software to do anything useful, you will need to make sure
-your kernel has been built with IPSEC support. For FreeBSD, this is
-either the KAME ipsec stack or the fast IPSEC stack. For example, to
-include support for fast IPSEC you could include ...
+are threading issues. For this software to do anything useful, you will
+need to make sure your kernel has been built with IPSEC support. For
+FreeBSD, this is either the KAME ipsec stack or the fast IPSEC stack. For
+example, to include support for fast IPSEC you could include ...
 
 # IP Security
 device          crypto
