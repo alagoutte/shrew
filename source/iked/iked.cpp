@@ -264,6 +264,11 @@ long _IKED::init( long setlevel )
 
 #endif
 
+	return LIBIKE_OK;
+}
+
+void _IKED::loop()
+{
 	//
 	// start our ike network thread
 	//
@@ -283,17 +288,12 @@ long _IKED::init( long setlevel )
 	ith_timer.run( 100 );
 
 	//
-	// give the thread a fair chance
+	// give the threads a fair chance
 	// at starting up before return
 	//
 
-	Sleep( 1000 );
+	Sleep( 500 );
 
-	return LIBIKE_OK;
-}
-
-void _IKED::loop()
-{
 	//
 	// accept admin connections
 	//
