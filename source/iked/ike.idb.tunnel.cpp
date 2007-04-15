@@ -289,7 +289,7 @@ void _IDB_TUNNEL::end( bool lock )
 	}
 
 	//
-	// remove all associated phase1 sa's
+	// check for phase1 object refrences
 	//
 
 	count = iked.list_phase1.get_count();
@@ -298,7 +298,7 @@ void _IDB_TUNNEL::end( bool lock )
 	for( ; index < count; index++ )
 	{
 		//
-		// get the next phase2 in our list
+		// get the next phase1 in our list
 		// and attempt to match tunnel ids
 		//
 
