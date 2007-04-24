@@ -228,11 +228,12 @@ YY_DECL;
 #define TERM_CLIENT				1
 #define TERM_SOCKET				2
 #define TERM_EXPIRE				3
-#define TERM_USER_AUTH			4
-#define TERM_PEER_AUTH			5
-#define TERM_USER_CLOSE			6
-#define TERM_PEER_CLOSE			7
-#define TERM_PEER_DEAD			8
+#define TERM_BADMSG				4
+#define TERM_USER_AUTH			5
+#define TERM_PEER_AUTH			6
+#define TERM_USER_CLOSE			7
+#define TERM_PEER_CLOSE			8
+#define TERM_PEER_DEAD			9
 
 #define FILE_OK					0
 #define FILE_FAIL				1

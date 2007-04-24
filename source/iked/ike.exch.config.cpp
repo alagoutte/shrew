@@ -294,8 +294,6 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				if(  ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) &&
 					!( cfg->tunnel->state & TSTATE_RECV_XRSLT ) )
 				{
-					log.txt( LOG_INFO, "ii : received xauth result\n" );
-
 					//
 					// we should have an xauth status
 					// attribute that shows the result
@@ -303,29 +301,26 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 					long count = cfg->attr_count();
 					long index = 0;
-					long authed = 0;
+					long status = -1;
 
 					IKE_ATTR * attr = cfg->attr_get( index );
 					for( ; index < count; index++ )
 						if( ( attr->atype == XAUTH_STATUS ) && attr->basic )
-							authed = attr->bdata;
+							status = attr->bdata;
 
 					//
-					// unfortunately, not all gateways
-					// are compliant. a config push is
-					// sent without sending the xauth
-					// status. in this case, we assume
-					// xauth success and proceed to
-					// the configuration step
+					// process xauth status if present
 					//
 
-					if( index <= count )
+					if( status != -1 )
 					{
 						//
 						// check xauth result
 						//
 
-						if( authed == 1 )
+						log.txt( LOG_INFO, "ii : received xauth result\n" );
+
+						if( status == 1 )
 						{
 							log.txt( LOG_INFO,
 								"ii : user %s authentication succeeded\n",
@@ -346,19 +341,26 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 						break;
 					}
-					else
+
+					//
+					// unfortunately, not all gateways
+					// are compliant. a config push is
+					// sent before sending the xauth
+					// status. in this case, we fall
+					// through to process config push
+					// requests
+					//
+
+					if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_PUSH )
 					{
-						//
-						// assume xauth success and fall
-						// through to process any config
-						// push request attributes
-						//
+						log.txt( LOG_ERROR,
+							"!! : no xauth status and config mode is not push\n" );
 
-						log.txt( LOG_INFO,
-							"ii : assuming user %s authentication succeeded ( malformed response )\n",
-							cfg->tunnel->xauth.user.text() );
+						cfg->tunnel->close = TERM_BADMSG;
 
-						cfg->tunnel->state |= TSTATE_RECV_XRSLT;
+						cfg->lstate |= LSTATE_DELETE;
+
+						break;
 					}
 				}
 

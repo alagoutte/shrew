@@ -762,6 +762,13 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				break;
 
 			//
+			// an invalid message was received
+			//
+			case TERM_BADMSG:
+				ikei->send_msg_status( STATUS_FAIL, "invalid message from peer\n" );
+				break;
+
+			//
 			// user authentication error
 			//
 			case TERM_USER_AUTH:

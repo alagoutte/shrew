@@ -101,13 +101,17 @@ long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
 		// in progress
 		//
 
+		memset( &tmsg, 0, sizeof( tmsg ) );
+
 		if( ReadFileEx( hpipe, &tmsg, sizeof( tmsg ), &olapp, &msg_end ) )
 			wait = true;
-
-		if( GetLastError() == ERROR_BROKEN_PIPE )
+		else
 		{
-			CloseHandle( hpipe );
-			return IKEI_FAILED;
+			long result = GetLastError();
+
+			if( ( result == ERROR_INVALID_HANDLE ) ||
+				( result == ERROR_BROKEN_PIPE ) )
+				return IKEI_FAILED;
 		}
 	}
 
@@ -119,12 +123,13 @@ long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
 	if( !SleepEx( timeout, true ) )
 		return IKEI_NODATA;
 
+	wait = false;
+
 	//
-	// store the message header in a
-	// temporary buffer
+	// copy the message header into
+	// the callers buffer
 	//
 
-	wait = false;
 	memcpy( &msg, &tmsg, sizeof( tmsg ) );
 
 	return IKEI_OK;
