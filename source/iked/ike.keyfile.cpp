@@ -583,20 +583,67 @@ bool _IKED::cert_verify( BDATA & cert, BDATA & ca )
 
 	X509 * x509_cert;
 	if( !bdata_2_cert( &x509_cert, cert ) )
+	{
+		X509_free( x509_ca );
 		return false;
+	}
 
 	X509_STORE * store;
 	store = X509_STORE_new();
 	if( store == NULL )
+	{
+		X509_free( x509_cert );
+		X509_free( x509_ca );
 		return false;
+	}
 
 	X509_STORE_set_verify_cb_func( store, verify_cb );
 	X509_STORE_add_cert( store, x509_ca );
 
+	X509_LOOKUP * lookup = X509_STORE_add_lookup( store, X509_LOOKUP_file() );
+	if( lookup == NULL )
+	{
+		X509_STORE_free( store );
+		X509_free( x509_cert );
+		X509_free( x509_ca );
+		return false;
+	}
+
+#ifdef WIN32
+
+	char tmppath[ MAX_PATH ];
+	snprintf( tmppath, MAX_PATH, "%s\\certificates\\*.*", path_ins );
+
+	WIN32_FIND_DATA ffd;
+	memset( &ffd, 0, sizeof( ffd ) );
+	ffd.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+
+	HANDLE hff = FindFirstFile(
+					tmppath,
+					&ffd );
+
+	while( hff != NULL )
+	{
+		snprintf( tmppath, MAX_PATH, "%s\\certificates\\%s", path_ins, ffd.cFileName );
+
+		if( X509_LOOKUP_load_file( lookup, tmppath, X509_FILETYPE_PEM ) != NULL )
+			log.txt( LOG_DEBUG, "ii : added %s to x509 store\n", ffd.cFileName );
+
+		if( !FindNextFile( hff, &ffd ) )
+			hff = NULL;
+	}
+
+#endif
+
 	X509_STORE_CTX * store_ctx;
 	store_ctx = X509_STORE_CTX_new();
 	if( store_ctx == NULL )
+	{
+		X509_STORE_free( store );
+		X509_free( x509_cert );
+		X509_free( x509_ca );
 		return false;
+	}
 
 	X509_STORE_CTX_init( store_ctx, store, x509_cert, NULL );
 	X509_STORE_CTX_set_flags( store_ctx, X509_V_FLAG_CRL_CHECK );
@@ -613,33 +660,6 @@ bool _IKED::cert_verify( BDATA & cert, BDATA & ca )
 		return true;
 
 	return false;
-
-	/*
-	X509_V_OK
-	X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT
-	X509_V_ERR_UNABLE_TO_GET_CRL
-	X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE
-	X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE
-	X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY
-	X509_V_ERR_CERT_SIGNATURE_FAILURE
-	X509_V_ERR_CRL_SIGNATURE_FAILURE
-	X509_V_ERR_CERT_NOT_YET_VALID
-	X509_V_ERR_CERT_HAS_EXPIRED
-	X509_V_ERR_CRL_NOT_YET_VALID
-	X509_V_ERR_CRL_HAS_EXPIRED
-	X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD
-	X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD
-	X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD
-	X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD
-	X509_V_ERR_OUT_OF_MEM
-	X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT
-	X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN
-	X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
-	X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE
-	X509_V_ERR_CERT_CHAIN_TOO_LONG
-	X509_V_ERR_CERT_REVOKED
-	X509_V_ERR_APPLICATION_VERIFICATION
-	*/
 }
 
 long _IKED::prvkey_rsa_load_pem( char * file, EVP_PKEY ** evp_pkey, BDATA & pass )
