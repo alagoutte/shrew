@@ -526,19 +526,21 @@ typedef class _IDB_PH2 : public IDB_XCH
 {
 	public:
 
-	unsigned long	seqid;
-	long			dhgr_id;
-	long			spi_count;
+	uint32_t	seqid_in;
+	uint32_t	seqid_out;
+	long		spicount;
 
-	IKE_PH2ID		ph2id_ls;
-	IKE_PH2ID		ph2id_ld;
-	IKE_PH2ID		ph2id_rs;
-	IKE_PH2ID		ph2id_rd;
+	long		dhgr_id;
+
+	IKE_PH2ID	ph2id_ls;
+	IKE_PH2ID	ph2id_ld;
+	IKE_PH2ID	ph2id_rs;
+	IKE_PH2ID	ph2id_rd;
 
 	ITH_EVENT_PH2SOFT	event_soft;
 	ITH_EVENT_PH2HARD	event_hard;
 
-	_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, unsigned long set_msgid, unsigned long set_seqid );
+	_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, uint32_t set_msgid, uint32_t set_seqid_in );
 	virtual ~_IDB_PH2();
 
 	virtual bool add( bool lock );

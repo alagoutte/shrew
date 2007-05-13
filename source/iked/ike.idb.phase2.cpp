@@ -72,12 +72,13 @@ bool _ITH_EVENT_PH2HARD::func()
 // phase2 security association class
 //
 
-_IDB_PH2::_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, unsigned long set_msgid, unsigned long set_seqid )
+_IDB_PH2::_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, uint32_t set_msgid, uint32_t set_seqid_in )
 {
 	msgid = 0;
-	seqid = 0;
+	seqid_in = 0;
+	seqid_out = 0;
+	spicount = 0;
 	dhgr_id = 0;
-	spi_count = 0;
 
 	//
 	// initialize the tunnel id
@@ -102,13 +103,15 @@ _IDB_PH2::_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, unsigned long s
 		iked.rand_bytes( &msgid, sizeof( msgid ) );
 
 	//
-	// initialize seqid
+	// initialize seqids
 	//
 
-	if( set_seqid )
-		seqid = set_seqid;
+	if( set_seqid_in )
+		seqid_in = set_seqid_in;
 	else
-		iked.rand_bytes( &seqid, sizeof( seqid ) );
+		iked.rand_bytes( &seqid_in, sizeof( seqid_in ) );
+
+	iked.rand_bytes( &seqid_out, sizeof( seqid_out ) );
 
 	//
 	// initialize nonce data
@@ -232,7 +235,8 @@ bool _IKED::get_phase2( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, long lst
 		//
 
 		if( seqid != NULL )
-			if( tmp_ph2->seqid != *seqid )
+			if( ( tmp_ph2->seqid_in != *seqid ) &&
+				( tmp_ph2->seqid_out != *seqid ) )
 				continue;
 
 		//

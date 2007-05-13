@@ -724,17 +724,6 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 		txtid_dst );
 
 	//
-	// we only need to process update
-	// message data associated with
-	// inbound sas. for this reason,
-	// we will have used a null seqid
-	// for outbound spi requests
-	//
-
-	if( !msg.hdr->sadb_msg_seq )
-		return LIBIKE_OK;
-
-	//
 	// convert the pfkey sainfo type
 	// to a known isakmp protocol
 	//
@@ -781,6 +770,18 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 	}
 
 	//
+	// we only need to process update
+	// message data associated with
+	// inbound sas.
+	//
+
+	if( msg.hdr->sadb_msg_seq == ph2->seqid_out )
+	{
+		ph2->dec( true );
+		return LIBIKE_OK;
+	}
+
+	//
 	// step through the appropriate list
 	// of proposals / transforms and set
 	// the spi for all matched protocols
@@ -823,10 +824,16 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 		pcount,
 		find_name( NAME_PROTOCOL, proto ) );
 
-	ph2->spi_count--;
+	//
+	// once all spis have been accounted
+	// for, we can initiate phase2 with
+	// our peer
+	//
 
-	if( ph2->spi_count )
-		log.txt( LOG_DEBUG, "ii : waiting for %i spi updates\n", ph2->spi_count );
+	ph2->spicount--;
+
+	if( ph2->spicount )
+		log.txt( LOG_DEBUG, "ii : waiting for %i spi updates\n", ph2->spicount );
 	else
 	{
 		ph2->lstate |= LSTATE_HASSPI;
@@ -952,6 +959,7 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 
 	//
 	// convert source and destination
+	// and store sequence ids
 	//
 
 	sainfo.paddr_src.proto = IPSEC_PROTO_ANY;
@@ -962,25 +970,15 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 		case IPSEC_DIR_INBOUND:
 			cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_src.saddr, use_ports );
 			cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_dst.saddr, use_ports );
+			sainfo.seq = ph2->seqid_in;
 			break;
 
 		case IPSEC_DIR_OUTBOUND:
 			cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_src.saddr, use_ports );
 			cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_dst.saddr, use_ports );
+			sainfo.seq = ph2->seqid_out;
 			break;
 	}
-
-	//
-	// we only need process getspi messages
-	// for inbound policies. use a zero for
-	// seqid for outbound policy so we can
-	// id them when received.
-	//
-
-	if( policy->sp.dir == IPSEC_DIR_INBOUND )
-		sainfo.seq = ph2->seqid;
-	else
-		sainfo.seq = ph2->seqid + 1;
 
 	//
 	// configure the spiinfo parameters
@@ -1110,7 +1108,7 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 			// wait for an update response
 			//
 
-			ph2->spi_count++;
+			ph2->spicount++;
 		}
 
 		//
@@ -1387,6 +1385,7 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 
 	//
 	// convert source and destination
+	// and store sequence ids
 	//
 
 	sainfo.paddr_src.proto = IPSEC_PROTO_ANY;
@@ -1397,11 +1396,13 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 		case IPSEC_DIR_INBOUND:
 			cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_src.saddr, use_ports );
 			cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_dst.saddr, use_ports );
+			sainfo.seq = ph2->seqid_in;
 			break;
 
 		case IPSEC_DIR_OUTBOUND:
 			cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_src.saddr, use_ports );
 			cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_dst.saddr, use_ports );
+			sainfo.seq = ph2->seqid_out;
 			break;
 	}
 
@@ -1430,11 +1431,6 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 
 	text_addr( txtid_src, &sainfo.paddr_src, true, true );
 	text_addr( txtid_dst, &sainfo.paddr_dst, true, true );
-
-	if( dir == IPSEC_DIR_INBOUND )
-		sainfo.seq = ph2->seqid;
-	else
-		sainfo.seq = ph2->seqid + 1;
 
 	long nametype = NAME_SAENCR;
 	if( sainfo.satype == SADB_X_SATYPE_IPCOMP )
