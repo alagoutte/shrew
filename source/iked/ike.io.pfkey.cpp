@@ -821,10 +821,13 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 	log.txt( LOG_DEBUG,
 		"ii : updated spi for %i %s proposal\n",
 		pcount,
-		find_name( NAME_PROTOCOL, proto ),
-		ph2->spi_count );
+		find_name( NAME_PROTOCOL, proto ) );
 
-	if( !( --ph2->spi_count ) )
+	ph2->spi_count--;
+
+	if( ph2->spi_count )
+		log.txt( LOG_DEBUG, "ii : waiting for %i spi updates\n", ph2->spi_count );
+	else
 	{
 		ph2->lstate |= LSTATE_HASSPI;
 

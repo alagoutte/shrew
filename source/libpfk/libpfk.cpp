@@ -287,6 +287,7 @@ long _PFKI::wait_msg()
 long _PFKI::send_msg( PFKI_MSG & msg )
 {
 	DWORD result;
+
 	WriteFile( hpipe, msg.msg_buff, msg.msg_size, &result, NULL );
 
 	if( long( result ) != msg.msg_size )
@@ -310,6 +311,7 @@ long _PFKI::recv_msg( PFKI_MSG & msg, bool peek )
 	else
 	{
 		ReadFile( hpipe, msg.msg_buff + sizeof( tmsg ), msg.msg_size - sizeof( tmsg ), &result, NULL );
+
 		memcpy( msg.msg_buff, &tmsg, sizeof( tmsg ) );
 		result += sizeof( tmsg );
 	}
@@ -1949,8 +1951,8 @@ PFKI * _PFKS::accept()
 				PFKI_PIPE_NAME,
 				PIPE_ACCESS_DUPLEX |
 				FILE_FLAG_OVERLAPPED,
-			    PIPE_TYPE_MESSAGE |
-				PIPE_READMODE_MESSAGE |
+			    PIPE_TYPE_BYTE |
+				PIPE_READMODE_BYTE |
 				PIPE_NOWAIT,
 				PIPE_UNLIMITED_INSTANCES,
 				8192,

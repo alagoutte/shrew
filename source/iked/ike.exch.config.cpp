@@ -1225,7 +1225,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		if( nullmask & IPSEC_OPTS_DOMAIN )
 		{
 			cfg->attr_add_v( UNITY_DEF_DOMAIN, NULL, 0 );
-			log.txt( LOG_DEBUG,	"ii : - IP4 DNS Suffix\n" );
+			log.txt( LOG_DEBUG,	"ii : - DNS Suffix\n" );
 		}
 		else
 		{
@@ -1237,7 +1237,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 			text_addr( txtaddr, cfg->tunnel->xconf.dnss );
 
 			log.txt( LOG_DEBUG,
-				"ii : - IP4 DNS Suffix = %s\n",
+				"ii : - DNS Suffix = %s\n",
 				cfg->tunnel->xconf.suffix );
 		}
 	}
@@ -1370,7 +1370,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		if( nullmask & IPSEC_OPTS_BANNER )
 		{
 			cfg->attr_add_v( UNITY_BANNER, NULL, 0 );
-			log.txt( LOG_DEBUG,	"ii : Login Banner\n" );
+			log.txt( LOG_DEBUG,	"ii : - Login Banner\n" );
 		}
 		else
 		{
