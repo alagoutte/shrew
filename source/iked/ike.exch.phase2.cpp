@@ -855,12 +855,22 @@ long _IKED::process_phase2_send( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 long _IKED::phase2_gen_hash_i( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 {
+	BDATA input;
+	input.add( &ph2->msgid, sizeof( ph2->msgid ) );
+	input.add( ph2->hda );
+
+	log.bin(
+		LOG_DEBUG,
+		LOG_DECODE,
+		input.buff(),
+		input.size(),
+		"== : phase2 hash_i ( input )" );
+
 	hash.set( 0, ph1->hash_size );
 
 	HMAC_CTX ctx_prf;
 	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ph1->skeyid_a.size(), ph1->evp_hash );
-	HMAC_Update( &ctx_prf, ( unsigned char * ) &ph2->msgid, sizeof( ph2->msgid ) );
-	HMAC_Update( &ctx_prf, ph2->hda.buff(), ph2->hda.size() );
+	HMAC_Update( &ctx_prf, input.buff(), input.size() );
 	HMAC_Final( &ctx_prf, hash.buff(), NULL );
 	HMAC_cleanup( &ctx_prf );
 
@@ -876,18 +886,28 @@ long _IKED::phase2_gen_hash_i( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 
 long _IKED::phase2_gen_hash_r( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 {
+	BDATA input;
+	input.add( &ph2->msgid, sizeof( ph2->msgid ) );
+
+	if( ph2->initiator )
+		input.add( ph2->nonce_l );
+	else
+		input.add( ph2->nonce_r );
+
+	input.add( ph2->hda );
+
+	log.bin(
+		LOG_DEBUG,
+		LOG_DECODE,
+		input.buff(),
+		input.size(),
+		"== : phase2 hash_r ( input )" );
+
 	hash.set( 0, ph1->hash_size );
 
 	HMAC_CTX ctx_prf;
 	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ph1->skeyid_a.size(), ph1->evp_hash );
-	HMAC_Update( &ctx_prf, ( unsigned char * ) &ph2->msgid, sizeof( ph2->msgid ) );
-
-	if( ph2->initiator )
-		HMAC_Update( &ctx_prf, ph2->nonce_l.buff(), ph2->nonce_l.size() );
-	else
-		HMAC_Update( &ctx_prf, ph2->nonce_r.buff(), ph2->nonce_r.size() );
-
-	HMAC_Update( &ctx_prf, ph2->hda.buff(), ph2->hda.size() );
+	HMAC_Update( &ctx_prf, input.buff(), input.size() );
 	HMAC_Final( &ctx_prf, hash.buff(), NULL );
 	HMAC_cleanup( &ctx_prf );
 
@@ -903,24 +923,33 @@ long _IKED::phase2_gen_hash_r( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 
 long _IKED::phase2_gen_hash_p( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 {
+	BDATA input;
+	input.add( "\0", 1 );
+	input.add( &ph2->msgid, sizeof( ph2->msgid ) );
+
+	if( ph2->initiator )
+	{
+		input.add( ph2->nonce_l );
+		input.add( ph2->nonce_r );
+	}
+	else
+	{
+		input.add( ph2->nonce_r );
+		input.add( ph2->nonce_l );
+	}
+
+	log.bin(
+		LOG_DEBUG,
+		LOG_DECODE,
+		input.buff(),
+		input.size(),
+		"== : phase2 hash_p ( input )" );
+
 	hash.set( 0, ph1->hash_size );
 
 	HMAC_CTX ctx_prf;
 	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ph1->skeyid_a.size(), ph1->evp_hash );
-	HMAC_Update( &ctx_prf, ( unsigned char * ) "\0", 1 );
-	HMAC_Update( &ctx_prf, ( unsigned char * ) &ph2->msgid, sizeof( ph2->msgid ) );
-
-	if( ph2->initiator )
-	{
-		HMAC_Update( &ctx_prf, ph2->nonce_l.buff(), ph2->nonce_l.size() );
-		HMAC_Update( &ctx_prf, ph2->nonce_r.buff(), ph2->nonce_r.size() );
-	}
-	else
-	{
-		HMAC_Update( &ctx_prf, ph2->nonce_r.buff(), ph2->nonce_r.size() );
-		HMAC_Update( &ctx_prf, ph2->nonce_l.buff(), ph2->nonce_l.size() );
-	}
-
+	HMAC_Update( &ctx_prf, input.buff(), input.size() );
 	HMAC_Final( &ctx_prf, hash.buff(), 0 );
 	HMAC_cleanup( &ctx_prf );
 

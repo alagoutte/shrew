@@ -49,7 +49,7 @@ _IKED::_IKED()
 	policyid = 1;
 
 	retry_count = 2;
-	retry_delay = 10;
+	retry_delay = 5;
 
 	sock_ike_open = 0;
 	sock_natt_open = 0;
