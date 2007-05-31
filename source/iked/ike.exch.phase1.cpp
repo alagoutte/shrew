@@ -1874,77 +1874,42 @@ long _IKED::phase1_gen_hash_r( IDB_PH1 * sa, BDATA & hash )
 
 long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 {
-	long count = 0;
-
-	if( ph1->xauth_l )
-		count++;
-
-	if( ph1->natt_l )
-		count++;
-
-	if( ph1->frag_l )
-		count++;
-
-	if( ph1->dpd_l )
-		count++;
-
-	unsigned char next = ISAKMP_PAYLOAD_VEND;
-
-	//
-	// add unity vendor id payload
-	//
-
-	if( !count )
-		next = ISAKMP_PAYLOAD_NONE;
-
-	payload_add_vend( packet, vend_unity, next );
-
 	//
 	// optionally add xauth vendor id payload
 	//
 
-	if( !count )
-		next = ISAKMP_PAYLOAD_NONE;
-
 	if( ph1->xauth_l )
-	{
-		payload_add_vend( packet, vend_xauth, next );
-		count--;
-	}
+		payload_add_vend( packet, vend_xauth, ISAKMP_PAYLOAD_VEND );
 
 	//
 	// optionally add natt vendor id payload
 	//
 
-	if( !count )
-		next = ISAKMP_PAYLOAD_NONE;
-
 	if( ph1->natt_l )
 	{
 		payload_add_vend( packet, vend_natt_v02, ISAKMP_PAYLOAD_VEND );
-		payload_add_vend( packet, vend_natt_rfc, next );
-		count--;
+		payload_add_vend( packet, vend_natt_rfc, ISAKMP_PAYLOAD_VEND );
 	}
 
 	//
 	// optionally add fragmentation vendor id payload
 	//
 
-	if( !count )
-		next = ISAKMP_PAYLOAD_NONE;
-
 	if( ph1->frag_l )
-	{
-		payload_add_vend( packet, vend_frag, next );
-		count--;
-	}
+		payload_add_vend( packet, vend_frag, ISAKMP_PAYLOAD_VEND );
 
 	//
 	// optionally add dpd vendor id payload
 	//
 
 	if( ph1->dpd_l )
-		payload_add_vend( packet, vend_dpd1, ISAKMP_PAYLOAD_NONE );
+		payload_add_vend( packet, vend_dpd1, ISAKMP_PAYLOAD_VEND );
+
+	//
+	// add unity vendor id payload
+	//
+
+	payload_add_vend( packet, vend_unity, ISAKMP_PAYLOAD_NONE );
 
 	return LIBIKE_OK;
 }

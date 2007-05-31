@@ -68,10 +68,20 @@ bool _ITH_EVENT_PH1DPD::func()
 		return false;
 	}
 
-	ph1->dpd_req++;
+	//
+	// obtain next sequence number
+	// and convert to network byte
+	// order
+	//
+
+	uint32_t dpdseq = htonl( ph1->dpd_req++ );
+
+	//
+	// add sequence number and send
+	//
 
 	BDATA bdata;
-	bdata.add( &ph1->dpd_req, sizeof( ph1->dpd_req ) );
+	bdata.add( &dpdseq, sizeof( dpdseq ) );
 
 	iked.inform_new_notify( ph1, NULL, ISAKMP_N_DPD_R_U_THERE, &bdata );
 

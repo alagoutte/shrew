@@ -538,16 +538,27 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 				{
 					if( notify->data.size() == sizeof( ph1->dpd_res ) )
 					{
-						uint32_t * dpdseq = ( uint32_t * ) notify->data.buff();
+						//
+						// obtain sequence number and
+						// convert to host byte order
+						//
 
-						if( *dpdseq > ph1->dpd_req )
+						uint32_t dpdseq;
+						notify->data.get( &dpdseq, sizeof( dpdseq ) );
+						dpdseq = ntohl( dpdseq );
+
+						//
+						// check dpd sequence number
+						//
+
+						if( dpdseq > ph1->dpd_req )
 						{
 							log.txt( LOG_DEBUG, "ii : DPD sequence rejected\n" );
 							break;
 						}
 
 						log.txt( LOG_DEBUG, "ii : DPD sequence accepted\n" );
-						ph1->dpd_res = *dpdseq;
+						ph1->dpd_res = dpdseq;
 					}
 
 					break;
