@@ -12,5 +12,5 @@ include_directories(
 	/usr/include/netinet6 )
 
 add_library(
-	libpfk
+	libpfk SHARED
 	libpfk.cpp )
