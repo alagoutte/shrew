@@ -62,6 +62,13 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#ifndef SA_SIZE
+#define SA_SIZE(sa)                                             \
+    (  (!(sa) || ((struct sockaddr *)(sa))->sa_len == 0) ?      \
+        sizeof(long)            :                               \
+        1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(long) - 1) ) )
+#endif
+
 #endif
 
 #include <stdio.h>
