@@ -544,8 +544,14 @@ long _IKED::send_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 
 bool _IKED::vnet_init()
 {
+
+#ifdef FREEBSD
+
 	kldload( "/boot/kernel/if_tap.ko" );
 	return true;
+
+#endif
+
 }
 
 bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
