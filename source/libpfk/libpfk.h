@@ -96,6 +96,10 @@
 
 #ifndef __FreeBSD__
 
+#ifndef SADB_X_EALG_AESCBC
+# define SADB_X_EALG_AESCBC 12
+#endif
+
 // Linux and NetBSD compat
 
 #define PFKEY_SOFT_LIFETIME_RATE	80
@@ -112,12 +116,6 @@
         (((struct sadb_address *)(ext))->sadb_address_proto)
 #define PFKEY_ADDR_SADDR(ext) \
         ((struct sockaddr *)((caddr_t)(ext) + sizeof(struct sadb_address)))
-
-#else
-
-#ifndef SADB_X_EALG_AESCBC
-# define SADB_X_EALG_AESCBC 12
-#endif
 
 #endif
 

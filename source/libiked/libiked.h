@@ -52,6 +52,7 @@
 #  include <sys/un.h>
 #  include <sys/stat.h>
 # else
+#  include <sys/types.h>
 #  include <sys/un.h>
 #  include <sys/stat.h>
 # endif
