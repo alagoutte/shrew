@@ -41,10 +41,14 @@
 
 #include "iked.h"
 
-#ifdef WIN32
-# define SSLCONST const
+//
+// opsenssl version compatibility
+//
+
+#if OPENSSL_VERSION_NUMBER < 0x0090800fL
+# define X509CONST
 #else
-# define SSLCONST
+# define X509CONST const
 #endif
 
 // openssl password callback
@@ -100,7 +104,7 @@ bool _IKED::cert_2_bdata( BDATA & cert, X509 * x509 )
 
 bool _IKED::bdata_2_cert( X509 ** x509, BDATA & cert )
 {
-	SSLCONST unsigned char * cert_buff = cert.buff();
+	X509CONST unsigned char * cert_buff = cert.buff();
 
 	*x509 = d2i_X509( NULL, &cert_buff, cert.size() );
 	if( !( *x509 ) )
@@ -298,7 +302,7 @@ bool _IKED::asn1_text( BDATA & data, BDATA & text )
 {
 	X509_NAME * x509_name = NULL;
 
-	SSLCONST unsigned char * buff = data.buff();
+	X509CONST unsigned char * buff = data.buff();
 	if( buff == NULL )
 		return false;
 

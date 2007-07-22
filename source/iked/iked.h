@@ -133,7 +133,7 @@
 #define PATH_DEBUG		"/var/log"
 #define MAX_PATH		1024
 
-// conf parser definition
+// Conf parser definition
 
 #define YY_DECL										\
 	yy::conf_parser::token_type						\
