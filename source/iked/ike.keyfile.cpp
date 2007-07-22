@@ -41,7 +41,7 @@
 
 #include "iked.h"
 
-#ifndef WIN32
+#ifdef WIN32
 # define SSLCONST const
 #else
 # define SSLCONST

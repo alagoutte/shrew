@@ -55,9 +55,6 @@
 #endif
 
 #ifdef UNIX
-# ifdef __FreeBSD__
-#  include <sys/linker.h>
-# endif
 # ifdef __linux__
 #  include <signal.h>
 #  include <pwd.h>
@@ -67,21 +64,17 @@
 #  include <sys/ioctl.h>
 #  include <linux/udp.h>
 # else
-#  include <sys/time.h>
-#  include <unistd.h>
 #  include <signal.h>
-#  include <ctype.h>
-#  include <netdb.h>
 #  include <pwd.h>
 #  include <grp.h>
-#  include <sys/stat.h>
-#  include <sys/socket.h>
+#  include <netdb.h>
 #  include <sys/ioctl.h>
 #  include <sys/param.h>
-#  include <arpa/inet.h>
+#  include <sys/socket.h>
 #  include <net/if.h>
-#  include <netinet/in.h>
-#  include <netinet6/ipsec.h>
+# endif
+# ifdef __FreeBSD__
+#  include <sys/linker.h>
 # endif
 # include "conf.parse.hpp"
 #endif
@@ -132,10 +125,11 @@
 #ifdef __linux__
 #define SET_SALEN( A, B )
 #else
-#define SET_SALEN( A, B ) (sockaddr*)A->sa_len = B
+#define SET_SALEN( A, B ) ((sockaddr*)(A))->sa_len = B
 #endif
 
 #define PATH_DEBUG		"/var/log"
+#define MAX_PATH		1024
 
 // conf parser definition
 
@@ -146,8 +140,6 @@
 	IKED & iked )
 
 YY_DECL;
-
-#define MAX_PATH 1024
 
 #endif
 

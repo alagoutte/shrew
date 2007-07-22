@@ -42,18 +42,6 @@
 #ifndef _IKE_H_
 #define _IKE_H_
 
-#ifdef WIN32
-# include <winsock2.h>
-#endif
-
-#ifdef UNIX
-# ifdef __linux__
-# else
-#  include <sys/socket.h>
-#  include <netinet/in.h>
-# endif
-#endif
-
 #include "libip.h"
 
 #define CONF_STRLEN					256

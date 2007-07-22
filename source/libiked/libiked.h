@@ -52,10 +52,8 @@
 #  include <sys/un.h>
 #  include <sys/stat.h>
 # else
-#  include <unistd.h>
 #  include <sys/un.h>
 #  include <sys/stat.h>
-#  include <linux/types.h>
 # endif
 #endif
 

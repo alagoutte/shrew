@@ -69,8 +69,6 @@
 #  include <fcntl.h>
 #  include <sys/socket.h>
 #  include <netinet/in.h>
-#  include <netinet/udp.h>
-#  include <arpa/inet.h>
 #  include <net/pfkeyv2.h>
 #  include <netinet6/ipsec.h>
 # endif
@@ -94,12 +92,13 @@
 
 #ifdef UNIX
 
+#define PFKEY_BUFFSIZE			128 * 1024
+
 #ifndef __FreeBSD__
 
 // Linux and NetBSD compat
 
 #define PFKEY_SOFT_LIFETIME_RATE	80
-#define PFKEY_BUFFSIZE			128 * 1024
 
 #define PFKEY_UNUNIT64(a)		((a) << 3)
 #define PFKEY_UNIT64(a)			((a) >> 3)
