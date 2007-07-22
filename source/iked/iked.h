@@ -108,6 +108,8 @@
 
 #define PATH_CONF		"SOFTWARE\\ShrewSoft\\vpn"
 
+#define SET_SALEN( A, B )
+
 #endif
 
 //

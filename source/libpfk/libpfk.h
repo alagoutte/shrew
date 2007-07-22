@@ -49,6 +49,7 @@
 # include <stdlib.h>
 # include "inttypes.h"
 # include "pfkeyv2.h"
+# include "ipsec.h"
 #endif
 
 #ifdef UNIX
