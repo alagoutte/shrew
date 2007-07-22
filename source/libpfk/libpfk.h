@@ -95,11 +95,11 @@
 
 #define PFKEY_BUFFSIZE			128 * 1024
 
-#ifndef __FreeBSD__
-
 #ifndef SADB_X_EALG_AESCBC
 # define SADB_X_EALG_AESCBC 12
 #endif
+
+#ifndef __FreeBSD__
 
 // Linux and NetBSD compat
 
