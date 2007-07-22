@@ -11,5 +11,5 @@ include_directories(
         ${IKE_SOURCE_DIR}/source )
 
 add_library(
-	libith
+	ith
 	libith.cpp )

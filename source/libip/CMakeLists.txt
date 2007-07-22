@@ -12,7 +12,7 @@ include_directories(
 	${IKE_SOURCE_DIR}/source/libith )
 
 add_library(
-	libip
+	ip
 	libip.bdata.cpp
 	libip.frag.cpp
 	libip.packet.cpp

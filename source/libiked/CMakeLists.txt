@@ -14,5 +14,5 @@ include_directories(
         ${IKE_SOURCE_DIR}/source/libip )
 
 add_library(
-	libiked SHARED
+	iked SHARED
 	libiked.cpp )

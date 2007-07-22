@@ -11,5 +11,5 @@ include_directories(
         ${IKE_SOURCE_DIR}/source )
 
 add_library(
-	libpfk SHARED
+	pfk SHARED
 	libpfk.cpp )
