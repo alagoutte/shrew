@@ -10,14 +10,14 @@
 include_directories(
 	${IKE_SOURCE_DIR}/source
 	${IKE_SOURCE_DIR}/source/iked
-	${IKE_SOURCE_DIR}/source/libiked
+	${IKE_SOURCE_DIR}/source/libike
 	${IKE_SOURCE_DIR}/source/libith
 	${IKE_SOURCE_DIR}/source/libip
 	${IKE_SOURCE_DIR}/source/liblog
 	${IKE_SOURCE_DIR}/source/libpfk )
 
 link_directories(
-	${IKE_SOURCE_DIR}/source/libiked
+	${IKE_SOURCE_DIR}/source/libike
 	${IKE_SOURCE_DIR}/source/libith
 	${IKE_SOURCE_DIR}/source/libip
 	${IKE_SOURCE_DIR}/source/liblog
@@ -61,11 +61,11 @@ add_executable(
 
 target_link_libraries(
 	iked
-	libiked
-	libith
-	libip
-	liblog
-	libpfk
+	ike
+	ith
+	ip
+	log
+	pfk
 	crypt
 	crypto
 	pthread )

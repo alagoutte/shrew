@@ -10,9 +10,9 @@
 include_directories(
         ${IKE_SOURCE_DIR}/source
         ${IKE_SOURCE_DIR}/source/iked
-        ${IKE_SOURCE_DIR}/source/libiked
+        ${IKE_SOURCE_DIR}/source/libike
         ${IKE_SOURCE_DIR}/source/libip )
 
 add_library(
-	iked SHARED
-	libiked.cpp )
+	ike SHARED
+	libike.cpp )

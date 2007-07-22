@@ -30,7 +30,7 @@ subdirs(
 #	source/ikea
 #	source/ikec
 	source/iked
-	source/libiked
+	source/libike
 	source/libip
 	source/libith
 	source/liblog
