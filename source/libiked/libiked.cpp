@@ -192,13 +192,18 @@ long _IKEI::attach( long timeout )
 
 	struct sockaddr_un saddr;
 	saddr.sun_family = AF_UNIX;
-	saddr.sun_len = strlen( IKEI_SOCK_NAME ) +
-			sizeof( saddr.sun_len ) +
+
+	long sun_len =  strlen( IKEI_SOCK_NAME ) +
 			sizeof( saddr.sun_family );
+
+#ifndef __linux__
+	sun_len += sizeof( saddr.sun_len );
+	saddr.sun_len = sun_len;
+#endif
 
 	strcpy( saddr.sun_path, IKEI_SOCK_NAME );
 
-	if( connect( sock, ( struct sockaddr * ) &saddr, saddr.sun_len ) < 0 )
+	if( connect( sock, ( struct sockaddr * ) &saddr, sun_len ) < 0 )
 		return IKEI_FAILED;
 
 	return IKEI_OK;
@@ -603,13 +608,18 @@ bool _IKES::init()
 
 	struct sockaddr_un saddr;
 	saddr.sun_family = AF_UNIX;
-	saddr.sun_len = strlen( IKEI_SOCK_NAME ) +
-			sizeof( saddr.sun_len ) +
+
+	long sun_len =  strlen( IKEI_SOCK_NAME ) +
 			sizeof( saddr.sun_family );
+
+#ifndef __linux__
+        sun_len += sizeof( saddr.sun_len );
+        saddr.sun_len = sun_len;
+#endif
 
 	strcpy( saddr.sun_path, IKEI_SOCK_NAME );
 
-	if( bind( sock, ( struct sockaddr * ) &saddr, saddr.sun_len ) < 0 )
+	if( bind( sock, ( struct sockaddr * ) &saddr, sun_len ) < 0 )
 		return false;
 
 	if( chmod( IKEI_SOCK_NAME, S_IRWXU | S_IRWXG | S_IRWXO ) < 0 )

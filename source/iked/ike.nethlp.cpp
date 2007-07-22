@@ -131,12 +131,16 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 		return LIBIKE_SOCKET;
 	}
 
+#ifndef __linux__
+
 	optval = 1;
 	if( setsockopt( sock_info->sock, IPPROTO_IP, IP_RECVDSTADDR, &optval, sizeof( optval ) ) < 0)
 	{
 		log.txt( LOG_ERROR, "!! : socket set recvdstaddr option failed\n" );
 		return LIBIKE_SOCKET;
 	}
+
+#endif
 
 	if( fcntl( sock_info->sock, F_SETFL, O_NONBLOCK ) == -1 )
 	{
@@ -265,10 +269,14 @@ long _IKED::recv_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 		if( result <= 0 )
 			continue;
 
+#ifndef __linux__
+
 		memcpy(
 			&dest.saddr4.sin_addr,
 			CMSG_DATA( msg.msg_control ),
 			sizeof( dest.saddr4.sin_addr ) );
+
+#endif
 
 		//
 		// add udp and ip headers
@@ -645,9 +653,8 @@ bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 		struct ifreq ifr;
 		memset( &ifr, 0, sizeof( struct ifreq ) );
 
-		struct sockaddr_in * addr;
-		addr = ( struct sockaddr_in * ) &( ifr.ifr_addr );
-		addr->sin_len=sizeof( struct sockaddr_in );
+		struct sockaddr_in * addr = ( struct sockaddr_in * ) &( ifr.ifr_addr );
+		SET_SALEN( addr, sizeof( struct sockaddr_in ) );
 		addr->sin_family = AF_INET;
 
 		int sock = socket( PF_INET, SOCK_DGRAM, 0 );

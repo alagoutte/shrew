@@ -123,6 +123,21 @@ bool _IKED::rand_bytes( void * buff, long size )
 
 long _IKED::init( long setlevel )
 {
+
+	//
+	// check that we are root
+	//
+
+#ifdef UNIX
+
+	if( getuid() )
+	{
+		printf( "you must be root to run this program !!!\n" );
+		return LIBIKE_FAILED;
+	}
+
+#endif
+
 	//
 	// initialize ike service interface
 	//
@@ -220,10 +235,8 @@ long _IKED::init( long setlevel )
 	{
 		IKE_SADDR saddr;
 		memset( &saddr, 0, sizeof( saddr ) );
+		SET_SALEN( &saddr.saddr4, sizeof( sockaddr_in ) );
 		saddr.saddr4.sin_family	= AF_INET;
-#ifdef UNIX
-		saddr.saddr4.sin_len = sizeof( sockaddr_in );
-#endif
 		saddr.saddr4.sin_port = htons( LIBIKE_IKE_PORT );
 
 		if( socket_create( saddr, false ) != LIBIKE_OK )
@@ -244,10 +257,8 @@ long _IKED::init( long setlevel )
 	{
 		IKE_SADDR saddr;
 		memset( &saddr, 0, sizeof( saddr ) );
+		SET_SALEN( &saddr.saddr4, sizeof( sockaddr_in ) );
 		saddr.saddr4.sin_family	= AF_INET;
-#ifdef UNIX
-		saddr.saddr4.sin_len = sizeof( sockaddr_in );
-#endif
 		saddr.saddr4.sin_port = htons( LIBIKE_NATT_PORT );
 
 		if( socket_create( saddr, true ) != LIBIKE_OK )

@@ -43,49 +43,101 @@
 #define _IKED_H_
 
 #ifdef WIN32
-
-#define PATH_CONF		"SOFTWARE\\ShrewSoft\\vpn"
-
-#include <winsock2.h>
-#include <windows.h>
-#include <shlwapi.h>
-#include <time.h>
-#include <assert.h>
-#include <string.h>
-#include "libvflt.h"
-#include "libvnet.h"
-
+# include <winsock2.h>
+# include <windows.h>
+# include <shlwapi.h>
+# include <time.h>
+# include <assert.h>
+# include <string.h>
+# include "libvflt.h"
+# include "libvnet.h"
+# include "ipsec.h"
 #endif
 
 #ifdef UNIX
+# ifdef __FreeBSD__
+#  include <sys/linker.h>
+# endif
+# ifdef __linux__
+#  include <signal.h>
+#  include <pwd.h>
+#  include <grp.h>
+#  include <netdb.h>
+#  include <net/if.h>
+#  include <sys/ioctl.h>
+#  include <linux/udp.h>
+# else
+#  include <sys/time.h>
+#  include <unistd.h>
+#  include <signal.h>
+#  include <ctype.h>
+#  include <netdb.h>
+#  include <pwd.h>
+#  include <grp.h>
+#  include <sys/stat.h>
+#  include <sys/socket.h>
+#  include <sys/ioctl.h>
+#  include <sys/param.h>
+#  include <arpa/inet.h>
+#  include <net/if.h>
+#  include <netinet/in.h>
+#  include <netinet6/ipsec.h>
+# endif
+# include "conf.parse.hpp"
+#endif
 
-#define PATH_CONF		"/usr/local/etc/iked.conf"
-#define PATH_DEBUG		"/var/log"
+#ifdef OPT_LDAP
+#include <ldap.h>
+#endif
 
-#include <unistd.h>
-#include <signal.h>
-#include <ctype.h>
-#include <netdb.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <sys/param.h>
-#include <arpa/inet.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <pwd.h>
-#include <grp.h>
-#include "conf.parse.hpp"
+#include "version.h"
+#include "liblog.h"
+#include "libiked.h"
+#include "libith.h"
+#include "libpfk.h"
+#include "libiked.h"
+#include "ike.h"
+#include "idb.h"
+#include "xauth.h"
+#include "xconf.h"
+#include "crypto.h"
 
-#ifdef FREEBSD
+#ifdef OPT_DTP
+#include "libdtp.h"
+#endif
 
-#include <sys/linker.h>
+
+//
+// Win32 specific
+//
+
+#ifdef WIN32
+
+#define PATH_CONF		"SOFTWARE\\ShrewSoft\\vpn"
 
 #endif
 
 //
-// parser definition
+// Unix specific
 //
+
+#ifdef UNIX
+
+#ifdef __FreeBSD__
+# define PATH_CONF		"/usr/local/etc/iked.conf"
+#else
+# define PATH_CONF		"/etc/iked.conf"
+#endif
+
+#ifdef __linux__
+#define SET_SALEN( A, B )
+#else
+#define SET_SALEN( A, B ) (sockaddr*)A->sa_len = B
+#endif
+
+#define PATH_DEBUG		"/var/log"
+
+// conf parser definition
 
 #define YY_DECL										\
 	yy::conf_parser::token_type						\
@@ -98,28 +150,6 @@ YY_DECL;
 #define MAX_PATH 1024
 
 #endif
-
-#include "libiked.h"
-
-#ifdef OPT_LDAP
-#include <ldap.h>
-#endif
-
-#ifdef OPT_DTP
-#include "libdtp.h"
-#endif
-
-#include "version.h"
-#include "crypto.h"
-#include "liblog.h"
-#include "libiked.h"
-#include "libith.h"
-#include "libpfk.h"
-#include "ike.h"
-#include "idb.h"
-#include "xauth.h"
-#include "xconf.h"
-#include "ipsec.h"
 
 //
 // IKED constants

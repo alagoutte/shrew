@@ -43,18 +43,20 @@
 #define _LIBIKED_H_
 
 #ifdef WIN32
-
-#include <winsock2.h>
-#include <aclapi.h>
-
+# include <winsock2.h>
+# include <aclapi.h>
 #endif
 
 #ifdef UNIX
-
-#include <unistd.h>
-#include <sys/un.h>
-#include <sys/stat.h>
-
+# ifdef __linux__
+#  include <sys/un.h>
+#  include <sys/stat.h>
+# else
+#  include <unistd.h>
+#  include <sys/un.h>
+#  include <sys/stat.h>
+#  include <linux/types.h>
+# endif
 #endif
 
 #include <assert.h>

@@ -237,6 +237,7 @@ bool _IKED_XAUTH_LDAP::auth_pwd( IKE_XAUTH & xauth )
 	char *	atlist[ 1 ] = { NULL };
 	char *	userdn = NULL;
 	int		scope = LDAP_SCOPE_ONE;
+	int	ecount = 0;
 
 	LDAPMessage * lr = NULL;
 	LDAPMessage * le = NULL;
@@ -285,7 +286,7 @@ bool _IKED_XAUTH_LDAP::auth_pwd( IKE_XAUTH & xauth )
 
 	// check the number of ldap entries returned
 
-	int ecount = ldap_count_entries(ld, lr);
+	ecount = ldap_count_entries(ld, lr);
 	if( ecount < 1 )
 		goto ldap_pwd_end;
 
@@ -370,6 +371,7 @@ bool _IKED_XAUTH_LDAP::auth_grp( IKE_XAUTH & xauth, BDATA & group )
 	BDATA	filter;
 	char *	atlist[ 1 ] = { NULL };
 	int		scope = LDAP_SCOPE_ONE;
+	int	ecount = 0;
 
 	LDAPMessage * lr = NULL;
 
@@ -423,7 +425,7 @@ bool _IKED_XAUTH_LDAP::auth_grp( IKE_XAUTH & xauth, BDATA & group )
 
 	// check the number of ldap entries returned
 
-	int ecount = ldap_count_entries( ld, lr );
+	ecount = ldap_count_entries( ld, lr );
 	if( ecount < 1 )
 		goto ldap_grp_end;
 

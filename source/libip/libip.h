@@ -43,31 +43,28 @@
 #define _LIBIP_H_
 
 #ifdef WIN32
-
-#define MPR50 1
-#include <winsock2.h>
-#include <windows.h>
-#include <iphlpapi.h>
-#include <routprot.h>
-#include <inttypes.h>
-
+# define MPR50 1
+# include <winsock2.h>
+# include <windows.h>
+# include <iphlpapi.h>
+# include <routprot.h>
+# include <inttypes.h>
 #endif
 
 #ifdef UNIX
-
-#include <unistd.h>
-#include <sys/socket.h>
-#include <net/route.h>
-#include <net/if_dl.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-#ifndef SA_SIZE
-#define SA_SIZE(sa)                                             \
-    (  (!(sa) || ((struct sockaddr *)(sa))->sa_len == 0) ?      \
-        sizeof(long)            :                               \
-        1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(long) - 1) ) )
-#endif
+# ifdef __linux__
+#  include <unistd.h>
+#  include <inttypes.h>
+#  include <sys/socket.h>
+#  include <arpa/inet.h>
+# else
+#  include <unistd.h>
+#  include <netinet/in.h>
+#  include <sys/socket.h>
+#  include <net/if_dl.h>
+#  include <net/route.h>
+#  include <arpa/inet.h>
+# endif
 
 #endif
 

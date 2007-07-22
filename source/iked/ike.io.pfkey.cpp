@@ -292,12 +292,9 @@ bool _IKED::ph2id_paddr( IKE_PH2ID & ph2id, PFKI_ADDR & paddr )
 		case ISAKMP_ID_IPV4_ADDR_SUBNET:
 		{
 			paddr.saddr4.sin_family = AF_INET;
+			SET_SALEN( &paddr.saddr4, sizeof( sockaddr_in  ) );
 			paddr.saddr4.sin_addr = ph2id.addr1;
 			paddr.saddr4.sin_port = ph2id.port;
-
-#ifdef UNIX
-			paddr.saddr4.sin_len = sizeof( sockaddr_in  );
-#endif
 
 			if( ph2id.prot )
 				paddr.proto = ph2id.prot;
@@ -1200,9 +1197,9 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 					sainfo.sa.encrypt = SADB_EALG_3DESCBC;
 					break;
 
-				case ISAKMP_ESP_CAST:
-					sainfo.sa.encrypt = SADB_X_EALG_CAST128CBC;
-					break;
+//				case ISAKMP_ESP_CAST:
+//					sainfo.sa.encrypt = SADB_X_EALG_CAST128CBC;
+//					break;
 
 				case ISAKMP_ESP_BLOWFISH:
 					sainfo.sa.encrypt = SADB_X_EALG_BLOWFISHCBC;

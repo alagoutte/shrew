@@ -1246,10 +1246,10 @@ char * _PFKI::name( long type, long value )
 
 				case SADB_X_SPDDELETE2:
 					return msgtype_22;
-/*
-				case SADB_X_NAT_T_NEW_MAPPING:
-					return msgtype_23;
-*/
+
+//				case SADB_X_NAT_T_NEW_MAPPING:
+//					return msgtype_23;
+
 				default:
 					return unknown;
 
@@ -1272,8 +1272,8 @@ char * _PFKI::name( long type, long value )
 				case SADB_EALG_3DESCBC:
 					return encrtype_03;
 
-				case SADB_X_EALG_CAST128CBC:
-					return encrtype_06;
+//				case SADB_X_EALG_CAST128CBC:
+//					return encrtype_06;
 
 				case SADB_X_EALG_BLOWFISHCBC:
 					return encrtype_07;
@@ -1365,8 +1365,8 @@ char * _PFKI::name( long type, long value )
 				case SADB_X_SATYPE_IPCOMP:
 					return satype_09;
 
-				case SADB_X_SATYPE_TCPSIGNATURE:
-					return satype_11;
+//				case SADB_X_SATYPE_TCPSIGNATURE:
+//					return satype_11;
 
 				default:
 					return unknown;

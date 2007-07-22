@@ -42,9 +42,9 @@
 #ifndef _IDB_H_
 #define _IDB_H_
 
-#include "ipsec.h"
-#include "crypto.h"
 #include "libip.h"
+#include "libpfk.h"
+#include "crypto.h"
 
 //
 // forward delare some class types
@@ -207,7 +207,7 @@ typedef class _IDB
 	long		lstate;
 	uint32_t	msgid;
 
-	_IDB::_IDB()
+	_IDB()
 	{
 		refid = 0;
 		refcount = 0;

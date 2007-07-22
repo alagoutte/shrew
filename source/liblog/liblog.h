@@ -43,15 +43,11 @@
 #define _LOG_H_
 
 #ifdef WIN32
-
-#include <windows.h>
-
+# include <windows.h>
 #endif
 
 #ifdef UNIX
-
-#include <stdarg.h>
-
+# include <stdarg.h>
 #endif
 
 #include <stdio.h>

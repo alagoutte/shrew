@@ -43,25 +43,43 @@
 #define _LIBITH_H_
 
 #ifdef WIN32
+# include <windows.h>
+#endif
 
-#include <windows.h>
+#ifdef UNIX
+# ifdef __linux__
+#  include <unistd.h>
+#  include <pthread.h>
+#  include <sys/time.h>
+# else
+#  include <unistd.h>
+#  include <pthread.h>
+#  include <sys/time.h>
+# endif
+#endif
+
+#include "export.h"
+
+//
+// Win32 specific
+//
+
+#ifdef WIN32
 
 typedef LARGE_INTEGER ITH_TIMEVAL;
 
 #endif
 
+//
+// Unix specific
+//
+
 #ifdef UNIX
 
-#include <unistd.h>
-#include <pthread.h>
-
 typedef timeval ITH_TIMEVAL; 
-
 #define Sleep( T ) usleep( T * 1000 )
 
 #endif
-
-#include "export.h"
 
 //
 // thread execution class

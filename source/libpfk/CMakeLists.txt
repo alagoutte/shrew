@@ -8,8 +8,7 @@
 #
 
 include_directories(
-        ${IKE_SOURCE_DIR}/source
-	/usr/include/netinet6 )
+        ${IKE_SOURCE_DIR}/source )
 
 add_library(
 	libpfk SHARED

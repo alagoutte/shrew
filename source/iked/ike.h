@@ -43,16 +43,15 @@
 #define _IKE_H_
 
 #ifdef WIN32
-
-#include <winsock2.h>
-
+# include <winsock2.h>
 #endif
 
 #ifdef UNIX
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-
+# ifdef __linux__
+# else
+#  include <sys/socket.h>
+#  include <netinet/in.h>
+# endif
 #endif
 
 #include "libip.h"

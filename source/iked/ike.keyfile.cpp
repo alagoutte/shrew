@@ -40,18 +40,11 @@
  */
 
 #include "iked.h"
-#include "crypto.h"
 
-#ifdef WIN32
-
-#define SSLCONST const
-
-#endif
-
-#ifdef UNIX
-
-#define SSLCONST
-
+#ifndef WIN32
+# define SSLCONST const
+#else
+# define SSLCONST
 #endif
 
 // openssl password callback

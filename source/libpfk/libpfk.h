@@ -43,45 +43,89 @@
 #define _LIBPFK_H_
 
 #ifdef WIN32
+# include <winsock2.h>
+# include <windows.h>
+# include <process.h>
+# include <stdlib.h>
+# include "inttypes.h"
+# include "pfkeyv2.h"
+#endif
 
-#include <winsock2.h>
-#include <windows.h>
-#include <process.h>
-#include <stdlib.h>
-#include "inttypes.h"
-#include "pfkeyv2.h"
+#ifdef UNIX
+# ifdef __linux__
+#  include <unistd.h>
+#  include <string.h>
+#  include <errno.h>
+#  include <fcntl.h>
+#  include <inttypes.h>
+#  include <sys/socket.h>
+#  include <netinet/in.h>
+#  include <linux/pfkeyv2.h>
+#  include <linux/ipsec.h>
+# else
+#  include <unistd.h>
+#  include <string.h>
+#  include <errno.h>
+#  include <fcntl.h>
+#  include <sys/socket.h>
+#  include <netinet/in.h>
+#  include <netinet/udp.h>
+#  include <arpa/inet.h>
+#  include <net/pfkeyv2.h>
+#  include <netinet6/ipsec.h>
+# endif
+#endif
+
+//
+// Win32 specific
+//
+
+#ifdef WIN32
 
 #define PFKI_EVENT_NAME			"pfki"
 #define PFKI_PIPE_NAME			"\\\\.\\pipe\\pfki"
-
 #define getpid	_getpid
 
 #endif
 
+//
+// Unix specific
+//
+
 #ifdef UNIX
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <net/pfkeyv2.h>
-#include <netinet/in.h>
-#include <netinet/udp.h>
-#include <ipsec.h>
-#include <arpa/inet.h>
-#include <errno.h>
+#ifndef __FreeBSD__
 
-#define PFKEY_BUFFSIZE		128 * 1024
+// Linux and NetBSD compat
+
+#define PFKEY_SOFT_LIFETIME_RATE	80
+#define PFKEY_BUFFSIZE			128 * 1024
+
+#define PFKEY_UNUNIT64(a)		((a) << 3)
+#define PFKEY_UNIT64(a)			((a) >> 3)
+
+#define PFKEY_ALIGN8(a) (1 + (((a) - 1) | (8 - 1)))
+#define PFKEY_EXTLEN(msg) \
+        PFKEY_UNUNIT64(((struct sadb_ext *)(msg))->sadb_ext_len)
+#define PFKEY_ADDR_PREFIX(ext) \
+        (((struct sadb_address *)(ext))->sadb_address_prefixlen)
+#define PFKEY_ADDR_PROTO(ext) \
+        (((struct sadb_address *)(ext))->sadb_address_proto)
+#define PFKEY_ADDR_SADDR(ext) \
+        ((struct sockaddr *)((caddr_t)(ext) + sizeof(struct sadb_address)))
+
+#else
 
 #ifndef SADB_X_EALG_AESCBC
-#define SADB_X_EALG_AESCBC 12
+# define SADB_X_EALG_AESCBC 12
+#endif
+
 #endif
 
 #endif
 
 #include <stdio.h>
 #include "export.h"
-#include "ipsec.h"
 
 #define PFKI_MAX_XFORMS		4
 #define PFKI_MAX_KEYLEN		32

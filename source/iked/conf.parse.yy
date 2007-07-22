@@ -5,6 +5,7 @@
 %{
 
 #include <string>
+
 #include "libip.h"
 
 typedef class _IKED IKED;
@@ -216,7 +217,7 @@ daemon_line
 		IKE_SADDR saddr;
 		memset( &saddr, 0, sizeof( saddr ) );
 		saddr.saddr4.sin_family = AF_INET;
-		saddr.saddr4.sin_len = sizeof( sockaddr_in );
+		SET_SALEN( &saddr.saddr4, sizeof( sockaddr_in ) ); 
 		saddr.saddr4.sin_port = htons( $3 );
 
 		if( iked.socket_create( saddr, false ) != LIBIKE_OK )
@@ -227,8 +228,8 @@ daemon_line
 	{
 		IKE_SADDR saddr;
 		memset( &saddr, 0, sizeof( saddr ) );
+		SET_SALEN( &saddr.saddr4, sizeof( sockaddr_in ) );
 		saddr.saddr4.sin_family = AF_INET;
-		saddr.saddr4.sin_len = sizeof( sockaddr_in );
 		saddr.saddr4.sin_addr.s_addr = inet_addr( $3->text() );
 		saddr.saddr4.sin_port = htons( $4 );
 
@@ -242,8 +243,8 @@ daemon_line
 	{
 		IKE_SADDR saddr;
 		memset( &saddr, 0, sizeof( saddr ) );
+		SET_SALEN( &saddr.saddr4, sizeof( sockaddr_in ) );
 		saddr.saddr4.sin_family = AF_INET;
-		saddr.saddr4.sin_len = sizeof( sockaddr_in );
 		saddr.saddr4.sin_port = htons( $3 );
 
 		if( iked.socket_create( saddr, true ) != LIBIKE_OK )
@@ -254,8 +255,8 @@ daemon_line
 	{
 		IKE_SADDR saddr;
 		memset( &saddr, 0, sizeof( saddr ) );
+		SET_SALEN( &saddr.saddr4, sizeof( sockaddr_in ) );
 		saddr.saddr4.sin_family = AF_INET;
-		saddr.saddr4.sin_len = sizeof( sockaddr_in );
 		saddr.saddr4.sin_addr.s_addr = inet_addr( $3->text() );
 		saddr.saddr4.sin_port = htons( $4 );
 
@@ -612,9 +613,8 @@ peer_section
 		peer->frag_ike_size = 520;
 		peer->frag_esp_size = 520;
 		peer->life_check = LTIME_CLAIM;
-
+		SET_SALEN( &peer->saddr.saddr4, sizeof( sockaddr_in ) );
 		peer->saddr.saddr4.sin_family = AF_INET;
-		peer->saddr.saddr4.sin_len = sizeof( sockaddr_in );
 		peer->saddr.saddr4.sin_port = htons( LIBIKE_IKE_PORT );
 		peer->saddr.saddr4.sin_addr.s_addr = inet_addr( $2->text() );
 
@@ -647,9 +647,8 @@ peer_section
 		peer->frag_ike_size = 520;
 		peer->frag_esp_size = 520;
 		peer->life_check = LTIME_CLAIM;
-
+		SET_SALEN( &peer->saddr.saddr4, sizeof( sockaddr_in ) );
 		peer->saddr.saddr4.sin_family = AF_INET;
-		peer->saddr.saddr4.sin_len = sizeof( sockaddr_in );
 		peer->saddr.saddr4.sin_port = htons( $3 );
 		peer->saddr.saddr4.sin_addr.s_addr = inet_addr( $2->text() );
 

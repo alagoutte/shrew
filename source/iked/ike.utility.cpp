@@ -94,9 +94,7 @@ bool cpy_sockaddr( sockaddr & saddr1, sockaddr & saddr2, bool port )
 			sockaddr_in * saddr1_in = ( sockaddr_in * ) &saddr1;
 			sockaddr_in * saddr2_in = ( sockaddr_in * ) &saddr2;
 
-#ifdef UNIX
-			saddr2_in->sin_len = sizeof( sockaddr_in  );
-#endif
+			SET_SALEN( saddr2_in, sizeof( sockaddr_in  ) );
 			saddr2_in->sin_family = AF_INET;
 			saddr2_in->sin_addr = saddr1_in->sin_addr;
 

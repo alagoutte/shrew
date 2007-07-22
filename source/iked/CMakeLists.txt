@@ -14,17 +14,14 @@ include_directories(
 	${IKE_SOURCE_DIR}/source/libith
 	${IKE_SOURCE_DIR}/source/libip
 	${IKE_SOURCE_DIR}/source/liblog
-	${IKE_SOURCE_DIR}/source/libpfk
-	/usr/local/include
-	/usr/include/netinet6 )
+	${IKE_SOURCE_DIR}/source/libpfk )
 
 link_directories(
 	${IKE_SOURCE_DIR}/source/libiked
 	${IKE_SOURCE_DIR}/source/libith
 	${IKE_SOURCE_DIR}/source/libip
 	${IKE_SOURCE_DIR}/source/liblog
-	${IKE_SOURCE_DIR}/source/libpfk
-	/usr/local/lib )
+	${IKE_SOURCE_DIR}/source/libpfk )
 
 add_executable(
 	iked

@@ -1,12 +1,33 @@
 
 #include "libip.h"
 
+#ifndef __linux__
+
+//
+// NetBSD compatability ( obtained from FreeBSD )
+//
+
+#ifndef SA_SIZE
+#define SA_SIZE(sa)                                             \
+    (  (!(sa) || ((struct sockaddr *)(sa))->sa_len == 0) ?      \
+        sizeof(long)            :                               \
+        1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(long) - 1) ) )
+#endif
+
+//
+// BSD route message wrapper struct
+//
+
 typedef struct _RTMSG
 {
 	rt_msghdr	hdr;
 	char		msg[ 1024 ];
 
 }RTMSG;
+
+//
+// BSD route message generic function
+//
 
 bool rtmsg_result( RTMSG * rtmsg, in_addr * dst, in_addr * gwy, in_addr * msk, in_addr * ifa )
 {
@@ -51,14 +72,16 @@ bool rtmsg_result( RTMSG * rtmsg, in_addr * dst, in_addr * gwy, in_addr * msk, i
 	return true;
 }
 
+//
+// BSD IPROUTE class
+//
+
 _IPROUTE::_IPROUTE()
 {
 	seq = 0;
 }
 
-//
 // add a route
-//
 
 bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
 {
@@ -130,9 +153,7 @@ bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 	return true;
 }
 
-//
 // delete a route 
-//
 
 bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
 {
@@ -204,18 +225,14 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 	return true;
 }
 
-//
 // get a route ( by addr and mask )
-//
 
 bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
 {
 	return true;
 }
 
-//
-// best route ( by address )
-//
+// get best route ( by address )
 
 bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
 {
@@ -289,26 +306,84 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	return rtmsg_result( &rtmsg, &addr, &next, &mask, &iface );
 }
 
-//
 // decrement route costs
-//
 
 bool _IPROUTE::increment( in_addr addr, in_addr mask )
 {
 	return true;
 }
 
-//
 // increment route costs
-//
 
 bool _IPROUTE::decrement( in_addr addr, in_addr mask )
 {
 	return true;
 }
 
+// flush arp table
 
 bool _IPROUTE::flusharp( in_addr & iface )
 {
 	return true;
 }
+
+#else
+
+//
+// Linux IPROUTE class
+//
+
+_IPROUTE::_IPROUTE()
+{
+}
+
+// add a route
+
+bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
+{
+	return true;
+}
+
+// delete a route
+
+bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
+{
+	return true;
+}
+
+// get a route ( by addr and mask )
+
+bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
+{
+	return true;
+}
+
+// get best route ( by address )
+
+bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
+{
+	return true;
+}
+
+// decrement route metrics
+
+bool _IPROUTE::increment( in_addr addr, in_addr mask )
+{
+	return true;
+}
+
+// increment route metrics
+
+bool _IPROUTE::decrement( in_addr addr, in_addr mask )
+{
+	return true;
+}
+
+// flush arp table
+
+bool _IPROUTE::flusharp( in_addr & iface )
+{
+	return true;
+}
+
+#endif
