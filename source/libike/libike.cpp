@@ -39,7 +39,7 @@
  *
  */
 
-#include "libiked.h"
+#include "libike.h"
 
 #define	MAX_BASIC_MSG	sizeof( IKEI_MSG_BASIC ) + IKEI_MAX_BDATA
 

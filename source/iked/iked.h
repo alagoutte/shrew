@@ -85,10 +85,10 @@
 
 #include "version.h"
 #include "liblog.h"
-#include "libiked.h"
+#include "libike.h"
 #include "libith.h"
 #include "libpfk.h"
-#include "libiked.h"
+#include "libike.h"
 #include "ike.h"
 #include "idb.h"
 #include "xauth.h"
