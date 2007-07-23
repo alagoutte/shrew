@@ -78,8 +78,7 @@ int main( int argc, char ** argv )
 		// does not require xauth
 
 		char auth_method[ 64 ] = { 0 };
-		ikec.config.get_string( "auth-method",
-		auth_method, 63, 0 );
+		ikec.config.get_string( "auth-method", auth_method, 63, 0 );
 
 		if( strstr( auth_method, "xauth" ) == NULL )
 			w.groupBoxCredentials->setHidden( true );

@@ -27,8 +27,8 @@ endif( LDAP )
 #
 
 subdirs(
-#	source/ikea
-#	source/ikec
+	source/ikea
+	source/ikec
 	source/iked
 	source/libike
 	source/libip

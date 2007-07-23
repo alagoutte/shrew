@@ -18,7 +18,7 @@
 #include <stdarg.h>
 #include "root.h"
 #include "banner.h"
-#include "libiked.h"
+#include "libike.h"
 #include "config.h"
 
 #define EVENT_RUNNING		QEvent::User + 1
