@@ -71,8 +71,18 @@ target_link_libraries(
 	crypto
 	pthread )
 
+# LDAP support option
+
 if( LDAP )
-	target_link_libraries( iked ldap lber )
+
+	include_directories(
+		${IDIR_LDAP} )
+
+	target_link_libraries(
+		iked
+		${LDIR_LDAP}
+		${LDIR_LBER} )
+
 endif( LDAP )
 
 set_source_files_properties(

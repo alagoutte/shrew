@@ -7,99 +7,57 @@
 #        : Copyright 2007, Shrew Soft Inc
 #
 
-add_definitions( -D QT_THREAD_SUPPORT )
-
 include_directories(
 	${IKE_SOURCE_DIR}/source/
 	${IKE_SOURCE_DIR}/source/ikea
 	${IKE_SOURCE_DIR}/source/iked
 	${IKE_SOURCE_DIR}/source/libike
 	${IKE_SOURCE_DIR}/source/libip
-	/usr/X11R6/include )
+	${QT_INCLUDE_DIR} )
 
 link_directories(
-	/usr/X11R6/lib )
+	${IKE_SOURCE_DIR}/source/libip )
+
+set(
+	UIC_FILES
+	banner.ui
+	root.ui )
+
+set(
+	IMG_FILES
+	png/ikec.png )
+
+qt_wrap_ui(
+	LIB_FILES
+	INC_FILES
+	CPP_FILES
+	${UIC_FILES} )
+
+qt_wrap_cpp(
+	LIB_FILES
+	MOC_FILES
+	${INC_FILES} )
 
 add_executable(
 	ikec
 	main.cpp
 	ikec.cpp
-	../ikea/config.cpp
 	images.cpp
-	banner.cpp
-	root.cpp
-	moc_banner.cpp
-	moc_root.cpp )
+	../ikea/config.cpp
+	${CPP_FILES} )
 
 target_link_libraries(
 	ikec
 	ike
         ip
 	pthread
-	qt-mt )
+	${QT_LIBRARIES} )
 
-# Custom target for IMG
+# qt image support
 
-add_custom_target( IPSecCIMG echo "Creating VPN Client Connect IMG" )
-
-add_custom_command(
-        SOURCE png/ikec.png
-        COMMAND uic
-        ARGS -embed ikec png/ikec.png -o images.cpp
-        TARGET IPSecCIMG
+add_custom_command(  
+	SOURCE ${IMG_FILES}
+        COMMAND ${QT_UIC_EXECUTABLE}
+        ARGS -embed ${IMG_FILES} -o images.cpp
+        TARGET ikec
         OUTPUTS images.cpp )
-
-# Custom target for UIC
-
-add_custom_target( IPSecCUIC echo "Creating VPN Client Connect UIC" )
-
-add_custom_command(
-        SOURCE banner.ui
-        COMMAND uic
-        ARGS banner.ui -o banner.h
-        TARGET IPSecCUIC
-        OUTPUTS banner.h )
-
-add_custom_command(
-        SOURCE root.ui
-        COMMAND uic
-        ARGS root.ui -o root.h
-        TARGET IPSecCUIC
-        OUTPUTS root.h )
-
-# Custom target for CPP
-
-add_custom_target( IPSecCCPP echo "Creating VPN Client Connect CPP" )
-
-add_custom_command(
-        SOURCE banner.h
-        COMMAND uic
-        ARGS banner.ui -i banner.h -o banner.cpp
-        TARGET IPSecCCPP
-        OUTPUTS banner.cpp )
-
-add_custom_command(
-        SOURCE root.h
-        COMMAND uic
-        ARGS root.ui -i root.h -o root.cpp
-        TARGET IPSecCCPP
-        OUTPUTS root.cpp )
-
-add_custom_target( IPSecCMOC echo "Creating VPN Client Connect MOC" )
-
-# Custom command for MOC
-
-add_custom_command(
-        SOURCE banner.h
-        COMMAND moc
-        ARGS banner.h -o moc_banner.cpp
-        TARGET IPSecCMOC
-        OUTPUTS moc_banner.cpp )
-
-add_custom_command(
-        SOURCE root.h
-        COMMAND moc
-        ARGS root.h -o moc_root.cpp
-        TARGET IPSecCMOC
-        OUTPUTS moc_root.cpp )
-

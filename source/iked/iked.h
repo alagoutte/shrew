@@ -72,6 +72,7 @@
 #  include <sys/param.h>
 #  include <sys/socket.h>
 #  include <net/if.h>
+#  include <netinet/udp.h>
 # endif
 # ifdef __FreeBSD__
 #  include <sys/linker.h>
