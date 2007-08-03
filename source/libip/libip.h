@@ -487,7 +487,7 @@ typedef class _IPFRAG_ENTRY
 {
 	friend class _IPFRAG;
 
-	long		expire;
+	time_t		expire;
 	PACKET_IP	packet;
 
 }IPFRAG_ENTRY;
@@ -497,7 +497,7 @@ typedef class DLX _IPFRAG
 	private:
 
 	LIST	frags;
-	long	lastchk;
+	time_t	lastchk;
 
 	public:
 

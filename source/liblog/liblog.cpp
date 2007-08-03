@@ -179,8 +179,8 @@ void _LOG::txt( long level, char * fmt, ... )
 
 	if( ( fp != NULL ) || log_echo )
 	{
-		size = vsnprintf( tbuff, LOG_MAX_TXT, fmt, list ); 
-		size = snprintf( bbuff, LOG_MAX_TXT, "%s%s", fbuff, tbuff );
+		size = vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list ); 
+		size = sprintf_s( bbuff, LOG_MAX_TXT, "%s%s", fbuff, tbuff );
 
 		if( size != -1 )
 			append( bbuff, size );
@@ -189,6 +189,10 @@ void _LOG::txt( long level, char * fmt, ... )
 
 void _LOG::bin( long level, long blevel, void * bin, long len, char * fmt, ... )
 {
+	//
+	// FIXME : Review for buffer overflows
+	//
+
 	char fbuff[ 64 ];
 	tstamp( fbuff, 64 );
 
@@ -203,21 +207,20 @@ void _LOG::bin( long level, long blevel, void * bin, long len, char * fmt, ... )
 	if( ( level <= log_level ) && ( blevel > log_level ) )
 	{
 
-		size = vsnprintf( tbuff, LOG_MAX_TXT, fmt, list ); 
+		size = vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list ); 
 
 		if( size != -1 )
 		{
-			size = sprintf( bbuff, "%s%s ( %ld bytes )\n", fbuff, tbuff, len );
+			size = sprintf_s( bbuff, LOG_MAX_BIN, "%s%s ( %ld bytes )\n", fbuff, tbuff, len );
 
 			append( bbuff, size );
 		}
 	}
 
-
 	if( blevel <= log_level )
 	{
-		size = vsnprintf( tbuff, LOG_MAX_TXT, fmt, list );
-		size = snprintf( bbuff, LOG_MAX_TXT, "%s%s ( %ld bytes ) = ", fbuff, tbuff, len );
+		size = vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list );
+		size = sprintf_s( bbuff, LOG_MAX_TXT, "%s%s ( %ld bytes ) = ", fbuff, tbuff, len );
 
 		char * cdata = ( char * ) bin;
 		char * bdata = bbuff + size;
@@ -226,23 +229,23 @@ void _LOG::bin( long level, long blevel, void * bin, long len, char * fmt, ... )
 		{
 			if( LOG_MAX_BIN - ( bdata - bbuff + size ) <= 8 )
 			{
-				bdata += sprintf( bdata, " ...\n" );
+				bdata += sprintf_s( bdata, LOG_MAX_BIN, " ...\n" );
 				break;
 			}
 
 			if( !( index % 0x20 ) )
-				bdata += sprintf( bdata, "\n0x :" );
+				bdata += sprintf_s( bdata, LOG_MAX_BIN, "\n0x :" );
 
 			if( !( index % 0x04 ) )
-				bdata += sprintf( bdata, " " );
+				bdata += sprintf_s( bdata, LOG_MAX_BIN, " " );
 
-			bdata += sprintf( bdata, "%02x", 0xff & cdata[ index ] );
+			bdata += sprintf_s( bdata, LOG_MAX_BIN, "%02x", 0xff & cdata[ index ] );
 		}
 
-		sprintf( bdata, "\n" );
+		sprintf_s( bdata, LOG_MAX_BIN, "\n" );
 		bdata++;
 
-		size = bdata - bbuff;
+		size = long( bdata - bbuff );
 
 		append( bbuff, size );
 

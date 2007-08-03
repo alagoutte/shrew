@@ -64,7 +64,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	DTPI dtpi;
 #endif
 
-	long stattick = 0;
+	time_t stattick = 0;
 
 	//
 	// enter client ctrl loop

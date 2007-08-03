@@ -447,11 +447,11 @@ long _IKED::inform_get_spi( char * text, IDB_PH1 * ph1, IKE_NOTIFY * notify )
 	switch( notify->spi.size )
 	{
 		case 0:
-			snprintf( text, 64, "none" );
+			sprintf_s( text, LIBIKE_MAX_TEXTSPI, "none" );
 			break;
 
 		case ( ISAKMP_COOKIE_SIZE * 2 ):
-			snprintf( text, 64,
+			sprintf_s( text, LIBIKE_MAX_TEXTSPI,
 				"%08x%08x:%08x%08x",
 				htonl( *( long * ) &notify->spi.cookies.i[ 0 ] ),
 				htonl( *( long * ) &notify->spi.cookies.i[ 4 ] ),
@@ -460,15 +460,15 @@ long _IKED::inform_get_spi( char * text, IDB_PH1 * ph1, IKE_NOTIFY * notify )
 			break;
 
 		case ISAKMP_SPI_SIZE:
-			snprintf( text, 64, "0x%08x", ntohl( notify->spi.spi ) );
+			sprintf_s( text, LIBIKE_MAX_TEXTSPI, "0x%08x", ntohl( notify->spi.spi ) );
 			break;
 
 		case ISAKMP_CPI_SIZE:
-			snprintf( text, 64, "0x%04x", ntohs( notify->spi.cpi ) );
+			sprintf_s( text, LIBIKE_MAX_TEXTSPI, "0x%04x", ntohs( notify->spi.cpi ) );
 			break;
 
 		default:
-			snprintf( text, 64, "unspecified value" );
+			sprintf_s( text, LIBIKE_MAX_TEXTSPI, "unspecified value" );
 			return LIBIKE_FAILED;
 	}
 
@@ -483,7 +483,8 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 	// build text strings for logging
 	//
 
-	char txtspi[ 64 ];
+	char txtspi[ LIBIKE_MAX_TEXTSPI ];
+
 	char txtaddr_l[ LIBIKE_MAX_TEXTADDR ];
 	char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
 
@@ -689,7 +690,8 @@ long _IKED::inform_chk_delete( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 	// build text strings for logging
 	//
 
-	char txtspi[ 64 ];
+	char txtspi[ LIBIKE_MAX_TEXTSPI ];
+
 	char txtaddr_l[ LIBIKE_MAX_TEXTADDR ];
 	char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
 
@@ -823,7 +825,8 @@ long _IKED::inform_new_notify( IDB_PH1 * ph1, IDB_PH2 * ph2, unsigned short code
 		// log the notification
 		//
 
-		char txtspi[ 64 ];
+		char txtspi[ LIBIKE_MAX_TEXTSPI ];
+
 		inform_get_spi( txtspi, ph1, &notify );
 
 		log.txt( LOG_INFO,
@@ -923,7 +926,8 @@ long _IKED::inform_new_delete( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 		// log the delete
 		//
 
-		char txtspi[ 64 ];
+		char txtspi[ LIBIKE_MAX_TEXTSPI ];
+
 		inform_get_spi( txtspi, ph1, &notify );
 
 		log.txt( LOG_INFO,
@@ -979,7 +983,8 @@ long _IKED::inform_new_delete( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 			// log the delete protocol and spi
 			//
 
-			char txtspi[ 64 ];
+			char txtspi[ LIBIKE_MAX_TEXTSPI ];
+
 			inform_get_spi( txtspi, ph1, &notify );
 
 			log.txt( LOG_INFO,

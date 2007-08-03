@@ -200,7 +200,7 @@ bool _IPFRAG::defrag_add( PACKET_IP & fragment, unsigned short & id )
 	// but only once per second
 	//
 
-	long current = time( NULL );
+	time_t current = time( NULL );
 
 	if( lastchk < current )
 	{

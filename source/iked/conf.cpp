@@ -137,13 +137,13 @@ bool _IKED::conf_load( char * path, bool trace )
 	//
 
 	if( !strlen( path_log ) )
-		snprintf( path_log, MAX_PATH, "%s/debug/%s", path_ins, "iked.log" );
+		sprintf_s( path_log, MAX_PATH, "%s/debug/%s", path_ins, "iked.log" );
 
 	if( dump_ike )
-		snprintf( path_ike, MAX_PATH, "%s/debug/%s", path_ins, "dump-ike.cap" );
+		sprintf_s( path_ike, MAX_PATH, "%s/debug/%s", path_ins, "dump-ike.cap" );
 
 	if( dump_pub )
-		snprintf( path_pub, MAX_PATH, "%s/debug/%s", path_ins, "dump-pub.cap" );
+		sprintf_s( path_pub, MAX_PATH, "%s/debug/%s", path_ins, "dump-pub.cap" );
 
 
 	return true;

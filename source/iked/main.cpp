@@ -59,7 +59,7 @@ SERVICE_STATUS			service_status;
 void service_add( char * path )
 {
 	char prog[ MAX_PATH ];
-	sprintf( prog, "%s -service", path );
+	sprintf_s( prog, MAX_PATH, "%s -service", path );
 
 	SC_HANDLE hmngr = NULL;
 	SC_HANDLE hsrvc = NULL;

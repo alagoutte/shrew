@@ -62,9 +62,18 @@ bool _PCAP_DUMP::open( char * path )
 	// create file
 	//
 
+#ifdef WIN32
+
+	if( fopen_s( &fp, path, "w+b" ) )
+		return false;
+
+#else
+
 	fp = fopen( path, "w+b" );
 	if( fp == NULL )
 		return false;
+
+#endif
 
 	//
 	// write pcap file header

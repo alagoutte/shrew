@@ -785,7 +785,8 @@ void _IKED::text_addr( char * text, in_addr & addr )
 {
 	unsigned long haddr = ntohl( addr.s_addr );
 
-	sprintf( text, "%lu.%lu.%lu.%lu",
+	sprintf_s( text, LIBIKE_MAX_TEXTADDR,
+		"%lu.%lu.%lu.%lu",
 		0xff & ( haddr >> 24 ),
 		0xff & ( haddr >> 16 ),
 		0xff & ( haddr >>  8 ),
@@ -806,7 +807,7 @@ void _IKED::text_mask( char * text, in_addr & addr )
 		bits++;
 	}
 
-	snprintf(
+	sprintf_s(
 		text,
 		LIBIKE_MAX_TEXTADDR,
 		"%lu",
@@ -826,7 +827,7 @@ void _IKED::text_addr( char * text, sockaddr * saddr, bool port )
 
 			if( port )
 			{
-				snprintf(
+				sprintf_s(
 					text,
 					LIBIKE_MAX_TEXTADDR,
 					"%s:%u",
@@ -835,7 +836,7 @@ void _IKED::text_addr( char * text, sockaddr * saddr, bool port )
 			}
 			else
 			{
-				snprintf(
+				sprintf_s(
 					text,
 					LIBIKE_MAX_TEXTADDR,
 					"%s",
@@ -847,7 +848,10 @@ void _IKED::text_addr( char * text, sockaddr * saddr, bool port )
 
 		default:
 
-			sprintf( text, "<UNKNOWN AF>" );
+			sprintf_s(
+				text,
+				LIBIKE_MAX_TEXTADDR,
+				"<UNKNOWN AF>" );
 	}
 }
 
@@ -863,7 +867,7 @@ void _IKED::text_addr( char * text, PFKI_ADDR * paddr, bool port, bool netmask )
 
 	if( netmask && paddr->prefix )
 	{
-		snprintf(
+		sprintf_s(
 			text,
 			LIBIKE_MAX_TEXTADDR,
 			"%s/%u",
@@ -872,7 +876,7 @@ void _IKED::text_addr( char * text, PFKI_ADDR * paddr, bool port, bool netmask )
 	}
 	else
 	{
-		snprintf(
+		sprintf_s(
 			text,
 			LIBIKE_MAX_TEXTADDR,
 			"%s",
@@ -889,7 +893,7 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 			text_addr( txtaddr, ph1id->addr );
 
-			snprintf(
+			sprintf_s(
 				text,
 				LIBIKE_MAX_TEXTP1ID,
 				"%s %s",
@@ -906,7 +910,7 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 			varid.set( ph1id->varid );
 			varid.add( 0, 1 );
 
-			snprintf(
+			sprintf_s(
 				text,
 				LIBIKE_MAX_TEXTP1ID,
 				"%s %s",
@@ -923,7 +927,7 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 			asn1_text( ph1id->varid, varid );
 			varid.add( 0, 1 );
 
-			snprintf(
+			sprintf_s(
 				text,
 				LIBIKE_MAX_TEXTP1ID,
 				"%s %s",
@@ -935,7 +939,7 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 
 		case ISAKMP_ID_KEY_ID:
 		{
-			snprintf(
+			sprintf_s(
 				text,
 				LIBIKE_MAX_TEXTP1ID,
 				"%s [ %lu bytes ]",
@@ -947,7 +951,10 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 
 		default:
 
-			sprintf( text, "<UNKNOWN P1ID>" );
+			sprintf_s(
+				text,
+				LIBIKE_MAX_TEXTP1ID,
+				"<UNKNOWN P1ID>" );
 	}
 }
 
@@ -962,7 +969,7 @@ void _IKED::text_ph2id( char * text, IKE_PH2ID * ph2id )
 
 			text_addr( txtaddr1, ph2id->addr1 );
 
-			snprintf(
+			sprintf_s(
 				text,
 				LIBIKE_MAX_TEXTP2ID,
 				"%s",
@@ -975,7 +982,7 @@ void _IKED::text_ph2id( char * text, IKE_PH2ID * ph2id )
 			text_addr( txtaddr1, ph2id->addr1 );
 			text_mask( txtaddr2, ph2id->addr2 );
 
-			snprintf(
+			sprintf_s(
 				text,
 				LIBIKE_MAX_TEXTP2ID,
 				"%s/%s",
@@ -989,7 +996,7 @@ void _IKED::text_ph2id( char * text, IKE_PH2ID * ph2id )
 			text_addr( txtaddr1, ph2id->addr1 );
 			text_addr( txtaddr2, ph2id->addr2 );
 
-			snprintf(
+			sprintf_s(
 				text,
 				LIBIKE_MAX_TEXTP2ID,
 				"%s-%s",
@@ -1000,7 +1007,10 @@ void _IKED::text_ph2id( char * text, IKE_PH2ID * ph2id )
 
 		default:
 
-			sprintf( text, "<UNKNOWN P2ID>" );
+			sprintf_s(
+				text,
+				LIBIKE_MAX_TEXTP2ID,
+				"<UNKNOWN P2ID>" );
 	}
 }
 

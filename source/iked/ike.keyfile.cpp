@@ -72,8 +72,9 @@ void _IKED::load_path( char * file, char * fpath )
 
 	if( PathIsRelative( file ) )
 	{
-		sprintf( 
+		sprintf_s( 
 			fpath,
+			MAX_PATH,
 			"%s\\certificates\\%s",
 			path_ins,
 			file );
@@ -83,7 +84,7 @@ void _IKED::load_path( char * file, char * fpath )
 #endif
 
 	{
-		strcpy( fpath, file );
+		strcpy_s( fpath, MAX_PATH, file );
 	}
 }
 
@@ -118,9 +119,19 @@ long _IKED::cert_load_pem( BDATA & cert, char * file, bool ca, BDATA & pass )
 	char fpath[ MAX_PATH ];
 	load_path( file, fpath );
 
+#ifdef WIN32
+
+	FILE * fp;
+	if( fopen_s( &fp, fpath, "rb" ) )
+		return FILE_FAIL;
+
+#else
+
 	FILE * fp = fopen( fpath, "rb" );
 	if( !fp )
 		return FILE_FAIL;
+
+#endif
 
 	X509 * x509 = PEM_read_X509( fp, NULL, NULL, NULL );
 
@@ -144,9 +155,19 @@ long _IKED::cert_load_p12( BDATA & cert, char * file, bool ca, BDATA & pass )
 	char fpath[ MAX_PATH ];
 	load_path( file, fpath );
 
+#ifdef WIN32
+
+	FILE * fp;
+	if( fopen_s( &fp, fpath, "rb" ) )
+		return FILE_FAIL;
+
+#else
+
 	FILE * fp = fopen( fpath, "rb" );
 	if( !fp )
 		return FILE_FAIL;
+
+#endif
 
 	PKCS12 * p12 = d2i_PKCS12_fp( fp, NULL );
 
@@ -216,9 +237,19 @@ long _IKED::cert_save( char * file, BDATA & cert )
 	if( !bdata_2_cert( &x509, cert ) )
 		return FILE_FAIL;
 
+#ifdef WIN32
+
+	FILE * fp;
+	if( fopen_s( &fp, fpath, "wb" ) )
+		return FILE_FAIL;
+
+#else
+
 	FILE * fp = fopen( fpath, "wb" );
 	if( !fp )
 		return FILE_FAIL;
+
+#endif
 	
 	PEM_write_X509( fp, x509 );
 
@@ -571,7 +602,7 @@ static int verify_cb( int ok, X509_STORE_CTX * store_ctx )
 bool _IKED::cert_verify( BDATA & cert, BDATA & ca )
 {
 	char fpath[ MAX_PATH ];
-	sprintf( fpath, "%s\\debug\\remote.crt", path_ins );
+	sprintf_s( fpath, MAX_PATH, "%s\\debug\\remote.crt", path_ins );
 	cert_save( fpath, cert );
 
 	X509 * x509_ca;
@@ -609,7 +640,7 @@ bool _IKED::cert_verify( BDATA & cert, BDATA & ca )
 #ifdef WIN32
 
 	char tmppath[ MAX_PATH ];
-	snprintf( tmppath, MAX_PATH, "%s\\certificates\\*.*", path_ins );
+	sprintf_s( tmppath, MAX_PATH, "%s\\certificates\\*.*", path_ins );
 
 	WIN32_FIND_DATA ffd;
 	memset( &ffd, 0, sizeof( ffd ) );
@@ -621,7 +652,7 @@ bool _IKED::cert_verify( BDATA & cert, BDATA & ca )
 
 	while( hff != NULL )
 	{
-		snprintf( tmppath, MAX_PATH, "%s\\certificates\\%s", path_ins, ffd.cFileName );
+		sprintf_s( tmppath, MAX_PATH, "%s\\certificates\\%s", path_ins, ffd.cFileName );
 
 		if( X509_LOOKUP_load_file( lookup, tmppath, X509_FILETYPE_PEM ) != NULL )
 			log.txt( LOG_DEBUG, "ii : added %s to x509 store\n", ffd.cFileName );
@@ -664,9 +695,19 @@ long _IKED::prvkey_rsa_load_pem( char * file, EVP_PKEY ** evp_pkey, BDATA & pass
 	char fpath[ MAX_PATH ];
 	load_path( file, fpath );
 
+#ifdef WIN32
+
+	FILE * fp;
+	if( fopen_s( &fp, fpath, "rb" ) )
+		return FILE_FAIL;
+
+#else
+
 	FILE * fp = fopen( fpath, "rb" );
 	if( !fp )
 		return FILE_FAIL;
+
+#endif
 
 	*evp_pkey = PEM_read_PrivateKey( fp, NULL, NULL, NULL );
 
@@ -686,9 +727,19 @@ long _IKED::prvkey_rsa_load_p12( char * file, EVP_PKEY ** evp_pkey, BDATA & pass
 	char fpath[ MAX_PATH ];
 	load_path( file, fpath );
 
+#ifdef WIN32
+
+	FILE * fp;
+	if( fopen_s( &fp, fpath, "rb" ) )
+		return FILE_FAIL;
+
+#else
+
 	FILE * fp = fopen( fpath, "rb" );
 	if( !fp )
 		return FILE_FAIL;
+
+#endif
 
 	PKCS12 * p12 = d2i_PKCS12_fp( fp, NULL );
 

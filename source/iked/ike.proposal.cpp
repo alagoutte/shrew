@@ -589,9 +589,9 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	char klentxt[ 32 ];
 	if( proposal1->ciph_kl )
-		snprintf( klentxt, 32, "%i bits", proposal1->ciph_kl );
+		sprintf_s( klentxt, 32, "%i bits", proposal1->ciph_kl );
 	else
-		snprintf( klentxt, 32, "default" );
+		sprintf_s( klentxt, 32, "default" );
 
 	log.txt( LOG_INFO,
 		"ii : matched %s proposal #%i transform #%i\n"
@@ -1433,9 +1433,9 @@ bool _IKED::phase2_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	char klentxt[ 32 ];
 	if( proposal1->ciph_kl )
-		snprintf( klentxt, 32, "%i bits", proposal1->ciph_kl );
+		sprintf_s( klentxt, 32, "%i bits", proposal1->ciph_kl );
 	else
-		snprintf( klentxt, 32, "default" );
+		sprintf_s( klentxt, 32, "default" );
 
 	log.txt( LOG_INFO,
 		"ii : matched %s proposal #%i transform #%i\n"
