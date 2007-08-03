@@ -7,6 +7,8 @@
 #        : Copyright 2007, Shrew Soft Inc
 #
 
+add_definitions( -D QT_THREAD_SUPPORT )
+
 include_directories(
 	${IKE_SOURCE_DIR}/source/
 	${IKE_SOURCE_DIR}/source/ikea
@@ -22,6 +24,7 @@ add_executable(
 	ikec
 	main.cpp
 	ikec.cpp
+	../ikea/config.cpp
 	images.cpp
 	banner.cpp
 	root.cpp
@@ -30,6 +33,7 @@ add_executable(
 
 target_link_libraries(
 	ikec
+	ike
         ip
 	pthread
 	qt-mt )

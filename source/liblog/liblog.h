@@ -44,14 +44,17 @@
 
 #ifdef WIN32
 # include <windows.h>
+# include <stdio.h>
+# include <time.h>
 #endif
 
 #ifdef UNIX
 # include <stdarg.h>
+# include <stdio.h>
+# include <time.h>
+# include "winstring.h"
 #endif
 
-#include <stdio.h>
-#include <time.h>
 #include "libith.h"
 #include "export.h"
 

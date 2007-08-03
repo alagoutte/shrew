@@ -9,6 +9,7 @@
 
 include_directories(
         ${IKE_SOURCE_DIR}/source
+        ${IKE_SOURCE_DIR}/source/compat
         ${IKE_SOURCE_DIR}/source/libith )
 
 add_library(

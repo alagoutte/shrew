@@ -7,6 +7,8 @@
 #        : Copyright 2007, Shrew Soft Inc
 #
 
+add_definitions( -D QT_THREAD_SUPPORT )
+
 include_directories(
 	${IKE_SOURCE_DIR}/source/
 	${IKE_SOURCE_DIR}/source/libip
