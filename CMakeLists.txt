@@ -53,6 +53,8 @@ if( QTGUI )
 
 	add_definitions( -D QT_THREAD_SUPPORT )
 
+	set( QT_MT_REQUIRED TRUE )
+
 	FIND_PACKAGE( Qt3 )
 
 	if( NOT QT_FOUND )
