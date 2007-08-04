@@ -63,11 +63,11 @@ if( QTGUI )
 
 	endif( NOT QT_FOUND )
 		
+	# success
+
 	message(
 		STATUS 
 		"Enabled Client QT GUI support ..." )
-
-	# success
 
 	add_subdirectory( source/ikea )
 	add_subdirectory( source/ikec )
@@ -112,6 +112,10 @@ if( NATT )
 
 	# success
 
+	message(
+		STATUS 
+		"Enabled NAT Traversal support ..." )
+
 	add_definitions( -D OPT_NATT )
 
 endif( NATT )
@@ -144,7 +148,7 @@ if( LDAP )
 	find_library(
 		LDIR_LDAP
 		NAMES
-		ldap ber
+		ldap
 		PATHS
 		${LDIR_PATHS} )
 
@@ -155,19 +159,19 @@ if( LDAP )
 		PATHS
 		${LDIR_PATHS} )
 
-	if( NOT LDIR_LDAP OR LDIR_LBER )
+	if( NOT LDIR_LDAP OR NOT LDIR_LBER )
 
 		message(
 			FATAL_ERROR
 			"Unable to locate LDAP library file" )
 
-	endif( NOT LDIR_LDAP OR LDIR_LBER )
+	endif( NOT LDIR_LDAP OR NOT LDIR_LBER )
+
+	# success
 
 	message( 
 		STATUS
 		"Enabled LDAP Authentication support ..." )
-
-	# success
 
 	add_definitions( -D OPT_LDAP )
 
