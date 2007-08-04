@@ -1,16 +1,37 @@
 #ifndef _IKEA_H_
 #define _IKEA_H_
 
-#include <pwd.h>
+/*
+
+# include <unistd.h>
+# include <linux/types.h>
+# include <linux/dirent.h>
+# include <linux/unistd.h>
+# include <errno.h>
+
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/stat.h>
+*/
+
+#ifdef __linux__
+# include <unistd.h>
+# include <linux/types.h>
+# include <linux/dirent.h>
+# include <linux/unistd.h>
+# include <errno.h>
+#else
+# include <dirent.h>
+#endif
+
+#include <pwd.h>
 #include <fcntl.h>
-#include <dirent.h>
+
 #include <qfiledialog.h>
 #include <qlineedit.h>
 #include <qmessagebox.h>
 #include <qprocess.h>
-#include "netinet/in.h"
-#include "arpa/inet.h"
+
 #include "config.h"
 #include "root.h"
 #include "site.h"

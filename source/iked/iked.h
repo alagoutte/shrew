@@ -77,7 +77,7 @@
 # ifdef __FreeBSD__
 #  include <sys/linker.h>
 # endif
-# include "winstring.h"
+# include "compat/winstring.h"
 # include "conf.parse.hpp"
 #endif
 

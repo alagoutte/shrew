@@ -9,7 +9,6 @@
 
 include_directories(
 	${IKE_SOURCE_DIR}/source
-	${IKE_SOURCE_DIR}/source/compat
 	${IKE_SOURCE_DIR}/source/iked
 	${IKE_SOURCE_DIR}/source/libike
 	${IKE_SOURCE_DIR}/source/libith

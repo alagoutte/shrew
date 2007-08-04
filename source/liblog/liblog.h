@@ -52,7 +52,7 @@
 # include <stdarg.h>
 # include <stdio.h>
 # include <time.h>
-# include "winstring.h"
+# include "compat/winstring.h"
 #endif
 
 #include "libith.h"

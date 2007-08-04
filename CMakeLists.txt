@@ -104,10 +104,6 @@ if( NATT )
 			FATAL_ERROR
 			"Unable to locate required NAT-T pfkey structures" )
 
-		message(
-			FATAL_ERROR
-			"Unable to locate required NAT-T pfkey structures" )
-
 	endif( NOT NATT_FOUND )
 
 	# success
