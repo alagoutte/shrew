@@ -10,12 +10,15 @@
 #include <qthread.h>
 #include <qevent.h>
 
+#include <unistd.h>
+#include <signal.h>
 #include <pwd.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <stdarg.h>
+#include <netdb.h>
+//#include <netinet/in.h>
+//#include <sys/socket.h>
+//#include <arpa/inet.h>
+
 #include "root.h"
 #include "banner.h"
 #include "libike.h"
