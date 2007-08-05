@@ -146,7 +146,7 @@ X Modify the client gui for config push or pull
 X Fix the vpn trace sdb output tabs
 X Update the client gui network tab
 X Test all client features against racoon and iked
-. Update the documentation
+x Update the documentation
 . !!! All reported bugs !!!
 
 2.1 release - Bug fix and fine tuning

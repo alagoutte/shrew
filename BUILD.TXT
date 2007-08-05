@@ -1,21 +1,47 @@
+================================================================================
 REQUIREMENTS
-------------
+================================================================================
 
-This software requires Bison version 2.3 or higher as it uses the new
-c++ parser model. The c++ model was introduced in 2.1 but appears to
-be broken in that release. The Trolltech QT toolkit version 3.3.x or
-higher is also required if you plan to build the client front end
-applications.
+Minimum
+--------------------------------------------------------------------------------
 
+cmake >= 2.4
+bison >= 2.3
+flex
+
+This software requires Bison version 2.3 or higher as it uses the new c++
+parser model. The c++ model was introduced in 2.1 but appears to be broken in
+that release.
+
+Optional
+--------------------------------------------------------------------------------
+
+qt >= 3.3
+openldap >= 2.0
+
+The Trolltech QT toolkit version 3.3.x or higher is also required if you plan
+to build the qt client front end applications. The openldap support is only
+required if you plan to use iked on a VPN client gateway and require ldap xauth
+support.
+
+================================================================================
 PLATFORM NOTES
---------------
+================================================================================
 
-The only platforms that have been tested at present are FreeBSD i386 and
-amd64. This software also compiles on NetBSD but does not work as there
-are threading issues. For this software to do anything useful, you will
-need to make sure your kernel has been built with IPSEC support. For
-FreeBSD, this is either the KAME ipsec stack or the fast IPSEC stack. For
-example, to include support for fast IPSEC you could include ...
+Linux
+--------------------------------------------------------------------------------
+
+TODO : Add Notes
+
+FreeBSD
+--------------------------------------------------------------------------------
+
+The only archs that have been tested at present are i386 and amd64 for version
+6.2 RELEASE. For this software to do anything useful, you will need to make
+sure your kernel has been built with IPSEC support. For FreeBSD, this is either
+the KAME ipsec stack or the fast IPSEC stack. For example, to include support
+for fast IPSEC you could enable the following options in you kernel
+configuration file ...
 
 # IP Security
 device          crypto
@@ -24,17 +50,16 @@ options         FAST_IPSEC
 Please see the FreeBSD handbook for more information on compiling and
 installing a custom kernel.
 
-As of FreeBSD 6.2, NATT kernel support has not yet been committed to
-the main line source. However, Yvan who is an ipsec-tools maintainer
-has posted a patch that has been tested with this software. The last
-known location for the FreeBSD 6.x patch is at the following url ...
+As of FreeBSD 6.2, NATT kernel support has not yet been committed to the main
+line source. However, Yvan who is an ipsec-tools maintainer has posted a patch
+that has been tested with this software. The last known location for the
+FreeBSD 6.x patch is at the following url ...
 
 http://ipsec-tools.sourceforge.net/freebsd6-natt.diff
 
-Before this software can be compiled with NATT support, this patch
-must be applied to your kernel. To apply the patch, you need to
-copy the patch file into the /usr/src/sys directory and apply the
-patch using the following command ...
+Before this software can be compiled with NATT support, this patch must be
+applied to your kernel. To apply the patch, you need to copy the patch file
+into the /usr/src/sys directory and apply the patch using the following ...
 
 patch < freebsd6-natt.diff
 
@@ -46,44 +71,50 @@ Next, you will need to build and install the new kernel and perform a
 buildworld and installworld. Please see the FreeBSD handbook for more
 information on compiling and installing a custom kernel and userland.
 
+NetBSD
+--------------------------------------------------------------------------------
+
+The only archs that have been tested at present are i386 and amd64 for version
+3.1 release. For this software to do anything useful, you will need to make
+sure your kernel has been built with IPSEC support. For example, to include
+support for IPSEC you could enable the following options in your kernel
+configuration file ...
+
+options         INET
+options         IPSEC
+options         IPSEC_ESP
+options         IPSEC_NAT_T
+
+Please see the NetBSD Documentation for more information on compiling and
+installing a custom kernel.
+
+================================================================================
 COMPILING
----------
+================================================================================
 
-The build system is very basic at the moment. The make files use BSD style
-rules so the project will need to be re-tooled before it will build on
-other platforms. The root make file is located in the unix directory. To
-build and install the ike daemon, enter the following commands using the
-root login ...
+The build system uses cmake to generate platform dependent make files. To
+configure the build, you simply run cmake in the base distribution directory
+using any optional parameters you may require. For example: enter the following
+to build and install the basic software ...
 
-cd unix
-make daemon
-make install-daemon
-
-To install both the daemon and the client front end applications, enter
-the following commands using the root login ...
-
-cd unix
-mske
+cmake .
+make
 make install
 
+================================================================================
 OPTIONS
--------
+================================================================================
 
 A few build options may be specified. Here is a brief list ...
 
-DEBUG	preserve debug symbols
-NATT	enable natt support ( requires kernel support )
-LDAP	enable ldap support ( requires openldap 2.2 or higher client )
+DEBUG	Enable Debug Symbols
+QTGUI	Enable Client QT GUI
+NATT	Enable Nat Traversal Support
+LDAP	Enable LDAP Authentication Support
 
-For example, to build iked with all options, you would specify ...
+For example: enter the following to build and install the software with all
+options enabled ...
 
-cd unix
-make -DDEBUG -DNATT -DLDAP
+cmake -DDEBUG=YES -DQTGUI=YES -DNATT=YES -DLDAP=YES
+make
 make install
-
-SUPPORT
--------
-
-Please visit the Shrew Soft website at the following url for details ...
-
-http://www.shrew.net
