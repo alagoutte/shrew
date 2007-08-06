@@ -30,6 +30,86 @@ set(
 	/usr/lib
 	/usr/local/lib )
 
+set(
+	BDIR_PATHS
+	/usr/bin
+	/usr/local/bin
+	/usr/pkg/bin )
+
+set(
+	MDIR_PATHS
+	/usr/share
+	/usr/local
+	/usr )
+
+#
+# PreRequisite Checks
+#
+
+find_program(
+	BPATH_FLEX
+	NAMES "flex"
+	PATHS ${BDIR_PATHS} )
+
+if( NOT BPATH_FLEX )
+
+	message(
+		FATAL_ERROR
+		"Unable to locate required binary : flex" )
+
+endif( NOT BPATH_FLEX )
+		
+message(
+	STATUS 
+	"Using binary ${BPATH_FLEX} ..." )
+
+find_program(
+	BPATH_BISON
+	NAMES "bison"
+	PATHS ${BDIR_PATHS} )
+
+if( NOT BPATH_BISON )
+
+	message(
+		FATAL_ERROR
+		"Unable to locate required binary : bison" )
+
+endif( NOT BPATH_BISON )
+		
+message(
+	STATUS 
+	"Using binary ${BPATH_BISON} ..." )
+
+find_path(
+	MDIR_MAN
+	NAMES "man"
+	PATHS ${MDIR_PATHS}
+	NO_DEFAULT_PATH )
+
+if( NOT MDIR_MAN )
+
+	message(
+		FATAL_ERROR
+		"Unable to locate man path" )
+
+endif( NOT MDIR_MAN )
+		
+message(
+	STATUS 
+	"Using man path ${MDIR_MAN}/man ..." )
+
+if( NOT EXISTS ${CMAKE_INSTALL_PREFIX} )
+
+	set(
+		CMAKE_INSTALL_PREFIX
+		"/usr" )
+
+endif( NOT EXISTS ${CMAKE_INSTALL_PREFIX} )
+
+message(
+	STATUS 
+	"Using install prefix ${CMAKE_INSTALL_PREFIX} ..." )
+
 #
 # Options
 #

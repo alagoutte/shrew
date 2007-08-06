@@ -96,7 +96,7 @@ add_custom_target( ConfParser echo "Creating Conf Parser" )
 
 add_custom_command(
 	SOURCE conf.token.ll
-	COMMAND flex
+	COMMAND ${BPATH_FLEX}
 	ARGS -d -oconf.token.cpp conf.token.ll
 	TARGET ConfParser
 	OUTPUTS conf.token.cpp )
@@ -105,23 +105,21 @@ add_custom_command(
 
 add_custom_command(
 	SOURCE conf.parse.yy
-	COMMAND bison
+	COMMAND ${BPATH_BISON}
 	ARGS -oconf.parse.cpp conf.parse.yy
 	TARGET ConfParser
 	OUTPUTS conf.parse.cpp conf.parse.hpp location.hh position.hh stack.hh )
-	
 
 # install support
 
 install(
         TARGETS iked
-        RUNTIME DESTINATION bin )
+        RUNTIME DESTINATION sbin )
 
 install(
 	FILES iked.8
-	DESTINATION man/man8 )
+	DESTINATION ${MDIR_MAN}/man/man8 )
 
 install(
 	FILES iked.conf.5
-	DESTINATION man/man5 )
-
+	DESTINATION ${MDIR_MAN}/man/man5 )
