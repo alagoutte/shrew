@@ -66,3 +66,9 @@ add_custom_command(
         ARGS -embed ${IMG_FILES} -o images.cpp
         TARGET ikea
         OUTPUTS images.cpp )
+
+# install support
+
+install(
+	TARGETS ikea
+	RUNTIME	DESTINATION bin )

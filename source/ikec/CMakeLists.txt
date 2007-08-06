@@ -61,3 +61,9 @@ add_custom_command(
         ARGS -embed ${IMG_FILES} -o images.cpp
         TARGET ikec
         OUTPUTS images.cpp )
+
+# install support
+
+install(
+	TARGETS ikec
+	RUNTIME	DESTINATION bin )

@@ -13,3 +13,10 @@ include_directories(
 add_library(
 	pfk SHARED
 	libpfk.cpp )
+
+# install support
+
+install(
+	TARGETS pfk
+	LIBRARY DESTINATION lib )
+

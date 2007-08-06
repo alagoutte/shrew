@@ -16,3 +16,10 @@ include_directories(
 add_library(
 	ike SHARED
 	libike.cpp )
+
+# install support
+
+install(
+	TARGETS ike
+	LIBRARY DESTINATION lib )
+

@@ -20,24 +20,26 @@ subdirs(
 	source/liblog
 	source/libpfk )
 
-SET(
+set(
 	IDIR_PATHS
 	/usr/include
 	/usr/local/include )
 
-SET(
+set(
 	LDIR_PATHS
 	/usr/lib
 	/usr/local/lib )
+
+#
+# Options
+#
 
 OPTION( DEBUG "include Debug Symbol support" )
 OPTION( QTGUI "include Client QT GUI support" )
 OPTION( NATT  "include NAT Traversal support" )
 OPTION( LDAP  "include LDAP Authentication support" )
 
-#
 # Debug Symbols Option
-#
 
 if( DEBUG )
 
@@ -45,9 +47,7 @@ if( DEBUG )
 
 endif( DEBUG )
 
-#
 # Client GUI option
-#
 
 if( QTGUI )
 
@@ -76,9 +76,7 @@ if( QTGUI )
 
 endif( QTGUI )
 
-#
 # NAT Traversion option
-#
 
 if( NATT )
 
@@ -118,9 +116,7 @@ if( NATT )
 
 endif( NATT )
 
-#
 # LDAP support option
-#
 
 if( LDAP )
 

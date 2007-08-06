@@ -110,3 +110,18 @@ add_custom_command(
 	TARGET ConfParser
 	OUTPUTS conf.parse.cpp conf.parse.hpp location.hh position.hh stack.hh )
 	
+
+# install support
+
+install(
+        TARGETS iked
+        RUNTIME DESTINATION bin )
+
+install(
+	FILES iked.8
+	DESTINATION man/man8 )
+
+install(
+	FILES iked.conf.5
+	DESTINATION man/man5 )
+
