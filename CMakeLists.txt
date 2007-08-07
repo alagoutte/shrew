@@ -21,23 +21,23 @@ subdirs(
 	source/libpfk )
 
 set(
-	IDIR_PATHS
+	SEARCH_INC
 	/usr/include
 	/usr/local/include )
 
 set(
-	LDIR_PATHS
+	SEARCH_LIB
 	/usr/lib
 	/usr/local/lib )
 
 set(
-	BDIR_PATHS
-	/usr/bin
+	SEARCH_BIN
 	/usr/local/bin
-	/usr/pkg/bin )
+	/usr/pkg/bin
+	/usr/bin )
 
 set(
-	MDIR_PATHS
+	SEARCH_SYS
 	/usr/share
 	/usr/local
 	/usr )
@@ -47,56 +47,42 @@ set(
 #
 
 find_program(
-	BPATH_FLEX
+	PATH_BIN_FLEX
 	NAMES "flex"
-	PATHS ${BDIR_PATHS} )
+	PATHS ${SEARCH_BIN} )
 
-if( NOT BPATH_FLEX )
+if( NOT PATH_BIN_FLEX )
 
 	message(
 		FATAL_ERROR
 		"Unable to locate required binary : flex" )
 
-endif( NOT BPATH_FLEX )
+endif( NOT PATH_BIN_FLEX )
 		
 message(
 	STATUS 
-	"Using binary ${BPATH_FLEX} ..." )
+	"Using binary ${PATH_BIN_FLEX} ..." )
 
 find_program(
-	BPATH_BISON
+	PATH_BIN_BISON
 	NAMES "bison"
-	PATHS ${BDIR_PATHS} )
+	PATHS ${SEARCH_BIN} )
 
-if( NOT BPATH_BISON )
+if( NOT PATH_BIN_BISON )
 
 	message(
 		FATAL_ERROR
 		"Unable to locate required binary : bison" )
 
-endif( NOT BPATH_BISON )
+endif( NOT PATH_BIN_BISON )
 		
 message(
 	STATUS 
-	"Using binary ${BPATH_BISON} ..." )
+	"Using binary ${PATH_BIN_BISON} ..." )
 
-find_path(
-	MDIR_MAN
-	NAMES "man"
-	PATHS ${MDIR_PATHS}
-	NO_DEFAULT_PATH )
-
-if( NOT MDIR_MAN )
-
-	message(
-		FATAL_ERROR
-		"Unable to locate man path" )
-
-endif( NOT MDIR_MAN )
-		
-message(
-	STATUS 
-	"Using man path ${MDIR_MAN}/man ..." )
+#
+# Install Path Checks
+#
 
 if( NOT EXISTS ${CMAKE_INSTALL_PREFIX} )
 
@@ -110,14 +96,78 @@ message(
 	STATUS 
 	"Using install prefix ${CMAKE_INSTALL_PREFIX} ..." )
 
+# etc path
+
+if( ETCDIR )
+
+	set(	PATH_ETC
+		${ETCDIR} )
+
+else( ETCDIR )
+
+	if( EXISTS ${CMAKE_INSTALL_PREFIX}/etc )
+
+		set(	PATH_ETC
+			"${CMAKE_INSTALL_PREFIX}/etc" )
+
+	else( EXISTS ${CMAKE_INSTALL_PREFIX}/etc )
+		
+		set(	PATH_ETC
+			"/etc" )
+
+	endif( EXISTS ${CMAKE_INSTALL_PREFIX}/etc )
+
+endif( ETCDIR )
+
+message(
+	STATUS
+	"Using etc path ${PATH_ETC} ..." )
+
+# man path
+
+if( MANDIR )
+
+	set(	PATH_MAN
+		${MANDIR} )
+
+else( MANDIR )
+
+	find_path(
+		PATH_MAN
+		NAMES "man"
+		PATHS ${SEARCH_SYS}
+		NO_DEFAULT_PATH )
+
+	if( PATH_MAN )
+
+		set(	PATH_MAN
+			"${PATH_MAN}/man" )
+
+	else( PATH_MAN )
+
+		set(	PATH_MAN
+			"${CMAKE_INSTALL_PREFIX}/man" )
+
+	endif( PATH_MAN )
+
+endif( MANDIR )
+
+message(
+	STATUS
+	"Using man path ${PATH_MAN} ..." )
+
 #
-# Options
+# Build Options
 #
 
-OPTION( DEBUG "include Debug Symbol support" )
-OPTION( QTGUI "include Client QT GUI support" )
-OPTION( NATT  "include NAT Traversal support" )
-OPTION( LDAP  "include LDAP Authentication support" )
+OPTION( DEBUG  "include Debug Symbol support" )
+OPTION( QTGUI  "include Client QT GUI support" )
+OPTION( NATT   "include NAT Traversal support" )
+OPTION( LDAP   "include LDAP Authentication support" )
+
+OPTION( ETCDIR "etc install directory" )
+OPTION( MANDIR "man install directory" )
+
 
 # Debug Symbols Option
 
@@ -203,43 +253,37 @@ if( LDAP )
 	# ldap include
 
 	find_path(
-		IDIR_LDAP
-		NAMES
-		ldap.h
-		PATHS
-		${IDIR_PATHS} )
+		PATH_INC_LDAP
+		NAMES "ldap.h"
+		PATHS ${SEARCH_INC} )
 
-	if( NOT IDIR_LDAP )
+	if( NOT PATH_INC_LDAP )
 
 		message(
 			FATAL_ERROR
 			"Unable to locate LDAP include file" )
 
-	endif( NOT IDIR_LDAP )
+	endif( NOT PATH_INC_LDAP )
 
 	# ldap libraries
 
 	find_library(
-		LDIR_LDAP
-		NAMES
-		ldap
-		PATHS
-		${LDIR_PATHS} )
+		PATH_LIB_LDAP
+		NAMES "ldap"
+		PATHS ${SEARCH_LIB} )
 
 	find_library(
-		LDIR_LBER
-		NAMES
-		lber
-		PATHS
-		${LDIR_PATHS} )
+		PATH_LIB_LBER
+		NAMES "lber"
+		PATHS ${SEARCH_LIB} )
 
-	if( NOT LDIR_LDAP OR NOT LDIR_LBER )
+	if( NOT PATH_LIB_LDAP OR NOT PATH_LIB_LBER )
 
 		message(
 			FATAL_ERROR
 			"Unable to locate LDAP library file" )
 
-	endif( NOT LDIR_LDAP OR NOT LDIR_LBER )
+	endif( NOT PATH_LIB_LDAP OR NOT PATH_LIB_LBER )
 
 	# success
 

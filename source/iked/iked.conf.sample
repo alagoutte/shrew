@@ -1,0 +1,24 @@
+#
+# sample client iked.conf file
+#
+
+daemon
+{
+	# bind to ports
+
+	socket ike 500;
+	socket natt 4500;
+
+	# log output
+
+	log_level error;
+
+	log_file "/var/log/iked.log";
+	pcap_ike "/var/log/ike.pcap";
+	pcap_pub "/var/log/pub.pcap";
+
+	# retry settings
+
+	retry_delay 10;
+	retry_count 2;
+}

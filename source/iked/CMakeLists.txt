@@ -75,12 +75,12 @@ target_link_libraries(
 if( LDAP )
 
 	include_directories(
-		${IDIR_LDAP} )
+		${PATH_INC_LDAP} )
 
 	target_link_libraries(
 		iked
-		${LDIR_LDAP}
-		${LDIR_LBER} )
+		${PATH_LIB_LDAP}
+		${PATH_LIB_LBER} )
 
 endif( LDAP )
 
@@ -118,8 +118,12 @@ install(
 
 install(
 	FILES iked.8
-	DESTINATION ${MDIR_MAN}/man/man8 )
+	DESTINATION ${PATH_MAN}/man8 )
 
 install(
 	FILES iked.conf.5
-	DESTINATION ${MDIR_MAN}/man/man5 )
+	DESTINATION ${PATH_MAN}/man5 )
+
+install(
+	FILES iked.conf.sample
+	DESTINATION ${PATH_ETC} )
