@@ -1,5 +1,10 @@
 #
-# Shrew Soft IKE daemon and client
+# Shrew Soft VPN / IKE Tools
+# Cross Platform Make File
+#
+# author : Matthew Grooms
+#        : mgrooms@shrew.net
+#        : Copyright 2007, Shrew Soft Inc
 #
 
 project( IKE )
