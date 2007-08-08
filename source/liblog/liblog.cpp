@@ -179,7 +179,7 @@ void _LOG::txt( long level, char * fmt, ... )
 
 	if( ( fp != NULL ) || log_echo )
 	{
-		size = vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list ); 
+		vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list );
 		size = sprintf_s( bbuff, LOG_MAX_TXT, "%s%s", fbuff, tbuff );
 
 		if( size != -1 )

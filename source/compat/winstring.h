@@ -17,14 +17,17 @@ inline int vsprintf_s( char * buffer, size_t numberOfElements, const char * form
 
 inline int sprintf_s( char * buffer, size_t sizeOfBuffer, const char * format, ... )
 {
-	va_list ap;
-	va_start( ap, format );
-	return snprintf( buffer, sizeOfBuffer, format, ap );
+	va_list list;
+	va_start( list, format );
+
+	return vsnprintf( buffer, sizeOfBuffer, format, list );
 }
 
 inline int strcpy_s( char * strDestination, size_t numberOfElements, const char * strSource )
 {
 	strncpy( strDestination, strSource, numberOfElements );
+
+	return 0;
 }
 
 #endif

@@ -164,7 +164,7 @@ long _IKED::init( long setlevel )
 	// load our configuration
 	//
 
-	if( !conf_load( PATH_CONF ) )
+	if( !conf_load( PATH_CONF "/iked.conf" ) )
 		return LIBIKE_FAILED;
 
 	//

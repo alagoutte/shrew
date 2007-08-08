@@ -120,10 +120,8 @@
 
 #ifdef UNIX
 
-#ifdef __FreeBSD__
-# define PATH_CONF		"/usr/local/etc/iked.conf"
-#else
-# define PATH_CONF		"/etc/iked.conf"
+#ifndef PATH_CONF
+#define PATH_CONF		"/etc/iked.conf"
 #endif
 
 #ifdef __linux__
