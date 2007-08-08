@@ -131,7 +131,16 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 		return LIBIKE_SOCKET;
 	}
 
-#ifndef __linux__
+#ifdef __linux__
+
+	optval = 1;
+	if( setsockopt( sock_info->sock, IPPROTO_IP, IP_PKTINFO, &optval, sizeof( optval ) ) < 0)
+	{
+		log.txt( LOG_ERROR, "!! : socket set recvdstaddr option failed\n" );
+		return LIBIKE_SOCKET;
+	}
+
+#else
 
 	optval = 1;
 	if( setsockopt( sock_info->sock, IPPROTO_IP, IP_RECVDSTADDR, &optval, sizeof( optval ) ) < 0)
@@ -269,7 +278,20 @@ long _IKED::recv_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 		if( result <= 0 )
 			continue;
 
-#ifndef __linux__
+#ifdef __linux__
+
+		struct cmsghdr *cm;
+		cm = (struct cmsghdr *) ctrl;
+
+		struct in_pktinfo * pi;
+		pi = ( struct in_pktinfo * )( CMSG_DATA( cm ) );
+
+		memcpy(
+			&dest.saddr4.sin_addr,
+			&pi->ipi_addr,
+			sizeof( dest.saddr4.sin_addr ) );
+
+#else
 
 		memcpy(
 			&dest.saddr4.sin_addr,

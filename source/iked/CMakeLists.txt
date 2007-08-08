@@ -96,7 +96,7 @@ add_custom_target( ConfParser echo "Creating Conf Parser" )
 
 add_custom_command(
 	SOURCE conf.token.ll
-	COMMAND ${BPATH_FLEX}
+	COMMAND ${PATH_BIN_FLEX}
 	ARGS -d -oconf.token.cpp conf.token.ll
 	TARGET ConfParser
 	OUTPUTS conf.token.cpp )
@@ -105,7 +105,7 @@ add_custom_command(
 
 add_custom_command(
 	SOURCE conf.parse.yy
-	COMMAND ${BPATH_BISON}
+	COMMAND ${PATH_BIN_BISON}
 	ARGS -oconf.parse.cpp conf.parse.yy
 	TARGET ConfParser
 	OUTPUTS conf.parse.cpp conf.parse.hpp location.hh position.hh stack.hh )
