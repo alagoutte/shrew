@@ -111,6 +111,8 @@ DEBUG	Enable Debug Symbols
 QTGUI	Enable Client QT GUI
 NATT	Enable Nat Traversal Support
 LDAP	Enable LDAP Authentication Support
+ETCDIR	System etc configuration path
+MANDIR	System man page path
 
 For example: enter the following to build and install the software with all
 options enabled ...
@@ -118,3 +120,19 @@ options enabled ...
 cmake -DDEBUG=YES -DQTGUI=YES -DNATT=YES -DLDAP=YES
 make
 make install
+
+================================================================================
+USAGE
+================================================================================
+
+The main process that handles ike negotiations is iked and must be run as root.
+By default, it will detach itself from the terminal and execute as a daemon. To
+force foreground operation, use the -F switch. A sample configuration file is
+included in this distribution and will be installed in the etc system
+configuration directory. The configuration should be suitable to allow for
+client operation but can also be modified to allow for site to site or client
+gateway operation as well. See the iked.conf man page for more details.
+
+Once the iked process has been launched, the ikea application can be used to
+build remote access client configurations and initiate sessions. See the online
+documentation available at http://www.shrew.net for more details.

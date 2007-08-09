@@ -330,6 +330,18 @@ bool site::Load( CONFIG & config )
 		}
 	}
 
+	// phase1 exchange type ( default main )
+
+	if( config.get_string( "phase1-exchange",
+		text, MAX_CONFSTRING, 0 ) )
+	{
+		if( !strcmp( text, "main" ) )
+			comboBoxP1Exchange->setCurrentItem( 0 );
+
+		if( !strcmp( text, "aggressive" ) )
+			comboBoxP1Exchange->setCurrentItem( 1 );
+	}
+
 	// authentication mode ( default hybrid rsa xauth )
 
 	if( config.get_string( "auth-method",
@@ -351,7 +363,11 @@ bool site::Load( CONFIG & config )
 			comboBoxAuthMethod->setCurrentItem( 4 );
 	}
 
+	UpdateAuth();
+
 	// local identity type
+	//
+	// NOTE : Requires phase1 exchange type & authentication mode
 
 	if( config.get_string( "ident-client-type",
 		text, MAX_CONFSTRING, 0 ) )
@@ -428,18 +444,6 @@ bool site::Load( CONFIG & config )
 	if( config.get_string( "auth-mutual-psk",
 		text, MAX_CONFSTRING, 0 ) )
 		lineEditPSK->setText( text );
-
-	// phase1 exchange type ( default main )
-
-	if( config.get_string( "phase1-exchange",
-		text, MAX_CONFSTRING, 0 ) )
-	{
-		if( !strcmp( text, "main" ) )
-			comboBoxP1Exchange->setCurrentItem( 0 );
-
-		if( !strcmp( text, "aggressive" ) )
-			comboBoxP1Exchange->setCurrentItem( 1 );
-	}
 
 	// phase1 dh group ( default auto )
 
@@ -607,7 +611,6 @@ bool site::Load( CONFIG & config )
 	// update dialog
 
 	Update();
-	UpdateAuth();
 	UpdateExchange();
 	UpdateCipher();
 	UpdateTransform();
