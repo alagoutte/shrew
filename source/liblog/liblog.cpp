@@ -157,6 +157,7 @@ void _LOG::close()
 		fclose( fp );
 
 #endif
+		fp = NULL;
 
 	}
 }
