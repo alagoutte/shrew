@@ -592,6 +592,8 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 
 #ifdef __FreeBSD__
 
+	// find existing device
+
 	int index = 0;
 
 	for( ; index < 16; index++ )
@@ -620,23 +622,39 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 			continue;
 		}
 
+		sprintf( (*adapter)->name, "tap%i" , index );
+
 		break;
 	}
 
-	// if no existing device has been opened,
-	// attempt to open a new device
-
-	if( (*adapter)->fn == -1 )
-		(*adapter)->fn = open( "/dev/tap", O_RDWR );
-
 	if( (*adapter)->fn == -1 )
 	{
-		log.txt( LOG_ERROR, "!! : failed to open tap device\n" );
 
-		delete *adapter;
-		*adapter = NULL;
+		// create new device
 
-		return false;
+		(*adapter)->fn = open( "/dev/tap", O_RDWR);
+		if( (*adapter)->fn == -1 )
+		{
+			log.txt( LOG_ERROR, "!! : failed to open tap device\n" );
+
+			delete *adapter;
+			*adapter = NULL;
+
+			return false;
+		}
+
+		struct stat buf;
+		if( fstat( (*adapter)->fn, &buf ) < 0 )
+		{
+			log.txt( LOG_ERROR, "!! : failed to read tap interface name\n" );
+
+			delete *adapter;
+			*adapter = NULL;
+
+			return false;
+		}
+	
+		devname_r( buf.st_rdev, S_IFCHR, (*adapter)->name, IFNAMSIZ );
 	}
 
 #endif
