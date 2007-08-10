@@ -72,6 +72,7 @@
 #  include <sys/param.h>
 #  include <sys/socket.h>
 #  include <net/if.h>
+#  include <net/if_tap.h>
 #  include <netinet/udp.h>
 # endif
 # ifdef __FreeBSD__
@@ -283,7 +284,7 @@ typedef struct _SOCK_INFO
 
 typedef struct _VNET_ADAPTER
 {
-	FILE *	fp;
+	int	fn;
 	char	name[ IFNAMSIZ ];
 
 }VNET_ADAPTER;

@@ -566,8 +566,6 @@ long _IKED::send_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 
 #ifdef UNIX
 
-#define BASENAME "/dev/tap"
-         
 //
 // UNIX virtual adapter code
 //
@@ -592,6 +590,8 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 	if( !*adapter )
 		return false;
 
+#ifdef __FreeBSD__
+
 	int index = 0;
 
 	for( ; index < 16; index++ )
@@ -599,7 +599,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 		// check for existing device
 
 		struct stat sb;
-		sprintf( (*adapter)->name, "%s%i", BASENAME, index );
+		sprintf( (*adapter)->name, "/dev/tap%i" , index );
 
 		// attempt to stat device
 
@@ -612,8 +612,8 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 
 		// attempt to open device
 
-		(*adapter)->fp = fopen( (*adapter)->name, "rw" );
-		if( (*adapter)->fp == NULL )
+		(*adapter)->fn = open( (*adapter)->name, O_RDWR );
+		if( (*adapter)->fn == -1 )
 		{
 			log.txt( LOG_DEBUG, "ii : unable to open %s\n",
 				(*adapter)->name );
@@ -626,10 +626,10 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 	// if no existing device has been opened,
 	// attempt to open a new device
 
-	if( (*adapter)->fp == NULL )
-		(*adapter)->fp = fopen( BASENAME, "rw" );
+	if( (*adapter)->fn == -1 )
+		(*adapter)->fn = open( "/dev/tap", O_RDWR );
 
-	if( (*adapter)->fp == NULL )
+	if( (*adapter)->fn == -1 )
 	{
 		log.txt( LOG_ERROR, "!! : failed to open tap device\n" );
 
@@ -638,6 +638,36 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 
 		return false;
 	}
+
+#endif
+
+#ifdef __NetBSD__
+
+	(*adapter)->fn = open( "/dev/tap", O_RDWR);
+	if( (*adapter)->fn == -1 )
+	{
+		log.txt( LOG_ERROR, "!! : failed to open tap device\n" );
+
+		delete *adapter;
+		*adapter = NULL;
+
+		return false;
+	}
+
+	struct ifreq ifr;
+	if( ioctl( (*adapter)->fn, TAPGIFNAME, (void*) &ifr ) < 0 )
+	{
+		log.txt( LOG_ERROR, "!! : failed to read tap interface name\n" );
+
+		delete *adapter;
+		*adapter = NULL;
+
+		return false;
+	}
+
+	strcpy( (*adapter)->name, ifr.ifr_name );
+
+#endif
 
 	log.txt( LOG_INFO, "ii : opened tap device %s\n", (*adapter)->name );
 
@@ -652,7 +682,8 @@ bool _IKED::vnet_rel( VNET_ADAPTER * adapter )
 
 	// close adapter
 
-	fclose( adapter->fp );
+	if( adapter->fn != -1 )
+		close( adapter->fn );
 
 	log.txt( LOG_INFO, "ii : closed tap device %s\n", adapter->name );
 
@@ -687,7 +718,7 @@ bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 			return false;
 		}
 
-		strncpy( ifr.ifr_name, strrchr( adapter->name, '/' ) + 1, IFNAMSIZ );
+		strncpy( ifr.ifr_name, adapter->name, IFNAMSIZ );
 
 		addr->sin_addr = xconf.addr;
 
