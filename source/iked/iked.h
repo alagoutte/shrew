@@ -60,9 +60,10 @@
 #  include <pwd.h>
 #  include <grp.h>
 #  include <netdb.h>
-#  include <net/if.h>
 #  include <sys/ioctl.h>
 #  include <linux/udp.h>
+#  include <linux/if.h>
+#  include <linux/if_tun.h>
 # else
 #  include <signal.h>
 #  include <pwd.h>

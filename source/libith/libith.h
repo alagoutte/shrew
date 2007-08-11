@@ -58,6 +58,7 @@
 # endif
 #endif
 
+#include <stdio.h>
 #include "export.h"
 
 //
@@ -128,7 +129,7 @@ typedef class DLX _ITH_LOCK
 	_ITH_LOCK();
 	~_ITH_LOCK();
 
-	void	lock();
+	bool	lock();
 	void	unlock();
 
 }ITH_LOCK;

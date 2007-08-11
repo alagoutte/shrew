@@ -648,6 +648,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 		{
 			log.txt( LOG_ERROR, "!! : failed to read tap interface name\n" );
 
+			close( (*adapter)->fn );
 			delete *adapter;
 			*adapter = NULL;
 
@@ -673,10 +674,45 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 	}
 
 	struct ifreq ifr;
+	memset( &ifr, 0, sizeof( ifr ) );
+
 	if( ioctl( (*adapter)->fn, TAPGIFNAME, (void*) &ifr ) < 0 )
 	{
 		log.txt( LOG_ERROR, "!! : failed to read tap interface name\n" );
 
+		close( (*adapter)->fn );
+		delete *adapter;
+		*adapter = NULL;
+
+		return false;
+	}
+
+	strcpy( (*adapter)->name, ifr.ifr_name );
+
+#endif
+
+#ifdef __linux__
+
+	(*adapter)->fn = open( "/dev/net/tun", O_RDWR);
+	if( (*adapter)->fn == -1 )
+	{
+		log.txt( LOG_ERROR, "!! : failed to open tap device\n" );
+
+		delete *adapter;
+		*adapter = NULL;
+
+		return false;
+	}
+
+	struct ifreq ifr;
+	memset( &ifr, 0, sizeof( ifr ) );
+	ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
+
+	if( ioctl( (*adapter)->fn, TUNSETIFF, (void*) &ifr ) < 0 )
+	{
+		log.txt( LOG_ERROR, "!! : failed to read tap interface name\n" );
+
+		close( (*adapter)->fn );
 		delete *adapter;
 		*adapter = NULL;
 

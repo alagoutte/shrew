@@ -142,9 +142,14 @@ _ITH_LOCK::~_ITH_LOCK()
 	CloseHandle( mutex );
 }
 
-void _ITH_LOCK::lock()
+bool _ITH_LOCK::lock()
 {
-	WaitForSingleObject( mutex, INFINITE );
+	if( WaitForSingleObject( mutex, 3000 ) != WAIT_TIMEOUT )
+		return true;
+
+	printf( "!! : lock timeout !!!\n" );
+
+	return false;
 }
 
 void _ITH_LOCK::unlock()
@@ -166,9 +171,18 @@ _ITH_LOCK::~_ITH_LOCK()
 	pthread_mutex_destroy( &mutex );
 }
 
-void _ITH_LOCK::lock()
+bool _ITH_LOCK::lock()
 {
-	pthread_mutex_lock( &mutex );
+	struct timespec ts;
+	ts.tv_sec = 3;
+	ts.tv_nsec = 0;
+
+	if( !pthread_mutex_timedlock( &mutex, &ts ) )
+		return true;
+
+	printf( "!! : lock timeout !!!\n" );
+
+	return false;
 }
 
 void _ITH_LOCK::unlock()
