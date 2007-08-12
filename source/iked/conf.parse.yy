@@ -234,13 +234,14 @@ daemon_line
 		saddr.saddr4.sin_port = htons( $4 );
 
 		if( iked.socket_create( saddr, false ) != LIBIKE_OK )
-			error( @$, std::string( "daemon network configuration failed\n" ) );
+			error( @$, std::string( "daemon network configuration failed" ) );
 
 		delete $3;
 	}
 	EOS
   |	SOCKET NATT NUMBER
 	{
+#ifdef OPT_NATT
 		IKE_SADDR saddr;
 		memset( &saddr, 0, sizeof( saddr ) );
 		SET_SALEN( &saddr.saddr4, sizeof( sockaddr_in ) );
@@ -248,11 +249,15 @@ daemon_line
 		saddr.saddr4.sin_port = htons( $3 );
 
 		if( iked.socket_create( saddr, true ) != LIBIKE_OK )
-			error( @$, std::string( "daemon network configuration failed\n" ) );
+			error( @$, std::string( "daemon network configuration failed" ) );
+#else
+		error( @$, std::string( "iked was compiled without NATT support" ) );
+#endif
 	}
 	EOS
   |	SOCKET NATT ADDRESS NUMBER
 	{
+#ifdef OPT_NATT
 		IKE_SADDR saddr;
 		memset( &saddr, 0, sizeof( saddr ) );
 		SET_SALEN( &saddr.saddr4, sizeof( sockaddr_in ) );
@@ -261,9 +266,12 @@ daemon_line
 		saddr.saddr4.sin_port = htons( $4 );
 
 		if( iked.socket_create( saddr, true ) != LIBIKE_OK )
-			error( @$, std::string( "daemon network configuration failed\n" ) );
+			error( @$, std::string( "daemon network configuration failed" ) );
 
 		delete $3;
+#else
+		error( @$, std::string( "iked was compiled without NATT support" ) );
+#endif
 	}
 	EOS
   |	LOG_FILE QUOTED
@@ -338,7 +346,7 @@ netgroup_section
 	{
 		ilist = new IKE_ILIST;
 		if( ilist == NULL )
-			error( @$, std::string( "unable to allocate idlist for netgroup\n" ) + $2->text() );
+			error( @$, std::string( "unable to allocate idlist for netgroup" ) + $2->text() );
 
 		ilist->name.set( *$2 );
 		iked.list_netgrp.add_item( ilist );
@@ -691,22 +699,38 @@ peer_line
 	EOS
   |	NATT_MODE ENABLE
 	{
+#ifdef OPT_NATT
 		peer->natt_mode = IPSEC_NATT_ENABLE;
+#else
+		error( @$, std::string( "iked was compiled without NATT support" ) );
+#endif
 	}
 	EOS
   |	NATT_MODE DISABLE
 	{
+#ifdef OPT_NATT
 		peer->natt_mode = IPSEC_NATT_DISABLE;
+#else
+		error( @$, std::string( "iked was compiled without NATT support" ) );
+#endif
 	}
 	EOS
   |	NATT_MODE FORCE
 	{
+#ifdef OPT_NATT
 		peer->natt_mode = IPSEC_NATT_FORCE;
+#else
+		error( @$, std::string( "iked was compiled without NATT support" ) );
+#endif
 	}
 	EOS
   |	NATT_RATE NUMBER
 	{
+#ifdef OPT_NATT
 		peer->natt_rate = $2;
+#else
+		error( @$, std::string( "iked was compiled without NATT support" ) );
+#endif
 	}
 	EOS
   |	DPD_MODE ENABLE

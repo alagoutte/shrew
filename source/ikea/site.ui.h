@@ -82,10 +82,20 @@ void site::init()
 	lineEditDNSServer->setInputMask( "00D . 00D . 00D . 00D" );
 	lineEditDNSServer->setText( "0.0.0.0" );
 
-#ifndef OPT_NATT
-	textLabelNATTMode->setEnabled( false );
-	comboBoxNATTMode->setEnabled( false );
-	combobox_setbytext( "disable", comboBoxNATTMode );
+#ifdef OPT_NATT
+
+	textLabelNATTMode->setEnabled( true );
+	comboBoxNATTMode->setEnabled( true );
+
+	textLabelNATTPort->setEnabled( true );
+	lineEditNATTPort->setEnabled( true );
+
+	textLabelNATTRate->setEnabled( true );
+	lineEditNATTRate->setEnabled( true );
+	textLabelNATTSecs->setEnabled( true );
+
+	combobox_setbytext( "enable", comboBoxNATTMode );
+
 #endif
 
 	// update dialog
@@ -218,6 +228,8 @@ bool site::Load( CONFIG & config )
 		}
 	}
 
+#ifdef OPT_NATT
+
 	// nat traversal mode ( default enabled )
 
 	if( config.get_string( "network-natt-mode",
@@ -238,6 +250,8 @@ bool site::Load( CONFIG & config )
 		if( config.get_number( "network-natt-rate", &numb ) )
 			lineEditNATTRate->setText( QString::number( numb, 10 ) );
 	}
+
+#endif
 
 	// ike fragment mode ( default enabled )
 
@@ -689,6 +703,8 @@ bool site::Save( CONFIG & config )
 		}
 	}
 
+#ifdef OPT_NATT
+
 	// nat traversal mode
 
 	config.set_string( "network-natt-mode",
@@ -709,6 +725,8 @@ bool site::Save( CONFIG & config )
 		config.set_number( "network-natt-rate",
 			lineEditNATTRate->text().toLong() );
 	}
+
+#endif
 
 	// ike fragment mode
 
@@ -1231,6 +1249,7 @@ void site::Update()
 
 		textLabelNATTRate->setEnabled( false );
 		lineEditNATTRate->setEnabled( false );
+		textLabelNATTSecs->setEnabled( false );
 	}
 	else
 	{
@@ -1241,6 +1260,7 @@ void site::Update()
 
 		textLabelNATTRate->setEnabled( true );
 		lineEditNATTRate->setEnabled( true );
+		textLabelNATTSecs->setEnabled( true );
 	}
 
 	// ike frag mode

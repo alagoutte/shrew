@@ -163,19 +163,21 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 		return LIBIKE_SOCKET;
 	}
 
-#ifdef OPT_NATT
-
 	if( encap )
 	{
+
+#ifdef OPT_NATT
+
 		optval = UDP_ENCAP_ESPINUDP;
 		if( setsockopt( sock_info->sock, SOL_UDP, UDP_ENCAP, &optval, sizeof( optval ) ) < 0)
 		{
 			log.txt( LOG_ERROR, "!! : socket set udp-encap option failed\n" );
 			return LIBIKE_SOCKET;
 		}
-	}
 
 #endif
+
+	}
 
 	lock_net.lock();
 

@@ -364,38 +364,6 @@
                     </property>
                     <widget class="QLabel">
                         <property name="name">
-                            <cstring>textLabelNATTMode</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>10</x>
-                                <y>20</y>
-                                <width>120</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>NAT Traversal</string>
-                        </property>
-                    </widget>
-                    <widget class="QLabel">
-                        <property name="name">
-                            <cstring>textLabelNATTRate</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>10</x>
-                                <y>80</y>
-                                <width>120</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>Keep-Alive Packet Rate</string>
-                        </property>
-                    </widget>
-                    <widget class="QLabel">
-                        <property name="name">
                             <cstring>textLabelFragMode</cstring>
                         </property>
                         <property name="geometry">
@@ -444,22 +412,6 @@
                     </widget>
                     <widget class="QLabel">
                         <property name="name">
-                            <cstring>textLabelFragSecs</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>220</x>
-                                <y>80</y>
-                                <width>30</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>Secs</string>
-                        </property>
-                    </widget>
-                    <widget class="QLabel">
-                        <property name="name">
                             <cstring>textLabelFragBytes</cstring>
                         </property>
                         <property name="geometry">
@@ -474,25 +426,12 @@
                             <string>Bytes</string>
                         </property>
                     </widget>
-                    <widget class="QLabel">
-                        <property name="name">
-                            <cstring>textLabelNATTPort</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>10</x>
-                                <y>50</y>
-                                <width>120</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>NAT Traversal Port</string>
-                        </property>
-                    </widget>
                     <widget class="QLineEdit">
                         <property name="name">
                             <cstring>lineEditNATTPort</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
                         </property>
                         <property name="geometry">
                             <rect>
@@ -509,35 +448,102 @@
                             <set>AlignRight</set>
                         </property>
                     </widget>
-                    <widget class="QComboBox">
-                        <item>
-                            <property name="text">
-                                <string>disable</string>
-                            </property>
-                        </item>
-                        <item>
-                            <property name="text">
-                                <string>enable</string>
-                            </property>
-                        </item>
-                        <item>
-                            <property name="text">
-                                <string>force</string>
-                            </property>
-                        </item>
+                    <widget class="QLineEdit">
                         <property name="name">
-                            <cstring>comboBoxNATTMode</cstring>
+                            <cstring>lineEditNATTRate</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
                         </property>
                         <property name="geometry">
                             <rect>
                                 <x>150</x>
-                                <y>20</y>
-                                <width>101</width>
+                                <y>80</y>
+                                <width>60</width>
                                 <height>21</height>
                             </rect>
                         </property>
-                        <property name="currentItem">
-                            <number>1</number>
+                        <property name="text">
+                            <string>15</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignRight</set>
+                        </property>
+                    </widget>
+                    <widget class="QLabel">
+                        <property name="name">
+                            <cstring>textLabelNATTMode</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>20</y>
+                                <width>120</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>NAT Traversal</string>
+                        </property>
+                    </widget>
+                    <widget class="QLabel">
+                        <property name="name">
+                            <cstring>textLabelNATTPort</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>50</y>
+                                <width>120</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>NAT Traversal Port</string>
+                        </property>
+                    </widget>
+                    <widget class="QLabel">
+                        <property name="name">
+                            <cstring>textLabelNATTRate</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>80</y>
+                                <width>120</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Keep-Alive Packet Rate</string>
+                        </property>
+                    </widget>
+                    <widget class="QLabel">
+                        <property name="name">
+                            <cstring>textLabelNATTSecs</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>220</x>
+                                <y>80</y>
+                                <width>30</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Secs</string>
                         </property>
                     </widget>
                     <widget class="QComboBox">
@@ -571,23 +577,38 @@
                             <number>1</number>
                         </property>
                     </widget>
-                    <widget class="QLineEdit">
+                    <widget class="QComboBox">
+                        <item>
+                            <property name="text">
+                                <string>disable</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>enable</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>force</string>
+                            </property>
+                        </item>
                         <property name="name">
-                            <cstring>lineEditNATTRate</cstring>
+                            <cstring>comboBoxNATTMode</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
                         </property>
                         <property name="geometry">
                             <rect>
                                 <x>150</x>
-                                <y>80</y>
-                                <width>60</width>
+                                <y>20</y>
+                                <width>101</width>
                                 <height>21</height>
                             </rect>
                         </property>
-                        <property name="text">
-                            <string>15</string>
-                        </property>
-                        <property name="alignment">
-                            <set>AlignRight</set>
+                        <property name="currentItem">
+                            <number>0</number>
                         </property>
                     </widget>
                 </widget>
@@ -606,25 +627,6 @@
                     <property name="title">
                         <string>Other Options</string>
                     </property>
-                    <widget class="QCheckBox">
-                        <property name="name">
-                            <cstring>checkBoxDPD</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>10</x>
-                                <y>20</y>
-                                <width>241</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>Enable Dead Peer Detection</string>
-                        </property>
-                        <property name="checked">
-                            <bool>true</bool>
-                        </property>
-                    </widget>
                     <widget class="QCheckBox">
                         <property name="name">
                             <cstring>checkBoxNotify</cstring>
@@ -658,6 +660,25 @@
                         </property>
                         <property name="text">
                             <string>Enable Client Login Banner</string>
+                        </property>
+                        <property name="checked">
+                            <bool>true</bool>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>checkBoxDPD</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>20</y>
+                                <width>241</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Enable Dead Peer Detection</string>
                         </property>
                         <property name="checked">
                             <bool>true</bool>

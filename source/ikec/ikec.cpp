@@ -141,6 +141,10 @@ void _IKEC::run()
 	// nat-t enable
 
 	peer.natt_mode = IPSEC_NATT_DISABLE;
+	peer.natt_port = htons( 4500 );
+	peer.natt_rate = 30;
+
+#ifdef OPT_NATT
 
 	if( config.get_string( "network-natt-mode", text, MAX_CONFSTRING, 0 ) )
 	{
@@ -152,16 +156,16 @@ void _IKEC::run()
 
 		// nat-t udp port
 
-		peer.natt_port = htons( 4500 );
 		if( config.get_number( "network-natt-port", &numb ) )
 			peer.natt_port = htons( ( unsigned short ) numb );
 
 		// nat-t keep-alive rate
 
-		peer.natt_rate = 30;
 		if( config.get_number( "network-natt-rate", &numb ) )
 			peer.natt_rate = numb;
 	}
+
+#endif
 
 	// ike fragmentation enable
 
