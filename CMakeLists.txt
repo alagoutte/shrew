@@ -206,6 +206,8 @@ if( QTGUI )
 		STATUS 
 		"Enabled Client QT GUI support ..." )
 
+	add_definitions( ${QT_DEFINITIONS} )
+
 	add_subdirectory( source/ikea )
 	add_subdirectory( source/ikec )
 

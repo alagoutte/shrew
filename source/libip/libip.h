@@ -56,7 +56,12 @@
 #  include <unistd.h>
 #  include <inttypes.h>
 #  include <sys/socket.h>
+#  include <sys/ioctl.h>
 #  include <arpa/inet.h>
+#  include <asm/types.h>
+#  include <linux/if.h>
+#  include <linux/netlink.h>
+#  include <linux/rtnetlink.h>
 # else
 #  include <unistd.h>
 #  include <netinet/in.h>

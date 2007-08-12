@@ -85,7 +85,7 @@ void site::init()
 #ifndef OPT_NATT
 	textLabelNATTMode->setEnabled( false );
 	comboBoxNATTMode->setEnabled( false );
-	combobox_setbytext( "disabled", comboBoxNATTMode );
+	combobox_setbytext( "disable", comboBoxNATTMode );
 #endif
 
 	// update dialog

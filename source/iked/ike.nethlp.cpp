@@ -710,7 +710,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 
 	if( ioctl( (*adapter)->fn, TUNSETIFF, (void*) &ifr ) < 0 )
 	{
-		log.txt( LOG_ERROR, "!! : failed to read tap interface name\n" );
+		log.txt( LOG_ERROR, "!! : failed to get tap interface name\n" );
 
 		close( (*adapter)->fn );
 		delete *adapter;
@@ -719,8 +719,51 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 		return false;
 	}
 
-	strcpy( (*adapter)->name, ifr.ifr_name );
+	//
+	// bring up the interface
+	//
 
+	int efd = socket( PF_PACKET, SOCK_RAW, htons( ETH_P_ALL ) );
+	if( efd < 0 )
+	{
+		log.txt( LOG_ERROR, "!! : failed to open raw packet handle\n" );
+
+		close( (*adapter)->fn );
+		delete *adapter;
+		*adapter = NULL;
+
+		return false;
+	}
+
+	if( ioctl( efd, SIOCGIFFLAGS, (void*) &ifr ) < 0 )
+	{
+		log.txt( LOG_ERROR, "!! : failed to get tap interface flags\n" );
+
+		close( efd );
+		close( (*adapter)->fn );
+		delete *adapter;
+		*adapter = NULL;
+
+		return false;
+	}
+
+	ifr.ifr_flags |= IFF_UP;
+
+	if( ioctl( efd, SIOCSIFFLAGS, (void*) &ifr ) < 0 )
+	{
+		log.txt( LOG_ERROR, "!! : failed to set tap interface flags\n" );
+
+		close( efd );
+		close( (*adapter)->fn );
+		delete *adapter;
+		*adapter = NULL;
+
+		return false;
+	}
+
+	close( efd );
+
+	strcpy( (*adapter)->name, ifr.ifr_name );
 #endif
 
 	log.txt( LOG_INFO, "ii : opened tap device %s\n", (*adapter)->name );
