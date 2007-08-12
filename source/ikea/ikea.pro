@@ -3,7 +3,9 @@ LANGUAGE	= C++
 
 CONFIG	+= qt warn_on release
 
-LIBS	+= ../libip/utils.list.o
+LIBS	+= ../libip/libip.a
+
+DEFINES	+= OPT_NATT
 
 INCLUDEPATH	+= ./.. ../libip
 

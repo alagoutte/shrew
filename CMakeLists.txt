@@ -166,9 +166,9 @@ message(
 #
 
 OPTION( DEBUG  "include Debug Symbol support" )
-OPTION( QTGUI  "include Client QT GUI support" )
 OPTION( NATT   "include NAT Traversal support" )
 OPTION( LDAP   "include LDAP Authentication support" )
+OPTION( QTGUI  "include Client QT GUI support" )
 
 OPTION( ETCDIR "etc install directory" )
 OPTION( MANDIR "man install directory" )
@@ -181,37 +181,6 @@ if( DEBUG )
 	add_definitions( -g )
 
 endif( DEBUG )
-
-# Client GUI option
-
-if( QTGUI )
-
-	add_definitions( -D QT_THREAD_SUPPORT )
-
-	set( QT_MT_REQUIRED TRUE )
-
-	FIND_PACKAGE( Qt3 )
-
-	if( NOT QT_FOUND )
-
-		message(
-			FATAL_ERROR
-			"Unable to locate QT package" )
-
-	endif( NOT QT_FOUND )
-		
-	# success
-
-	message(
-		STATUS 
-		"Enabled Client QT GUI support ..." )
-
-	add_definitions( ${QT_DEFINITIONS} )
-
-	add_subdirectory( source/ikea )
-	add_subdirectory( source/ikec )
-
-endif( QTGUI )
 
 # NAT Traversion option
 
@@ -301,4 +270,36 @@ if( LDAP )
 	add_definitions( -D OPT_LDAP )
 
 endif( LDAP )
+
+# Client GUI option
+
+if( QTGUI )
+
+	add_definitions( -D QT_THREAD_SUPPORT )
+
+	set( QT_MT_REQUIRED TRUE )
+
+	FIND_PACKAGE( Qt3 )
+
+	if( NOT QT_FOUND )
+
+		message(
+			FATAL_ERROR
+			"Unable to locate QT package" )
+
+	endif( NOT QT_FOUND )
+		
+	# success
+
+	message(
+		STATUS 
+		"Enabled Client QT GUI support ..." )
+
+	add_definitions( ${QT_DEFINITIONS} )
+
+	add_subdirectory( source/ikea )
+	add_subdirectory( source/ikec )
+
+endif( QTGUI )
+
 
