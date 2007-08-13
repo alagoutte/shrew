@@ -48,11 +48,15 @@
 
 #ifdef UNIX
 # ifdef __linux__
+#  include <errno.h>
+#  include <assert.h>
 #  include <unistd.h>
 #  include <pthread.h>
 #  include <sys/time.h>
 # else
+#  include <errno.h>
 #  include <unistd.h>
+#  include <assert.h>
 #  include <pthread.h>
 #  include <sys/time.h>
 # endif

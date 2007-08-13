@@ -177,10 +177,31 @@ bool _ITH_LOCK::lock()
 	ts.tv_sec = 3;
 	ts.tv_nsec = 0;
 
-	if( !pthread_mutex_timedlock( &mutex, &ts ) )
-		return true;
+	int result = pthread_mutex_timedlock( &mutex, &ts );
 
-	printf( "!! : lock timeout !!!\n" );
+	switch( result )
+	{
+		case 0:
+			return true;
+
+		case EINVAL:
+			printf( "XX : mutex lock failed, invalid parameter\n" );
+			break;
+
+		case ETIMEDOUT:
+			printf( "XX : mutex lock failed, timeout expired\n" );
+			break;
+
+		case EAGAIN:
+			printf( "XX : mutex lock failed, recursion error\n" );
+			break;
+
+		case EDEADLK:
+			printf( "XX : mutex lock failed, mutex already owned\n" );
+			break;
+	}
+
+	assert( result == 0 );
 
 	return false;
 }
