@@ -427,6 +427,9 @@ int rtmsg_recv( int s, in_addr * dst, in_addr * gwy, in_addr * msk, in_addr * if
 	while( true )
 	{
 		rtn = recv( s, p, sizeof( buf ) - nll, 0 );
+		if( !rtn )
+			break;
+
 		nlp = ( struct nlmsghdr * ) p;
 
 		if( nlp->nlmsg_type == NLMSG_ERROR )
@@ -550,13 +553,9 @@ bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 	if( s < 0 )
 		return false;
 
-//	int r = rtmsg_recv( s, &addr, &next, &mask, &iface );
-
 	close( s );
 
 	return true;
-
-//	return ( r >= 0 );
 }
 
 // delete a route
@@ -610,13 +609,9 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 	if( s < 0 )
 		return false;
 
-//	int r = rtmsg_recv( s, &addr, &next, &mask, &iface );
-
 	close( s );
 
 	return true;
-
-//	return ( r >= 0 );
 }
 
 // get a route ( by addr and mask )
@@ -642,7 +637,7 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	nlmsg.msg.rtm_table = RT_TABLE_MAIN;
 
 	// add route destination
-/*
+
 	struct rtattr * rta = ( struct rtattr * ) nlmsg.buff;
 
 	rta->rta_type = RTA_DST;
@@ -650,7 +645,7 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	memcpy( ( ( char * ) rta ) + sizeof( struct rtattr ), &addr, sizeof( addr ) );
 
 	nlmsg.hdr.nlmsg_len += rta->rta_len;
-*/
+
 	// set route network mask
 
 	nlmsg.msg.rtm_dst_len = 32;

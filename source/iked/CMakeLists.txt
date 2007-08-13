@@ -70,7 +70,18 @@ target_link_libraries(
 	pfk
 	crypt
 	crypto
+	rt
 	pthread )
+
+# linux realtime library
+
+if( PATH_LIB_RT )
+
+	target_link_libraries(
+		iked
+		rt )
+
+endif( PATH_LIB_RT )
 
 # LDAP support option
 

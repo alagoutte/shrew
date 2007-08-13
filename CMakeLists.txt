@@ -85,6 +85,11 @@ message(
 	STATUS 
 	"Using binary ${PATH_BIN_BISON} ..." )
 
+find_library(
+	PATH_LIB_RT
+	NAMES "rt"
+	PATHS ${SEARCH_LIB} )
+
 #
 # Install Path Checks
 #

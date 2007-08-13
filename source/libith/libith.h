@@ -49,6 +49,7 @@
 
 #ifdef UNIX
 # ifdef __linux__
+#  include <time.h>
 #  include <errno.h>
 #  include <assert.h>
 #  include <unistd.h>
