@@ -174,7 +174,7 @@ _ITH_LOCK::_ITH_LOCK()
 	count = 0;
 	memset( name, 0, 20 );
 	pthread_mutexattr_init( &attr );
-	pthread_mutexattr_setpshared( &attr, 1 );
+	pthread_mutexattr_settype( &attr, PTHREAD_MUTEX_ERRORCHECK );
 	pthread_mutex_init( &mutex, &attr );
 }
 
@@ -192,15 +192,18 @@ void _ITH_LOCK::setname( char * lkname )
 bool _ITH_LOCK::lock()
 {
 
+#ifdef OPT_LKDBG
+
 	if( *name )
 		printf( "LK : LOCKING %s ( %i )\n", name, count++ );
 
-	struct timespec ts;
-	ts.tv_sec = 3;
-	ts.tv_nsec = 0;
+#endif
+
+        struct timespec ts;
+        clock_gettime( CLOCK_REALTIME, &ts );
+        ts.tv_sec += 3;
 
 	int result = pthread_mutex_timedlock( &mutex, &ts );
-//	int result = pthread_mutex_lock( &mutex );
 
 	switch( result )
 	{
@@ -231,8 +234,13 @@ bool _ITH_LOCK::lock()
 
 bool _ITH_LOCK::unlock()
 {
+
+#ifdef OPT_LKDBG
+
 	if( *name )
 		printf( "LK : UNLOCKING %s ( %i )\n", name, count++ );
+
+#endif
 
 	int result = pthread_mutex_unlock( &mutex );
 
