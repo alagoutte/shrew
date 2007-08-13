@@ -205,11 +205,19 @@ bool _ITH_LOCK::lock()
 
 #endif
 
+#ifdef pthread_mutex_timedlock
+
         struct timespec ts;
         clock_gettime( CLOCK_REALTIME, &ts );
         ts.tv_sec += 3;
 
 	int result = pthread_mutex_timedlock( &mutex, &ts );
+
+#else
+
+	int result = pthread_mutex_lock( &mutex );
+
+#endif
 
 	switch( result )
 	{
