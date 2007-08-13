@@ -134,12 +134,18 @@ bool _ITH_EXEC::exec( void * arg )
 
 _ITH_LOCK::_ITH_LOCK()
 {
+	memset( name, 0, 20 );
 	mutex = CreateMutex( NULL, false, NULL );
 }
 
 _ITH_LOCK::~_ITH_LOCK()
 {
 	CloseHandle( mutex );
+}
+
+void _ITH_LOCK::setname( char * lkname )
+{
+	strcpy_s( name, 20, lkname );
 }
 
 bool _ITH_LOCK::lock()
@@ -152,9 +158,11 @@ bool _ITH_LOCK::lock()
 	return false;
 }
 
-void _ITH_LOCK::unlock()
+bool _ITH_LOCK::unlock()
 {
 	ReleaseMutex( mutex );
+
+	return true;
 }
 
 #endif
@@ -163,21 +171,36 @@ void _ITH_LOCK::unlock()
 
 _ITH_LOCK::_ITH_LOCK()
 {
-	pthread_mutex_init( &mutex, NULL );
+	count = 0;
+	memset( name, 0, 20 );
+	pthread_mutexattr_init( &attr );
+	pthread_mutexattr_setpshared( &attr, 1 );
+	pthread_mutex_init( &mutex, &attr );
 }
 
 _ITH_LOCK::~_ITH_LOCK()
 {
 	pthread_mutex_destroy( &mutex );
+	pthread_mutexattr_destroy( &attr );
+}
+
+void _ITH_LOCK::setname( char * lkname )
+{
+	strcpy_s( name, 20, lkname );
 }
 
 bool _ITH_LOCK::lock()
 {
+
+	if( *name )
+		printf( "LK : LOCKING %s ( %i )\n", name, count++ );
+
 	struct timespec ts;
 	ts.tv_sec = 3;
 	ts.tv_nsec = 0;
 
 	int result = pthread_mutex_timedlock( &mutex, &ts );
+//	int result = pthread_mutex_lock( &mutex );
 
 	switch( result )
 	{
@@ -206,9 +229,26 @@ bool _ITH_LOCK::lock()
 	return false;
 }
 
-void _ITH_LOCK::unlock()
+bool _ITH_LOCK::unlock()
 {
-	pthread_mutex_unlock( &mutex );
+	if( *name )
+		printf( "LK : UNLOCKING %s ( %i )\n", name, count++ );
+
+	int result = pthread_mutex_unlock( &mutex );
+
+	switch( result )
+	{
+		case 0:
+			return true;
+
+		case EINVAL:
+			printf( "XX : mutex unlock failed, mutex not owned\n" );
+			break;
+	}
+
+	assert( result == 0 );
+
+	return false;
 }
 
 #endif

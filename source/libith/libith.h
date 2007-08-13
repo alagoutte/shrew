@@ -60,6 +60,7 @@
 #  include <pthread.h>
 #  include <sys/time.h>
 # endif
+# include "compat/winstring.h"
 #endif
 
 #include <stdio.h>
@@ -116,6 +117,9 @@ typedef class DLX _ITH_LOCK
 {
 	private:
 
+	char		name[ 20 ];
+	unsigned long	count;
+
 #ifdef WIN32
 
 	HANDLE	mutex;
@@ -125,6 +129,7 @@ typedef class DLX _ITH_LOCK
 #ifdef UNIX
 
 	pthread_mutex_t mutex;
+	pthread_mutexattr_t attr;
 
 #endif
 
@@ -133,8 +138,10 @@ typedef class DLX _ITH_LOCK
 	_ITH_LOCK();
 	~_ITH_LOCK();
 
+	void	setname( char * lkname );
+
 	bool	lock();
-	void	unlock();
+	bool	unlock();
 
 }ITH_LOCK;
 
@@ -182,7 +189,7 @@ typedef class DLX _ITH_TIMER : public _ITH_EXEC
 
 	public:
 
-			_ITH_TIMER();
+	_ITH_TIMER();
 	virtual	~_ITH_TIMER();
 
 	virtual long func( void * arg );

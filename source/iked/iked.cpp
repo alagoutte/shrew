@@ -56,6 +56,9 @@ _IKED::_IKED()
 
 	rand_bytes( &ident, 2 );
 
+	lock_net.setname( "net" );
+	lock_sdb.setname( "sdb" );
+
 	unsigned char xauth[] = VEND_XAUTH;
 	vend_xauth.set( xauth, sizeof( xauth ) );
 
