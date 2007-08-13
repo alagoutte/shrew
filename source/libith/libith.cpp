@@ -150,10 +150,16 @@ void _ITH_LOCK::setname( char * lkname )
 
 bool _ITH_LOCK::lock()
 {
-	if( WaitForSingleObject( mutex, 3000 ) != WAIT_TIMEOUT )
+	int result = WaitForSingleObject( mutex, 3000 );
+
+	assert( result != WAIT_FAILED );
+
+	if( result != WAIT_FAILED )
 		return true;
 
-	printf( "!! : lock timeout !!!\n" );
+	result = GetLastError();
+
+	printf( "XX : mutex lock failed, ERROR CODE %i\n", result );
 
 	return false;
 }

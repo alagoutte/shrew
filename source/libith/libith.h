@@ -44,6 +44,7 @@
 
 #ifdef WIN32
 # include <windows.h>
+# include <assert.h>
 #endif
 
 #ifdef UNIX
