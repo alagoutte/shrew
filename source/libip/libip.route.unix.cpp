@@ -354,6 +354,35 @@ _IPROUTE::_IPROUTE()
 // Linux generic route message functions
 //
 
+unsigned int mask_to_prefix( in_addr mask )
+{
+	unsigned int plen = 0;
+	unsigned int hmsk = ntohl( mask.s_addr );
+
+	plen = 0;
+
+	while( hmsk & 0x80000000 )
+	{
+		hmsk <<= 1;
+		plen++;
+	}
+
+	return plen;
+}
+
+unsigned int prefix_to_mask( int plen )
+{
+	unsigned int mask = 0;
+
+	for( int i = 0; i < plen; i++ )
+	{
+		mask >>= 1;
+                mask |= 0x80000000;
+	}
+
+	return htonl( mask );
+}
+
 int rtmsg_send( NLMSG * nlmsg )
 {
 	int s = socket( PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE );
@@ -434,8 +463,11 @@ int rtmsg_recv( int s, in_addr * dst, in_addr * gwy, in_addr * msk, in_addr * if
 			switch( rtap->rta_type )
 			{
 				case RTA_DST:
+				{
 					memcpy( dst, RTA_DATA( rtap ), sizeof( *dst ) );
+					msk->s_addr = prefix_to_mask( rtp->rtm_dst_len );
 					break;
+				}
 
 				case RTA_GATEWAY:
 					memcpy( gwy, RTA_DATA( rtap ), sizeof( *gwy ) );
@@ -507,7 +539,7 @@ bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 	// set route network mask
 
-	nlmsg.msg.rtm_dst_len = 16;
+	nlmsg.msg.rtm_dst_len = mask_to_prefix( mask );
 
 	// set final message length
 
@@ -567,7 +599,7 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 	// set route network mask
 
-	nlmsg.msg.rtm_dst_len = 16;
+	nlmsg.msg.rtm_dst_len = mask_to_prefix( mask );
 
 	// set final message length
 

@@ -63,14 +63,16 @@
 #  include <netinet/in.h>
 #  include <linux/pfkeyv2.h>
 #  include <linux/ipsec.h>
+#  include <linux/udp.h>
 # else
 #  include <unistd.h>
 #  include <string.h>
 #  include <errno.h>
 #  include <fcntl.h>
 #  include <sys/socket.h>
-#  include <netinet/in.h>
 #  include <net/pfkeyv2.h>
+#  include <netinet/in.h>
+#  include <netinet/udp.h>
 #  include <netinet6/ipsec.h>
 # endif
 #endif
@@ -137,6 +139,7 @@
 #define NAME_SPDIR			7
 #define NAME_SPMODE			8
 #define NAME_SPLEVEL		9
+#define NAME_NTTYPE			10
 
 #define PFKI_WINDSIZE		4
 

@@ -1447,7 +1447,10 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 		"ii : - auth = %s\n"
 		"ii : - akey = %i bits\n"
 		"ii : - hard = %i\n"
-		"ii : - soft = %i\n",
+		"ii : - soft = %i\n"
+		"ii : - natt = %s\n"
+		"ii : - nsrc = %i\n"
+		"ii : - ndst = %i\n",
 		ntohl( sainfo.sa.spi ),
 		txtid_src,
 		txtid_dst,
@@ -1456,7 +1459,12 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 		pfki.name( NAME_SAAUTH, sainfo.sa.auth ),
 		sainfo.akey.length * 8,
 		long( sainfo.ltime_hard.addtime ),
-		long( sainfo.ltime_soft.addtime ) );
+		long( sainfo.ltime_soft.addtime ),
+		pfki.name( NAME_NTTYPE, sainfo.natt.type ),
+		ntohs( sainfo.natt.port_src ),
+		ntohs( sainfo.natt.port_dst ) );
+
+	printf( "XX : NATT SET VALUE = %i\n", sainfo.natt.type );
 
 	pfki.send_update( sainfo );
 

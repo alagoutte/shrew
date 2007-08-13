@@ -1480,6 +1480,26 @@ char * _PFKI::name( long type, long value )
 					return unknown;
 			}
 		}
+
+		case NAME_NTTYPE:
+		{
+			static char * nattype_00 = "NONE";
+			static char * nattype_01 = "ESPINUDP";
+
+			printf( "XX : NATT GET VALUE = %i\n", value );
+
+			switch( value )
+			{
+				case 0:
+					return nattype_00;
+#ifdef OPT_NATT
+				case UDP_ENCAP_ESPINUDP:
+					return nattype_01;
+#endif
+				default:
+					return unknown;
+			}
+		}
 	}
 
 	return unknown;
