@@ -70,7 +70,6 @@ target_link_libraries(
 	pfk
 	crypt
 	crypto
-	rt
 	pthread )
 
 # linux realtime library
