@@ -1486,8 +1486,6 @@ char * _PFKI::name( long type, long value )
 			static char * nattype_00 = "NONE";
 			static char * nattype_01 = "ESPINUDP";
 
-			printf( "XX : NATT GET VALUE = %i\n", value );
-
 			switch( value )
 			{
 				case 0:

@@ -1464,8 +1464,6 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 		ntohs( sainfo.natt.port_src ),
 		ntohs( sainfo.natt.port_dst ) );
 
-	printf( "XX : NATT SET VALUE = %i\n", sainfo.natt.type );
-
 	pfki.send_update( sainfo );
 
 	return LIBIKE_OK;
