@@ -51,6 +51,26 @@ set(
 # PreRequisite Checks
 #
 
+find_package( OpenSSL )
+
+if( NOT OPENSSL_FOUND )
+
+	message(
+		FATAL_ERROR
+		"Unable to locate required package : OpenSSL" )
+
+endif( NOT OPENSSL_FOUND )
+
+find_package( Threads )
+
+if( NOT CMAKE_USE_PTHREADS_INIT )
+
+	message(
+		FATAL_ERROR
+		"Unable to locate required package : pthreads" )
+
+endif( NOT CMAKE_USE_PTHREADS_INIT )
+
 find_program(
 	PATH_BIN_FLEX
 	NAMES "flex"
@@ -280,17 +300,27 @@ endif( LDAP )
 
 if( QTGUI )
 
+	find_package( X11 )
+
+	if( NOT X11_FOUND )
+
+		message(
+			FATAL_ERROR
+			"Unable to locate required package : X11" )
+
+	endif( NOT X11_FOUND )
+		
 	add_definitions( -D QT_THREAD_SUPPORT )
 
 	set( QT_MT_REQUIRED TRUE )
 
-	FIND_PACKAGE( Qt3 )
+	find_package( Qt3 )
 
 	if( NOT QT_FOUND )
 
 		message(
 			FATAL_ERROR
-			"Unable to locate QT package" )
+			"Unable to locate required package : QT" )
 
 	endif( NOT QT_FOUND )
 		
