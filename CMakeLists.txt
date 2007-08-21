@@ -214,6 +214,7 @@ if( NATT )
 	check_c_source_compiles(
 		"
 		#ifdef __linux__
+		# include <inttypes.h>
 		# include <linux/pfkeyv2.h>
 		#else
 		# include <sys/types.h>

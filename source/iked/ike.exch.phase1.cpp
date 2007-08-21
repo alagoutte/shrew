@@ -291,7 +291,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					break;
 				}
 
-				if( !( ph1->xstate & XSTATE_RECV_NDR ) )
+//				if( !( ph1->xstate & XSTATE_RECV_NDR ) )
 				{
 					result = payload_get_natd( packet, ph1->natd_rs, ph1->hash_size );
 					ph1->xstate |= XSTATE_RECV_NDR;
