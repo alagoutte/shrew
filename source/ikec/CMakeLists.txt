@@ -42,8 +42,8 @@ add_executable(
 	ikec
 	main.cpp
 	ikec.cpp
-	images.cpp
 	../ikea/config.cpp
+	images.cxx
 	${CPP_FILES} )
 
 target_link_libraries(
@@ -58,9 +58,9 @@ target_link_libraries(
 add_custom_command(  
 	SOURCE ${IMG_FILES}
         COMMAND ${QT_UIC_EXECUTABLE}
-        ARGS -embed ${IMG_FILES} -o images.cpp
+        ARGS -embed ikec ${IMG_FILES} -o images.cxx
         TARGET ikec
-        OUTPUTS images.cpp )
+        OUTPUTS images.cxx )
 
 # install support
 

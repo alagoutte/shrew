@@ -300,16 +300,6 @@ endif( LDAP )
 
 if( QTGUI )
 
-	find_package( X11 )
-
-	if( NOT X11_FOUND )
-
-		message(
-			FATAL_ERROR
-			"Unable to locate required package : X11" )
-
-	endif( NOT X11_FOUND )
-		
 	add_definitions( -D QT_THREAD_SUPPORT )
 
 	set( QT_MT_REQUIRED TRUE )
