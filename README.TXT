@@ -67,11 +67,11 @@ incomplete.
 Optional
 --------------------------------------------------------------------------------
 
-qt >= 3.3 ( multithreaded version, qt-mt )
+TrollTech QT >= 3.3 ( multithreaded version, qt-mt )
 openldap >= 2.0
 
 The Trolltech QT toolkit version 3.3.x or higher is also required if you plan
-to build the qt client front end applications. Version 4.x has not been tested
+to build the QT client front end applications. Version 4.x has not been tested
 and is not supported. The openldap support is only required if you plan to use
 iked to facilitate VPN client gateway connectivity and require xauth support
 via an external LDAP database.
@@ -225,7 +225,7 @@ make install
 USAGE
 ================================================================================
 
-The main process that handles ike negotiations is iked and must be run as root.
+The main process that handles IKE negotiations is iked and must be run as root.
 By default, it will detach itself from the terminal and execute as a daemon. To
 force foreground operation, use the -F switch. A sample configuration file is
 included in this distribution and will be installed in the etc system
