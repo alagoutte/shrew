@@ -43,15 +43,18 @@ REQUIREMENTS
 ================================================================================
 
 This section describes the basic requirements used to compile this software. In
-most cases, development versions of the required dependencies will need to be
-installed. These should be available as pre-compiled packages or could
-optionally be compiled from source.
+most cases, development versions of the dependencies will need to be installed.
+These could be available as pre-compiled packages or compiled directly from
+source.
 
 Minimum
 --------------------------------------------------------------------------------
 
 c++ compiler
-pthreads
+stock c libs
+stock c includes
+pthread support
+
 lex or flex
 bison >= 2.3
 cmake >= 2.4
@@ -154,6 +157,18 @@ The following options are recommended when running the cmake configuration
 for NetBSD. Please see the OPTIONS section for more details.
 
 cmake -DQTGUI=YES -DNATT=YES
+
+NetBSD also appears to require several environment variables to be set when
+compiling and using the QT front end applications. For example, the following
+lines were added to the users ~/.profie script when testing this software for
+NetBSD ...
+
+QTDIR=/usr/pkg/qt3
+QMAKESPEC=netbsd-g++
+PATH=${PATH}:${QTDIR}/bin
+LD_LIBRARY_PATH=/usr/pkg/qt3/lib/:/usr/X11R6/lib
+
+export PATH QTDIR QMAKESPEC LD_LIBRARY_PATH
 
 Linux
 --------------------------------------------------------------------------------
