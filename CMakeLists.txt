@@ -43,8 +43,8 @@ set(
 
 set(
 	SEARCH_SYS
-	/usr/share
 	/usr/local
+	/usr/share
 	/usr )
 
 #
