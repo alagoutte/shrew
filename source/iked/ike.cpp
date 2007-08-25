@@ -123,7 +123,7 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	// after ike encapsulation overhead
 	//
 
-	long encap_size = 0;
+	size_t encap_size = 0;
 
 	// account for udp header length
 	encap_size += sizeof( UDP_HEADER );
@@ -138,7 +138,7 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	//
 
 	bool packet_frag = false;
-	long packet_left = packet.size();
+	size_t packet_left = packet.size();
 
 	if( ph1->frag_l && ph1->frag_r )
 		if( ( packet_left + encap_size ) > ph1->tunnel->peer->frag_ike_size )
@@ -155,8 +155,8 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 		// calculate the max fragment payload size
 		//
 
-		long frag_max = ph1->tunnel->peer->frag_ike_size - encap_size;
-		long frag_sent = packet.size() - packet_left;
+		size_t frag_max = ph1->tunnel->peer->frag_ike_size - encap_size;
+		size_t frag_sent = packet.size() - packet_left;
 
 		//
 		// set out initial fragment index
@@ -179,7 +179,7 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 			// possible
 			//
 
-			long frag_size = packet_left;
+			size_t frag_size = packet_left;
 
 			//
 			// create ike fragment using the
@@ -354,7 +354,7 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 	//
 
 	unsigned char *	data = packet.buff();
-	long		    size = packet.size();
+	size_t		    size = packet.size();
 
 	if( data[ ISAKMP_FLAGS_OFFSET ] & ISAKMP_FLAG_ENCRYPT )
 	{
@@ -385,31 +385,35 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 		EVP_CIPHER_CTX ctx_cipher;
 		EVP_CIPHER_CTX_init( &ctx_cipher );
 
-		EVP_CipherInit_ex( &ctx_cipher,
-							sa->evp_cipher,
-							NULL,
-							NULL,
-							NULL,
-							0 );
+		EVP_CipherInit_ex(
+			&ctx_cipher,
+			sa->evp_cipher,
+			NULL,
+			NULL,
+			NULL,
+			0 );
 
-//		if( sa->transform.ciph_kl )
-			EVP_CIPHER_CTX_set_key_length( &ctx_cipher, sa->key.size() );
+		EVP_CIPHER_CTX_set_key_length(
+			&ctx_cipher,
+			( int ) sa->key.size() );
 
-		EVP_CipherInit_ex( &ctx_cipher,
-							NULL,
-							NULL,
-							sa->key.buff(),
-							iv->buff(),
-							0 );
+		EVP_CipherInit_ex(
+			&ctx_cipher,
+			NULL,
+			NULL,
+			sa->key.buff(),
+			iv->buff(),
+			0 );
 
 		//
 		// decrypt all but header
 		//
 
-		EVP_Cipher( &ctx_cipher,
-					data + ISAKMP_HEADER_SIZE,
-					data + ISAKMP_HEADER_SIZE,
-					size - ISAKMP_HEADER_SIZE );
+		EVP_Cipher(
+			&ctx_cipher,
+			data + ISAKMP_HEADER_SIZE,
+			data + ISAKMP_HEADER_SIZE,
+			( int ) size - ISAKMP_HEADER_SIZE );
 
 		EVP_CIPHER_CTX_cleanup( &ctx_cipher );
 
@@ -447,12 +451,12 @@ long _IKED::packet_ike_encrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 	//
 
 	unsigned char *	data = packet.buff();
-	long		    size = packet.size();
+	size_t		    size = packet.size();
 
 	if( data[ ISAKMP_FLAGS_OFFSET ] & ISAKMP_FLAG_ENCRYPT )
 	{
 		unsigned char *	encr = 0;
-		long			padd = 0;
+		size_t			padd = 0;
 
 		log.bin(
 			LOG_DEBUG,
@@ -472,8 +476,8 @@ long _IKED::packet_ike_encrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 		// determine padding
 		//
 
-		long plen = size - ISAKMP_HEADER_SIZE;
-		long blen = EVP_CIPHER_block_size( sa->evp_cipher );
+		size_t plen = size - ISAKMP_HEADER_SIZE;
+		size_t blen = EVP_CIPHER_block_size( sa->evp_cipher );
 
 		if( plen % blen )
 			padd += blen - plen % blen;
@@ -498,27 +502,31 @@ long _IKED::packet_ike_encrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 		EVP_CIPHER_CTX ctx_cipher;
 		EVP_CIPHER_CTX_init( &ctx_cipher );
 
-		EVP_CipherInit_ex( &ctx_cipher,
-							sa->evp_cipher,
-							NULL,
-							NULL,
-							NULL,
-							1 );
+		EVP_CipherInit_ex(
+			&ctx_cipher,
+			sa->evp_cipher,
+			NULL,
+			NULL,
+			NULL,
+			1 );
 
-//		if( sa->transform.ciph_kl )
-			EVP_CIPHER_CTX_set_key_length( &ctx_cipher, sa->key.size() );
+		EVP_CIPHER_CTX_set_key_length(
+			&ctx_cipher,
+			( int ) sa->key.size() );
 
-		EVP_CipherInit_ex( &ctx_cipher,
-							NULL,
-							NULL,
-							sa->key.buff(),
-							iv->buff(),
-							1 );
+		EVP_CipherInit_ex(
+			&ctx_cipher,
+			NULL,
+			NULL,
+			sa->key.buff(),
+			iv->buff(),
+			1 );
 
-		EVP_Cipher( &ctx_cipher,
-					encr + ISAKMP_HEADER_SIZE,
-					encr + ISAKMP_HEADER_SIZE,
-					size - ISAKMP_HEADER_SIZE + padd );
+		EVP_Cipher(
+			&ctx_cipher,
+			encr + ISAKMP_HEADER_SIZE,
+			encr + ISAKMP_HEADER_SIZE,
+			( int ) size + padd - ISAKMP_HEADER_SIZE );
 
 		EVP_CIPHER_CTX_cleanup( &ctx_cipher );
 

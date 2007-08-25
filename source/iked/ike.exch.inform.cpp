@@ -88,7 +88,7 @@ long _IKED::process_inform_send( IDB_PH1 * ph1, IDB_XCH * inform )
 	// optionally add null hash payload
 	//
 
-	long off = packet.size();
+	size_t off = packet.size();
 
 	if( flags & ISAKMP_FLAG_ENCRYPT )
 	{
@@ -100,7 +100,7 @@ long _IKED::process_inform_send( IDB_PH1 * ph1, IDB_XCH * inform )
 	// add all notify / delete payloads
 	//
 
-	long beg = packet.size();
+	size_t beg = packet.size();
 
 	long nindex = 0;
 
@@ -142,7 +142,7 @@ long _IKED::process_inform_send( IDB_PH1 * ph1, IDB_XCH * inform )
 		}
 	}
 
-	long end = packet.size();
+	size_t end = packet.size();
 
 	inform->hda.add( packet.buff() + beg, end - beg );
 
@@ -278,9 +278,9 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_NOTIFY:
 			{
 				IKE_NOTIFY notify;
-				long beg = packet.oset() - 4;
+				size_t beg = packet.oset() - 4;
 				result = payload_get_notify( packet, &notify );
-				long end = packet.oset();
+				size_t end = packet.oset();
 				inform.hda.set( packet.buff() + beg, end - beg );
 
 				if( result == LIBIKE_OK )
@@ -296,9 +296,9 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_DELETE:
 			{
 				IKE_NOTIFY notify;
-				long beg = packet.oset() - 4;
+				size_t beg = packet.oset() - 4;
 				result = payload_get_delete( packet, &notify );
-				long end = packet.oset();
+				size_t end = packet.oset();
 				inform.hda.set( packet.buff() + beg, end - beg );
 
 				if( result == LIBIKE_OK )
@@ -327,7 +327,7 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		// was the entire payload read
 		//
 
-		long bytes_left;
+		size_t bytes_left;
 		packet.chk_payload( bytes_left );
 		if( bytes_left )
 			log.txt( LOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
@@ -389,7 +389,7 @@ long _IKED::inform_chk_hash( IDB_PH1 * ph1, IDB_XCH * inform )
 	hash_c.set( 0, ph1->hash_size );
 
 	HMAC_CTX ctx_prf;
-	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ph1->skeyid_a.size(), ph1->evp_hash );
+	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ( int ) ph1->skeyid_a.size(), ph1->evp_hash );
 	HMAC_Update( &ctx_prf, ( unsigned char * ) &inform->msgid, 4 );
 	HMAC_Update( &ctx_prf, inform->hda.buff(), inform->hda.size() );
 	HMAC_Final( &ctx_prf, hash_c.buff(), NULL );
@@ -426,7 +426,7 @@ long _IKED::inform_gen_hash( IDB_PH1 * ph1, IDB_XCH * inform )
 	inform->hash_l.set( 0, ph1->hash_size );
 
 	HMAC_CTX ctx_prf;
-	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ph1->skeyid_a.size(), ph1->evp_hash );
+	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ( int ) ph1->skeyid_a.size(), ph1->evp_hash );
 	HMAC_Update( &ctx_prf, ( unsigned char * ) &inform->msgid, sizeof( inform->msgid ) );
 	HMAC_Update( &ctx_prf, inform->hda.buff(), inform->hda.size() );
 	HMAC_Final( &ctx_prf, inform->hash_l.buff(), 0 );

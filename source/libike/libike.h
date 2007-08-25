@@ -106,7 +106,7 @@ typedef struct _IKEI_MSG
 {
 	long		peer;
 	long		type;
-	long		size;
+	size_t		size;
 
 }IKEI_MSG, *pIKEI_MSG;
 
@@ -114,7 +114,7 @@ typedef struct _IKEI_MSG_BASIC
 {
 	IKEI_MSG	msg;
 	long		value;
-	long		bsize;
+	size_t		bsize;
 
 }IKEI_MSG_BASIC;
 
@@ -153,13 +153,13 @@ typedef class DLX _IKEI
 	IKEI_MSG	tmsg;
 
 	long	wait_msg( IKEI_MSG & msg, long timeout );
-	long	recv_msg( void * data, unsigned long & size );
-	long	send_msg( void * data, unsigned long size );
-	long	peek_msg( void * data, unsigned long size );
+	long	recv_msg( void * data, size_t & size );
+	long	send_msg( void * data, size_t size );
+	long	peek_msg( void * data, size_t size );
 
-	long	recv_basic( long type, long * value, void * bdata, long * bsize );
-	long	send_basic( long type, long value, void * bdata, long bsize );
-	long	send_bidir( long type, long value, void * bdata, long bsize, long * msgres );
+	long	recv_basic( long type, long * value, void * bdata, size_t * bsize );
+	long	send_basic( long type, long value, void * bdata, size_t bsize );
+	long	send_bidir( long type, long value, void * bdata, size_t bsize, long * msgres );
 
 	public:
 
@@ -173,7 +173,7 @@ typedef class DLX _IKEI
 
 	long	send_msg_result( long msgres );
 
-	long	recv_msg_status( long * status, char * str, long & len );
+	long	recv_msg_status( long * status, char * str, size_t & len );
 	long	send_msg_status( long status, char * str, long * msgres = NULL );
 
 	long	recv_msg_stats( IKEI_STATS * stats );
@@ -194,8 +194,8 @@ typedef class DLX _IKEI
 	long	recv_msg_network( IKE_PH2ID * ph2id, long * type );
 	long	send_msg_network( IKE_PH2ID * ph2id, long type, long * msgres = NULL );
 
-	long	recv_msg_cfgstr( long * type, char * str, long * len );
-	long	send_msg_cfgstr( long type, char * str, long len, long * msgres = NULL );
+	long	recv_msg_cfgstr( long * type, char * str, size_t * len );
+	long	send_msg_cfgstr( long type, char * str, size_t len, long * msgres = NULL );
 
 }IKEI;
 

@@ -41,7 +41,7 @@
 
 #include "iked.h"
 
-long _IKED::payload_add_frag( PACKET_IKE & packet, unsigned char & index, unsigned char * data, long & size, long max )
+long _IKED::payload_add_frag( PACKET_IKE & packet, unsigned char & index, unsigned char * data, size_t & size, size_t max )
 {
 	log.txt( LOG_DEBUG, ">> : fragment payload\n" );
 
@@ -67,11 +67,26 @@ long _IKED::payload_add_frag( PACKET_IKE & packet, unsigned char & index, unsign
 		flags |= IKE_FRAG_FLAG_LAST;
 
 	//
+	// sanity check size to make
+	// sure it doesn't overflow
+	// the 16bit value ( really
+	// should never happen )
+	//
+
+	if( ( size + 8 ) > 0xFFFF )
+	{
+		log.txt( LOG_DEBUG, "!! : ike fragment length > 16bit\n" );
+		return LIBIKE_FAILED;
+	}
+
+	uint16_t total = ( uint16_t ) size + 8;
+
+	//
 	// write the fragment header
 	//
 
 	packet.add_word( 0 );		// always set to 0 ?
-	packet.add_word( size + 8 );
+	packet.add_word( total );
 	packet.add_word( 1 );		// always set to 1 ?
 	packet.add_byte( index );
 	packet.add_byte( flags );
@@ -113,7 +128,7 @@ long _IKED::payload_get_frag( PACKET_IKE & packet, IDB_PH1 * ph1, bool & complet
 	// perform some sanity check
 	//
 
-	long data_size = packet.size() - packet.oset();
+	size_t data_size = packet.size() - packet.oset();
 	if( data_size < size )
 	{
 		log.txt( LOG_ERROR, "!! : packet size is invalid for given fragment size\n" );
@@ -685,14 +700,14 @@ long _IKED::payload_get_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal )
 			break;
 	}
 
-	long pld_length;
-	packet.chk_payload( pld_length );
+	size_t size;
+	packet.chk_payload( size );
 
 	uint32_t lvalue = 0;
 	uint16_t svalue = 0;
 	uint16_t ltype = 0;
 	
-	while( pld_length )
+	while( size )
 	{
 		uint16_t attrib;
 		uint16_t length;
@@ -952,7 +967,7 @@ long _IKED::payload_get_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal )
 			}
 		}
 
-		packet.chk_payload( pld_length );
+		packet.chk_payload( size );
 	}
 
 	//
@@ -987,7 +1002,7 @@ long _IKED::payload_get_kex( PACKET_IKE & packet, BDATA & gx )
 	// read key exchange payload
 	//
 
-	long size;
+	size_t size;
 	packet.chk_payload( size );
 
 	if( size > LIBIKE_MAX_DHGRP )
@@ -1030,7 +1045,7 @@ long _IKED::payload_get_nonce( PACKET_IKE & packet, BDATA & nonce )
 	// read nonce payload
 	//
 
-	long size;
+	size_t size;
 	packet.chk_payload( size );
 
 	if( ( size < ISAKMP_NONCE_MIN ) ||
@@ -1108,7 +1123,7 @@ long _IKED::payload_get_ph1id( PACKET_IKE & packet, IKE_PH1ID & ph1id )
 	uint16_t	r_port;
 	uint32_t	temp = 0;
 
-	long		size;
+	size_t		size;
 
 	packet.get_byte( ph1id.type );			// id type
 	packet.get_byte( r_prot );				// protocol ( ignore )
@@ -1278,7 +1293,7 @@ long _IKED::payload_get_cert( PACKET_IKE & packet, uint8_t & type, BDATA & cert 
 	// read certificate payload
 	//
 
-	long size;
+	size_t size;
 	packet.chk_payload( size );
 	size--;
 
@@ -1340,7 +1355,7 @@ long _IKED::payload_get_creq( PACKET_IKE & packet, uint8_t & type )
 		return LIBIKE_DECODE;
 	}
 
-	long size;
+	size_t size;
 	packet.chk_payload( size );
 
 	if( size > ISAKMP_CREQ_MAX )
@@ -1389,7 +1404,7 @@ long _IKED::payload_get_sign( PACKET_IKE & packet, BDATA & sign )
 	// read signature payload
 	//
 
-	long size;
+	size_t size;
 	packet.chk_payload( size );
 
 	if( size > ISAKMP_SIGN_MAX )
@@ -1432,7 +1447,7 @@ long _IKED::payload_get_hash( PACKET_IKE & packet, BDATA & hash, long hash_size 
 	// read hash payload
 	//
 
-	long size;
+	size_t size;
 	packet.chk_payload( size );
 
 	if( size != hash_size )
@@ -1475,7 +1490,7 @@ long _IKED::payload_get_vend( PACKET_IKE & packet, BDATA & vend )
 	// read vendor id payload
 	//
 
-	long size;
+	size_t size;
 	packet.chk_payload( size );
 
 	//
@@ -1555,7 +1570,7 @@ long _IKED::payload_get_cfglist( PACKET_IKE & packet, IDB_CFG * cfg )
 	// get remaining payload length
 	//
 
-	long size;
+	size_t size;
 	packet.chk_payload( size );
 
 	while( size )
@@ -1632,7 +1647,7 @@ long _IKED::payload_get_natd( PACKET_IKE & packet, BDATA & natd, long natd_size 
 	// read hash payload
 	//
 
-	long size;
+	size_t size;
 	packet.chk_payload( size );
 
 	if( size != natd_size )
@@ -1739,7 +1754,7 @@ long _IKED::payload_get_notify( PACKET_IKE & packet, IKE_NOTIFY * notify )
 	// read any extra notify data
 	//
 
-	long size;
+	size_t size;
 	packet.chk_payload( size );
 	packet.get( notify->data, size );
 

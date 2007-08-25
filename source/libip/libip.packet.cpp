@@ -62,7 +62,7 @@ bool _PACKET::add_quad( uint32_t data, bool hton )
 	return add( &data, sizeof( data ) );
 }
 
-bool _PACKET::add_null( long size )
+bool _PACKET::add_null( size_t size )
 {
 	return add( 0, size );
 }
@@ -94,7 +94,7 @@ bool _PACKET::get_quad( uint32_t & data, bool ntoh )
 	return true;
 }
 
-bool _PACKET::get_null( long size )
+bool _PACKET::get_null( size_t size )
 {
 	return get( ( void * ) NULL, size );
 }

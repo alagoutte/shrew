@@ -58,7 +58,7 @@ bool _BDATA::set( _BDATA & bdata )
 	return set( ( char * ) bdata.buff(), bdata.size() );
 }
 
-bool _BDATA::set( int value, long size )
+bool _BDATA::set( int value, size_t size )
 {
 	if( !set( ( void * ) NULL, size ) )
 		return false;
@@ -68,12 +68,12 @@ bool _BDATA::set( int value, long size )
 	return true;
 }
 
-bool _BDATA::set( char * buff, long size )
+bool _BDATA::set( char * buff, size_t size )
 {
 	return set( ( void * ) buff, size );
 }
 
-bool _BDATA::set( void * buff, long size )
+bool _BDATA::set( void * buff, size_t size )
 {
 	unsigned char * new_buff = new unsigned char[ size ];
 	if( !new_buff )
@@ -91,12 +91,12 @@ bool _BDATA::set( void * buff, long size )
 	return true;
 }
 
-bool _BDATA::ins( _BDATA & bdata, long oset )
+bool _BDATA::ins( _BDATA & bdata, size_t oset )
 {
 	return ins( bdata.buff(), bdata.size(),	oset );
 }
 
-bool _BDATA::ins( int value, long size, long oset )
+bool _BDATA::ins( int value, size_t size, size_t oset )
 {
 	if( !ins( ( void * ) NULL, size, oset ) )
 		return false;
@@ -106,17 +106,17 @@ bool _BDATA::ins( int value, long size, long oset )
 	return true;
 }
 
-bool _BDATA::ins( char * buff, long size, long oset )
+bool _BDATA::ins( char * buff, size_t size, size_t oset )
 {
 	return ins( ( void * ) buff, size );
 }
 
-bool _BDATA::ins( void * buff, long size, long oset )
+bool _BDATA::ins( void * buff, size_t size, size_t oset )
 {
 	if( data_size < oset )
 		return false;
 
-	unsigned long	new_size = data_size + size;
+	size_t	new_size = data_size + size;
 	unsigned char * new_buff = new unsigned char[ new_size ];
 	if( !new_buff )
 		return false;
@@ -150,7 +150,7 @@ bool _BDATA::add( _BDATA & bdata )
 	return add( bdata.buff(), bdata.size() );
 }
 
-bool _BDATA::add( int value, long size )
+bool _BDATA::add( int value, size_t size )
 {
 	if( !add( ( void * ) NULL, size ) )
 		return false;
@@ -160,14 +160,14 @@ bool _BDATA::add( int value, long size )
 	return true;
 }
 
-bool _BDATA::add( char * buff, long size )
+bool _BDATA::add( char * buff, size_t size )
 {
 	return add( ( void * ) buff, size );
 }
 
-bool _BDATA::add( void * buff, long size )
+bool _BDATA::add( void * buff, size_t size )
 {
-	unsigned long	new_size = data_size + size;
+	size_t	new_size = data_size + size;
 	unsigned char * new_buff = new unsigned char[ new_size ];
 	if( !new_buff )
 		return false;
@@ -186,7 +186,7 @@ bool _BDATA::add( void * buff, long size )
 	return true;
 }
 
-bool _BDATA::get( _BDATA & bdata, long size )
+bool _BDATA::get( _BDATA & bdata, size_t size )
 {
 	if( size == -1 )
 		size = data_size - data_oset;
@@ -196,12 +196,12 @@ bool _BDATA::get( _BDATA & bdata, long size )
 	return get( bdata.buff(), bdata.size() );
 }
 
-bool _BDATA::get( char * buff, long size )
+bool _BDATA::get( char * buff, size_t size )
 {
 	return get( ( void * ) buff, size );
 }
 
-bool _BDATA::get( void * buff, long size )
+bool _BDATA::get( void * buff, size_t size )
 {
 	if( size > ( data_size - data_oset ) )
 		return false;
@@ -218,7 +218,7 @@ bool _BDATA::get( void * buff, long size )
 	return true;
 }
 
-bool _BDATA::dec( long size )
+bool _BDATA::dec( size_t size )
 {
 	if( size > data_size )
 		return false;
@@ -253,12 +253,12 @@ unsigned char * _BDATA::buff()
 	return data_buff;
 }
 
-long _BDATA::size()
+size_t _BDATA::size()
 {
 	return data_size;
 }
 
-long _BDATA::oset()
+size_t _BDATA::oset()
 {
 	return data_oset;
 }

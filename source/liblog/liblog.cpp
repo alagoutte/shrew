@@ -188,7 +188,7 @@ void _LOG::txt( long level, char * fmt, ... )
 	}
 }
 
-void _LOG::bin( long level, long blevel, void * bin, long len, char * fmt, ... )
+void _LOG::bin( long level, long blevel, void * bin, size_t len, char * fmt, ... )
 {
 	//
 	// FIXME : Review for buffer overflows
@@ -226,7 +226,7 @@ void _LOG::bin( long level, long blevel, void * bin, long len, char * fmt, ... )
 		char * cdata = ( char * ) bin;
 		char * bdata = bbuff + size;
 
-		for( long index = 0; index < len; index ++ )
+		for( size_t index = 0; index < len; index ++ )
 		{
 			if( LOG_MAX_BIN - ( bdata - bbuff + size ) <= 8 )
 			{

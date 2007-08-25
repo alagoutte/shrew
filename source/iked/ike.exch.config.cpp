@@ -177,9 +177,9 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 			case ISAKMP_PAYLOAD_ATTRIB:
 			{
-				long beg = packet.oset() - 4;
+				size_t beg = packet.oset() - 4;
 				result = payload_get_cfglist( packet, cfg );
-				long end = packet.oset();
+				size_t end = packet.oset();
 				cfg->hda.set( packet.buff() + beg, end - beg );
 
 				break;
@@ -205,7 +205,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		// was the entire payload read
 		//
 
-		long bytes_left;
+		size_t bytes_left;
 		packet.chk_payload( bytes_left );
 		if( bytes_left )
 			log.txt( LOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
@@ -1552,7 +1552,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 
 				if( ( readmask & IPSEC_OPTS_DOMAIN ) && attr->vdata.size() )
 				{
-					long nlen = attr->vdata.size();
+					size_t nlen = attr->vdata.size();
 					if( nlen > ( CONF_STRLEN - 1 ) )
 						nlen = ( CONF_STRLEN - 1 );
 
@@ -1581,7 +1581,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 					attr->vdata.add( 0, 1 );
 
 					unsigned char *	dnsstr = attr->vdata.buff();
-					long			dnslen = 0;
+					size_t			dnslen = 0;
 
 					while( dnslen < ( attr->vdata.size() - 1 ) )
 					{
@@ -1591,7 +1591,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 							dnsstr += 1;
 						}
 
-						long tmplen = strlen( ( char * ) dnsstr ) + 1;
+						size_t tmplen = strlen( ( char * ) dnsstr ) + 1;
 
 						BDATA suffix;
 						suffix.set( dnsstr, tmplen );
@@ -1620,7 +1620,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 
 				if( ( readmask & IPSEC_OPTS_SPLITNET ) && attr->vdata.size() )
 				{
-					int net_count = attr->vdata.size() / sizeof( IKE_UNITY_NET );
+					int net_count = int( attr->vdata.size() / sizeof( IKE_UNITY_NET ) );
 					int net_index = 0;
 
 					for( ; net_index < net_count; net_index++ )
@@ -1688,7 +1688,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 				{
 					cfg->tunnel->banner.add( 0, 1 );
 
-					long size = 15;
+					size_t size = 15;
 					char text[ 16 ] = { 0 };
 					if( size > attr->vdata.size() )
 						size = attr->vdata.size();
@@ -1737,7 +1737,7 @@ long _IKED::config_chk_hash( IDB_PH1 * ph1, IDB_CFG * cfg, unsigned long msgid )
 	hash_c.set( 0, ph1->hash_size );
 
 	HMAC_CTX ctx_prf;
-	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ph1->skeyid_a.size(), ph1->evp_hash );
+	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ( int ) ph1->skeyid_a.size(), ph1->evp_hash );
 	HMAC_Update( &ctx_prf, ( unsigned char * ) &msgid, 4 );
 	HMAC_Update( &ctx_prf, cfg->hda.buff(), cfg->hda.size() );
 	HMAC_Final( &ctx_prf, hash_c.buff(), NULL );
@@ -1781,15 +1781,13 @@ long _IKED::config_message_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 	packet.write( ph1->cookies, ISAKMP_PAYLOAD_HASH, ISAKMP_EXCH_CONFIG, ISAKMP_FLAG_ENCRYPT );
 
-	long off = packet.size();
+	size_t off = packet.size();
 
 	payload_add_hash( packet, hash, ISAKMP_PAYLOAD_ATTRIB );
 
-	long beg = packet.size();
-
+	size_t beg = packet.size();
 	payload_add_cfglist( packet, cfg, ISAKMP_PAYLOAD_NONE );
-
-	long end = packet.size();
+	size_t end = packet.size();
 
 	packet.done();
 
@@ -1798,7 +1796,7 @@ long _IKED::config_message_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 	//
 
 	HMAC_CTX ctx_prf;
-	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ph1->skeyid_a.size(), ph1->evp_hash );
+	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ( int ) ph1->skeyid_a.size(), ph1->evp_hash );
 	HMAC_Update( &ctx_prf, ( unsigned char * ) &cfg->msgid, sizeof( cfg->msgid ) );
 	HMAC_Update( &ctx_prf, packet.buff() + beg, end - beg );
 	HMAC_Final( &ctx_prf, hash.buff(), 0 );

@@ -103,7 +103,7 @@ void _PCAP_DUMP::close()
 	}
 }
 
-bool _PCAP_DUMP::dump( unsigned char * buff, long size )
+bool _PCAP_DUMP::dump( unsigned char * buff, size_t size )
 {
 	if( fp == NULL )
 		return false;
@@ -111,8 +111,8 @@ bool _PCAP_DUMP::dump( unsigned char * buff, long size )
 	pcap_pkthdr pph;
 	pph.ts_sec = 0;
 	pph.ts_usec = 0;
-	pph.caplen = size;
-	pph.len = size;
+	pph.caplen = ( uint32_t ) size;
+	pph.len = ( uint32_t ) size;
 
 	fwrite( &pph, sizeof( pph ), 1, fp );
 	fwrite( buff, size, 1, fp );
@@ -128,8 +128,8 @@ bool _PCAP_DUMP::dump( ETH_HEADER & header, PACKET_IP & packet )
 	pcap_pkthdr pph;
 	pph.ts_sec = 0;
 	pph.ts_usec = 0;
-	pph.caplen = packet.size() + sizeof( ETH_HEADER );
-	pph.len = packet.size() + sizeof( ETH_HEADER );
+	pph.caplen = ( uint32_t ) packet.size() + sizeof( ETH_HEADER );
+	pph.len = ( uint32_t ) packet.size() + sizeof( ETH_HEADER );
 
 	fwrite( &pph, sizeof( pph ), 1, fp );
 	fwrite( &header, sizeof( header ), 1, fp );

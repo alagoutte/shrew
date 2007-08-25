@@ -77,7 +77,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 		long result;
 
 		char text[ MAX_PATH ];
-		long size = MAX_PATH;
+		size_t size = MAX_PATH;
 
 		//
 		// check for tunnel close

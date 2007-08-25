@@ -96,7 +96,7 @@ bool _PACKET_IKE::write( IKE_COOKIES & cookies, uint8_t payload, uint8_t exchang
 bool _PACKET_IKE::done()
 {
 	uint32_t * total = ( uint32_t * ) data_buff;
-	total[ 6 ] = htonl( data_size );
+	total[ 6 ] = htonl( ( unsigned long ) data_size );
 
 	return true;
 }
@@ -208,7 +208,7 @@ bool _PACKET_IKE::get_payload( bool encap, uint8_t & next_payload )
 	return true;
 }
 
-bool _PACKET_IKE::chk_payload( long & bytes_left )
+bool _PACKET_IKE::chk_payload( size_t & bytes_left )
 {
 	bytes_left = pld_stack[ pld_depth ].oset +
 				 pld_stack[ pld_depth ].size -

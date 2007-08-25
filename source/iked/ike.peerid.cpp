@@ -60,7 +60,7 @@ bool _IKED::gen_ph1id_l( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 						ph1id.varid ) )
 				{
 					char temp[ 512 ];
-					long size = ph1->tunnel->peer->iddata_l.size();
+					size_t size = ph1->tunnel->peer->iddata_l.size();
 					if( size > 511 )
 						size = 511;
 
@@ -127,7 +127,7 @@ bool _IKED::gen_ph1id_r( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 						ph1id.varid ) )
 				{
 					char temp[ 512 ];
-					long size = ph1->tunnel->peer->iddata_r.size();
+					size_t size = ph1->tunnel->peer->iddata_r.size();
 					if( size > 511 )
 						size = 511;
 

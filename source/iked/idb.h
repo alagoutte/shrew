@@ -64,8 +64,8 @@ typedef class _IDB_CFG IDB_CFG;
 
 typedef struct _IKE_PAYLOAD
 {
-	long	oset;
-	long	size;
+	size_t	oset;
+	size_t	size;
 
 }IKE_PAYLOAD;
 
@@ -94,7 +94,7 @@ typedef class _PACKET_IKE : public _PACKET
 	bool	get_payload( bool encap, uint8_t & next_payload );
 	void	end_payload( bool decap, bool write = true );
 
-	bool	chk_payload( long & bytes_left );
+	bool	chk_payload( size_t & bytes_left );
 
 	bool	write( IKE_COOKIES & cookies,
 					uint8_t payload,
@@ -581,7 +581,7 @@ typedef class _IDB_CFG : public IDB_XCH
 	IKE_ATTR *	attr_get( long index );
 	bool		attr_has( unsigned short atype );
 	bool		attr_add_b( unsigned short atype, unsigned short adata );
-	bool		attr_add_v( unsigned short atype, void * vdata, unsigned long size );
+	bool		attr_add_v( unsigned short atype, void * vdata, size_t size );
 
 	long		attr_count();						// get attribute count
 	void		attr_reset();						// reset attribute list

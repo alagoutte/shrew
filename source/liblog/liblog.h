@@ -104,7 +104,7 @@ typedef struct DLX _LOG
 	void	close();
 
 	void	txt( long level, char * fmt, ... );
-	void	bin( long level, long blevel, void * bin, long size, char * fmt, ... );
+	void	bin( long level, long blevel, void * bin, size_t size, char * fmt, ... );
 
 }LOG, *PLOG;
 

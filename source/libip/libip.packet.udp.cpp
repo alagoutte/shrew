@@ -44,13 +44,12 @@
 uint16_t _PACKET_UDP::checksum( in_addr addr_src, in_addr addr_dst )
 {
 	unsigned char * data = data_buff;
-	int size = data_size;
+	size_t size = data_size;
+	size_t oset = 0;
 
 	uint32_t cksum = 0;
 
-	long oset;
-
-	for( oset = 0; ( oset + 1 ) < size; oset += 2 )
+	for( ; ( oset + 1 ) < size; oset += 2 )
 	{
 		cksum += ( ( data[ oset ] << 8 ) & 0xff00 );
 		cksum += ( data[ oset + 1 ] & 0x00ff );

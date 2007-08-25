@@ -135,7 +135,7 @@ long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
 	return IKEI_OK;
 }
 
-long _IKEI::recv_msg( void * data, unsigned long & size )
+long _IKEI::recv_msg( void * data, size_t & size )
 {
 	//
 	// read the rest of the message
@@ -145,10 +145,15 @@ long _IKEI::recv_msg( void * data, unsigned long & size )
 
 	unsigned char * buff = ( unsigned char * ) data;
 
+	DWORD dwsize = DWORD( tmsg.size - sizeof( tmsg ) );
+
 	long result = ReadFile( hpipe,
-					buff + sizeof( IKEI_MSG ),
-					tmsg.size - sizeof( IKEI_MSG ),
-					&size, NULL );
+					buff + sizeof( tmsg ),
+					dwsize,
+					&dwsize,
+					NULL );
+
+	size = dwsize;
 
 	if( !result )
 	{
@@ -159,9 +164,13 @@ long _IKEI::recv_msg( void * data, unsigned long & size )
 	return IKEI_OK;
 }
 
-long _IKEI::send_msg( void * data, unsigned long size )
+long _IKEI::send_msg( void * data, size_t size )
 {
-	long result = WriteFile( hpipe, data, size, &size, &olapp );
+	DWORD dwsize = DWORD( size );
+
+	long result = WriteFile( hpipe, data, dwsize, &dwsize, &olapp );
+
+	size = dwsize;
 
 	if( !result )
 		if( GetLastError() == ERROR_BROKEN_PIPE )
@@ -271,13 +280,13 @@ long _IKEI::send_msg( void * data, unsigned long size )
 
 #endif
 
-long _IKEI::recv_basic( long type, long * value, void * bdata, long * bsize )
+long _IKEI::recv_basic( long type, long * value, void * bdata, size_t * bsize )
 {
 	char msg_buff[ MAX_BASIC_MSG ];
 
 	IKEI_MSG_BASIC *	msg_head = ( IKEI_MSG_BASIC * ) msg_buff;
 	char *				msg_data = ( char * ) ( msg_buff + sizeof( IKEI_MSG_BASIC ) );
-	unsigned long		msg_size = MAX_BASIC_MSG;
+	size_t				msg_size = MAX_BASIC_MSG;
 
 	long result;
 
@@ -303,13 +312,13 @@ long _IKEI::recv_basic( long type, long * value, void * bdata, long * bsize )
 	return IKEI_OK;
 }
 
-long _IKEI::send_basic( long type, long value, void * bdata, long bsize )
+long _IKEI::send_basic( long type, long value, void * bdata, size_t bsize )
 {
 	char msg_buff[ MAX_BASIC_MSG ];
 
 	IKEI_MSG_BASIC *	msg_head = ( IKEI_MSG_BASIC * ) msg_buff;
 	char *				msg_data = ( char * ) ( msg_buff + sizeof( IKEI_MSG_BASIC ) );
-	unsigned long		msg_size = sizeof( IKEI_MSG_BASIC ) + bsize;
+	size_t				msg_size = sizeof( IKEI_MSG_BASIC ) + bsize;
 
 	msg_head->msg.type = type;
 	msg_head->msg.size = msg_size;
@@ -321,7 +330,7 @@ long _IKEI::send_basic( long type, long value, void * bdata, long bsize )
 	return send_msg( msg_buff, msg_size );
 }
 
-long _IKEI::send_bidir( long type, long value, void * bdata, long bsize, long * msgres )
+long _IKEI::send_bidir( long type, long value, void * bdata, size_t bsize, long * msgres )
 {
 	long result;
 	
@@ -352,19 +361,20 @@ long _IKEI::send_msg_result( long msgres )
 	return send_basic( IKEI_MSGID_RESULT, msgres, NULL, 0 );
 }
 
-long _IKEI::recv_msg_status( long * status, char * str, long & len )
+long _IKEI::recv_msg_status( long * status, char * str, size_t & len )
 {
 	return recv_basic( IKEI_MSGID_STATUS, status, str, &len );
 }
 
 long _IKEI::send_msg_status( long status, char * str, long * msgres )
 {
-	return send_basic( IKEI_MSGID_STATUS, status, str, strlen( str ) );
+	long len = long( strlen( str ) );
+	return send_basic( IKEI_MSGID_STATUS, status, str, len );
 }
 
 long _IKEI::recv_msg_stats( IKEI_STATS * stats )
 {
-	long length = sizeof( IKEI_STATS );
+	size_t length = sizeof( IKEI_STATS );
 	return recv_basic( IKEI_MSGID_STATS, NULL, stats, &length ); 
 }
 
@@ -389,7 +399,7 @@ long _IKEI::recv_msg_enable( long * enable )
 
 long _IKEI::recv_msg_peer( IKE_PEER * peer )
 {
-	long length = sizeof( IKE_PEER );
+	size_t length = sizeof( IKE_PEER );
 	return recv_basic( IKEI_MSGID_PEER, NULL, peer, &length ); 
 }
 
@@ -400,7 +410,7 @@ long _IKEI::send_msg_peer( IKE_PEER * peer, long * msgres )
 
 long _IKEI::recv_msg_proposal( IKE_PROPOSAL * proposal )
 {
-	long length = sizeof( IKE_PROPOSAL );
+	size_t length = sizeof( IKE_PROPOSAL );
 	return recv_basic( IKEI_MSGID_PROPOSAL, NULL, proposal, &length ); 
 }
 
@@ -411,7 +421,7 @@ long _IKEI::send_msg_proposal( IKE_PROPOSAL * proposal, long * msgres )
 
 long _IKEI::recv_msg_client( IKE_XCONF * xconf )
 {
-	long length = sizeof( IKE_XCONF );
+	size_t length = sizeof( IKE_XCONF );
 	return recv_basic( IKEI_MSGID_CLIENT, NULL, xconf, &length ); 
 }
 
@@ -422,7 +432,7 @@ long _IKEI::send_msg_client( IKE_XCONF * xconf, long * msgres )
 
 long _IKEI::recv_msg_network( IKE_PH2ID * ph2id, long * type )
 {
-	long length = sizeof( IKE_PH2ID );
+	size_t length = sizeof( IKE_PH2ID );
 	return recv_basic( IKEI_MSGID_NETWORK, type, ph2id, &length ); 
 }
 
@@ -431,12 +441,12 @@ long _IKEI::send_msg_network( IKE_PH2ID * ph2id, long type, long * msgres )
 	return send_bidir( IKEI_MSGID_NETWORK, type, ph2id, sizeof( IKE_PH2ID ), msgres );
 }
 
-long _IKEI::recv_msg_cfgstr( long * type, char * str, long * len )
+long _IKEI::recv_msg_cfgstr( long * type, char * str, size_t * len )
 {
 	return recv_basic( IKEI_MSGID_CFGSTR, type, str, len );
 }
 
-long _IKEI::send_msg_cfgstr( long type, char * str, long len, long * msgres )
+long _IKEI::send_msg_cfgstr( long type, char * str, size_t len, long * msgres )
 {
 	return send_bidir( IKEI_MSGID_CFGSTR, type, str, len, msgres );
 }

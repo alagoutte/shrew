@@ -158,8 +158,8 @@ bool PACKET_DNS::read_name( char * name, long & size )
 		//
 		if( ( tag1 & 0xc0 ) == 0xc0 )
 		{
-			long tmp_oset = 0;
-			long new_oset = 0;
+			size_t tmp_oset = 0;
+			size_t new_oset = 0;
 
 			//
 			// its a pointer, recurse

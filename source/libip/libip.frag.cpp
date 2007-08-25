@@ -96,7 +96,7 @@ bool _IPFRAG::dnfrag( PACKET_IP & packet )
 	return false;
 }
 
-bool _IPFRAG::dofrag( PACKET_IP & packet, PACKET_IP & fragment, long & offset, long max_size )
+bool _IPFRAG::dofrag( PACKET_IP & packet, PACKET_IP & fragment, size_t & offset, size_t max_size )
 {
 	//
 	// determine packet ip header size
@@ -109,7 +109,7 @@ bool _IPFRAG::dofrag( PACKET_IP & packet, PACKET_IP & fragment, long & offset, l
 	// determine total payload size
 	//
 
-	long pld_size;
+	size_t pld_size;
 	pld_size = packet.size();
 	pld_size -= ip_hdsize;
 
@@ -117,18 +117,18 @@ bool _IPFRAG::dofrag( PACKET_IP & packet, PACKET_IP & fragment, long & offset, l
 	// determine fragment payload size
 	//
 
-	long frg_size;
+	size_t frg_size;
 	frg_size = pld_size;
 	frg_size -= offset;
 
-	if( frg_size > long( max_size - sizeof( IP_HEADER ) ) )
-		frg_size = long( max_size - sizeof( IP_HEADER ) );
+	if( frg_size > ( max_size - sizeof( IP_HEADER ) ) )
+		frg_size = ( max_size - sizeof( IP_HEADER ) );
 
 	//
 	// calculate payload left
 	//
 
-	long pld_left = 0;
+	size_t pld_left = 0;
 	pld_left = pld_size;
 	pld_left -= ( offset + frg_size );
 

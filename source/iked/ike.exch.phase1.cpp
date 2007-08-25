@@ -136,9 +136,9 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					log.txt( LOG_INFO, "<< : ignoring duplicate security association payload\n" );
 				else
 				{
-					long beg = packet.oset();
+					size_t beg = packet.oset();
 					result = payload_get_sa( packet, ph1->plist_r );
-					long end = packet.oset();
+					size_t end = packet.oset();
 
 					if( !ph1->initiator )
 						ph1->hda.set( packet.buff() + beg, end - beg );
@@ -188,9 +188,9 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					log.txt( LOG_INFO, "<< : ignoring duplicate id payload\n" );
 				else
 				{
-					long beg = packet.oset();
+					size_t beg = packet.oset();
 					result = payload_get_ph1id( packet, ph1->ph1id_r );
-					long end = packet.oset();
+					size_t end = packet.oset();
 
 					if( ph1->initiator )
 						ph1->idr.set( packet.buff() + beg, end - beg );
@@ -339,7 +339,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		// check that the entire payload was read
 		//
 
-		long bytes_left;
+		size_t bytes_left;
 		packet.chk_payload( bytes_left );
 		if( bytes_left )
 			log.txt( LOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
@@ -499,9 +499,9 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				// add sa payload
 				//
 
-				long beg = packet.size() + 4;
+				size_t beg = packet.size() + 4;
 				payload_add_sa( packet, ph1->plist_l, ISAKMP_PAYLOAD_VEND );
-				long end = packet.size();
+				size_t end = packet.size();
 
 				ph1->hda.set( packet.buff() + beg, end - beg );
 
@@ -621,11 +621,9 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						// add the local id payload
 						//
 
-						long pld_beg = packet.size() + 4;
-
+						size_t pld_beg = packet.size() + 4;
 						payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_HASH );
-
-						long pld_end = packet.size();
+						size_t pld_end = packet.size();
 
 						ph1->idi.set( packet.buff() + pld_beg, pld_end - pld_beg );
 
@@ -649,11 +647,9 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						// add the local id payload
 						//
 
-						long pld_beg = packet.size() + 4;
-
+						size_t pld_beg = packet.size() + 4;
 						payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_CERT );
-
-						long pld_end = packet.size();
+						size_t pld_end = packet.size();
 
 						ph1->idi.set( packet.buff() + pld_beg, pld_end - pld_beg );
 
@@ -800,11 +796,9 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 						packet.write( ph1->cookies, ISAKMP_PAYLOAD_IDENT, ph1->exchange, ISAKMP_FLAG_ENCRYPT );
 
-						long pld_beg = packet.size() + 4;
-
+						size_t pld_beg = packet.size() + 4;
 						payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_HASH );
-
-						long pld_end = packet.size();
+						size_t pld_end = packet.size();
 
 						ph1->idr.set( packet.buff() + pld_beg, pld_end - pld_beg );
 
@@ -852,11 +846,9 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 						packet.write( ph1->cookies, ISAKMP_PAYLOAD_IDENT, ph1->exchange, ISAKMP_FLAG_ENCRYPT );
 
-						long pld_beg = packet.size() + 4;
-
+						size_t pld_beg = packet.size() + 4;
 						payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_CERT );
-
-						long pld_end = packet.size();
+						size_t pld_end = packet.size();
 
 						ph1->idr.set( packet.buff() + pld_beg, pld_end - pld_beg );
 
@@ -916,9 +908,9 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				// add and store the sa payload
 				//
 
-				long beg = packet.size() + 4;
+				size_t beg = packet.size() + 4;
 				payload_add_sa( packet, ph1->plist_l, ISAKMP_PAYLOAD_KEX );
-				long end = packet.size();
+				size_t end = packet.size();
 
 				ph1->hda.set( packet.buff() + beg, end - beg );
 
@@ -1194,9 +1186,9 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						// add and store the phase1 id payload
 						//
 
-						long pld_beg = packet.size() + 4;
+						size_t pld_beg = packet.size() + 4;
 						payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_HASH );
-						long pld_end = packet.size();
+						size_t pld_end = packet.size();
 
 						ph1->idr.set( packet.buff() + pld_beg, pld_end - pld_beg );
 
@@ -1220,9 +1212,9 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						// add and store the phase1 id payload
 						//
 
-						long pld_beg = packet.size() + 4;
+						size_t pld_beg = packet.size() + 4;
 						payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_CERT );
-						long pld_end = packet.size();
+						size_t pld_end = packet.size();
 
 						ph1->idr.set( packet.buff() + pld_beg, pld_end - pld_beg );
 
@@ -1558,7 +1550,7 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 			HMAC_Init(
 				&ctx_prf,
 				ph1->tunnel->peer->psk.buff(),
-				ph1->tunnel->peer->psk.size(),
+				( int ) ph1->tunnel->peer->psk.size(),
 				ph1->evp_hash );
 
 			if( ph1->initiator )
@@ -1604,7 +1596,7 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 			}
 
 			HMAC_CTX ctx_prf;
-			HMAC_Init( &ctx_prf, nonce.buff(), nonce.size(), ph1->evp_hash );
+			HMAC_Init( &ctx_prf, nonce.buff(), ( int ) nonce.size(), ph1->evp_hash );
 			HMAC_Update( &ctx_prf, shared.buff(), shared.size() );
 			HMAC_Final( &ctx_prf, skeyid_data, NULL );
 			HMAC_cleanup( &ctx_prf );
@@ -1627,7 +1619,7 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	//
 
 	HMAC_CTX ctx_prf;
-	HMAC_Init( &ctx_prf, ph1->skeyid.buff(), ph1->skeyid.size(), ph1->evp_hash );
+	HMAC_Init( &ctx_prf, ph1->skeyid.buff(), ( int ) ph1->skeyid.size(), ph1->evp_hash );
 	HMAC_Update( &ctx_prf, shared.buff(), shared.size() );
 	HMAC_Update( &ctx_prf, ph1->cookies.i, ISAKMP_COOKIE_SIZE );
 	HMAC_Update( &ctx_prf, ph1->cookies.r, ISAKMP_COOKIE_SIZE );
@@ -1648,7 +1640,7 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	// compute SKEYID_a
 	//
 
-	HMAC_Init( &ctx_prf, ph1->skeyid.buff(), ph1->skeyid.size(), ph1->evp_hash );
+	HMAC_Init( &ctx_prf, ph1->skeyid.buff(), ( int ) ph1->skeyid.size(), ph1->evp_hash );
 	HMAC_Update( &ctx_prf, skeyid_data, skeyid_size );
 	HMAC_Update( &ctx_prf, shared.buff(), shared.size() );
 	HMAC_Update( &ctx_prf, ph1->cookies.i, ISAKMP_COOKIE_SIZE );
@@ -1670,7 +1662,7 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	// compute SKEYID_e
 	//
 
-	HMAC_Init( &ctx_prf, ph1->skeyid.buff(), ph1->skeyid.size(), ph1->evp_hash );
+	HMAC_Init( &ctx_prf, ph1->skeyid.buff(), ( int ) ph1->skeyid.size(), ph1->evp_hash );
 	HMAC_Update( &ctx_prf, skeyid_data, skeyid_size );
 	HMAC_Update( &ctx_prf, shared.buff(), shared.size() );
 	HMAC_Update( &ctx_prf, ph1->cookies.i, ISAKMP_COOKIE_SIZE );
@@ -1803,7 +1795,7 @@ long _IKED::phase1_gen_hash_i( IDB_PH1 * sa, BDATA & hash )
 	hash.set( 0, sa->hash_size );
 
 	HMAC_CTX ctx_prf;
-	HMAC_Init( &ctx_prf, sa->skeyid.buff(), sa->skeyid.size(), sa->evp_hash );
+	HMAC_Init( &ctx_prf, sa->skeyid.buff(), ( int ) sa->skeyid.size(), sa->evp_hash );
 
 	if( sa->initiator )
 	{
@@ -1842,7 +1834,7 @@ long _IKED::phase1_gen_hash_r( IDB_PH1 * sa, BDATA & hash )
 	hash.set( 0, sa->hash_size );
 
 	HMAC_CTX ctx_prf;
-	HMAC_Init( &ctx_prf, sa->skeyid.buff(), sa->skeyid.size(), sa->evp_hash );
+	HMAC_Init( &ctx_prf, sa->skeyid.buff(), ( int ) sa->skeyid.size(), sa->evp_hash );
 
 	if( sa->initiator )
 	{

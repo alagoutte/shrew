@@ -83,7 +83,7 @@ bool _IDB_CFG::attr_add_b( unsigned short atype, unsigned short bdata )
 	return attrs.add_item( attr );
 }
 
-bool _IDB_CFG::attr_add_v( unsigned short atype, void * vdata, unsigned long vsize )
+bool _IDB_CFG::attr_add_v( unsigned short atype, void * vdata, size_t vsize )
 {
 	IKE_ATTR * attr = new IKE_ATTR;
 	if( attr == NULL )

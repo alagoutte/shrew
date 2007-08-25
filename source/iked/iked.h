@@ -595,7 +595,7 @@ typedef class _IKED
 	// isakmp payload handler functions
 	//
 
-	long	payload_add_frag( PACKET_IKE & packet, unsigned char & index, unsigned char * data, long & size, long max );
+	long	payload_add_frag( PACKET_IKE & packet, unsigned char & index, unsigned char * data, size_t & size, size_t max );
 	long	payload_get_frag( PACKET_IKE & packet, IDB_PH1 * ph1, bool & complete );
 
 	long	payload_add_attr( PACKET_IKE & packet, IKE_ATTR & attrib  );

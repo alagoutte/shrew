@@ -349,8 +349,8 @@ typedef class DLX _BDATA
 	protected:
 
 	unsigned char *	data_buff;
-	long			data_size;
-	long			data_oset;
+	size_t			data_size;
+	size_t			data_oset;
 
 	public:
 
@@ -358,31 +358,31 @@ typedef class DLX _BDATA
 	~_BDATA();
 
 	bool set( _BDATA & bdata );
-	bool set( int value, long size );
-	bool set( char * buff, long size );
-	bool set( void * buff, long size );
+	bool set( int value, size_t size );
+	bool set( char * buff, size_t size );
+	bool set( void * buff, size_t size );
 
-	bool ins( _BDATA & bdata, long oset = 0 );
-	bool ins( int value, long size, long oset = 0 );
-	bool ins( char * buff, long size, long oset = 0 );
-	bool ins( void * buff, long size, long oset = 0 );
+	bool ins( _BDATA & bdata, size_t oset = 0 );
+	bool ins( int value, size_t size, size_t oset = 0 );
+	bool ins( char * buff, size_t size, size_t oset = 0 );
+	bool ins( void * buff, size_t size, size_t oset = 0 );
 
 	bool add( _BDATA & bdata );
-	bool add( int value, long size );
-	bool add( char * buff, long size );
-	bool add( void * buff, long size );
+	bool add( int value, size_t size );
+	bool add( char * buff, size_t size );
+	bool add( void * buff, size_t size );
 
-	bool get( _BDATA & bdata, long size = -1 );
-	bool get( char * buff, long size );
-	bool get( void * buff, long size );
+	bool get( _BDATA & bdata, size_t size = -1 );
+	bool get( char * buff, size_t size );
+	bool get( void * buff, size_t size );
 
-	bool dec( long size );
+	bool dec( size_t size );
 	void del( bool null = false );
 
 	char *			text();
 	unsigned char *	buff();
-	long			size();
-	long			oset();
+	size_t			size();
+	size_t			oset();
 
 }BDATA, *PBDATA;
 
@@ -397,12 +397,12 @@ typedef class DLX _PACKET : public _BDATA
 	bool	add_byte( uint8_t data );
 	bool	add_word( uint16_t data, bool hton = true );
 	bool	add_quad( uint32_t data, bool hton = true );
-	bool	add_null( long size );
+	bool	add_null( size_t size );
 
 	bool	get_byte( uint8_t & data );
 	bool	get_word( uint16_t & data, bool ntoh = true );
 	bool	get_quad( uint32_t & data, bool ntoh = true );
-	bool	get_null( long size );
+	bool	get_null( size_t size );
 
 }PACKET;
 
@@ -416,7 +416,7 @@ typedef class DLX _PACKET_IP : public _PACKET
 
 	bool write( in_addr addr_src, in_addr addr_dst, unsigned short ident, unsigned char prot );
 	bool read( in_addr & addr_src, in_addr & addr_dst, unsigned char & prot );
-	bool frag( bool more = false, unsigned long oset = 0 );
+	bool frag( bool more = false, size_t oset = 0 );
 	bool done();
 
 }PACKET_IP;
@@ -510,7 +510,7 @@ typedef class DLX _IPFRAG
 
 	bool	isfrag( PACKET_IP & packet );
 	bool	dnfrag( PACKET_IP & packet );
-	bool	dofrag( PACKET_IP & packet, PACKET_IP & fragment, long & offset, long max_size );
+	bool	dofrag( PACKET_IP & packet, PACKET_IP & fragment, size_t & offset, size_t max_size );
 
 	bool	defrag_add( PACKET_IP & packet, unsigned short & id );
 	bool	defrag_chk( unsigned short id );
@@ -579,7 +579,7 @@ typedef class DLX _PCAP_DUMP
 	bool	open( char * path );
 	void	close();
 
-	bool	dump( unsigned char * buff, long size );
+	bool	dump( unsigned char * buff, size_t size );
 	bool	dump( ETH_HEADER & header, PACKET_IP & packet );
 
 	bool	flush();
