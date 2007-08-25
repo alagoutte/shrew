@@ -247,7 +247,7 @@ long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
 	return IKEI_OK;
 }
 
-long _IKEI::recv_msg( void * data, unsigned long & size )
+long _IKEI::recv_msg( void * data, size_t & size )
 {
 	if( recv( sock, data, sizeof( IKEI_MSG ), 0 ) <= 0 )
 		return IKEI_FAILED;
@@ -269,7 +269,7 @@ long _IKEI::recv_msg( void * data, unsigned long & size )
 	return IKEI_OK;
 }
 
-long _IKEI::send_msg( void * data, unsigned long size )
+long _IKEI::send_msg( void * data, size_t size )
 {
 	long result = send( sock, data, size, 0 );
 	if( result < 0 )
