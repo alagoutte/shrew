@@ -344,6 +344,8 @@ struct pcap_pkthdr {
 // basic data class
 //
 
+#define BDATA_ALL		~0
+
 typedef class DLX _BDATA
 {
 	protected:
@@ -372,7 +374,7 @@ typedef class DLX _BDATA
 	bool add( char * buff, size_t size );
 	bool add( void * buff, size_t size );
 
-	bool get( _BDATA & bdata, size_t size = -1 );
+	bool get( _BDATA & bdata, size_t size = BDATA_ALL );
 	bool get( char * buff, size_t size );
 	bool get( void * buff, size_t size );
 
