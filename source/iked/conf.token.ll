@@ -279,9 +279,13 @@ bool _IKED::conf_load( char * path, bool trace )
 	//
 	// open file and run parser
 	//
+	
+	char path_conf[ MAX_PATH ];
+	
+	snprintf( path_conf, MAX_PATH, "%s/iked.conf", path );
 
 	yy_flex_debug = trace;
-	if( !( yyin = fopen( path, "r" ) ) )
+	if( !( yyin = fopen( path_conf, "r" ) ) )
 	{
 		log.txt( LOG_ERROR, "!! : unable to open %s\n", path );
 		return false;

@@ -188,7 +188,7 @@ bool _BDATA::add( void * buff, size_t size )
 
 bool _BDATA::get( _BDATA & bdata, size_t size )
 {
-	if( size == -1 )
+	if( size == BDATA_ALL )
 		size = data_size - data_oset;
 
 	bdata.set( 0, size );
