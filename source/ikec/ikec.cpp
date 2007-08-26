@@ -1084,7 +1084,7 @@ void _IKEC::run()
 			case IKEI_MSGID_STATUS:
 			{
 				char	txtmsg[ IKEI_MAX_BDATA + 1 ] = { 0 };
-				long	txtlen = IKEI_MAX_BDATA;
+				size_t	txtlen = IKEI_MAX_BDATA;
 
 				result = ikei.recv_msg_status( &status, txtmsg, txtlen );
 				if( result != IKEI_OK )
