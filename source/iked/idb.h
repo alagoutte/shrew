@@ -433,6 +433,9 @@ typedef class _IDB_PH1 : public IDB_XCH
 	bool	xauth_l;	// local will support xauth
 	bool	xauth_r;	// remote will support xauth
 
+	bool	unity_l;	// local will support cisco unity
+	bool	unity_r;	// remote will support cisco unity
+
 	bool	natt_l;		// local will support natt
 	bool	natt_r;		// remote will support natt
 	long	natt_v;		// version negotiated

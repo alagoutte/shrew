@@ -731,6 +731,22 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->attr_reset();
 
+				//
+				// skip unity attributes if the
+				// peer does not support them
+				//
+
+				if( !ph1->unity_l || !ph1->unity_r )
+				{
+					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_DOMAIN;
+					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_SPLITDNS;
+					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_SPLITNET;
+					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_BANNER;
+					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_PFS;
+
+					log.txt( LOG_INFO, "ii : excluding unity attribute set\n" );
+				}
+
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.rqst,
 					0xffffffff );
@@ -1154,6 +1170,10 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 {
+	//
+	// standard attributes
+	//
+
 	if( setmask & IPSEC_OPTS_ADDR )
 	{
 		if( nullmask & IPSEC_OPTS_ADDR )
@@ -1220,6 +1240,32 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		}
 	}
 
+	if( setmask & IPSEC_OPTS_NBNS )
+	{
+		if( nullmask & IPSEC_OPTS_NBNS )
+		{
+			cfg->attr_add_v( INTERNAL_IP4_NBNS, NULL, 0 );
+			log.txt( LOG_DEBUG,	"ii : - IP4 WINS Server\n" );
+		}
+		else
+		{
+			cfg->attr_add_v( INTERNAL_IP4_NBNS,
+				&cfg->tunnel->xconf.nbns,
+				sizeof( cfg->tunnel->xconf.nbns ) );
+
+			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+			text_addr( txtaddr, cfg->tunnel->xconf.nbns );
+
+			log.txt( LOG_DEBUG,
+				"ii : - IP4 WINS Server = %s\n",
+				txtaddr );
+		}
+	}
+
+	//
+	// cisco unity attributes
+	//
+
 	if( setmask & IPSEC_OPTS_DOMAIN )
 	{
 		if( nullmask & IPSEC_OPTS_DOMAIN )
@@ -1268,28 +1314,6 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 					suffix.buff(),
 					suffix.size() );
 			}
-		}
-	}
-
-	if( setmask & IPSEC_OPTS_NBNS )
-	{
-		if( nullmask & IPSEC_OPTS_NBNS )
-		{
-			cfg->attr_add_v( INTERNAL_IP4_NBNS, NULL, 0 );
-			log.txt( LOG_DEBUG,	"ii : - IP4 WINS Server\n" );
-		}
-		else
-		{
-			cfg->attr_add_v( INTERNAL_IP4_NBNS,
-				&cfg->tunnel->xconf.nbns,
-				sizeof( cfg->tunnel->xconf.nbns ) );
-
-			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-			text_addr( txtaddr, cfg->tunnel->xconf.nbns );
-
-			log.txt( LOG_DEBUG,
-				"ii : - IP4 WINS Server = %s\n",
-				txtaddr );
 		}
 	}
 
@@ -1418,6 +1442,10 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 
 		switch( attr->atype )
 		{
+			//
+			// standard attributes
+			//
+
 			case INTERNAL_IP4_ADDRESS:
 			{
 				getmask |= IPSEC_OPTS_ADDR;
@@ -1545,6 +1573,10 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 
 				break;
 			}
+
+			//
+			// cisco unity attributes
+			//
 
 			case UNITY_DEF_DOMAIN:
 			{

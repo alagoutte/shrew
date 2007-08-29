@@ -1965,6 +1965,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	if( vend.size() == vend_unity.size() )
 		if( !memcmp( vend.buff(), vend_unity.buff(), vend_unity.size() ) )
 		{
+			ph1->unity_r = true;
 			log.txt( LOG_INFO, "ii : peer supports UNITY\n" );
 			return LIBIKE_OK;
 		}
