@@ -456,6 +456,7 @@
 #define IPSEC_OPTS_DNSS			0x0040
 #define IPSEC_OPTS_DOMAIN		0x0080
 #define IPSEC_OPTS_SPLITDNS		0x0100
+#define IPSEC_OPTS_SAVEPW		0x0200
 
 #define CONFIG_MODE_PULL		1
 #define CONFIG_MODE_PUSH		2
@@ -593,6 +594,7 @@ typedef struct _IKE_XCONF
 	in_addr			dnss;	// dns server
 	in_addr			nbns;	// wins server
 	unsigned short	dhgr;	// pfs dh group
+	unsigned short	svpw;	// save password
 
 	char		suffix[ CONF_STRLEN ];
 

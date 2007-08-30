@@ -1428,6 +1428,24 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		}
 	}
 
+	if( setmask & IPSEC_OPTS_SAVEPW )
+	{
+		if( nullmask & IPSEC_OPTS_SAVEPW )
+		{
+			cfg->attr_add_v( UNITY_SAVE_PASSWD, NULL, 0 );
+			log.txt( LOG_DEBUG,	"ii : - Save Password\n" );
+		}
+		else
+		{
+			cfg->attr_add_b( UNITY_SAVE_PASSWD,
+				cfg->tunnel->xconf.svpw );
+
+			log.txt( LOG_DEBUG,
+				"ii : - Save Password = %i\n",
+				cfg->tunnel->xconf.svpw );
+		}
+	}
+
 	return LIBIKE_OK;
 }
 
@@ -1754,6 +1772,24 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 				}
 				else
 					log.txt( LOG_DEBUG,	"ii : - PFS Group\n" );
+
+				break;
+			}
+
+			case UNITY_SAVE_PASSWD:
+			{
+				getmask |= IPSEC_OPTS_SAVEPW;
+
+				if( ( readmask & IPSEC_OPTS_SAVEPW ) && attr->basic )
+				{
+					log.txt( LOG_DEBUG,
+						"ii : - Save Password = %d\n",
+						attr->bdata );
+
+					cfg->tunnel->xconf.svpw = attr->bdata;
+				}
+				else
+					log.txt( LOG_DEBUG,	"ii : - Save Password\n" );
 
 				break;
 			}
