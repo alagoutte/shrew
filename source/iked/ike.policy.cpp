@@ -570,7 +570,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 
 		pfkey_send_spdel( policy );
 
-		policy->dec( true );
+		policy->dec( false );
 	}
 
 	//
@@ -587,7 +587,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	}
 
 	if( get_policy(
-			true,
+			false,
 			&policy,
 			IPSEC_DIR_OUTBOUND,
 			type,
@@ -609,7 +609,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 
 		pfkey_send_spdel( policy );
 
-		policy->dec( true );
+		policy->dec( false );
 	}
 
 	//
