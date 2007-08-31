@@ -912,27 +912,12 @@ bool _IDB_PH1::dec( bool lock )
 		iked.inform_new_delete( this, NULL );
 
 	//
-	// deal with client based tunnels
+	// terminate client thread if relevant
 	//
 
-	if( !initiator )
-	{
-		// gateway
-
-		if( tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
-			iked.policy_list_remove( tunnel, initiator );
-
-		if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
-			tunnel->peer->xconf_source->pool4_rel( tunnel->xconf.addr );
-	}
-	else
-	{
-		// client
-
-		if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
-			if( !tunnel->close )
-				tunnel->close = TERM_PEER_DEAD;
-	}
+	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
+		if( !tunnel->close )
+			tunnel->close = TERM_PEER_DEAD;
 
 	//
 	// if this sa never reached maturity,
