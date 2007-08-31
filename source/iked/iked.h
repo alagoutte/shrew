@@ -238,6 +238,7 @@ YY_DECL;
 #define LSTATE_EXPIRE			0x000000800		// lifetime expired
 #define LSTATE_NOTIFY			0x000001000		// skip peer notify
 #define LSTATE_DELETE			0x000002000		// ready for delete
+#define LSTATE_FLUSHED			0x000004000		// pfkey flushed
 
 #define TSTATE_INITIALIZED		0x00000001
 #define TSTATE_RECV_XAUTH		0x00000002
@@ -663,7 +664,9 @@ typedef class _IKED
 	long	pfkey_recv_spinfo( PFKI_MSG & msg );
 	long	pfkey_recv_acquire( PFKI_MSG & msg );
 	long	pfkey_recv_getspi( PFKI_MSG & msg );
+	long	pfkey_recv_flush( PFKI_MSG & msg );
 	long	pfkey_recv_spdel( PFKI_MSG & msg );
+	long	pfkey_recv_spflush( PFKI_MSG & msg );
 
 	long	pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 );
 	long	pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & ekey, BDATA & akey, long dir );

@@ -145,6 +145,8 @@ long _IKED::loop_ike_pfkey()
 					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
 
+				pfkey_recv_flush( msg );
+
 				break;
 
 			case SADB_ACQUIRE:
@@ -193,6 +195,8 @@ long _IKED::loop_ike_pfkey()
 					"K< : recv %s %s pfkey message\n",
 					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+
+				pfkey_recv_spflush( msg );
 
 				break;
 
@@ -887,6 +891,32 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 	return LIBIKE_OK;
 }
 
+long _IKED::pfkey_recv_flush( PFKI_MSG & msg )
+{
+	lock_sdb.lock();
+
+	long count = iked.list_phase2.get_count();
+	long index = 0;
+
+	for( ; index < count; index++ )
+	{
+		IDB_PH2 * ph2 = ( IDB_PH2 * ) iked.list_phase2.get_item( index );
+
+		ph2->inc( false );
+		ph2->lstate |= ( LSTATE_DELETE | LSTATE_FLUSHED );
+
+		if( ph2->dec( false ) )
+		{
+			index--;
+			count--;
+		}
+	}
+
+	lock_sdb.unlock();
+
+	return LIBIKE_OK;
+}
+
 long _IKED::pfkey_recv_spdel( PFKI_MSG & msg )
 {
 	PFKI_SPINFO	spinfo;
@@ -937,6 +967,32 @@ long _IKED::pfkey_recv_spdel( PFKI_MSG & msg )
 
 	policy->lstate = LSTATE_DELETE;
 	policy->dec( true );
+
+	return LIBIKE_OK;
+}
+
+long _IKED::pfkey_recv_spflush( PFKI_MSG & msg )
+{
+	lock_sdb.lock();
+
+	long count = iked.list_policy.get_count();
+	long index = 0;
+
+	for( ; index < count; index++ )
+	{
+		IDB_POLICY * policy = ( IDB_POLICY * ) iked.list_policy.get_item( index );
+
+		policy->inc( false );
+		policy->lstate |= LSTATE_DELETE;
+
+		if( policy->dec( false ) )
+		{
+			index--;
+			count--;
+		}
+	}
+
+	lock_sdb.unlock();
 
 	return LIBIKE_OK;
 }

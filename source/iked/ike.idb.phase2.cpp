@@ -439,7 +439,12 @@ bool _IDB_PH2::dec( bool lock )
 
 		if( lstate & LSTATE_MATURE )
 		{
-			iked.pfkey_send_delete( this );
+			// dont send pfkey delete messages
+			// when responding to a flush request
+
+			if( !( lstate & LSTATE_FLUSHED ) )
+				iked.pfkey_send_delete( this );
+
 			tunnel->stats.sa_dead++;
 		}
 		else
