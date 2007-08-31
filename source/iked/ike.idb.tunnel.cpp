@@ -207,6 +207,17 @@ bool _IDB_TUNNEL::dec( bool lock )
 		iked.list_tunnel.get_count() );
 
 	//
+	// cleaup after client based tunnels
+	//
+
+	if( peer->plcy_mode != POLICY_MODE_DISABLE )
+		iked.policy_list_remove( this, pinit );
+
+	if( !pinit )
+		if( xconf.opts & IPSEC_OPTS_ADDR )
+			peer->xconf_source->pool4_rel( xconf.addr );
+
+	//
 	// dereference our peer
 	//
 
@@ -214,19 +225,6 @@ bool _IDB_TUNNEL::dec( bool lock )
 
 	if( lock )
 		iked.lock_sdb.unlock();
-
-	//
-	// cleaup after client based tunnels
-	//
-
-	if( !pinit )
-	{
-		if( peer->plcy_mode != POLICY_MODE_DISABLE )
-			iked.policy_list_remove( this, false );
-
-		if( xconf.opts & IPSEC_OPTS_ADDR )
-			peer->xconf_source->pool4_rel( xconf.addr );
-	}
 
 	//
 	// free

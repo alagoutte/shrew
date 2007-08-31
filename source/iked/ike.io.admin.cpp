@@ -711,12 +711,6 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	if( tunnel != NULL )
 	{
 		//
-		// remove client policies
-		// 
-
-		policy_list_remove( tunnel, true );
-
-		//
 		// if we were using a virutal adapter,
 		// perform some addition cleanup
 		//
