@@ -73,7 +73,11 @@
 #  include <net/pfkeyv2.h>
 #  include <netinet/in.h>
 #  include <netinet/udp.h>
-#  include <netinet6/ipsec.h>
+#  ifdef OPT_NETIPSEC
+#   include <netipsec/ipsec.h>
+#  else
+#   include <netinet6/ipsec.h>
+#  endif
 # endif
 #endif
 

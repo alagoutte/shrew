@@ -105,6 +105,17 @@ message(
 	STATUS 
 	"Using binary ${PATH_BIN_BISON} ..." )
 
+find_path(
+	PATH_INC_NETIPSEC
+	NAMES "ipsec.h"
+	PATHS "/usr/include/netipsec" )
+
+if( PATH_INC_NETIPSEC )
+
+	add_definitions( -D OPT_NETIPSEC )
+
+endif( PATH_INC_NETIPSEC )
+
 find_library(
 	PATH_LIB_RT
 	NAMES "rt"
