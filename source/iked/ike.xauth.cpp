@@ -146,7 +146,7 @@ bool _IKED_XAUTH_LOCAL::auth_grp( IKE_XAUTH & xauth, BDATA & group )
 
 #ifdef OPT_LDAP
 
-static char * iked_xauth_ldap_name = "ldap";
+static const char * iked_xauth_ldap_name = "ldap";
 
 _IKED_XAUTH_LDAP::_IKED_XAUTH_LDAP()
 {
@@ -165,7 +165,7 @@ _IKED_XAUTH_LDAP::~_IKED_XAUTH_LDAP()
 {
 }
 
-char * _IKED_XAUTH_LDAP::name()
+const char * _IKED_XAUTH_LDAP::name()
 {
 	return iked_xauth_ldap_name;
 }
