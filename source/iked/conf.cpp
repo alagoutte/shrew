@@ -41,7 +41,7 @@
 
 #include "iked.h"
 
-bool _IKED::conf_load( char * path, bool trace )
+bool _IKED::conf_load( const char * path, bool trace )
 {
 	HKEY	key;
 	DWORD	result;
