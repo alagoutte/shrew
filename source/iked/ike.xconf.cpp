@@ -92,10 +92,10 @@ bool _IKED_XCONF::pool4_set( in_addr & base, long bits, long max )
 	in_addr last;
 	last.s_addr = htonl( ntohl( base.s_addr ) + pool4_total - 1 );
 
-	static char * adj = "( adjusted )";
-	static char * org = "";
-	char * adj_base = org;
-	char * adj_last = org;
+	static const char * adj = "( adjusted )";
+	static const char * org = "";
+	const char * adj_base = org;
+	const char * adj_last = org;
 
 	if( base.s_addr == config.addr.s_addr )
 	{
@@ -225,7 +225,7 @@ bool _IKED_XCONF::pool4_rel( in_addr & addr )
 // XCONF - LOCAL CONFIG DB
 //
 
-static char * iked_xconf_local_name = "local";
+static const char * iked_xconf_local_name = "local";
 
 _IKED_XCONF_LOCAL::_IKED_XCONF_LOCAL()
 {
@@ -235,7 +235,7 @@ _IKED_XCONF_LOCAL::~_IKED_XCONF_LOCAL()
 {
 }
 
-char * _IKED_XCONF_LOCAL::name()
+const char * _IKED_XCONF_LOCAL::name()
 {
 	return iked_xconf_local_name;
 }

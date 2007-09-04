@@ -162,7 +162,7 @@ void _LOG::close()
 	}
 }
 
-void _LOG::txt( long level, char * fmt, ... )
+void _LOG::txt( long level, const char * fmt, ... )
 {
 	char fbuff[ 128 ];
 	tstamp( fbuff, 128 );
@@ -188,7 +188,7 @@ void _LOG::txt( long level, char * fmt, ... )
 	}
 }
 
-void _LOG::bin( long level, long blevel, void * bin, size_t len, char * fmt, ... )
+void _LOG::bin( long level, long blevel, void * bin, size_t len, const char * fmt, ... )
 {
 	//
 	// FIXME : Review for buffer overflows

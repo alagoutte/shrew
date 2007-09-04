@@ -55,7 +55,7 @@ bool _IKEC::init( root * setr )
 	return true;
 }
 
-bool _IKEC::log( long code, char * format, ... )
+bool _IKEC::log( long code, const char * format, ... )
 {
 	char buff[ 1024 ];
 	memset( buff, 0, sizeof( buff ) );

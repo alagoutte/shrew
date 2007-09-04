@@ -190,7 +190,7 @@ _ITH_LOCK::~_ITH_LOCK()
 	pthread_mutexattr_destroy( &attr );
 }
 
-void _ITH_LOCK::setname( char * lkname )
+void _ITH_LOCK::setname( const char * lkname )
 {
 	strcpy_s( name, 20, lkname );
 }

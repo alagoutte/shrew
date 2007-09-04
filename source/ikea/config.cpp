@@ -21,7 +21,7 @@
   *
   */
 
-bool cpp_strdup( char ** new_string, char * src_string )
+bool cpp_strdup( const char ** new_string, const char * src_string )
 {
         // sanity check for pointer
 
@@ -46,7 +46,7 @@ bool cpp_strdup( char ** new_string, char * src_string )
         return true;
 }
 		
-bool cpp_strdel( char ** del_string )
+bool cpp_strdel( const char ** del_string )
 {
         // sanity check for pointer
 
@@ -64,7 +64,7 @@ bool cpp_strdel( char ** del_string )
 // string duplication up to length chars using c++ add
 // for memory allocation
 
-bool cpp_strndup( char ** new_string, char * src_string, unsigned long length )
+bool cpp_strndup( const char ** new_string, const char * src_string, unsigned long length )
 {
         // sanity check for pointer
 
@@ -115,7 +115,7 @@ _CONFIG::~_CONFIG()
 	cpp_strdel( &id );
 }
 
-bool _CONFIG::set_id( char * set_id )
+bool _CONFIG::set_id( const char * set_id )
 {
 	cpp_strdel( &id );
 	cpp_strdup( &id, set_id );
@@ -123,7 +123,7 @@ bool _CONFIG::set_id( char * set_id )
 	return true;
 }
 
-char * _CONFIG::get_id()
+const char * _CONFIG::get_id()
 {
 	return id;
 }
@@ -155,7 +155,7 @@ _CONFIG & _CONFIG::operator = ( _CONFIG & config )
 	return *this;
 }
 
-CFGDAT * _CONFIG::get_data( long type, char * key, bool add )
+CFGDAT * _CONFIG::get_data( long type, const char * key, bool add )
 {
 	CFGDAT * cfgdat;
 
@@ -182,7 +182,7 @@ CFGDAT * _CONFIG::get_data( long type, char * key, bool add )
 	return 0;
 }
 
-void _CONFIG::del( char * key )
+void _CONFIG::del( const char * key )
 {
 	CFGDAT * cfgdat;
 
@@ -207,7 +207,7 @@ void _CONFIG::del_all()
 	}
 }
 
-bool _CONFIG::add_string( char * key, char * val, int size )
+bool _CONFIG::add_string( const char * key, const char * val, int size )
 {
 	CFGDAT * cfgdat = get_data( DATA_STRING, key, true );
 	if( !cfgdat )
@@ -240,19 +240,48 @@ bool _CONFIG::add_string( char * key, char * val, int size )
 	return true;
 }
 
-bool _CONFIG::set_string( char * key, char * val, int size )
+bool _CONFIG::set_string( const char * key, const char * val, int size )
 {
 	del( key );
 	return add_string( key, val, size );
 }
 
-bool _CONFIG::get_string( char * key, char * val, int size, int index )
+long _CONFIG::has_string( const char * key, const char * val, int size )
+{
+	CFGDAT * cfgdat = get_data( DATA_STRING, key );
+	if( !cfgdat )
+		return -1;
+
+	const char * oldptr = cfgdat->sval;
+	const char * newptr = cfgdat->sval;
+
+	long index = 0;
+
+	while( newptr )
+	{
+		newptr = strchr( oldptr, char( 255 ) );
+
+		if( newptr )
+			if( ( newptr - oldptr ) < size )
+				size = newptr - oldptr;
+
+		if( !strncmp( val, oldptr, size ) )
+			return index;
+		
+		oldptr = newptr + 1;
+		index++;
+	}
+
+	return -1;
+}
+
+bool _CONFIG::get_string( const char * key, char * val, int size, int index )
 {
 	CFGDAT * cfgdat = get_data( DATA_STRING, key );
 	if( !cfgdat )
 		return false;
 
-	char * strptr = cfgdat->sval;
+	const char * strptr = cfgdat->sval;
 
 	for( ; index > 0; index-- )
 	{
@@ -278,36 +307,7 @@ bool _CONFIG::get_string( char * key, char * val, int size, int index )
 	return true;
 }
 
-long _CONFIG::has_string( char * key, char * val, int size )
-{
-	CFGDAT * cfgdat = get_data( DATA_STRING, key );
-	if( !cfgdat )
-		return -1;
-
-	char * oldptr = cfgdat->sval;
-	char * newptr = cfgdat->sval;
-
-	long index = 0;
-
-	while( newptr )
-	{
-		newptr = strchr( oldptr, char( 255 ) );
-
-		if( newptr )
-			if( ( newptr - oldptr ) < size )
-				size = newptr - oldptr;
-
-		if( !strncmp( val, oldptr, size ) )
-			return index;
-		
-		oldptr = newptr + 1;
-		index++;
-	}
-
-	return -1;
-}
-
-bool _CONFIG::set_number( char * key, long val )
+bool _CONFIG::set_number( const char * key, long val )
 {
 	CFGDAT * cfgdat = get_data( DATA_NUMBER, key, true );
 	if( !cfgdat )
@@ -318,7 +318,7 @@ bool _CONFIG::set_number( char * key, long val )
 	return true;
 }
 
-bool _CONFIG::get_number( char * key, long * val )
+bool _CONFIG::get_number( const char * key, long * val )
 {
 	CFGDAT * cfgdat = get_data( DATA_NUMBER, key );
 	if( !cfgdat )
@@ -329,7 +329,7 @@ bool _CONFIG::get_number( char * key, long * val )
 	return true;
 }
 
-bool _CONFIG::set_binary( char * key, char * val, long size )
+bool _CONFIG::set_binary( const char * key, char * val, long size )
 {
 	CFGDAT * cfgdat = get_data( DATA_BINARY, key, true );
 	if( !cfgdat )
@@ -351,7 +351,7 @@ bool _CONFIG::set_binary( char * key, char * val, long size )
 	return true;
 }
 
-bool _CONFIG::get_binary( char * key, char * val, long size )
+bool _CONFIG::get_binary( const char * key, char * val, long size )
 {
 	CFGDAT * cfgdat = get_data( DATA_BINARY, key );
 	if( !cfgdat )

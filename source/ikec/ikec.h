@@ -112,7 +112,7 @@ typedef class _IKEC : public QThread
 	~_IKEC();
 
 	bool	init( root * setr );
-	bool	log( long code, char * format, ... );
+	bool	log( long code, const char * format, ... );
 
 	char *	file_spec( char * name = NULL );
 	char *	file_path();

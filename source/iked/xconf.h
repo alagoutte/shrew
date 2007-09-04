@@ -65,7 +65,7 @@ typedef class _IKED_XCONF
 
 	virtual ~_IKED_XCONF();
 
-	virtual char *	name() = 0;
+	virtual const char * name() = 0;
 	virtual bool	rslt( IDB_TUNNEL * tunnel ) = 0;
 
 	bool	pool4_set( in_addr & base, long bits, long max );
@@ -85,7 +85,7 @@ typedef class _IKED_XCONF_LOCAL : public _IKED_XCONF
 	_IKED_XCONF_LOCAL();
 	virtual ~_IKED_XCONF_LOCAL();
 
-	virtual char *	name();
+	virtual const char * name();
 	virtual bool	rslt( IDB_TUNNEL * tunnel );
 
 }IKED_XCONF_LOCAL;

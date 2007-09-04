@@ -424,7 +424,7 @@ typedef class _IKED
 
 	// id name helper functions
 
-	char *	find_name( long type, long id );
+	const char *	find_name( long type, long id );
 
 	// random helper functions
 
@@ -462,7 +462,7 @@ typedef class _IKED
 
 	// config file loader
 
-	bool	conf_load( char * path, bool trace = false );
+	bool	conf_load( const char * path, bool trace = false );
 
 	// x.509 certificate helper functions
 

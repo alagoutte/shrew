@@ -366,10 +366,10 @@ long _IKEI::recv_msg_status( long * status, char * str, size_t & len )
 	return recv_basic( IKEI_MSGID_STATUS, status, str, &len );
 }
 
-long _IKEI::send_msg_status( long status, char * str, long * msgres )
+long _IKEI::send_msg_status( long status, const char * str, long * msgres )
 {
 	long len = long( strlen( str ) );
-	return send_basic( IKEI_MSGID_STATUS, status, str, len );
+	return send_basic( IKEI_MSGID_STATUS, status, ( void * ) str, len );
 }
 
 long _IKEI::recv_msg_stats( IKEI_STATS * stats )

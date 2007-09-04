@@ -41,17 +41,17 @@
 
 #include "iked.h"
 
-char * _IKED::find_name( long type, long id )
+const char * _IKED::find_name( long type, long id )
 {
-	static char * unknown1 = "unknown type";
-	static char * unknown2 = "unknown";
+	static const char * unknown1 = "unknown type";
+	static const char * unknown2 = "unknown";
 
 	switch( type )
 	{
 		case NAME_INITIATOR:
 		{
-			static char * init0 = "responder";
-			static char * init1 = "initiator";
+			static const char * init0 = "responder";
+			static const char * init1 = "initiator";
 
 			switch( id )
 			{
@@ -68,12 +68,12 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_EXCHANGE:
 		{
-			static char * exchange1 = "base";
-			static char * exchange2 = "identity protect";
-			static char * exchange3 = "authenticateon only";
-			static char * exchange4 = "aggressive";
-			static char * exchange5 = "informational";
-			static char * exchange6 = "isakmp config / xauth";
+			static const char * exchange1 = "base";
+			static const char * exchange2 = "identity protect";
+			static const char * exchange3 = "authenticateon only";
+			static const char * exchange4 = "aggressive";
+			static const char * exchange5 = "informational";
+			static const char * exchange6 = "isakmp config / xauth";
 
 			switch( id )
 			{
@@ -103,10 +103,10 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_PROTOCOL:
 		{
-			static char * proto1 = "isakmp";
-			static char * proto2 = "ipsec-ah";
-			static char * proto3 = "ipsec-esp";
-			static char * proto4 = "ipcomp";
+			static const char * proto1 = "isakmp";
+			static const char * proto2 = "ipsec-ah";
+			static const char * proto3 = "ipsec-esp";
+			static const char * proto4 = "ipcomp";
 
 			switch( id )
 			{
@@ -129,7 +129,7 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_XFORM_ISAKMP:
 		{
-			static char * xform1 = "ike";
+			static const char * xform1 = "ike";
 
 			switch( id )
 			{
@@ -143,9 +143,9 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_XFORM_AH:
 		{
-			static char * xform1 = "ah-md5";
-			static char * xform2 = "ah-sha";
-			static char * xform3 = "ah-des";
+			static const char * xform1 = "ah-md5";
+			static const char * xform2 = "ah-sha";
+			static const char * xform3 = "ah-des";
 
 			switch( id )
 			{
@@ -165,18 +165,18 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_XFORM_ESP:
 		{
-			static char * xform1  = "esp-des-iv64";
-			static char * xform2  = "esp-des";
-			static char * xform3  = "esp-3des";
-			static char * xform4  = "esp-rc5";
-			static char * xform5  = "esp-idea";
-			static char * xform6  = "esp-cast";
-			static char * xform7  = "esp-blowfish";
-			static char * xform8  = "esp-3idea";
-			static char * xform9  = "esp-des-iv32";
-			static char * xform10 = "esp-rc4";
-			static char * xform11 = "esp-null";
-			static char * xform12 = "esp-aes";
+			static const char * xform1  = "esp-des-iv64";
+			static const char * xform2  = "esp-des";
+			static const char * xform3  = "esp-3des";
+			static const char * xform4  = "esp-rc5";
+			static const char * xform5  = "esp-idea";
+			static const char * xform6  = "esp-cast";
+			static const char * xform7  = "esp-blowfish";
+			static const char * xform8  = "esp-3idea";
+			static const char * xform9  = "esp-des-iv32";
+			static const char * xform10 = "esp-rc4";
+			static const char * xform11 = "esp-null";
+			static const char * xform12 = "esp-aes";
 
 			switch( id )
 			{
@@ -223,10 +223,10 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_XFORM_IPCOMP:
 		{
-			static char * xform0 = "none";
-			static char * xform1 = "ipcomp-oui";
-			static char * xform2 = "ipcomp-deflate";
-			static char * xform3 = "ipcomp-lzs";
+			static const char * xform0 = "none";
+			static const char * xform1 = "ipcomp-oui";
+			static const char * xform2 = "ipcomp-deflate";
+			static const char * xform3 = "ipcomp-lzs";
 
 			switch( id )
 			{
@@ -249,26 +249,26 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_PAYLOAD:
 		{
-			static char * pload0  = "none";
-			static char * pload1  = "security association";
-			static char * pload2  = "proposal";
-			static char * pload3  = "transform";
-			static char * pload4  = "key exchange";
-			static char * pload5  = "identity";
-			static char * pload6  = "certificate";
-			static char * pload7  = "certificate request";
-			static char * pload8  = "hash";
-			static char * pload9  = "signature";
-			static char * pload10 = "nonce";
-			static char * pload11 = "notify";
-			static char * pload12 = "delete";
-			static char * pload13 = "vendor";
-			static char * pload14 = "attribute";
-			static char * pload15 = "nat discovery v02";
-			static char * pload16 = "nat original adress v02";
-			static char * pload17 = "nat discovery rfc";
-			static char * pload18 = "nat original adress rfc";
-			static char * pload19 = "fragment";
+			static const char * pload0  = "none";
+			static const char * pload1  = "security association";
+			static const char * pload2  = "proposal";
+			static const char * pload3  = "transform";
+			static const char * pload4  = "key exchange";
+			static const char * pload5  = "identity";
+			static const char * pload6  = "certificate";
+			static const char * pload7  = "certificate request";
+			static const char * pload8  = "hash";
+			static const char * pload9  = "signature";
+			static const char * pload10 = "nonce";
+			static const char * pload11 = "notify";
+			static const char * pload12 = "delete";
+			static const char * pload13 = "vendor";
+			static const char * pload14 = "attribute";
+			static const char * pload15 = "nat discovery v02";
+			static const char * pload16 = "nat original adress v02";
+			static const char * pload17 = "nat discovery rfc";
+			static const char * pload18 = "nat original adress rfc";
+			static const char * pload19 = "fragment";
 
 			switch( id )
 			{
@@ -339,13 +339,13 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_CIPHER:
 		{
-			static char * cipher1 = "des";
-			static char * cipher2 = "idea";
-			static char * cipher3 = "blowfish";
-			static char * cipher4 = "rc5";
-			static char * cipher5 = "3des";
-			static char * cipher6 = "cast";
-			static char * cipher7 = "aes";
+			static const char * cipher1 = "des";
+			static const char * cipher2 = "idea";
+			static const char * cipher3 = "blowfish";
+			static const char * cipher4 = "rc5";
+			static const char * cipher5 = "3des";
+			static const char * cipher6 = "cast";
+			static const char * cipher7 = "aes";
 
 			switch( id )
 			{
@@ -377,25 +377,25 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_PAUTH:
 		{
-			static char * auth1 = "psk";
-			static char * auth2 = "sig-dsa";
-			static char * auth3 = "sig-rsa";
-			static char * auth4 = "rsa-encrypt";
-			static char * auth5 = "rsa-revised";
-			static char * auth6 = "hybrid-initiator-rsa";
-			static char * auth7 = "hybrid-responder-rsa";
-			static char * auth8 = "hybrid-initiator-dss";
-			static char * auth9 = "hybrid-responder-dss";
-			static char * auth10 = "xauth-initiator-psk";
-			static char * auth11 = "xauth-responder-psk";
-			static char * auth12 = "xauth-initiator-rsa";
-			static char * auth13 = "xauth-responder-rsa";
-			static char * auth14 = "xauth-initiator-dss";
-			static char * auth15 = "xauth-responder-dss";
-			static char * auth16 = "xauth-initiator-rsa-encryption";
-			static char * auth17 = "xauth-responder-rsa-encryption";
-			static char * auth18 = "xauth-initiator-rsa-revised-encryption";
-			static char * auth19 = "xauth-responder-rsa-revised-encryption";
+			static const char * auth1 = "psk";
+			static const char * auth2 = "sig-dsa";
+			static const char * auth3 = "sig-rsa";
+			static const char * auth4 = "rsa-encrypt";
+			static const char * auth5 = "rsa-revised";
+			static const char * auth6 = "hybrid-initiator-rsa";
+			static const char * auth7 = "hybrid-responder-rsa";
+			static const char * auth8 = "hybrid-initiator-dss";
+			static const char * auth9 = "hybrid-responder-dss";
+			static const char * auth10 = "xauth-initiator-psk";
+			static const char * auth11 = "xauth-responder-psk";
+			static const char * auth12 = "xauth-initiator-rsa";
+			static const char * auth13 = "xauth-responder-rsa";
+			static const char * auth14 = "xauth-initiator-dss";
+			static const char * auth15 = "xauth-responder-dss";
+			static const char * auth16 = "xauth-initiator-rsa-encryption";
+			static const char * auth17 = "xauth-responder-rsa-encryption";
+			static const char * auth18 = "xauth-initiator-rsa-revised-encryption";
+			static const char * auth19 = "xauth-responder-rsa-revised-encryption";
 
 			switch( id )
 			{
@@ -463,10 +463,10 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_MAUTH:
 		{
-			static char * hash1 = "hmac-md5";
-			static char * hash2 = "hmac-sha";
-			static char * hash3 = "des-mac";
-			static char * hash4 = "kpdk";
+			static const char * hash1 = "hmac-md5";
+			static const char * hash2 = "hmac-sha";
+			static const char * hash3 = "des-mac";
+			static const char * hash4 = "kpdk";
 
 			switch( id )
 			{
@@ -489,9 +489,9 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_HASH:
 		{
-			static char * hash1 = "md5";
-			static char * hash2 = "sha1";
-			static char * hash3 = "tiger";
+			static const char * hash1 = "md5";
+			static const char * hash2 = "sha1";
+			static const char * hash3 = "tiger";
 
 			switch( id )
 			{
@@ -511,18 +511,18 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_CERT:
 		{
-			static char * cert0  = "none";
-			static char * cert1  = "pkcs7";
-			static char * cert2  = "pgp";
-			static char * cert3  = "dns signed";
-			static char * cert4  = "x.509 signed";
-			static char * cert5  = "x.509 key exchange";
-			static char * cert6  = "kerberos";
-			static char * cert7  = "certificate revocation list ( CRL )";
-			static char * cert8  = "authority revocation list ( ARL )";
-			static char * cert9  = "spki";
-			static char * cert10 = "x.509 attribute";
-			static char * cert11 = "plain rsa";
+			static const char * cert0  = "none";
+			static const char * cert1  = "pkcs7";
+			static const char * cert2  = "pgp";
+			static const char * cert3  = "dns signed";
+			static const char * cert4  = "x.509 signed";
+			static const char * cert5  = "x.509 key exchange";
+			static const char * cert6  = "kerberos";
+			static const char * cert7  = "certificate revocation list ( CRL )";
+			static const char * cert8  = "authority revocation list ( ARL )";
+			static const char * cert9  = "spki";
+			static const char * cert10 = "x.509 attribute";
+			static const char * cert11 = "plain rsa";
 
 			switch( id )
 			{
@@ -569,15 +569,15 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_GROUP:
 		{
-			static char * group0 = "none";
-			static char * group1 = "modp-768";
-			static char * group2 = "modp-1024";
-			static char * group3 = "ecn-155";
-			static char * group4 = "ecn-185";
-			static char * group5 = "modp-1536";
-			static char * group6 = "modp-2048";
-			static char * group7 = "modp-3072";
-			static char * group8 = "modp-4096";
+			static const char * group0 = "none";
+			static const char * group1 = "modp-768";
+			static const char * group2 = "modp-1024";
+			static const char * group3 = "ecn-155";
+			static const char * group4 = "ecn-185";
+			static const char * group5 = "modp-1536";
+			static const char * group6 = "modp-2048";
+			static const char * group7 = "modp-3072";
+			static const char * group8 = "modp-4096";
 
 			switch( id )
 			{
@@ -615,12 +615,12 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_ENCAP:
 		{
-			static char * encap1 = "tunnel";
-			static char * encap2 = "transport";
-			static char * encap3 = "udp-tunnel v02";
-			static char * encap4 = "udp-transport v02";
-			static char * encap5 = "udp-tunnel rfc";
-			static char * encap6 = "udp-transport rfc";
+			static const char * encap1 = "tunnel";
+			static const char * encap2 = "transport";
+			static const char * encap3 = "udp-tunnel v02";
+			static const char * encap4 = "udp-transport v02";
+			static const char * encap5 = "udp-tunnel rfc";
+			static const char * encap6 = "udp-transport rfc";
 
 			switch( id )
 			{
@@ -649,17 +649,17 @@ char * _IKED::find_name( long type, long id )
 
 		case NAME_IDENT:
 		{
-			static char * ident1  = "ipv4-host";
-			static char * ident2  = "fqdn";
-			static char * ident3  = "user-fqdn";
-			static char * ident4  = "ipv4-subnet";
-			static char * ident5  = "ipv6-host";
-			static char * ident6  = "ipv6-subnet";
-			static char * ident7  = "ipv4-range";
-			static char * ident8  = "ipv4-range";
-			static char * ident9  = "asn1-dn";
-			static char * ident10 = "asn1-gn";
-			static char * ident11 = "key-id";
+			static const char * ident1  = "ipv4-host";
+			static const char * ident2  = "fqdn";
+			static const char * ident3  = "user-fqdn";
+			static const char * ident4  = "ipv4-subnet";
+			static const char * ident5  = "ipv6-host";
+			static const char * ident6  = "ipv6-subnet";
+			static const char * ident7  = "ipv4-range";
+			static const char * ident8  = "ipv4-range";
+			static const char * ident9  = "asn1-dn";
+			static const char * ident10 = "asn1-gn";
+			static const char * ident11 = "key-id";
 
 			switch( id )
 			{
@@ -703,41 +703,41 @@ char * _IKED::find_name( long type, long id )
 		
 		case NAME_NOTIFY:
 		{
-			static char * notify1  = "INVALID-PAYLOAD-TYPE";
-			static char * notify2  = "DOI-NOT-SUPPORTED";
-			static char * notify3  = "SITUATION-NOT-SUPPORTED";
-			static char * notify4  = "INVALID-COOKIE";
-			static char * notify5  = "INVALID-MAJOR-VERSION";
-			static char * notify6  = "INVALID-MINOR-VERSION";
-			static char * notify7  = "INVALID-EXCHANGE-TYPE";
-			static char * notify8  = "INVALID-FLAGS";
-			static char * notify9  = "INVALID-MESSAGE-ID";
-			static char * notify10 = "INVALID-PROTOCOL-ID";
-			static char * notify11 = "INVALID-SPI";
-			static char * notify12 = "INVALID-TRANSFORM-ID";
-			static char * notify13 = "ATTRIBUTES-NOT-SUPPORTED";
-			static char * notify14 = "NO-PROPOSAL-CHOSEN";
-			static char * notify15 = "BAD-PROPOSAL-SYNTAX";
-			static char * notify16 = "PAYLOAD-MALFORMED";
-			static char * notify17 = "INVALID-KEY-INFORMATION";
-			static char * notify18 = "INVALID-ID-INFORMATION";
-			static char * notify19 = "INVALID-CERT-ENCODING";
-			static char * notify20 = "INVALID-CERTIFICATE";
-			static char * notify21 = "CERT-TYPE-UNSUPPORTED";
-			static char * notify22 = "INVALID-CERT-AUTHORITY";
-			static char * notify23 = "INVALID-HASH-INFORMATION";
-			static char * notify24 = "AUTHENTICATION-FAILED";
-			static char * notify25 = "INVALID-SIGNATURE";
-			static char * notify26 = "ADDRESS-NOTIFICATION";
-			static char * notify27 = "NOTIFY-SA-LIFETIME";
-			static char * notify28 = "CERTIFICATE-UNAVAILABLE";
-			static char * notify29 = "UNSUPPORTED-EXCHANGE-TYPE";
-			static char * notify30 = "UNEQUAL-PAYLOAD-LENGTHS";
-			static char * notify31 = "RESPONDER-LIFETIME";
-			static char * notify32 = "REPLAY-STATUS";
-			static char * notify33 = "INITIAL-CONTACT";
-			static char * notify34 = "DPDV1-R-U-THERE";
-			static char * notify35 = "DPDV1-R-U-THERE-ACK";
+			static const char * notify1  = "INVALID-PAYLOAD-TYPE";
+			static const char * notify2  = "DOI-NOT-SUPPORTED";
+			static const char * notify3  = "SITUATION-NOT-SUPPORTED";
+			static const char * notify4  = "INVALID-COOKIE";
+			static const char * notify5  = "INVALID-MAJOR-VERSION";
+			static const char * notify6  = "INVALID-MINOR-VERSION";
+			static const char * notify7  = "INVALID-EXCHANGE-TYPE";
+			static const char * notify8  = "INVALID-FLAGS";
+			static const char * notify9  = "INVALID-MESSAGE-ID";
+			static const char * notify10 = "INVALID-PROTOCOL-ID";
+			static const char * notify11 = "INVALID-SPI";
+			static const char * notify12 = "INVALID-TRANSFORM-ID";
+			static const char * notify13 = "ATTRIBUTES-NOT-SUPPORTED";
+			static const char * notify14 = "NO-PROPOSAL-CHOSEN";
+			static const char * notify15 = "BAD-PROPOSAL-SYNTAX";
+			static const char * notify16 = "PAYLOAD-MALFORMED";
+			static const char * notify17 = "INVALID-KEY-INFORMATION";
+			static const char * notify18 = "INVALID-ID-INFORMATION";
+			static const char * notify19 = "INVALID-CERT-ENCODING";
+			static const char * notify20 = "INVALID-CERTIFICATE";
+			static const char * notify21 = "CERT-TYPE-UNSUPPORTED";
+			static const char * notify22 = "INVALID-CERT-AUTHORITY";
+			static const char * notify23 = "INVALID-HASH-INFORMATION";
+			static const char * notify24 = "AUTHENTICATION-FAILED";
+			static const char * notify25 = "INVALID-SIGNATURE";
+			static const char * notify26 = "ADDRESS-NOTIFICATION";
+			static const char * notify27 = "NOTIFY-SA-LIFETIME";
+			static const char * notify28 = "CERTIFICATE-UNAVAILABLE";
+			static const char * notify29 = "UNSUPPORTED-EXCHANGE-TYPE";
+			static const char * notify30 = "UNEQUAL-PAYLOAD-LENGTHS";
+			static const char * notify31 = "RESPONDER-LIFETIME";
+			static const char * notify32 = "REPLAY-STATUS";
+			static const char * notify33 = "INITIAL-CONTACT";
+			static const char * notify34 = "DPDV1-R-U-THERE";
+			static const char * notify35 = "DPDV1-R-U-THERE-ACK";
 			
 			switch( id )
 			{

@@ -174,7 +174,7 @@ typedef class DLX _IKEI
 	long	send_msg_result( long msgres );
 
 	long	recv_msg_status( long * status, char * str, size_t & len );
-	long	send_msg_status( long status, char * str, long * msgres = NULL );
+	long	send_msg_status( long status, const char * str, long * msgres = NULL );
 
 	long	recv_msg_stats( IKEI_STATS * stats );
 	long	send_msg_stats( IKEI_STATS * stats, long * msgres = NULL );

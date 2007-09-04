@@ -39,14 +39,14 @@ typedef class _CFGDAT
 	
 protected:
 	
-	char *	key;
-	long	type;
+	const char *	key;
+	long		type;
 	
 	union
 	{
-		char *	sval;
-		char *	bval;
-		long	nval;
+		const char *	sval;
+		char *		bval;
+		long		nval;
 	};
 	
 	long size;
@@ -59,10 +59,10 @@ typedef class DLX _CONFIG
 {
 	protected:
 	
-	char *	id;
+	const char * id;
 	LIST	data;
 	
-	CFGDAT *	get_data( long type, char * key, bool add = false );
+	CFGDAT *	get_data( long type, const char * key, bool add = false );
 	
 	public:
 	
@@ -74,22 +74,22 @@ typedef class DLX _CONFIG
 	bool	file_read( char * path );
 	bool	file_write( char * path );
 	
-	bool	set_id( char * id );
-	char *	get_id();
+	bool	set_id( const char * id );
+	const char *	get_id();
 	
-	void	del( char * key );
+	void	del( const char * key );
 	void	del_all();
 	
-	bool	add_string( char * key, char * val, int size );
-	bool	set_string( char * key, char * val, int size );
-	bool	get_string( char * key, char * val, int size, int index );
-	long	has_string( char * key, char * val, int size );
+	bool	add_string( const char * key, const char * val, int size );
+	bool	set_string( const char * key, const char * val, int size );
+	long	has_string( const char * key, const char * val, int size );
+	bool	get_string( const char * key, char * val, int size, int index );
 	
-	bool	set_number( char * key, long val );
-	bool	get_number( char * key, long * val );
+	bool	set_number( const char * key, long val );
+	bool	get_number( const char * key, long * val );
 	
-	bool	set_binary( char * key, char * val, long size );
-	bool	get_binary( char * key, char * val, long size );
+	bool	set_binary( const char * key, char * val, long size );
+	bool	get_binary( const char * key, char * val, long size );
 	
 }CONFIG;
 

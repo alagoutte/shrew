@@ -49,7 +49,7 @@ typedef class _IKED_XAUTH
 
 	virtual ~_IKED_XAUTH();
 
-	virtual char *	name() = 0;
+	virtual const char * name() = 0;
 
 	virtual bool	auth_pwd( IKE_XAUTH & xauth ) = 0;
 	virtual bool	auth_grp( IKE_XAUTH & xauth, BDATA & group ) = 0;
@@ -67,7 +67,7 @@ typedef class _IKED_XAUTH_LOCAL : public _IKED_XAUTH
 	_IKED_XAUTH_LOCAL();
 	virtual ~_IKED_XAUTH_LOCAL();
 
-	virtual char *	name();
+	virtual const char * name();
 
 	virtual bool	auth_pwd( IKE_XAUTH & xauth );
 	virtual bool	auth_grp( IKE_XAUTH & xauth, BDATA & group );
@@ -97,7 +97,7 @@ typedef class _IKED_XAUTH_LDAP : public _IKED_XAUTH
 	_IKED_XAUTH_LDAP();
 	virtual ~_IKED_XAUTH_LDAP();
 
-	virtual char *	name();
+	virtual const char * name();
 
 	virtual bool	auth_pwd( IKE_XAUTH & xauth );
 	virtual bool	auth_grp( IKE_XAUTH & xauth, BDATA & group );

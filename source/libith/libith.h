@@ -140,7 +140,7 @@ typedef class DLX _ITH_LOCK
 	_ITH_LOCK();
 	~_ITH_LOCK();
 
-	void	setname( char * lkname );
+	void	setname( const char * lkname );
 
 	bool	lock();
 	bool	unlock();

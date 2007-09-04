@@ -1143,38 +1143,38 @@ long _PFKI::send_spinfo( u_int8_t sadb_msg_type, PFKI_SPINFO & spinfo, bool serv
 	return send_msg( msg );
 }
 
-char * _PFKI::name( long type, long value )
+const char * _PFKI::name( long type, long value )
 {
-	static char * unknown = "unknown";
+	static const char * unknown = "unknown";
 
 	switch( type )
 	{
 		case NAME_MSGTYPE:
 		{
-			static char * msgtype_00 = "RESERVED";
-			static char * msgtype_01 = "GETSPI";
-			static char * msgtype_02 = "UPDATE";
-			static char * msgtype_03 = "ADD";
-			static char * msgtype_04 = "DELETE";
-			static char * msgtype_05 = "GET";
-			static char * msgtype_06 = "ACQUIRE";
-			static char * msgtype_07 = "REGISTER";
-			static char * msgtype_08 = "EXPIRE";
-			static char * msgtype_09 = "FLUSH";
-			static char * msgtype_10 = "DUMP";
-			static char * msgtype_11 = "X_PROMISC";
-			static char * msgtype_12 = "X_PCHANGE";
-			static char * msgtype_13 = "X_SPDUPDATE";
-			static char * msgtype_14 = "X_SPDADD";
-			static char * msgtype_15 = "X_SPDDELETE";
-			static char * msgtype_16 = "X_SPDGET";
-			static char * msgtype_17 = "X_SPDACQUIRE";
-			static char * msgtype_18 = "X_SPDDUMP";
-			static char * msgtype_19 = "X_SPDFLUSH";
-			static char * msgtype_20 = "X_SPDSETIDX";
-			static char * msgtype_21 = "X_SPDEXPIRE";
-			static char * msgtype_22 = "X_SPDDELETE2";
-//			static char * msgtype_23 = "X_NAT_T_NEW_MAPPING";
+			static const char * msgtype_00 = "RESERVED";
+			static const char * msgtype_01 = "GETSPI";
+			static const char * msgtype_02 = "UPDATE";
+			static const char * msgtype_03 = "ADD";
+			static const char * msgtype_04 = "DELETE";
+			static const char * msgtype_05 = "GET";
+			static const char * msgtype_06 = "ACQUIRE";
+			static const char * msgtype_07 = "REGISTER";
+			static const char * msgtype_08 = "EXPIRE";
+			static const char * msgtype_09 = "FLUSH";
+			static const char * msgtype_10 = "DUMP";
+			static const char * msgtype_11 = "X_PROMISC";
+			static const char * msgtype_12 = "X_PCHANGE";
+			static const char * msgtype_13 = "X_SPDUPDATE";
+			static const char * msgtype_14 = "X_SPDADD";
+			static const char * msgtype_15 = "X_SPDDELETE";
+			static const char * msgtype_16 = "X_SPDGET";
+			static const char * msgtype_17 = "X_SPDACQUIRE";
+			static const char * msgtype_18 = "X_SPDDUMP";
+			static const char * msgtype_19 = "X_SPDFLUSH";
+			static const char * msgtype_20 = "X_SPDSETIDX";
+			static const char * msgtype_21 = "X_SPDEXPIRE";
+			static const char * msgtype_22 = "X_SPDDELETE2";
+//			static const char * msgtype_23 = "X_NAT_T_NEW_MAPPING";
 
 			switch( value )
 			{
@@ -1258,11 +1258,11 @@ char * _PFKI::name( long type, long value )
 
 		case NAME_SAENCR:
 		{
-			static char * encrtype_02 = "DES-CBC";
-			static char * encrtype_03 = "3DES-CBC";
-			static char * encrtype_06 = "CAST128-CBC";
-			static char * encrtype_07 = "BLOWFISH-CBC";
-			static char * encrtype_12 = "AES-CBC";
+			static const char * encrtype_02 = "DES-CBC";
+			static const char * encrtype_03 = "3DES-CBC";
+			static const char * encrtype_06 = "CAST128-CBC";
+			static const char * encrtype_07 = "BLOWFISH-CBC";
+			static const char * encrtype_12 = "AES-CBC";
 
 			switch( value )
 			{
@@ -1288,9 +1288,9 @@ char * _PFKI::name( long type, long value )
 
 		case NAME_SACOMP:
 		{
-			static char * comptype_01 = "OUI";
-			static char * comptype_02 = "DEFLATE";
-			static char * comptype_03 = "LZS";
+			static const char * comptype_01 = "OUI";
+			static const char * comptype_02 = "DEFLATE";
+			static const char * comptype_03 = "LZS";
 
 			switch( value )
 			{
@@ -1310,8 +1310,8 @@ char * _PFKI::name( long type, long value )
 
 		case NAME_SAAUTH:
 		{
-			static char * authtype_02 = "HMAC-MD5";
-			static char * authtype_03 = "HMAC-SHA1";
+			static const char * authtype_02 = "HMAC-MD5";
+			static const char * authtype_03 = "HMAC-SHA1";
 
 			switch( value )
 			{
@@ -1329,15 +1329,15 @@ char * _PFKI::name( long type, long value )
 
 		case NAME_SATYPE:
 		{
-			static char * satype_00 = "UNSPEC";
-			static char * satype_02 = "AH";
-			static char * satype_03 = "ESP";
-			static char * satype_05 = "RSVP";
-			static char * satype_06 = "OSPFV2";
-			static char * satype_07 = "RIPV2";
-			static char * satype_08 = "MIP";
-			static char * satype_09 = "IPCOMP";
-			static char * satype_11 = "TCPSIGNATURE";
+			static const char * satype_00 = "UNSPEC";
+			static const char * satype_02 = "AH";
+			static const char * satype_03 = "ESP";
+			static const char * satype_05 = "RSVP";
+			static const char * satype_06 = "OSPFV2";
+			static const char * satype_07 = "RIPV2";
+			static const char * satype_08 = "MIP";
+			static const char * satype_09 = "IPCOMP";
+			static const char * satype_11 = "TCPSIGNATURE";
 
 			switch( value )
 			{
@@ -1375,9 +1375,9 @@ char * _PFKI::name( long type, long value )
 
 		case NAME_SPMODE:
 		{
-			static char * plcymode_00 = "ANY";
-			static char * plcymode_01 = "TANSPORT";
-			static char * plcymode_02 = "TUNNEL";
+			static const char * plcymode_00 = "ANY";
+			static const char * plcymode_01 = "TANSPORT";
+			static const char * plcymode_02 = "TUNNEL";
 
 			switch( value )
 			{
@@ -1397,11 +1397,11 @@ char * _PFKI::name( long type, long value )
 
 		case NAME_SPTYPE:
 		{
-			static char * plcytype_00 = "DISCARD";
-			static char * plcytype_01 = "NONE";
-			static char * plcytype_02 = "IPSEC";
-			static char * plcytype_03 = "ENTRUST";
-			static char * plcytype_04 = "BYPASS";
+			static const char * plcytype_00 = "DISCARD";
+			static const char * plcytype_01 = "NONE";
+			static const char * plcytype_02 = "IPSEC";
+			static const char * plcytype_03 = "ENTRUST";
+			static const char * plcytype_04 = "BYPASS";
 
 			switch( value )
 			{
@@ -1427,11 +1427,11 @@ char * _PFKI::name( long type, long value )
 
 		case NAME_SPDIR:
 		{
-			static char * plcydir_00 = "ANY";
-			static char * plcydir_01 = "INBOUND";
-			static char * plcydir_02 = "OUTBOUND";
-			static char * plcydir_03 = "MAX";
-			static char * plcydir_04 = "INVALID";
+			static const char * plcydir_00 = "ANY";
+			static const char * plcydir_01 = "INBOUND";
+			static const char * plcydir_02 = "OUTBOUND";
+			static const char * plcydir_03 = "MAX";
+			static const char * plcydir_04 = "INVALID";
 
 			switch( value )
 			{
@@ -1457,10 +1457,10 @@ char * _PFKI::name( long type, long value )
 
 		case NAME_SPLEVEL:
 		{
-			static char * plcylevel_00 = "ANY";
-			static char * plcylevel_01 = "USE";
-			static char * plcylevel_02 = "REQUIRE";
-			static char * plcylevel_03 = "UNIQUE";
+			static const char * plcylevel_00 = "ANY";
+			static const char * plcylevel_01 = "USE";
+			static const char * plcylevel_02 = "REQUIRE";
+			static const char * plcylevel_03 = "UNIQUE";
 
 			switch( value )
 			{
@@ -1483,8 +1483,8 @@ char * _PFKI::name( long type, long value )
 
 		case NAME_NTTYPE:
 		{
-			static char * nattype_00 = "NONE";
-			static char * nattype_01 = "ESPINUDP";
+			static const char * nattype_00 = "NONE";
+			static const char * nattype_01 = "ESPINUDP";
 
 			switch( value )
 			{

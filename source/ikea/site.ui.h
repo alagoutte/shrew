@@ -18,7 +18,7 @@
 #define IDTXT_ADDR	"IP Address"
 #define IDTXT_KEYID	"Key Identifier"
 
-bool combobox_setbytext( char * text, QComboBox * cbox )
+bool combobox_setbytext( const char * text, QComboBox * cbox )
 {
 	long index = 0;
 	long count = cbox->count();

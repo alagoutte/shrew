@@ -360,7 +360,7 @@ typedef class DLX _PFKI
 	long	open();
 	void	close();
 
-	char *	name( long type, long value );
+	const char *	name( long type, long value );
 
 	long	next_msg( PFKI_MSG & msg );
 

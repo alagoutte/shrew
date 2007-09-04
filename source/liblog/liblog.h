@@ -103,8 +103,8 @@ typedef struct DLX _LOG
 	bool	open( char * path, long level, bool echo );
 	void	close();
 
-	void	txt( long level, char * fmt, ... );
-	void	bin( long level, long blevel, void * bin, size_t size, char * fmt, ... );
+	void	txt( long level, const char * fmt, ... );
+	void	bin( long level, long blevel, void * bin, size_t size, const char * fmt, ... );
 
 }LOG, *PLOG;
 

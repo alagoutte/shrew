@@ -53,7 +53,7 @@ _IKED_XAUTH::~_IKED_XAUTH()
 // XAUTH - LOCAL ACCOUNT DB
 //
 
-static char * iked_xauth_local_name = "local";
+static const char * iked_xauth_local_name = "local";
 
 _IKED_XAUTH_LOCAL::_IKED_XAUTH_LOCAL()
 {
@@ -63,7 +63,7 @@ _IKED_XAUTH_LOCAL::~_IKED_XAUTH_LOCAL()
 {
 }
 
-char * _IKED_XAUTH_LOCAL::name()
+const char * _IKED_XAUTH_LOCAL::name()
 {
 	return iked_xauth_local_name;
 }

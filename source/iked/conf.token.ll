@@ -267,7 +267,7 @@ if( yy_first_time )
  *
  */
 
-bool _IKED::conf_load( char * path, bool trace )
+bool _IKED::conf_load( const char * path, bool trace )
 {
 	//
 	// set some defaults

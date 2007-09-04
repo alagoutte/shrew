@@ -933,7 +933,7 @@ long _IKED::phase2_gen_hash_r( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 long _IKED::phase2_gen_hash_p( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 {
 	BDATA input;
-	input.add( "\0", 1 );
+	input.add( 0, 1 );
 	input.add( &ph2->msgid, sizeof( ph2->msgid ) );
 
 	if( ph2->initiator )
