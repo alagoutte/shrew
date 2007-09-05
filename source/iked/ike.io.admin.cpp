@@ -715,7 +715,17 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 		//
 
 		if( tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
+		{
+			//
+			// caller must hold the sdb lock
+			//
+
+			iked.lock_sdb.lock();
+
 			iked.policy_list_remove( tunnel, true );
+
+			iked.lock_sdb.unlock();
+		}
 
 		//
 		// if we were using a virutal adapter,
