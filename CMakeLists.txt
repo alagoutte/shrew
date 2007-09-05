@@ -51,15 +51,31 @@ set(
 # PreRequisite Checks
 #
 
-find_package( OpenSSL )
+find_path(
+	PATH_INC_CRYPTO
+	NAMES "openssl/evp.h"
+	PATHS ${SEARCH_INC} )
 
-if( NOT OPENSSL_FOUND )
+if( NOT PATH_INC_CRYPTO )
 
 	message(
 		FATAL_ERROR
-		"Unable to locate required package : OpenSSL" )
+		"Unable to locate openssl crypto include files" )
 
-endif( NOT OPENSSL_FOUND )
+endif( NOT PATH_INC_CRYPTO )
+
+find_library(
+	PATH_LIB_CRYPTO
+	NAMES "crypto"
+	PATHS ${SEARCH_LIB} )
+
+if( NOT PATH_LIB_CRYPTO )
+
+	message(
+		FATAL_ERROR
+		"Unable to locate openssl crypto library file" )
+
+endif( NOT PATH_LIB_CRYPTO )
 
 find_package( Threads )
 
