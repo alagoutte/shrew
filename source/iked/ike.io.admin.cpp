@@ -711,6 +711,13 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	if( tunnel != NULL )
 	{
 		//
+		// cleaup our policy list
+		//
+
+		if( tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
+			iked.policy_list_remove( tunnel, true );
+
+		//
 		// if we were using a virutal adapter,
 		// perform some addition cleanup
 		//

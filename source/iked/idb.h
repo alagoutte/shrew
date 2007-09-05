@@ -287,7 +287,6 @@ typedef class _IDB_TUNNEL : public IDB
 
 	BDATA		banner;
 
-	bool		pinit;
 	long		state;
 	long		close;
 	long		natt_v;

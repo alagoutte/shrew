@@ -120,14 +120,6 @@ bool _IKED::policy_cmp_prots( PFKI_SPINFO * spinfo1, PFKI_SPINFO * spinfo2 )
 bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 {
 	//
-	// store the initiator value so
-	// we can can destroy the list
-	// later when the tunnel dies
-	//
-
-	tunnel->pinit = initiator;
-
-	//
 	// if we are the responder, make
 	// sure we generate an id list
 	// before attempting to create

@@ -193,17 +193,6 @@ bool _IDB_TUNNEL::dec( bool lock )
 	}
 
 	//
-	// cleaup after client based tunnels
-	//
-
-	if( peer->plcy_mode != POLICY_MODE_DISABLE )
-		iked.policy_list_remove( this, pinit );
-
-	if( !pinit )
-		if( xconf.opts & IPSEC_OPTS_ADDR )
-			peer->xconf_source->pool4_rel( xconf.addr );
-
-	//
 	// remove from our list
 	//
 

@@ -920,6 +920,19 @@ bool _IDB_PH1::dec( bool lock )
 			tunnel->close = TERM_PEER_DEAD;
 
 	//
+	// cleaup after client based tunnels
+	//
+
+	if( !initiator )
+	{
+		if( tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
+			iked.policy_list_remove( tunnel, false );
+
+		if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
+			tunnel->peer->xconf_source->pool4_rel( tunnel->xconf.addr );
+	}
+
+	//
 	// if this sa never reached maturity,
 	// locate any pending phase2 handles
 	// for this tunnel and delete them
