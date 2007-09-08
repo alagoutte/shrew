@@ -41,8 +41,6 @@
 
 #include "libith.h"
 
-//#define OPT_LKDBG 1
-
 //
 // thread execution class
 //
@@ -200,13 +198,6 @@ void _ITH_LOCK::setname( const char * lkname )
 bool _ITH_LOCK::lock()
 {
 
-#ifdef OPT_LKDBG
-
-	if( *name )
-		printf( "LK : LOCKING %s ( %i )\n", name, count++ );
-
-#endif
-
 #ifdef OPT_TIMEDLOCK
 
         struct timespec ts;
@@ -250,13 +241,6 @@ bool _ITH_LOCK::lock()
 
 bool _ITH_LOCK::unlock()
 {
-
-#ifdef OPT_LKDBG
-
-	if( *name )
-		printf( "LK : UNLOCKING %s ( %i )\n", name, count++ );
-
-#endif
 
 	int result = pthread_mutex_unlock( &mutex );
 

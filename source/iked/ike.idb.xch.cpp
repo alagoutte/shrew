@@ -58,11 +58,7 @@ bool _ITH_EVENT_RESEND::func()
 		return false;
 	}
 
-	printf( "XX : resend event : net lock - locking\n" );
-
 	iked.lock_ipq.lock();
-
-	printf( "XX : resend event : net lock - locked\n" );
 
 	long count = ipqueue.count();
 	long index = 0;
