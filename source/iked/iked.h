@@ -412,6 +412,7 @@ typedef class _IKED
 
 	ITH_LOCK	lock_sdb;
 	ITH_LOCK	lock_net;
+	ITH_LOCK	lock_ipq;
 
 	// xauth and xconf classes
 

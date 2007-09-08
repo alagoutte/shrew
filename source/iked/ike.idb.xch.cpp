@@ -60,7 +60,7 @@ bool _ITH_EVENT_RESEND::func()
 
 	printf( "XX : resend event : net lock - locking\n" );
 
-	iked.lock_net.lock();
+	iked.lock_ipq.lock();
 
 	printf( "XX : resend event : net lock - locked\n" );
 
@@ -80,7 +80,7 @@ bool _ITH_EVENT_RESEND::func()
 			packet );
 	}
 
-	iked.lock_net.unlock();
+	iked.lock_ipq.unlock();
 
 	attempt++;
 
@@ -126,7 +126,13 @@ bool _IDB_XCH::resend_queue( PACKET_IP & packet )
 	// queue our new packet
 	//
 
-	return event_resend.ipqueue.add( packet );
+	iked.lock_ipq.lock();
+
+	bool added = event_resend.ipqueue.add( packet );
+
+	iked.lock_ipq.unlock();
+
+	return added;
 }
 
 bool _IDB_XCH::resend_sched()
@@ -153,7 +159,12 @@ void _IDB_XCH::resend_clear()
 {
 	if( iked.ith_timer.del( &event_resend ) )
 	{
+		iked.lock_ipq.lock();
+
 		event_resend.ipqueue.flush();
+
+		iked.lock_ipq.unlock();
+
 		dec( true );
 	}
 }
