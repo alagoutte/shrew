@@ -16,6 +16,7 @@ project( IKE )
 add_definitions( -D UNIX )
 
 include( CheckCSourceCompiles )
+include( CheckLibraryExists )
 
 subdirs(
 	source/iked
@@ -86,6 +87,18 @@ if( NOT CMAKE_USE_PTHREADS_INIT )
 		"Unable to locate required package : pthreads" )
 
 endif( NOT CMAKE_USE_PTHREADS_INIT )
+
+check_library_exists(
+	${CMAKE_THREAD_LIBS_INIT}
+	"pthread_mutex_timedlock"
+	""
+	FUNC_LIB_TIMEDLOCK )
+
+if( FUNC_LIB_TIMEDLOCK )
+
+	add_definitions( -D OPT_TIMEDLOCK )
+
+endif( FUNC_LIB_TIMEDLOCK )
 
 find_program(
 	PATH_BIN_FLEX

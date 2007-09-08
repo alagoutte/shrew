@@ -41,6 +41,8 @@
 
 #include "libith.h"
 
+//#define OPT_LKDBG 1
+
 //
 // thread execution class
 //
@@ -205,7 +207,7 @@ bool _ITH_LOCK::lock()
 
 #endif
 
-#ifdef pthread_mutex_timedlock
+#ifdef OPT_TIMEDLOCK
 
         struct timespec ts;
         clock_gettime( CLOCK_REALTIME, &ts );
@@ -404,9 +406,11 @@ long _ITH_TIMER::func( void * arg )
 		//
 		// did we find an active event
 		//
-
+		
 		if( entry != NULL )
 		{
+			printf( "XX : executing event\n" );
+
 			//
 			// enable the event and
 			// reset if required
