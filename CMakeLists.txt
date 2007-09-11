@@ -13,7 +13,7 @@ project( IKE )
 # Unix Target Constants
 #
 
-add_definitions( -D UNIX )
+add_definitions( -DUNIX )
 
 include( CheckCSourceCompiles )
 include( CheckLibraryExists )
@@ -96,7 +96,7 @@ check_library_exists(
 
 if( FUNC_LIB_TIMEDLOCK )
 
-	add_definitions( -D OPT_TIMEDLOCK )
+	add_definitions( -DOPT_TIMEDLOCK )
 
 endif( FUNC_LIB_TIMEDLOCK )
 
@@ -141,7 +141,7 @@ find_path(
 
 if( PATH_INC_NETIPSEC )
 
-	add_definitions( -D OPT_NETIPSEC )
+	add_definitions( -DOPT_NETIPSEC )
 
 endif( PATH_INC_NETIPSEC )
 
@@ -284,7 +284,7 @@ if( NATT )
 		STATUS 
 		"Enabled NAT Traversal support ..." )
 
-	add_definitions( -D OPT_NATT )
+	add_definitions( -DOPT_NATT )
 
 endif( NATT )
 
@@ -333,7 +333,7 @@ if( LDAP )
 		STATUS
 		"Enabled LDAP Authentication support ..." )
 
-	add_definitions( -D OPT_LDAP )
+	add_definitions( -DOPT_LDAP )
 
 endif( LDAP )
 
@@ -341,7 +341,7 @@ endif( LDAP )
 
 if( QTGUI )
 
-	add_definitions( -D QT_THREAD_SUPPORT )
+	add_definitions( -DQT_THREAD_SUPPORT )
 
 	set( QT_MT_REQUIRED TRUE )
 
