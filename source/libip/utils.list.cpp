@@ -50,36 +50,43 @@ _LIST::_LIST()
 
 _LIST::~_LIST()
 {
-	if( item_list )
+	if( item_list != NULL )
 		delete []item_list;
+
+	item_list = NULL;
 }
 
 bool _LIST::grow()
 {
 	// allocate a new stack of pointers that will
 	// be larger that the last by GROW_SIZE
-	
+
 	void ** new_item_list = new void * [ item_capacity  + GROW_SIZE ];
-	
-	if( !new_item_list )
+
+	if( new_item_list != NULL )
 		return false;
-		
+
 	// initialize our new stack of pointers to null and
-	// copy our old pointer stack to our new pointer stack
-	
-	memset( new_item_list, 0, ( item_capacity  + GROW_SIZE ) * sizeof( void * ) );
-	memcpy( new_item_list, item_list, item_capacity * sizeof( void * ) );
-	
-	// free our old pointer stack and replace it with our
-	// new larger pointer stack
-	
-	delete []item_list;
+
+	memset( new_item_list, 0, ( item_capacity + GROW_SIZE ) * sizeof( void * ) );
+
+	// copy our old pointer stack to our new pointer
+	// stack and free our old pointer stack
+
+	if( item_list != NULL )
+	{
+		memcpy( new_item_list, item_list, item_capacity * sizeof( void * ) );
+		delete []item_list;
+	}
+
+	//replace it with our  new larger pointer stack
+
 	item_list= new_item_list;
-	
+
 	// store our new item_capacity
-	
+
 	item_capacity += GROW_SIZE;
-	
+
 	return true;
 }
 
@@ -87,7 +94,7 @@ bool _LIST::ins_item( void * ins_item, long index )
 {
 	// sanity check for valid pointer
 	
-	if( !ins_item )
+	if( ins_item == NULL )
 		return false;
 		
 	// sanity check for valid index
@@ -123,34 +130,34 @@ bool _LIST::ins_item( void * ins_item, long index )
 bool _LIST::add_item( void * add_item )
 {
 	// sanity check for valid pointer
-	
-	if( !add_item )
+
+	if( add_item == NULL )
 		return false;
-	
+
 	// make sure we have enough room in our stack,
 	// grow if neccesary
-	
+
 	if( item_count == item_capacity )
 		if( !grow() )
 			return false;
-		
+
 	// store our new string in the next available
 	// slot in the stack
-	
+
 	item_list[ item_count ] = add_item;
-	
+
 	// increment our list count
-	
+
 	item_count++;
-	
+
 	return true;
 }
 
 bool _LIST::del_item( void * del_item )
 {
 	// sanity check for valid pointer
-	
-	if( !del_item )
+
+	if( del_item == NULL )
 		return false;
 
 	// attempt to match our item to an item
