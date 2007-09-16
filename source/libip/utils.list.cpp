@@ -43,7 +43,7 @@
 
 _LIST::_LIST()
 {
-	item_list		= 0;
+	item_list		= NULL;
 	item_capacity	= 0;
 	item_count		= 0;
 }
@@ -51,7 +51,7 @@ _LIST::_LIST()
 _LIST::~_LIST()
 {
 	if( item_list != NULL )
-		delete []item_list;
+		delete [] item_list;
 
 	item_list = NULL;
 }
@@ -63,25 +63,25 @@ bool _LIST::grow()
 
 	void ** new_item_list = new void * [ item_capacity  + GROW_SIZE ];
 
-	if( new_item_list != NULL )
+	if( new_item_list == NULL )
 		return false;
 
 	// initialize our new stack of pointers to null and
 
 	memset( new_item_list, 0, ( item_capacity + GROW_SIZE ) * sizeof( void * ) );
 
-	// copy our old pointer stack to our new pointer
-	// stack and free our old pointer stack
+	// copy our old pointer stack to our new pointer stack 
+
+	memcpy( new_item_list, item_list, item_capacity * sizeof( void * ) );
+
+	// free our old pointer stack
 
 	if( item_list != NULL )
-	{
-		memcpy( new_item_list, item_list, item_capacity * sizeof( void * ) );
-		delete []item_list;
-	}
+		delete [] item_list;
 
-	//replace it with our  new larger pointer stack
+	//replace it with our new larger pointer stack
 
-	item_list= new_item_list;
+	item_list = new_item_list;
 
 	// store our new item_capacity
 
