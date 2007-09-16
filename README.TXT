@@ -156,7 +156,7 @@ installing a custom kernel.
 The following options are recommended when running the cmake configuration
 for NetBSD. Please see the OPTIONS section for more details.
 
-cmake -DQTGUI=YES -DNATT=YES
+cmake -DQTGUI=YES -DNATT=YES -DETCDIR=/etc
 
 NetBSD also appears to require several environment variables to be set when
 compiling and using the QT front end applications. For example, the following
