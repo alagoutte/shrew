@@ -632,11 +632,13 @@ void _IKEC::run()
 
 				// domain name suffix
 
-				if( config.get_string( "client-dns-suffix", text, MAX_CONFSTRING, 0 ) )
+				if( !config.get_string( "client-dns-suffix", text, MAX_CONFSTRING, 0 ) )
 				{
-					strncpy( xconf.suffix, text, CONF_STRLEN );
+					xconf.opts &= ~IPSEC_OPTS_DOMAIN;
 					xconf.rqst &= ~IPSEC_OPTS_DOMAIN;
 				}
+				else
+					strncpy( xconf.suffix, text, CONF_STRLEN );
 			}
 		}
 	}
