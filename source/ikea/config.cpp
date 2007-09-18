@@ -415,10 +415,7 @@ bool _CONFIG::file_read( char * path )
 		}
 
 		if( strlen( val ) <= 0 )
-		{
-			fail = true;
-			break;
-		}
+			continue;
 
 		switch( buff[ 0 ] )
 		{
