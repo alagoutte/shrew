@@ -28,7 +28,7 @@ X Isakmp re-transmit in ipsecd
 X Send NAT keep-alive packets
 X Mutual auth XAuth mode
 
-1.0 release ...
+1.0.0 release ...
 ----------------------------------------------------------------------
 X SPI size of 8 in sa payload
 X Flag tunnel as dead when proposal is rejected
@@ -60,7 +60,7 @@ X Correct the VNET MTU dropping to 175 ( THANK GOD !!! )
 X Update VProt Interface to handle Dialup Adapters
 . !!! All reported bugs !!!
 
-1.1 release - Bug fixes and fine tuning
+1.1.0 release - Bug fixes and fine tuning
 ----------------------------------------------------------------------
 X Add Split DNS Support
 X Cleanup orphaned dnsfwd entries
@@ -95,7 +95,7 @@ X Correct problems with local ID checking
 X Test kernel drivers with multi-core systems
 . !!! All reported bugs !!!
 
-2.0 release - Interface below TCPIP and friends
+2.0.0 release - Interface below TCPIP and friends
 ----------------------------------------------------------------------
 X Replace Protocol driver with IM filter driver
 X Build rule based filter framework into IM driver
@@ -146,34 +146,48 @@ X Modify the client gui for config push or pull
 X Fix the vpn trace sdb output tabs
 X Update the client gui network tab
 X Test all client features against racoon and iked
-x Update the documentation
+X Update the documentation
 . !!! All reported bugs !!!
 
-2.1 release - Bug fix and fine tuning
+2.0.1 release - Improve platform support
 ----------------------------------------------------------------------
-. Add support for lzs compression
-. Add adaptive communications during connect ( Frag/NATT )
-. Review option flags usage for client struct
-. Move to a purely primitive based tunnel confguration interface
+X Add support for Windows XP amd64 platform
+X Add support for x86/amd64 FreBSD platforms
+X Add support for x86/amd64 NetBSD platforms
+X Add support for x86/amd64 Linux platforms
+. !!! All reported bugs !!!
+
+2.1.0 release - Bug fix and fine tuning
+----------------------------------------------------------------------
+X Review option flag usage for client struct
+. Add support for dynamic management of divert rules
+. Add support for DHCP over IPsec configuration method
+. Add support for strictly manual client configuration method
+. Add support for x86/amd64 Windows Vista platforms
+. Add support for multiple DNS/WINS server addresses
+. Make Split DNS work with an adapter specific DNS suffix
 . Add user preference dialog for site manager
 . Add preference for client minimize to system tray
 . Add preference for auto-reconnect
 . Add support for unattended installations
+. Add adaptive communications during connect ( Frag/NATT )
+? Move to a purely primitive based tunnel confguration interface
+? Add support for lzs compression ( patent encumbered )
 ? Add preference for pre-populating user names
 ? Add ability to drag site connections as shortcuts
 . !!! All reported bugs !!!
 
-2.2 release - Feature Parity ...
+2.2.0 release - Feature Parity ...
 ----------------------------------------------------------------------
 . Stateful client side firewall
 . !!! All reported bugs !!!
 
-2.3 release - Feature Parity ...
+2.3.0 release - Feature Parity ...
 ----------------------------------------------------------------------
 . Secure Domain Login
 . !!! All reported bugs !!!
 
-3.0 release - High Performance
+3.0.0 release - High Performance
 ----------------------------------------------------------------------
 . Create lightweight kernel or userland buildable crypto library
 . Move ip security processing into the kernel
@@ -188,6 +202,6 @@ X Group based xauth
 X isakmp_id2str
 X sainfo debug improvements
 X responder ignores inital fragment
-. clientaddr
+X clientaddr
 . pass firewall rulesets via modecfg
-. review sa cleanup after client disconnect ( Yvan fixed? )
+. review sa cleanup after client disconnect
