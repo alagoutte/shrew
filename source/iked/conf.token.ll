@@ -81,8 +81,8 @@ if( yy_first_time )
 <SEC_DAEMON>decode		{ return( token::LL_DECODE ); }
 <SEC_DAEMON>log_level		{ return( token::LOG_LEVEL ); }
 <SEC_DAEMON>log_file		{ return( token::LOG_FILE ); }
-<SEC_DAEMON>pcap_ike		{ return( token::PCAP_IKE ); }
-<SEC_DAEMON>pcap_pub		{ return( token::PCAP_PUB ); }
+<SEC_DAEMON>pcap_decrypt	{ return( token::PCAP_DECRYPT ); }
+<SEC_DAEMON>pcap_encrypt	{ return( token::PCAP_ENCRYPT ); }
 <SEC_DAEMON>retry_delay		{ return( token::RETRY_DELAY ); }
 <SEC_DAEMON>retry_count		{ return( token::RETRY_COUNT ); }
 <SEC_DAEMON>{ecb}		{ BEGIN SEC_ROOT; return( token::ECB ); }

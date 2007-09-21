@@ -14,8 +14,8 @@ daemon
 	log_level error;
 
 	log_file "/var/log/iked.log";
-	pcap_ike "/var/log/ike.pcap";
-	pcap_pub "/var/log/pub.pcap";
+#	pcap_decrypt "/var/log/ike.pcap";
+#	pcap_encrypt "/var/log/pub.pcap";
 
 	# retry settings
 

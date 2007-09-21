@@ -60,8 +60,8 @@ IDB_PEER *	peer;
 %token		LL_DECODE	"decode"
 %token		LOG_LEVEL	"log level"
 %token		LOG_FILE	"log file"
-%token		PCAP_IKE	"ike pcap file"
-%token		PCAP_PUB	"pub pcap file"
+%token		PCAP_DECRYPT	"decrypted ike pcap dump file"
+%token		PCAP_ENCRYPT	"encrypted ike pcap dump file"
 %token		RETRY_COUNT	"retry count"
 %token		RETRY_DELAY	"retry delay"
 
@@ -310,17 +310,17 @@ daemon_line
 		iked.level = LOG_DECODE;
 	}
 	EOS
-  |	PCAP_IKE QUOTED
+  |	PCAP_ENCRYPT QUOTED
 	{
-		snprintf( iked.path_ike, MAX_PATH, $2->text() );
-		iked.dump_ike = true;
+		snprintf( iked.path_decrypt, MAX_PATH, $2->text() );
+		iked.dump_decrypt = true;
 		delete $2;
 	}
 	EOS
-  |	PCAP_PUB QUOTED
+  |	PCAP_DECRYPT QUOTED
 	{
-		snprintf( iked.path_pub, MAX_PATH, $2->text() );
-		iked.dump_pub = true;
+		snprintf( iked.path_encrypt, MAX_PATH, $2->text() );
+		iked.dump_encrypt = true;
 		delete $2;
 	}
 	EOS

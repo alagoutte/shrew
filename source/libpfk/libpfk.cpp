@@ -127,7 +127,7 @@ _PFKI::_PFKI()
 
 _PFKI::~_PFKI()
 {
-	close();
+	detach();
 }
 
 long _PFKI::wait_msg()
@@ -188,7 +188,7 @@ long _PFKI::recv_msg( PFKI_MSG & msg, bool peek )
 
 long _PFKI::attach()
 {
-	close();
+	detach();
 
 	//
 	// open our pfkey socket
