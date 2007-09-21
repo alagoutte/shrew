@@ -81,8 +81,8 @@ _IKED::_IKED()
 	unsigned char kame[] = VEND_KAME;
 	vend_kame.set( kame, sizeof( kame ) );
 
-	dump_ike = false;
-	dump_pub = false;
+	dump_decrypt = false;
+	dump_encrypt = false;
 
 	conf_fail = false;
 }
@@ -203,20 +203,20 @@ long _IKED::init( long setlevel )
 	// open our packet dump interfaces
 	//
 
-	if( dump_ike )
+	if( dump_decrypt )
 	{
-		if( !pcap_ike.open( path_ike ) )
-			log.txt( LOG_ERROR, "!! : failed to open %s\n", path_ike );
+		if( !pcap_decrypt.open( path_decrypt ) )
+			log.txt( LOG_ERROR, "!! : failed to open %s\n", path_decrypt );
 		else
-			log.txt( LOG_INFO, "ii : opened %s\'\n", path_ike );
+			log.txt( LOG_INFO, "ii : opened %s\'\n", path_decrypt );
 	}
 
-	if( dump_pub )
+	if( dump_encrypt )
 	{
-		if( !pcap_pub.open( path_pub ) )
-			log.txt( LOG_ERROR, "!! : failed to open %s\n", path_pub );
+		if( !pcap_encrypt.open( path_encrypt ) )
+			log.txt( LOG_ERROR, "!! : failed to open %s\n", path_encrypt );
 		else
-			log.txt( LOG_INFO, "ii : opened %s\'\n", path_pub );
+			log.txt( LOG_INFO, "ii : opened %s\'\n", path_encrypt );
 	}
 
 	//

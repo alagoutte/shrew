@@ -348,11 +348,11 @@ typedef class _IKED
 
 	private:
 
-	char	path_ins[ MAX_PATH ];	// install path
-	char	path_log[ MAX_PATH ];	// logfile path
-	char	path_ike[ MAX_PATH ];	// debug output path
-	char	path_pub[ MAX_PATH ];	// debug output path
-
+	char	path_ins[ MAX_PATH ];		// install path
+	char	path_log[ MAX_PATH ];		// logfile path
+	char	path_decrypt[ MAX_PATH ];	// decrypted pcap path
+	char	path_encrypt[ MAX_PATH ];	// encrypted pcap path
+	
 	long	level;				// logfile level
 
 	long	state;				// daemon run state
@@ -400,13 +400,11 @@ typedef class _IKED
 	BDATA	vend_dpd1;
 	BDATA	vend_kame;
 
-	long	dump_ike;			// packet dump decoded traffic
-	long	dump_pub;			// packet dump encoded traffic
+	long	dump_decrypt;		// packet dump decoded traffic
+	long	dump_encrypt;		// packet dump encoded traffic
 
-	PCAP_DUMP	pcap_ike;
-	PCAP_DUMP	pcap_pub;
-	PCAP_DUMP	pcap_frg;
-	PCAP_DUMP	pcap_prv;
+	PCAP_DUMP	pcap_decrypt;
+	PCAP_DUMP	pcap_encrypt;
 
 	// locking functions
 
@@ -438,6 +436,13 @@ typedef class _IKED
 	long	socket_create( IKE_SADDR & saddr, bool encap );
 	long	socket_locate( IKE_SADDR & saddr );
 	long	socket_select( unsigned long timeout );
+
+#ifdef WIN32
+
+	long	filter_tunnel_add( IDB_TUNNEL * tunnel );
+	long	filter_tunnel_del( IDB_TUNNEL * tunnel );
+
+#endif
 
 	long	header( PACKET_IP & packet, ETH_HEADER & ethhdr );
 	long	recv_ip( PACKET_IP & packet, ETH_HEADER * ethhdr = NULL );

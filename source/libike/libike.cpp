@@ -54,7 +54,10 @@ _IKEI::_IKEI()
 
 _IKEI::~_IKEI()
 {
-	CloseHandle( olapp.hEvent );
+	if( olapp.hEvent != NULL )
+		CloseHandle( olapp.hEvent );
+
+	detach();
 }
 
 long _IKEI::attach( long timeout )
@@ -79,11 +82,10 @@ long _IKEI::attach( long timeout )
 
 void _IKEI::detach()
 {
-	if( hpipe )
-	{
+	if( hpipe != INVALID_HANDLE_VALUE )
 		CloseHandle( hpipe );
-		hpipe = INVALID_HANDLE_VALUE;
-	}
+
+	hpipe = INVALID_HANDLE_VALUE;
 }
 
 void CALLBACK msg_end( DWORD result, DWORD size, LPOVERLAPPED overlapped )

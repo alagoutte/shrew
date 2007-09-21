@@ -149,6 +149,16 @@ bool _IDB_TUNNEL::add( bool lock )
 	if( lock )
 		iked.lock_sdb.unlock();
 
+	//
+	// setup our filter
+	//
+
+#ifdef WIN32
+
+	iked.filter_tunnel_add( this );
+
+#endif
+
 	return result;
 }
 
@@ -214,6 +224,16 @@ bool _IDB_TUNNEL::dec( bool lock )
 
 	if( lock )
 		iked.lock_sdb.unlock();
+
+	//
+	// cleanup our filter
+	//
+
+#ifdef WIN32
+
+	iked.filter_tunnel_del( this );
+
+#endif
 
 	//
 	// free

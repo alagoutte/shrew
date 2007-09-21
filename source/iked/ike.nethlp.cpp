@@ -494,41 +494,10 @@ void _IKED::socket_done()
 
 long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 {
-	FLT_RULE rule;
-	memset( &rule, 0, sizeof( rule ) );
-
-	if( !encap )
-	{
-		rule.Level   = RLEVEL_DAEMON;
-		rule.Group   = 0;
-		rule.Action  = FLT_ACTION_DIVERT;
-		rule.Flags   = FLT_FLAG_QUICK | FLT_FLAG_RECV;
-		rule.Proto   = htons( PROTO_IP );
-		rule.IpPro   = PROTO_IP_UDP;
-		rule.DstAddr = saddr.saddr4.sin_addr.s_addr;
-		rule.DstMask = FLT_MASK_ADDR;
-		rule.DstPort = saddr.saddr4.sin_port;
-
-		vflt.rule_add( &rule );
-
-		sock_ike_open++;
-	}
-	else
-	{
-		rule.Level   = RLEVEL_DAEMON;
-		rule.Group   = 0;
-		rule.Action  = FLT_ACTION_DIVERT;
-		rule.Flags   = FLT_FLAG_QUICK | FLT_FLAG_RECV | FLT_FLAG_NOT_NATTESP;
-		rule.Proto   = htons( PROTO_IP );
-		rule.IpPro   = PROTO_IP_UDP;
-		rule.DstAddr = saddr.saddr4.sin_addr.s_addr;
-		rule.DstMask = FLT_MASK_ADDR;
-		rule.DstPort = saddr.saddr4.sin_port;
-
-		vflt.rule_add( &rule );
-
-		sock_natt_open++;
-	}
+	//
+	// restore optional catch-all
+	// rules for gateway operation?
+	//
 
 	return LIBIKE_OK;
 }
@@ -562,6 +531,53 @@ long _IKED::recv_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 long _IKED::send_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 {
 	return vneterr( vflt.send_ip( packet, FLT_SEND_DN, ethhdr ) );
+}
+
+long _IKED::filter_tunnel_add( IDB_TUNNEL * tunnel )
+{
+	FLT_RULE rule;
+	memset( &rule, 0, sizeof( rule ) );
+
+	rule.Level   = RLEVEL_DAEMON;
+	rule.Group   = tunnel->refid;
+	rule.Action  = FLT_ACTION_DIVERT;
+	rule.Flags   = FLT_FLAG_QUICK | FLT_FLAG_RECV;
+	rule.Proto   = htons( PROTO_IP );
+	rule.IpPro   = PROTO_IP_UDP;
+	rule.SrcAddr = tunnel->saddr_r.saddr4.sin_addr.s_addr;
+	rule.SrcMask = FLT_MASK_ADDR;
+	rule.DstAddr = tunnel->saddr_l.saddr4.sin_addr.s_addr;
+	rule.DstMask = FLT_MASK_ADDR;
+	rule.SrcPort = tunnel->saddr_r.saddr4.sin_port;
+	rule.DstPort = tunnel->saddr_l.saddr4.sin_port;
+
+	vflt.rule_add( &rule );
+
+	memset( &rule, 0, sizeof( rule ) );
+
+	rule.Level   = RLEVEL_DAEMON;
+	rule.Group   = tunnel->refid;
+	rule.Action  = FLT_ACTION_DIVERT;
+	rule.Flags   = FLT_FLAG_QUICK | FLT_FLAG_RECV | FLT_FLAG_HAS_IPSECSPI;
+	rule.Proto   = htons( PROTO_IP );
+	rule.IpPro   = PROTO_IP_UDP;
+	rule.SrcAddr = tunnel->saddr_r.saddr4.sin_addr.s_addr;
+	rule.SrcMask = FLT_MASK_ADDR;
+	rule.DstAddr = tunnel->saddr_l.saddr4.sin_addr.s_addr;
+	rule.DstMask = FLT_MASK_ADDR;
+	rule.SrcPort = tunnel->peer->natt_port;
+	rule.DstPort = htons( LIBIKE_NATT_PORT );
+
+	vflt.rule_add( &rule );
+
+	return LIBIKE_OK;
+}
+
+long _IKED::filter_tunnel_del( IDB_TUNNEL * tunnel )
+{
+	vflt.rule_del( tunnel->refid );
+
+	return LIBIKE_OK;
 }
 
 #endif

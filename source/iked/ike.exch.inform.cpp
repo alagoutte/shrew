@@ -197,12 +197,12 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	packet_ike_decrypt( ph1, packet, &inform.iv );
 
 	//
-	// if we are dumping the ike packets,
-	// we need to rebuild a full packet
-	// to dump to pcap format 
+	// if we are dumping decrypted packets,
+	// we need to rebuild a full packet to
+	// dump to pcap format 
 	//
 
-	if( dump_ike )
+	if( dump_decrypt )
 	{
 		//
 		// strip the isakmp encryption flag
@@ -233,7 +233,7 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		// dump the packet
 		//
 
-		pcap_ike.dump(
+		pcap_decrypt.dump(
 			ethhdr,
 			packet_ip_dump );
 	}

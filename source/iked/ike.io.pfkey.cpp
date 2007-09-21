@@ -76,7 +76,7 @@ long _IKED::loop_ike_pfkey()
 
 		if( result != PFKI_OK )
 		{
-			if( pfki.open() != PFKI_OK )
+			if( pfki.attach() != PFKI_OK )
 			{
 				Sleep( 100 );
 				continue;
@@ -236,7 +236,7 @@ long _IKED::loop_ike_pfkey()
 		}
 	}
 
-	pfki.close();
+	pfki.detach();
 
 	refcount--;
 

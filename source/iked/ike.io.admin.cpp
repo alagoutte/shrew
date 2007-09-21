@@ -701,8 +701,8 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	// flush our private pcap dump files
 	//
 
-	pcap_prv.flush();
-	pcap_frg.flush();
+	if( dump_decrypt )
+		pcap_decrypt.flush();
 
 	//
 	// perform tunnel cleanup steps

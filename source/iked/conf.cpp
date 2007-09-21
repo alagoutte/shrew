@@ -100,33 +100,33 @@ bool _IKED::conf_load( const char * path, bool trace )
 					&size );
 
 		//
-		// decoded ike packet dump
+		// decrypted ike packet dump
 		//
 
-		size = sizeof( dump_ike );
+		size = sizeof( dump_decrypt );
 		type = REG_DWORD;
 
 		result = RegQueryValueEx(
 					key,
-					"dump-ike",
+					"dump-ike-decrypt",
 					0,
 					&type,
-					( LPBYTE ) &dump_ike,
+					( LPBYTE ) &dump_decrypt,
 					&size );
 
 		//
-		// encoded ike packet dump
+		// encrypted ike packet dump
 		//
 
-		size = sizeof( dump_pub );
+		size = sizeof( dump_encrypt );
 		type = REG_DWORD;
 
 		result = RegQueryValueEx(
 					key,
-					"dump-pub",
+					"dump-ike-encrypt",
 					0,
 					&type,
-					( LPBYTE ) &dump_pub,
+					( LPBYTE ) &dump_encrypt,
 					&size );
 
 		RegCloseKey( key );
@@ -139,11 +139,11 @@ bool _IKED::conf_load( const char * path, bool trace )
 	if( !strlen( path_log ) )
 		sprintf_s( path_log, MAX_PATH, "%s/debug/%s", path_ins, "iked.log" );
 
-	if( dump_ike )
-		sprintf_s( path_ike, MAX_PATH, "%s/debug/%s", path_ins, "dump-ike.cap" );
+	if( dump_decrypt )
+		sprintf_s( path_decrypt, MAX_PATH, "%s/debug/%s", path_ins, "dump-ike-decrypt.cap" );
 
-	if( dump_pub )
-		sprintf_s( path_pub, MAX_PATH, "%s/debug/%s", path_ins, "dump-pub.cap" );
+	if( dump_encrypt )
+		sprintf_s( path_encrypt, MAX_PATH, "%s/debug/%s", path_ins, "dump-ike-encrypt.cap" );
 
 
 	return true;

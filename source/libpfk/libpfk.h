@@ -357,8 +357,8 @@ typedef class DLX _PFKI
 	long	read_natt( PFKI_MSG & msg, PFKI_NATT & natt );
 	long	read_policy( PFKI_MSG & msg, PFKI_SPINFO & spinfo );
 
-	long	open();
-	void	close();
+	long	attach();
+	void	detach();
 
 	const char *	name( long type, long value );
 

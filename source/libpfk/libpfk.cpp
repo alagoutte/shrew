@@ -186,7 +186,7 @@ long _PFKI::recv_msg( PFKI_MSG & msg, bool peek )
 	return PFKI_OK;
 }
 
-long _PFKI::open()
+long _PFKI::attach()
 {
 	close();
 
@@ -216,7 +216,7 @@ long _PFKI::open()
 	return PFKI_OK;
 }
 
-void _PFKI::close()
+void _PFKI::detach()
 {
 	if( sock != -1 )
 		sockclose( sock );
@@ -239,7 +239,13 @@ _PFKI::_PFKI()
 
 _PFKI::~_PFKI()
 {
-	CloseHandle( olapp.hEvent );
+	if( olapp.hEvent != NULL )
+		CloseHandle( olapp.hEvent );
+
+	olapp.hEvent = NULL;
+
+	detach();
+
 }
 
 void CALLBACK msg_end( DWORD result, DWORD size, LPOVERLAPPED overlapped )
@@ -322,7 +328,7 @@ long _PFKI::recv_msg( PFKI_MSG & msg, bool peek )
 	return PFKI_OK;
 }
 
-long _PFKI::open()
+long _PFKI::attach()
 {
 	if( !WaitNamedPipe( PFKI_PIPE_NAME, 3000 ) )
 		return false;
@@ -344,10 +350,12 @@ long _PFKI::open()
 	return PFKI_OK;
 }
 
-void _PFKI::close()
+void _PFKI::detach()
 {
 	if( hpipe != INVALID_HANDLE_VALUE )
 		CloseHandle( hpipe );
+
+	hpipe = INVALID_HANDLE_VALUE;
 }
 
 #endif

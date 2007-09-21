@@ -47,13 +47,13 @@ static char encap_nat[] = "NAT-T:IKE";
 long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, bool retry )
 {
 	//
-	// if we are dumping ike packets,
-	// we need to build an ip packet
-	// using the un-encrypted ike
-	// payload
+	// if we are dumping decrytped ike
+	// packets, we need to build an ip
+	// packet using the un-encrypted
+	// ike payload
 	//
 
-	if( dump_ike )
+	if( dump_decrypt )
 	{
 		PACKET_IP packet_ip_dump;
 
@@ -92,7 +92,7 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 		// dump the ike packet
 		//
 
-		pcap_ike.dump( ethhdr, packet_ip_dump );
+		pcap_decrypt.dump( ethhdr, packet_ip_dump );
 
 		//
 		// restore the isakmp flags
@@ -308,11 +308,11 @@ long _IKED::packet_ike_xmit( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 		xch->resend_queue( packet_ip );
 
 	//
-	// dump for public interface
+	// dump for encoded packets
 	//
 
-	if( dump_pub )
-		pcap_pub.dump( header, packet_ip );
+	if( dump_encrypt )
+		pcap_encrypt.dump( header, packet_ip );
 
 	return LIBIKE_OK;
 }

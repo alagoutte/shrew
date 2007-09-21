@@ -563,7 +563,8 @@ typedef class DLX _IPROUTE
 	bool increment( in_addr addr, in_addr mask );
 	bool decrement( in_addr addr, in_addr mask );
 
-	bool flusharp( in_addr &iface );
+	bool islocal( in_addr & iface );
+	bool flusharp( in_addr & iface );
 
 }IPROUTE;
 

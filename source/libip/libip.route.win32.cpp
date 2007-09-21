@@ -478,6 +478,12 @@ bool _IPROUTE::decrement( in_addr addr, in_addr mask )
 }
 
 
+bool _IPROUTE::islocal( in_addr & iface )
+{
+	unsigned long iindex;
+	return addr_2_iface( iindex, iface );
+}
+
 bool _IPROUTE::flusharp( in_addr & iface )
 {
 	unsigned long iindex;

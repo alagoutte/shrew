@@ -109,9 +109,10 @@ long _IKED::loop_ike_nwork()
 			if( result == LIBIKE_NODATA )
 				break;
 
-			pcap_pub.dump(
-				eth_header,
-				packet_ip );
+			if( dump_encrypt )
+				pcap_encrypt.dump(
+					eth_header,
+					packet_ip );
 
 			packets--;
 
