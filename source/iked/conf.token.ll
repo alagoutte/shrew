@@ -73,6 +73,7 @@ if( yy_first_time )
 <SEC_DAEMON>socket		{ return( token::SOCKET ); }
 <SEC_DAEMON>ike			{ return( token::IKE ); }
 <SEC_DAEMON>natt		{ return( token::NATT ); }
+<SEC_DAEMON>syslog		{ return( token::SYSLOG ); }
 <SEC_DAEMON>none		{ return( token::LL_NONE ); }
 <SEC_DAEMON>error		{ return( token::LL_ERROR ); }
 <SEC_DAEMON>info		{ return( token::LL_INFO ); }
@@ -287,7 +288,7 @@ bool _IKED::conf_load( const char * path, bool trace )
 	yy_flex_debug = trace;
 	if( !( yyin = fopen( path_conf, "r" ) ) )
 	{
-		log.txt( LOG_ERROR, "!! : unable to open %s\n", path );
+		log.txt( LLOG_ERROR, "!! : unable to open %s\n", path );
 		return false;
 	}
 

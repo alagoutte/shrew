@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2007
  *      Shrew Soft Inc.  All rights reserved.
@@ -52,6 +51,7 @@
 # include <stdarg.h>
 # include <stdio.h>
 # include <time.h>
+# include <syslog.h>
 # include "compat/winstring.h"
 #endif
 
@@ -65,8 +65,11 @@
 #define	LLOG_LOUD		4
 #define	LLOG_DECODE		5
 
-#define LLOG_MAX_TXT		2048
-#define LLOG_MAX_BIN		16384
+#define LOG_MAX_TXT		2048
+#define LOG_MAX_BIN		16384
+
+#define LOGFLAG_ECHO		0x01
+#define LOGFLAG_SYSTEM		0x02
 
 typedef struct DLX _LOG
 {
@@ -90,7 +93,7 @@ typedef struct DLX _LOG
 	ITH_LOCK	lock;
 
 	long		log_level;
-	bool		log_echo;
+	long		log_flags;
 
 	void	tstamp( char * buff, long size );
 	bool	append( char * buff, long size );
@@ -100,7 +103,7 @@ typedef struct DLX _LOG
 	_LOG();
 	~_LOG();
 
-	bool	open( char * path, long level, bool echo );
+	bool	open( char * path, long level, long flags );
 	void	close();
 
 	void	txt( long level, const char * fmt, ... );

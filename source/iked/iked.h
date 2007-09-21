@@ -353,7 +353,8 @@ typedef class _IKED
 	char	path_decrypt[ MAX_PATH ];	// decrypted pcap path
 	char	path_encrypt[ MAX_PATH ];	// encrypted pcap path
 	
-	long	level;				// logfile level
+	long	level;				// logging level
+	bool	logflags;			// logging options
 
 	long	state;				// daemon run state
 	long	refcount;			// reference count

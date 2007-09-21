@@ -52,6 +52,7 @@ IDB_PEER *	peer;
 %token		SOCKET		"socket"
 %token		IKE		"ike"
 %token		NATT		"natt"
+%token		SYSLOG		"syslog"
 %token		LL_NONE		"none"
 %token		LL_ERROR	"error"
 %token		LL_INFO		"info"
@@ -274,6 +275,12 @@ daemon_line
 #endif
 	}
 	EOS
+  |	LOG_FILE SYSLOG
+	{
+		snprintf( iked.path_log, MAX_PATH, "iked" );
+		iked.logflags |= LOGFLAG_SYSTEM;
+	}
+	EOS
   |	LOG_FILE QUOTED
 	{
 		snprintf( iked.path_log, MAX_PATH, $2->text() );
@@ -282,32 +289,32 @@ daemon_line
 	EOS
   |	LOG_LEVEL LL_NONE
 	{
-		iked.level = LOG_NONE;
+		iked.level = LLOG_NONE;
 	}
 	EOS
   |	LOG_LEVEL LL_ERROR
 	{
-		iked.level = LOG_ERROR;
+		iked.level = LLOG_ERROR;
 	}
 	EOS
   |	LOG_LEVEL LL_INFO
 	{
-		iked.level = LOG_INFO;
+		iked.level = LLOG_INFO;
 	}
 	EOS
   |	LOG_LEVEL LL_DEBUG
 	{
-		iked.level = LOG_DEBUG;
+		iked.level = LLOG_DEBUG;
 	}
 	EOS
   |	LOG_LEVEL LL_LOUD
 	{
-		iked.level = LOG_LOUD;
+		iked.level = LLOG_LOUD;
 	}
 	EOS
   |	LOG_LEVEL LL_DECODE
 	{
-		iked.level = LOG_DECODE;
+		iked.level = LLOG_DECODE;
 	}
 	EOS
   |	PCAP_ENCRYPT QUOTED
@@ -1496,7 +1503,7 @@ void yy::conf_parser::error(
 	const yy::conf_parser::location_type & l,
         const std::string & m )
 {
-	iked.log.txt( LOG_ERROR,
+	iked.log.txt( LLOG_ERROR,
 		"%s ( line %i, col %i )\n",
 		m.c_str(),
 		l.end.line,

@@ -47,6 +47,7 @@ _IKED::_IKED()
 	refcount = 0;
 	tunnelid = 2;
 	policyid = 1;
+	logflags = LOGFLAG_ECHO;
 
 	retry_count = 2;
 	retry_delay = 5;
@@ -162,7 +163,7 @@ long _IKED::init( long setlevel )
 	// open our log ( debug and echo )
 	//
 
-	log.open( NULL, LLOG_DEBUG, true );
+	log.open( NULL, LLOG_DEBUG, logflags );
 
 	//
 	// load our configuration
@@ -178,7 +179,7 @@ long _IKED::init( long setlevel )
 	if( setlevel )
 		level = setlevel;
 
-	bool logging = log.open( path_log, level, true );
+	bool logging = log.open( path_log, level, logflags );
 	
 	//
 	// output our identity
@@ -194,10 +195,15 @@ long _IKED::init( long setlevel )
 		CLIENT_YEAR,
 		SSLeay_version( SSLEAY_VERSION ) );
 
-	if( !logging )
-		log.txt( LLOG_ERROR, "!! : failed to open %s\n", path_log );
+	if( logflags & LOGFLAG_SYSTEM )
+		log.txt( LLOG_INFO, "ii : opened system log facility\n" );
 	else
-		log.txt( LLOG_INFO, "ii : opened %s\'\n", path_log );
+	{
+		if( !logging )
+			log.txt( LLOG_ERROR, "!! : failed to open %s\n", path_log );
+		else
+			log.txt( LLOG_INFO, "ii : opened \'%s\'\n", path_log );
+	}
 
 	//
 	// open our packet dump interfaces
@@ -208,7 +214,7 @@ long _IKED::init( long setlevel )
 		if( !pcap_decrypt.open( path_decrypt ) )
 			log.txt( LLOG_ERROR, "!! : failed to open %s\n", path_decrypt );
 		else
-			log.txt( LLOG_INFO, "ii : opened %s\'\n", path_decrypt );
+			log.txt( LLOG_INFO, "ii : opened \'%s\'\n", path_decrypt );
 	}
 
 	if( dump_encrypt )
@@ -216,7 +222,7 @@ long _IKED::init( long setlevel )
 		if( !pcap_encrypt.open( path_encrypt ) )
 			log.txt( LLOG_ERROR, "!! : failed to open %s\n", path_encrypt );
 		else
-			log.txt( LLOG_INFO, "ii : opened %s\'\n", path_encrypt );
+			log.txt( LLOG_INFO, "ii : opened \'%s\'\n", path_encrypt );
 	}
 
 	//

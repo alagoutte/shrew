@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2007
  *      Shrew Soft Inc.  All rights reserved.
@@ -58,7 +57,7 @@ void _LOG::tstamp( char * buff, long size )
 	struct tm *	ltime;
 
 	time( &ctime );
-    ltime = localtime( &ctime );
+	ltime = localtime( &ctime );
 
 	strftime( buff, length, "%y/%m/%d %H:%M:%S ", ltime );
 */
@@ -69,11 +68,9 @@ bool _LOG::append( char * buff, long size )
 {
 	lock.lock();
 
-	if( fp != NULL )
-	{
-
 #ifdef WIN32
 
+	if( fp != NULL )
 		WriteFile(
 			fp,
 			buff,
@@ -85,14 +82,19 @@ bool _LOG::append( char * buff, long size )
 
 #ifdef UNIX
 
-		fwrite( buff, size, 1, fp );
-		fflush( fp );
-
+	if( log_flags & LOGFLAG_SYSTEM )
+		syslog( LOG_DEBUG, buff );
+	else
+	{
+		if( fp != NULL )
+		{
+			fwrite( buff, size, 1, fp );
+			fflush( fp );
+		}
+	}
 #endif
 
-	}
-
-	if( log_echo )
+	if( log_flags & LOGFLAG_ECHO )
 		printf( buff );
 
 	lock.unlock();
@@ -100,20 +102,20 @@ bool _LOG::append( char * buff, long size )
 	return true;
 }
 
-bool _LOG::open( char * path, long level, bool echo )
+bool _LOG::open( char * path, long level, long flags )
 {
 	//
 	// set the log level
 	//
 
-	log_echo = echo;
+	log_flags = flags;
 	log_level = level;
+
+#ifdef WIN32
 
 	if( path )
 	{
 		close();
-
-#ifdef WIN32
 
 		fp = CreateFile(
 				path,
@@ -124,17 +126,27 @@ bool _LOG::open( char * path, long level, bool echo )
 				FILE_ATTRIBUTE_NORMAL,
 				0 );
 
+		if( fp == NULL )
+			return false;
+	}
 #endif
 
 #ifdef UNIX
 
-		fp = fopen( path, "w" );
+	if( path )
+	{
+		if( log_flags & LOGFLAG_SYSTEM )
+			openlog( path, LOG_NDELAY, LOG_DAEMON );
+		else
+		{
+			fp = fopen( path, "w" );
+
+			if( fp == NULL )
+				return false;
+		}
+	}
 
 #endif
-
-		if( fp == NULL )
-			return false;
-	}
 
 	return true;
 }
@@ -142,24 +154,30 @@ bool _LOG::open( char * path, long level, bool echo )
 void _LOG::close()
 {
 
-	if( fp != NULL )
-	{
-
 #ifdef WIN32
 
+	if( fp != NULL )
+	{
 		FlushFileBuffers( fp );
 		CloseHandle( fp );
+	}
 #endif
 
 #ifdef UNIX
 
-		fflush( fp );
-		fclose( fp );
+	if( log_flags & LOGFLAG_SYSTEM )
+		closelog();
+	else
+	{
+		if( fp != NULL )
+		{
+			fflush( fp );
+			fclose( fp );
+		}
+	}
 
 #endif
-		fp = NULL;
-
-	}
+	fp = NULL;
 }
 
 void _LOG::txt( long level, const char * fmt, ... )
@@ -167,8 +185,8 @@ void _LOG::txt( long level, const char * fmt, ... )
 	char fbuff[ 128 ];
 	tstamp( fbuff, 128 );
 
-	char tbuff[ LLOG_MAX_TXT ];
-	char bbuff[ LLOG_MAX_TXT ];
+	char tbuff[ LOG_MAX_TXT ];
+	char bbuff[ LOG_MAX_TXT ];
 
 	if( level > log_level )
 		return;
@@ -178,10 +196,10 @@ void _LOG::txt( long level, const char * fmt, ... )
 
 	long size = 0;
 
-	if( ( fp != NULL ) || log_echo )
+	if( ( fp != NULL ) || ( log_flags & LOGFLAG_ECHO ) )
 	{
-		vsprintf_s( tbuff, LLOG_MAX_TXT, fmt, list );
-		size = sprintf_s( bbuff, LLOG_MAX_TXT, "%s%s", fbuff, tbuff );
+		vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list );
+		size = sprintf_s( bbuff, LOG_MAX_TXT, "%s%s", fbuff, tbuff );
 
 		if( size != -1 )
 			append( bbuff, size );
@@ -197,8 +215,8 @@ void _LOG::bin( long level, long blevel, void * bin, size_t len, const char * fm
 	char fbuff[ 64 ];
 	tstamp( fbuff, 64 );
 
-	char tbuff[ LLOG_MAX_TXT ];
-	char bbuff[ LLOG_MAX_BIN ];
+	char tbuff[ LOG_MAX_TXT ];
+	char bbuff[ LOG_MAX_BIN ];
 
 	va_list list;
 	va_start( list, fmt );
@@ -208,11 +226,11 @@ void _LOG::bin( long level, long blevel, void * bin, size_t len, const char * fm
 	if( ( level <= log_level ) && ( blevel > log_level ) )
 	{
 
-		size = vsprintf_s( tbuff, LLOG_MAX_TXT, fmt, list ); 
+		size = vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list ); 
 
 		if( size != -1 )
 		{
-			size = sprintf_s( bbuff, LLOG_MAX_BIN, "%s%s ( %ld bytes )\n", fbuff, tbuff, len );
+			size = sprintf_s( bbuff, LOG_MAX_BIN, "%s%s ( %ld bytes )\n", fbuff, tbuff, len );
 
 			append( bbuff, size );
 		}
@@ -220,30 +238,30 @@ void _LOG::bin( long level, long blevel, void * bin, size_t len, const char * fm
 
 	if( blevel <= log_level )
 	{
-		size = vsprintf_s( tbuff, LLOG_MAX_TXT, fmt, list );
-		size = sprintf_s( bbuff, LLOG_MAX_TXT, "%s%s ( %ld bytes ) = ", fbuff, tbuff, len );
+		size = vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list );
+		size = sprintf_s( bbuff, LOG_MAX_TXT, "%s%s ( %ld bytes ) = ", fbuff, tbuff, len );
 
 		char * cdata = ( char * ) bin;
 		char * bdata = bbuff + size;
 
 		for( size_t index = 0; index < len; index ++ )
 		{
-			if( LLOG_MAX_BIN - ( bdata - bbuff + size ) <= 8 )
+			if( LOG_MAX_BIN - ( bdata - bbuff + size ) <= 8 )
 			{
-				bdata += sprintf_s( bdata, LLOG_MAX_BIN, " ...\n" );
+				bdata += sprintf_s( bdata, LOG_MAX_BIN, " ...\n" );
 				break;
 			}
 
 			if( !( index % 0x20 ) )
-				bdata += sprintf_s( bdata, LLOG_MAX_BIN, "\n0x :" );
+				bdata += sprintf_s( bdata, LOG_MAX_BIN, "\n0x :" );
 
 			if( !( index % 0x04 ) )
-				bdata += sprintf_s( bdata, LLOG_MAX_BIN, " " );
+				bdata += sprintf_s( bdata, LOG_MAX_BIN, " " );
 
-			bdata += sprintf_s( bdata, LLOG_MAX_BIN, "%02x", 0xff & cdata[ index ] );
+			bdata += sprintf_s( bdata, LOG_MAX_BIN, "%02x", 0xff & cdata[ index ] );
 		}
 
-		sprintf_s( bdata, LLOG_MAX_BIN, "\n" );
+		sprintf_s( bdata, LOG_MAX_BIN, "\n" );
 		bdata++;
 
 		size = long( bdata - bbuff );
