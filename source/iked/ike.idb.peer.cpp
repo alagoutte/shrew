@@ -86,7 +86,7 @@ bool _IKED::get_peer( bool lock, IDB_PEER ** peer, IKE_SADDR * saddr )
 				if( !cmp_sockaddr( tmp_peer->saddr.saddr, saddr->saddr, false ) )
 					continue;
 
-		log.txt( LOG_DEBUG, "DB : peer found\n" );
+		log.txt( LLOG_DEBUG, "DB : peer found\n" );
 
 		//
 		// increase our refrence count
@@ -104,7 +104,7 @@ bool _IKED::get_peer( bool lock, IDB_PEER ** peer, IKE_SADDR * saddr )
 		return true;
 	}
 
-	log.txt( LOG_DEBUG, "DB : peer not found\n" );
+	log.txt( LLOG_DEBUG, "DB : peer not found\n" );
 
 	if( lock )
 		lock_sdb.unlock();
@@ -121,7 +121,7 @@ bool _IDB_PEER::add( bool lock )
 
 	bool result = iked.list_peer.add_item( this );
 
-	iked.log.txt( LOG_DEBUG, "DB : peer added\n" );
+	iked.log.txt( LLOG_DEBUG, "DB : peer added\n" );
 
 	if( lock )
 		iked.lock_sdb.unlock();
@@ -136,7 +136,7 @@ bool _IDB_PEER::inc( bool lock )
 
 	refcount++;
 
-	iked.log.txt( LOG_LOUD,
+	iked.log.txt( LLOG_LOUD,
 		"DB : peer ref increment ( ref count = %i, peer count = %i )\n",
 		refcount,
 		iked.list_peer.get_count() );
@@ -158,7 +158,7 @@ bool _IDB_PEER::dec( bool lock )
 
 	if( refcount || !( lstate & LSTATE_DELETE ) )
 	{
-		iked.log.txt( LOG_LOUD,
+		iked.log.txt( LLOG_LOUD,
 			"DB : peer ref decrement ( ref count = %i, peer count = %i )\n",
 			refcount,
 			iked.list_peer.get_count() );
@@ -179,7 +179,7 @@ bool _IDB_PEER::dec( bool lock )
 	// log deletion
 	//
 
-	iked.log.txt( LOG_DEBUG,
+	iked.log.txt( LLOG_DEBUG,
 		"DB : peer deleted ( peer count = %i )\n",
 		iked.list_peer.get_count() );
 
@@ -196,7 +196,7 @@ void _IDB_PEER::end( bool lock )
 	if( lock )
 		iked.lock_sdb.lock();
 
-	iked.log.txt( LOG_INFO, "DB : removing all peer refrences\n" );
+	iked.log.txt( LLOG_INFO, "DB : removing all peer refrences\n" );
 
 	//
 	// check for tunnel object refrences

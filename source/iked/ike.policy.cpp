@@ -128,7 +128,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 
 	if( !initiator )
 	{
-		log.txt( LOG_INFO, "ii : creating policy id list\n" );
+		log.txt( LLOG_INFO, "ii : creating policy id list\n" );
 
 		long index = 0;
 
@@ -144,7 +144,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 			{
 				if( tunnel->peer->plcy_mode == POLICY_MODE_COMPAT )
 				{
-					log.txt( LOG_ERROR,
+					log.txt( LLOG_ERROR,
 						"!! : - cannot validate netgroup %s before xauth\n",
 						netmap->ilist->name.text() );
 
@@ -154,7 +154,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 				if( !tunnel->xauth.user.size() ||
 					!tunnel->xauth.pass.size() )
 				{
-					log.txt( LOG_ERROR,
+					log.txt( LLOG_ERROR,
 						"!! : - cannot validate netgroup %s without xauth\n",
 						netmap->ilist->name.text() );
 
@@ -165,7 +165,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 						tunnel->xauth,
 						netmap->group ) )
 				{
-					log.txt( LOG_INFO,
+					log.txt( LLOG_INFO,
 						"ii : - xauth user %s group %s membership rejected ( %s )\n",
 						tunnel->xauth.user.text(),
 						netmap->group.text(),
@@ -174,7 +174,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 					continue;
 				}
 
-				log.txt( LOG_INFO,
+				log.txt( LLOG_INFO,
 					"ii : - xauth user %s group %s membership accepted ( %s )\n",
 					tunnel->xauth.user.text(),
 					netmap->group.text(),
@@ -185,7 +185,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 			// add netgroup ids to the tunnel list
 			//
 
-			log.txt( LOG_INFO,
+			log.txt( LLOG_INFO,
 				"ii : - adding policy ids for netgroup %s\n",
 				netmap->ilist->name.text() );
 
@@ -387,7 +387,7 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	text_addr( txtid_src, &spinfo.paddr_src, false, true );
 	text_addr( txtid_dst, &spinfo.paddr_dst, false, true );
 
-	log.txt( LOG_INFO, 
+	log.txt( LLOG_INFO, 
 		"ii : creating %s %s policy %s -> %s\n",
 		pfki.name( NAME_SPTYPE, spinfo.sp.type ),
 		pfki.name( NAME_SPDIR, spinfo.sp.dir ),
@@ -422,7 +422,7 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	text_addr( txtid_src, &spinfo.paddr_src, false, true );
 	text_addr( txtid_dst, &spinfo.paddr_dst, false, true );
 
-	log.txt( LOG_INFO, 
+	log.txt( LLOG_INFO, 
 		"ii : creating %s %s policy %s -> %s\n",
 		pfki.name( NAME_SPTYPE, spinfo.sp.type ),
 		pfki.name( NAME_SPDIR, spinfo.sp.dir ),
@@ -499,14 +499,14 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 
 		if( routed )
 		{
-			log.txt( LOG_INFO,
+			log.txt( LLOG_INFO,
 				"ii : created %s policy route for %s\n",
 				pfki.name( NAME_SPTYPE, type ),
 				txtid_dst );
 		}
 		else
 		{
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : failed to create %s policy route for %s\n",
 				pfki.name( NAME_SPTYPE, type ),
 				txtid_dst );
@@ -553,7 +553,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		text_addr( txtid_src, &policy->paddr_src, false, true );
 		text_addr( txtid_dst, &policy->paddr_dst, false, true );
 
-		log.txt( LOG_INFO, 
+		log.txt( LLOG_INFO, 
 			"ii : removing %s %s policy %s -> %s\n",
 			pfki.name( NAME_SPTYPE, policy->sp.type ),
 			pfki.name( NAME_SPDIR, policy->sp.dir ),
@@ -592,7 +592,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		text_addr( txtid_src, &policy->paddr_src, false, true );
 		text_addr( txtid_dst, &policy->paddr_dst, false, true );
 
-		log.txt( LOG_INFO, 
+		log.txt( LLOG_INFO, 
 			"ii : removing %s %s policy %s -> %s\n",
 			pfki.name( NAME_SPTYPE, policy->sp.type ),
 			pfki.name( NAME_SPDIR, policy->sp.dir ),
@@ -675,7 +675,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		{
 			text_ph2id( txtid_dst, &id2 );
 
-			log.txt( LOG_INFO,
+			log.txt( LLOG_INFO,
 				"ii : removed %s policy route for %s\n",
 				pfki.name( NAME_SPTYPE, type ),
 				txtid_dst );
@@ -684,7 +684,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		{
 			text_ph2id( txtid_dst, &id2 );
 
-			log.txt( LOG_INFO,
+			log.txt( LLOG_INFO,
 				"ii : failed to remove %s policy route for %s\n",
 				pfki.name( NAME_SPTYPE, type ),
 				txtid_dst );

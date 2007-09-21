@@ -113,21 +113,21 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 
 	if( sock_info->sock < 0 )
 	{
-		log.txt( LOG_ERROR, "!! : socket create failed\n" );
+		log.txt( LLOG_ERROR, "!! : socket create failed\n" );
 		return LIBIKE_SOCKET;
 	}
 
 	struct linger linger = { 0, 0 };
 	if( setsockopt( sock_info->sock, SOL_SOCKET, SO_LINGER, &linger, sizeof( linger ) ) < 0 )
 	{
-		log.txt( LOG_ERROR, "!! : socket set linger option failed\n" );
+		log.txt( LLOG_ERROR, "!! : socket set linger option failed\n" );
 		return LIBIKE_SOCKET;
 	}
 
 	int optval = 1;
 	if( setsockopt( sock_info->sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof( optval ) ) < 0 )
 	{
-		log.txt( LOG_ERROR, "!! : socket set linger option failed\n" );
+		log.txt( LLOG_ERROR, "!! : socket set linger option failed\n" );
 		return LIBIKE_SOCKET;
 	}
 
@@ -136,7 +136,7 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 	optval = 1;
 	if( setsockopt( sock_info->sock, IPPROTO_IP, IP_PKTINFO, &optval, sizeof( optval ) ) < 0)
 	{
-		log.txt( LOG_ERROR, "!! : socket set recvdstaddr option failed\n" );
+		log.txt( LLOG_ERROR, "!! : socket set recvdstaddr option failed\n" );
 		return LIBIKE_SOCKET;
 	}
 
@@ -145,7 +145,7 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 	optval = 1;
 	if( setsockopt( sock_info->sock, IPPROTO_IP, IP_RECVDSTADDR, &optval, sizeof( optval ) ) < 0)
 	{
-		log.txt( LOG_ERROR, "!! : socket set recvdstaddr option failed\n" );
+		log.txt( LLOG_ERROR, "!! : socket set recvdstaddr option failed\n" );
 		return LIBIKE_SOCKET;
 	}
 
@@ -153,13 +153,13 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 
 	if( fcntl( sock_info->sock, F_SETFL, O_NONBLOCK ) == -1 )
 	{
-		log.txt( LOG_ERROR, "!! : socket set non-blocking mode failed\n" );
+		log.txt( LLOG_ERROR, "!! : socket set non-blocking mode failed\n" );
 		return LIBIKE_SOCKET;
 	}
 
 	if( bind( sock_info->sock, &sock_info->saddr.saddr, sizeof( sock_info->saddr.saddr4 ) ) < 0 )
 	{
-		log.txt( LOG_ERROR, "!! : socket bind failed\n" );
+		log.txt( LLOG_ERROR, "!! : socket bind failed\n" );
 		return LIBIKE_SOCKET;
 	}
 
@@ -171,7 +171,7 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 		optval = UDP_ENCAP_ESPINUDP;
 		if( setsockopt( sock_info->sock, SOL_UDP, UDP_ENCAP, &optval, sizeof( optval ) ) < 0)
 		{
-			log.txt( LOG_ERROR, "!! : socket set udp-encap option failed\n" );
+			log.txt( LLOG_ERROR, "!! : socket set udp-encap option failed\n" );
 			return LIBIKE_SOCKET;
 		}
 
@@ -190,7 +190,7 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 
 	if( !encap )
 	{
-		log.txt( LOG_INFO,
+		log.txt( LLOG_INFO,
 			"ii : created ike socket %s\n",
 			txtaddr );
 
@@ -198,7 +198,7 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 	}
 	else
 	{
-		log.txt( LOG_INFO,
+		log.txt( LLOG_INFO,
 			"ii : created natt socket %s\n",
 			txtaddr );
 
@@ -415,7 +415,7 @@ long _IKED::send_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 
 		if( result <= 0 )
 		{
-			log.txt( LOG_ERROR, "!! : send error %li\n", result );
+			log.txt( LLOG_ERROR, "!! : send error %li\n", result );
 			return LIBIKE_SOCKET;
 		}
 
@@ -434,7 +434,7 @@ long _IKED::send_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 		return LIBIKE_OK;
 	}
 
-	log.txt( LOG_ERROR, "!! : socket not found\n" );
+	log.txt( LLOG_ERROR, "!! : socket not found\n" );
 
 	return LIBIKE_SOCKET;
 }
@@ -625,7 +625,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 
 		if( stat( (*adapter)->name, &sb ) )
 		{
-                        log.txt( LOG_DEBUG, "ii : unable to stat %s\n",
+                        log.txt( LLOG_DEBUG, "ii : unable to stat %s\n",
 				(*adapter)->name );
 			break;
 		}
@@ -635,7 +635,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 		(*adapter)->fn = open( (*adapter)->name, O_RDWR );
 		if( (*adapter)->fn == -1 )
 		{
-			log.txt( LOG_DEBUG, "ii : unable to open %s\n",
+			log.txt( LLOG_DEBUG, "ii : unable to open %s\n",
 				(*adapter)->name );
 			continue;
 		}
@@ -653,7 +653,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 		(*adapter)->fn = open( "/dev/tap", O_RDWR);
 		if( (*adapter)->fn == -1 )
 		{
-			log.txt( LOG_ERROR, "!! : failed to open tap device\n" );
+			log.txt( LLOG_ERROR, "!! : failed to open tap device\n" );
 
 			delete *adapter;
 			*adapter = NULL;
@@ -664,7 +664,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 		struct stat buf;
 		if( fstat( (*adapter)->fn, &buf ) < 0 )
 		{
-			log.txt( LOG_ERROR, "!! : failed to read tap interface name\n" );
+			log.txt( LLOG_ERROR, "!! : failed to read tap interface name\n" );
 
 			close( (*adapter)->fn );
 			delete *adapter;
@@ -683,7 +683,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 	(*adapter)->fn = open( "/dev/tap", O_RDWR);
 	if( (*adapter)->fn == -1 )
 	{
-		log.txt( LOG_ERROR, "!! : failed to open tap device\n" );
+		log.txt( LLOG_ERROR, "!! : failed to open tap device\n" );
 
 		delete *adapter;
 		*adapter = NULL;
@@ -696,7 +696,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 
 	if( ioctl( (*adapter)->fn, TAPGIFNAME, (void*) &ifr ) < 0 )
 	{
-		log.txt( LOG_ERROR, "!! : failed to read tap interface name\n" );
+		log.txt( LLOG_ERROR, "!! : failed to read tap interface name\n" );
 
 		close( (*adapter)->fn );
 		delete *adapter;
@@ -714,7 +714,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 	(*adapter)->fn = open( "/dev/net/tun", O_RDWR);
 	if( (*adapter)->fn == -1 )
 	{
-		log.txt( LOG_ERROR, "!! : failed to open tap device\n" );
+		log.txt( LLOG_ERROR, "!! : failed to open tap device\n" );
 
 		delete *adapter;
 		*adapter = NULL;
@@ -728,7 +728,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 
 	if( ioctl( (*adapter)->fn, TUNSETIFF, (void*) &ifr ) < 0 )
 	{
-		log.txt( LOG_ERROR, "!! : failed to get tap interface name\n" );
+		log.txt( LLOG_ERROR, "!! : failed to get tap interface name\n" );
 
 		close( (*adapter)->fn );
 		delete *adapter;
@@ -744,7 +744,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 	int efd = socket( PF_PACKET, SOCK_RAW, htons( ETH_P_ALL ) );
 	if( efd < 0 )
 	{
-		log.txt( LOG_ERROR, "!! : failed to open raw packet handle\n" );
+		log.txt( LLOG_ERROR, "!! : failed to open raw packet handle\n" );
 
 		close( (*adapter)->fn );
 		delete *adapter;
@@ -755,7 +755,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 
 	if( ioctl( efd, SIOCGIFFLAGS, (void*) &ifr ) < 0 )
 	{
-		log.txt( LOG_ERROR, "!! : failed to get tap interface flags\n" );
+		log.txt( LLOG_ERROR, "!! : failed to get tap interface flags\n" );
 
 		close( efd );
 		close( (*adapter)->fn );
@@ -769,7 +769,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 
 	if( ioctl( efd, SIOCSIFFLAGS, (void*) &ifr ) < 0 )
 	{
-		log.txt( LOG_ERROR, "!! : failed to set tap interface flags\n" );
+		log.txt( LLOG_ERROR, "!! : failed to set tap interface flags\n" );
 
 		close( efd );
 		close( (*adapter)->fn );
@@ -784,7 +784,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 	strcpy( (*adapter)->name, ifr.ifr_name );
 #endif
 
-	log.txt( LOG_INFO, "ii : opened tap device %s\n", (*adapter)->name );
+	log.txt( LLOG_INFO, "ii : opened tap device %s\n", (*adapter)->name );
 
 	return true;
 }
@@ -800,7 +800,7 @@ bool _IKED::vnet_rel( VNET_ADAPTER * adapter )
 	if( adapter->fn != -1 )
 		close( adapter->fn );
 
-	log.txt( LOG_INFO, "ii : closed tap device %s\n", adapter->name );
+	log.txt( LLOG_INFO, "ii : closed tap device %s\n", adapter->name );
 
 	// free adapter struct
 
@@ -828,7 +828,7 @@ bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 		int sock = socket( PF_INET, SOCK_DGRAM, 0 );
 		if( sock == -1 )
 		{
-			log.txt( LOG_ERROR, "!! : failed to create adapter socket ( %s )\n",
+			log.txt( LLOG_ERROR, "!! : failed to create adapter socket ( %s )\n",
 				strerror( errno ) );
 			return false;
 		}
@@ -839,7 +839,7 @@ bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 
 		if( ioctl( sock, SIOCSIFADDR, &ifr ) != 0 )
 		{
-			log.txt( LOG_ERROR, "!! : failed to configure address for %s ( %s )\n",
+			log.txt( LLOG_ERROR, "!! : failed to configure address for %s ( %s )\n",
 				adapter->name, strerror( errno ) );
 
 			close( sock );
@@ -850,14 +850,14 @@ bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 
 		if( ioctl( sock, SIOCSIFNETMASK, &ifr ) != 0 )
 		{
-			log.txt( LOG_ERROR, "!! : failed to configure netmask for %s ( %s )\n",
+			log.txt( LLOG_ERROR, "!! : failed to configure netmask for %s ( %s )\n",
 				adapter->name, strerror( errno ) );
 
 			close( sock );
 			return false;
 		}
 
-		log.txt( LOG_INFO, "ii : configured adapter %s\n", adapter->name );
+		log.txt( LLOG_INFO, "ii : configured adapter %s\n", adapter->name );
 
 		close( sock );
 	}
@@ -1266,7 +1266,7 @@ bool _IKED::find_addr_l( IKE_SADDR & saddr_r, IKE_SADDR & saddr_l, unsigned shor
 		char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 		text_addr( txtaddr, &saddr_l, true );
 
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 				"ii : local address %s selected for peer\n",
 				txtaddr );
 	}
@@ -1275,7 +1275,7 @@ bool _IKED::find_addr_l( IKE_SADDR & saddr_r, IKE_SADDR & saddr_l, unsigned shor
 		char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 		text_addr( txtaddr, &saddr_r, true );
 
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 				"ii : unable to select local address for peer %s\n",
 				txtaddr );
 	}

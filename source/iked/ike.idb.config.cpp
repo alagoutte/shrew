@@ -179,7 +179,7 @@ bool _IKED::get_config( bool lock, IDB_CFG ** cfg, IDB_TUNNEL * tunnel, unsigned
 		if( tmp_cfg->msgid != msgid )
 			continue;
 
-		log.txt( LOG_DEBUG, "DB : config found\n" );
+		log.txt( LLOG_DEBUG, "DB : config found\n" );
 
 		//
 		// increase our refrence count
@@ -197,7 +197,7 @@ bool _IKED::get_config( bool lock, IDB_CFG ** cfg, IDB_TUNNEL * tunnel, unsigned
 		return true;
 	}
 
-	log.txt( LOG_DEBUG, "DB : config not found\n" );
+	log.txt( LLOG_DEBUG, "DB : config not found\n" );
 
 	if( lock )
 		lock_sdb.unlock();
@@ -215,7 +215,7 @@ bool _IDB_CFG::add( bool lock )
 
 	bool result = iked.list_config.add_item( this );
 
-	iked.log.txt( LOG_DEBUG, "DB : config added\n" );
+	iked.log.txt( LLOG_DEBUG, "DB : config added\n" );
 
 	if( lock )
 		iked.lock_sdb.unlock();
@@ -231,7 +231,7 @@ bool _IDB_CFG::inc( bool lock )
 
 	refcount++;
 
-	iked.log.txt( LOG_LOUD,
+	iked.log.txt( LLOG_LOUD,
 		"DB : config ref increment ( ref count = %i, config count = %i )\n",
 		refcount,
 		iked.list_config.get_count() );
@@ -258,7 +258,7 @@ bool _IDB_CFG::dec( bool lock )
 		if( iked.ith_timer.del( &event_resend ) )
 		{
 			refcount--;
-			iked.log.txt( LOG_DEBUG,
+			iked.log.txt( LLOG_DEBUG,
 				"DB : config resend event canceled ( ref count = %i )\n",
 				refcount );
 		}
@@ -270,7 +270,7 @@ bool _IDB_CFG::dec( bool lock )
 
 	if( refcount || !( lstate & LSTATE_DELETE ) )
 	{
-		iked.log.txt( LOG_LOUD,
+		iked.log.txt( LLOG_LOUD,
 			"DB : config ref decrement ( ref count = %i, config count = %i )\n",
 			refcount,
 			iked.list_config.get_count() );
@@ -291,7 +291,7 @@ bool _IDB_CFG::dec( bool lock )
 	// log deletion
 	//
 
-	iked.log.txt( LOG_DEBUG,
+	iked.log.txt( LLOG_DEBUG,
 		"DB : config deleted ( config count %i )\n",
 		iked.list_config.get_count() );
 

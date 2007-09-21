@@ -208,7 +208,7 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 			// log the result
 			//
 
-			log.txt( LOG_DEBUG,
+			log.txt( LLOG_DEBUG,
 				"ii : ike packet fragment #%i sized to %i bytes\n",
 				frag_index,
 				frag_size );
@@ -275,8 +275,8 @@ long _IKED::packet_ike_xmit( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	//
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		packet_ip.buff(),
 		packet_ip.size(),
 		"-> : send %s packet %s -> %s",
@@ -359,8 +359,8 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 	if( data[ ISAKMP_FLAGS_OFFSET ] & ISAKMP_FLAG_ENCRYPT )
 	{
 		log.bin(
-			LOG_DEBUG,
-			LOG_DECODE,
+			LLOG_DEBUG,
+			LLOG_DECODE,
 			iv->buff(),
 			iv->size(),
 			"=< : decrypt iv" );
@@ -418,8 +418,8 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 		EVP_CIPHER_CTX_cleanup( &ctx_cipher );
 
 		log.bin(
-			LOG_DEBUG,
-			LOG_DECODE,
+			LLOG_DEBUG,
+			LLOG_DECODE,
 			data,
 			size,
 			"<= : decrypt packet" );
@@ -434,8 +434,8 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 			iv->size() );
 
 		log.bin(
-			LOG_DEBUG,
-			LOG_DECODE,
+			LLOG_DEBUG,
+			LLOG_DECODE,
 			iv->buff(),
 			iv->size(),
 			"== : stored iv" );
@@ -459,15 +459,15 @@ long _IKED::packet_ike_encrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 		size_t			padd = 0;
 
 		log.bin(
-			LOG_DEBUG,
-			LOG_DECODE,
+			LLOG_DEBUG,
+			LLOG_DECODE,
 			iv->buff(),
 			iv->size(),
 			">= : encrypt iv" );
 
 		log.bin(
-			LOG_DEBUG,
-			LOG_DECODE,
+			LLOG_DEBUG,
+			LLOG_DECODE,
 			data,
 			size,
 			"=> : encrypt packet" );
@@ -552,8 +552,8 @@ long _IKED::packet_ike_encrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 			iv->size() );
 
 		log.bin(
-			LOG_DEBUG,
-			LOG_DECODE,
+			LLOG_DEBUG,
+			LLOG_DECODE,
 			iv->buff(),
 			iv->size(),
 			"== : stored iv" );

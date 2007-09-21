@@ -144,7 +144,7 @@ bool _IKED::get_policy( bool lock, IDB_POLICY ** policy, long dir, u_int16_t typ
 				continue;
 		}
 
-		log.txt( LOG_DEBUG, "DB : policy found\n" );
+		log.txt( LLOG_DEBUG, "DB : policy found\n" );
 
 		//
 		// increase our refrence count
@@ -162,7 +162,7 @@ bool _IKED::get_policy( bool lock, IDB_POLICY ** policy, long dir, u_int16_t typ
 		return true;
 	}
 
-	log.txt( LOG_DEBUG, "DB : policy not found\n" );
+	log.txt( LLOG_DEBUG, "DB : policy not found\n" );
 
 	if( lock )
 		lock_sdb.unlock();
@@ -179,7 +179,7 @@ bool _IDB_POLICY::add( bool lock )
 
 	bool result = iked.list_policy.add_item( this );
 
-	iked.log.txt( LOG_DEBUG, "DB : policy added\n" );
+	iked.log.txt( LLOG_DEBUG, "DB : policy added\n" );
 
 	if( lock )
 		iked.lock_sdb.unlock();
@@ -195,7 +195,7 @@ bool _IDB_POLICY::inc( bool lock )
 
 	refcount++;
 
-	iked.log.txt( LOG_LOUD,
+	iked.log.txt( LLOG_LOUD,
 		"DB : policy ref increment ( ref count = %i, policy count = %i )\n",
 		refcount,
 		iked.list_policy.get_count() );
@@ -217,7 +217,7 @@ bool _IDB_POLICY::dec( bool lock )
 
 	if( refcount || !( lstate & LSTATE_DELETE ) )
 	{
-		iked.log.txt( LOG_LOUD,
+		iked.log.txt( LLOG_LOUD,
 			"DB : policy ref decrement ( ref count = %i, policy count = %i )\n",
 			refcount,
 			iked.list_policy.get_count() );
@@ -239,7 +239,7 @@ bool _IDB_POLICY::dec( bool lock )
 	// log deletion
 	//
 
-	iked.log.txt( LOG_DEBUG,
+	iked.log.txt( LLOG_DEBUG,
 		"DB : policy deleted ( policy count = %i )\n",
 		iked.list_policy.get_count() );
 

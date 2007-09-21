@@ -54,7 +54,7 @@ long ITH_ADMIN::func( void * arg )
 
 long _IKED::loop_ike_admin( IKEI * ikei )
 {
-	log.txt( LOG_INFO, "ii : admin process thread begin ...\n" );
+	log.txt( LLOG_INFO, "ii : admin process thread begin ...\n" );
 
 	IDB_PEER *		peer = NULL;
 	IDB_TUNNEL *	tunnel = NULL;
@@ -106,7 +106,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 				case IKEI_MSGID_PEER:
 				{
-					log.txt( LOG_INFO, "<A : peer config add message\n" );
+					log.txt( LLOG_INFO, "<A : peer config add message\n" );
 
 					IKE_PEER ike_peer;
 					if( !ikei->recv_msg_peer( &ike_peer ) )
@@ -124,7 +124,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 					if( !peer->add( true ) )
 					{
-						log.txt( LOG_ERROR, "!! : unable to add peer object\n" );
+						log.txt( LLOG_ERROR, "!! : unable to add peer object\n" );
 
 						delete peer;
 
@@ -156,7 +156,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 					if( !tunnel->add( true ) )
 					{
-						log.txt( LOG_ERROR, "!! : unable to add tunnel object\n" );
+						log.txt( LLOG_ERROR, "!! : unable to add tunnel object\n" );
 
 						delete tunnel;
 
@@ -176,7 +176,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 				case IKEI_MSGID_PROPOSAL:
 				{
-					log.txt( LOG_INFO, "<A : proposal config message\n" );
+					log.txt( LLOG_INFO, "<A : proposal config message\n" );
 
 					IKE_PROPOSAL proposal;
 					if( !ikei->recv_msg_proposal( &proposal ) )
@@ -184,7 +184,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 					if( !peer->prop_list.add( &proposal, true ) )
 					{
-						log.txt( LOG_ERROR, "!! : unable to add peer proposal\n" );
+						log.txt( LLOG_ERROR, "!! : unable to add peer proposal\n" );
 
 						tunnel->close = TERM_CLIENT;
 						ikei->send_msg_result( IKEI_FAILED );
@@ -203,7 +203,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 				case IKEI_MSGID_CLIENT:
 				{
-					log.txt( LOG_INFO, "<A : client config message\n" );
+					log.txt( LLOG_INFO, "<A : client config message\n" );
 
 					IKE_XCONF xconf;
 					if( !ikei->recv_msg_client( &xconf ) )
@@ -221,7 +221,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 				case IKEI_MSGID_NETWORK:
 				{
-					log.txt( LOG_INFO, "<A : remote resource message\n" );
+					log.txt( LLOG_INFO, "<A : remote resource message\n" );
 
 					IKE_PH2ID ph2id;
 					memset( &ph2id, 0, sizeof( ph2id ) );
@@ -268,7 +268,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_XAUTH_USER:
 						{
-							log.txt( LOG_INFO, "<A : xauth username message\n" );
+							log.txt( LLOG_INFO, "<A : xauth username message\n" );
 
 							tunnel->xauth.user.set( text, size );
 							ikei->send_msg_result( IKEI_OK );
@@ -282,7 +282,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_XAUTH_PASS:
 						{
-							log.txt( LOG_INFO, "<A : xauth password message\n" );
+							log.txt( LLOG_INFO, "<A : xauth password message\n" );
 
 							tunnel->xauth.pass.set( text, size );
 							ikei->send_msg_result( IKEI_OK );
@@ -296,7 +296,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_PSK:
 						{
-							log.txt( LOG_INFO, "<A : preshared key message\n" );
+							log.txt( LLOG_INFO, "<A : preshared key message\n" );
 
 							tunnel->peer->psk.set( text, size );
 							ikei->send_msg_result( IKEI_OK );
@@ -310,7 +310,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_FILE_PASS:
 						{
-							log.txt( LOG_INFO, "<A : file password\n" );
+							log.txt( LLOG_INFO, "<A : file password\n" );
 
 							tunnel->peer->fpass.set( text, size );
 							tunnel->peer->fpass.add( 0, 1 );
@@ -325,7 +325,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_RSA_RCRT:
 						{
-							log.txt( LOG_INFO, "<A : remote cert \'%s\' message\n", text );
+							log.txt( LLOG_INFO, "<A : remote cert \'%s\' message\n", text );
 
 							long loaded = cert_load_pem( tunnel->peer->cert_r, text, true, tunnel->peer->fpass );
 
@@ -336,7 +336,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 								ikei->send_msg_result( IKEI_OK );
 							else
 							{
-								log.txt( LOG_ERROR, "!! : \'%s\' load failed\n", text );
+								log.txt( LLOG_ERROR, "!! : \'%s\' load failed\n", text );
 
 								if( loaded == FILE_PASS )
 									ikei->send_msg_result( IKEI_PASSWD );
@@ -356,7 +356,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_RSA_LCRT:
 						{
-							log.txt( LOG_INFO, "<A : local cert \'%s\' message\n", text );
+							log.txt( LLOG_INFO, "<A : local cert \'%s\' message\n", text );
 
 							long loaded = cert_load_pem( tunnel->peer->cert_l, text, false, tunnel->peer->fpass );
 
@@ -367,7 +367,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 								ikei->send_msg_result( IKEI_OK );
 							else
 							{
-								log.txt( LOG_ERROR, "!! : \'%s\' load failed\n", text );
+								log.txt( LLOG_ERROR, "!! : \'%s\' load failed\n", text );
 
 								if( loaded == FILE_PASS )
 									ikei->send_msg_result( IKEI_PASSWD );
@@ -387,7 +387,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_RSA_LKEY:
 						{
-							log.txt( LOG_INFO, "<A : local key \'%s\' message\n", text );
+							log.txt( LLOG_INFO, "<A : local key \'%s\' message\n", text );
 
 							long loaded = prvkey_rsa_load_pem( text, &tunnel->peer->key, tunnel->peer->fpass );
 
@@ -398,7 +398,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 								ikei->send_msg_result( IKEI_OK );
 							else
 							{
-								log.txt( LOG_ERROR, "!! : \'%s\' load failed\n", text );
+								log.txt( LLOG_ERROR, "!! : \'%s\' load failed\n", text );
 
 								if( loaded == FILE_PASS )
 									ikei->send_msg_result( IKEI_PASSWD );
@@ -418,7 +418,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_LID:
 						{
-							log.txt( LOG_INFO, "<A : local id \'%s\' message\n", text );
+							log.txt( LLOG_INFO, "<A : local id \'%s\' message\n", text );
 
 							tunnel->peer->iddata_l.set( text, size );
 							ikei->send_msg_result( IKEI_OK );
@@ -432,7 +432,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_RID:
 						{
-							log.txt( LOG_INFO, "<A : remote id \'%s\' message\n", text );
+							log.txt( LLOG_INFO, "<A : remote id \'%s\' message\n", text );
 
 							tunnel->peer->iddata_r.set( text, size );
 							ikei->send_msg_result( IKEI_OK );
@@ -446,7 +446,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_SPLIT_DOMAIN:
 						{
-							log.txt( LOG_INFO, "<A : split dns \'%s\' message\n", text );
+							log.txt( LLOG_INFO, "<A : split dns \'%s\' message\n", text );
 
 							BDATA suffix;
 							suffix.set( text, size + 1 );
@@ -474,7 +474,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 					if( enable )
 					{
-						log.txt( LOG_INFO, "<A : peer tunnel enable message\n" );
+						log.txt( LLOG_INFO, "<A : peer tunnel enable message\n" );
 
 						//
 						// if the tunnel peer definition states
@@ -509,7 +509,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 								if( !vnet_get( &adapter ) )
 								{
-									log.txt( LOG_ERROR, "ii : unable to create vnet adapter ...\n" );
+									log.txt( LLOG_ERROR, "ii : unable to create vnet adapter ...\n" );
 									tunnel->close = TERM_CLIENT;
 
 									enable = false;
@@ -533,7 +533,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					}
 					else
 					{
-						log.txt( LOG_INFO, "<A : peer tunnel disable message\n" );
+						log.txt( LLOG_INFO, "<A : peer tunnel disable message\n" );
 
 						tunnel->close = TERM_USER_CLOSE;
 
@@ -545,7 +545,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 				default:
 
-					log.txt( LOG_ERROR, "!! : message type is invalid ( %u )\n", msg.type );
+					log.txt( LLOG_ERROR, "!! : message type is invalid ( %u )\n", msg.type );
 			}
 		}
 
@@ -579,7 +579,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 				if( !tunnel->xconf.addr.s_addr )
 				{
-					log.txt( LOG_ERROR, "!! : invalid private address\n" );
+					log.txt( LLOG_ERROR, "!! : invalid private address\n" );
 					ikei->send_msg_status( STATUS_FAIL, "invalid private address or netmask\n" );
 					tunnel->close = TERM_CLIENT;
 					break;
@@ -587,7 +587,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 				if( !tunnel->xconf.mask.s_addr )
 				{
-					log.txt( LOG_ERROR, "!! : invalid private netmask, defaulting to class c\n" );
+					log.txt( LLOG_ERROR, "!! : invalid private netmask, defaulting to class c\n" );
 					tunnel->xconf.mask.s_addr = inet_addr( "255.255.255.0" );
 				}
 
@@ -863,7 +863,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	ikei->send_msg_status( STATUS_DISABLED, "tunnel disabled\n" );
 	ikei->detach();
 
-	log.txt( LOG_INFO, "ii : admin process thread exit ...\n" );
+	log.txt( LLOG_INFO, "ii : admin process thread exit ...\n" );
 
 	return true;
 }

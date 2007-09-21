@@ -167,8 +167,8 @@ void _LOG::txt( long level, const char * fmt, ... )
 	char fbuff[ 128 ];
 	tstamp( fbuff, 128 );
 
-	char tbuff[ LOG_MAX_TXT ];
-	char bbuff[ LOG_MAX_TXT ];
+	char tbuff[ LLOG_MAX_TXT ];
+	char bbuff[ LLOG_MAX_TXT ];
 
 	if( level > log_level )
 		return;
@@ -180,8 +180,8 @@ void _LOG::txt( long level, const char * fmt, ... )
 
 	if( ( fp != NULL ) || log_echo )
 	{
-		vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list );
-		size = sprintf_s( bbuff, LOG_MAX_TXT, "%s%s", fbuff, tbuff );
+		vsprintf_s( tbuff, LLOG_MAX_TXT, fmt, list );
+		size = sprintf_s( bbuff, LLOG_MAX_TXT, "%s%s", fbuff, tbuff );
 
 		if( size != -1 )
 			append( bbuff, size );
@@ -197,8 +197,8 @@ void _LOG::bin( long level, long blevel, void * bin, size_t len, const char * fm
 	char fbuff[ 64 ];
 	tstamp( fbuff, 64 );
 
-	char tbuff[ LOG_MAX_TXT ];
-	char bbuff[ LOG_MAX_BIN ];
+	char tbuff[ LLOG_MAX_TXT ];
+	char bbuff[ LLOG_MAX_BIN ];
 
 	va_list list;
 	va_start( list, fmt );
@@ -208,11 +208,11 @@ void _LOG::bin( long level, long blevel, void * bin, size_t len, const char * fm
 	if( ( level <= log_level ) && ( blevel > log_level ) )
 	{
 
-		size = vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list ); 
+		size = vsprintf_s( tbuff, LLOG_MAX_TXT, fmt, list ); 
 
 		if( size != -1 )
 		{
-			size = sprintf_s( bbuff, LOG_MAX_BIN, "%s%s ( %ld bytes )\n", fbuff, tbuff, len );
+			size = sprintf_s( bbuff, LLOG_MAX_BIN, "%s%s ( %ld bytes )\n", fbuff, tbuff, len );
 
 			append( bbuff, size );
 		}
@@ -220,30 +220,30 @@ void _LOG::bin( long level, long blevel, void * bin, size_t len, const char * fm
 
 	if( blevel <= log_level )
 	{
-		size = vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list );
-		size = sprintf_s( bbuff, LOG_MAX_TXT, "%s%s ( %ld bytes ) = ", fbuff, tbuff, len );
+		size = vsprintf_s( tbuff, LLOG_MAX_TXT, fmt, list );
+		size = sprintf_s( bbuff, LLOG_MAX_TXT, "%s%s ( %ld bytes ) = ", fbuff, tbuff, len );
 
 		char * cdata = ( char * ) bin;
 		char * bdata = bbuff + size;
 
 		for( size_t index = 0; index < len; index ++ )
 		{
-			if( LOG_MAX_BIN - ( bdata - bbuff + size ) <= 8 )
+			if( LLOG_MAX_BIN - ( bdata - bbuff + size ) <= 8 )
 			{
-				bdata += sprintf_s( bdata, LOG_MAX_BIN, " ...\n" );
+				bdata += sprintf_s( bdata, LLOG_MAX_BIN, " ...\n" );
 				break;
 			}
 
 			if( !( index % 0x20 ) )
-				bdata += sprintf_s( bdata, LOG_MAX_BIN, "\n0x :" );
+				bdata += sprintf_s( bdata, LLOG_MAX_BIN, "\n0x :" );
 
 			if( !( index % 0x04 ) )
-				bdata += sprintf_s( bdata, LOG_MAX_BIN, " " );
+				bdata += sprintf_s( bdata, LLOG_MAX_BIN, " " );
 
-			bdata += sprintf_s( bdata, LOG_MAX_BIN, "%02x", 0xff & cdata[ index ] );
+			bdata += sprintf_s( bdata, LLOG_MAX_BIN, "%02x", 0xff & cdata[ index ] );
 		}
 
-		sprintf_s( bdata, LOG_MAX_BIN, "\n" );
+		sprintf_s( bdata, LLOG_MAX_BIN, "\n" );
 		bdata++;
 
 		size = long( bdata - bbuff );

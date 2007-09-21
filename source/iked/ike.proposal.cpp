@@ -304,7 +304,7 @@ long _IKED::phase1_sel_prop( IDB_PH1 * ph1 )
 
 								if( ltemp.life_sec != rtemp.life_sec )
 								{
-									log.txt( LOG_INFO,
+									log.txt( LLOG_INFO,
 										"ii : adjusting %s lifetime %i -> %i ( obey )\n",
 										find_name( NAME_PROTOCOL, ltemp.proto ),
 										ltemp.life_sec,
@@ -322,7 +322,7 @@ long _IKED::phase1_sel_prop( IDB_PH1 * ph1 )
 
 								if( ltemp.life_sec > rtemp.life_sec )
 								{
-									log.txt( LOG_INFO,
+									log.txt( LLOG_INFO,
 										"ii : adjusting %s lifetime %i -> %i ( claim )\n",
 										find_name( NAME_PROTOCOL, ltemp.proto ),
 										ltemp.life_sec,
@@ -337,7 +337,7 @@ long _IKED::phase1_sel_prop( IDB_PH1 * ph1 )
 
 								if( ltemp.life_sec < rtemp.life_sec )
 								{
-									log.txt( LOG_INFO,
+									log.txt( LLOG_INFO,
 										"ii : using responder %s lifetime %i seconds, initiators is longer ( claim )\n",
 										find_name( NAME_PROTOCOL, ltemp.proto ),
 										ltemp.life_sec );
@@ -352,7 +352,7 @@ long _IKED::phase1_sel_prop( IDB_PH1 * ph1 )
 
 								if( ltemp.life_sec > rtemp.life_sec )
 								{
-									log.txt( LOG_INFO,
+									log.txt( LLOG_INFO,
 										"ii : adjusting %s lifetime %i -> %i ( strict )\n",
 										find_name( NAME_PROTOCOL, ltemp.proto ),
 										ltemp.life_sec,
@@ -396,7 +396,7 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->proto != proposal2->proto )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched phase1 proposal/transform\n"
 			"ii : protocol ( %s != %s )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -420,7 +420,7 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 		default:
 		{
-			log.txt( LOG_DEBUG,
+			log.txt( LLOG_DEBUG,
 				"ii : internal error, phase1 protocol unknown %i\n",
 				proposal2->proto );
 
@@ -434,7 +434,7 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->xform != proposal2->xform )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched %s proposal/transform\n"
 			"ii : crypto transform type ( %s != %s )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -450,7 +450,7 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->ciph_id != proposal2->ciph_id )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched %s proposal/transform\n"
 			"ii : cipher type ( %s != %s )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -466,7 +466,7 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->ciph_kl != proposal2->ciph_kl )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched %s proposal/transform\n"
 			"ii : key length ( %i != %i )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -482,7 +482,7 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->hash_id != proposal2->hash_id )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched %s proposal/transform\n"
 			"ii : hash type ( %s != %s )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -498,7 +498,7 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->dhgr_id != proposal2->dhgr_id )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched %s proposal/transform\n"
 			"ii : dh group description ( %s != %s )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -514,7 +514,7 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->auth_id != proposal2->auth_id )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched %s proposal/transform\n"
 			"ii : hmac type ( %s != %s )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -540,7 +540,7 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 			{
 				if( proposal1->life_sec < proposal2->life_sec )
 				{
-					log.txt( LOG_DEBUG,
+					log.txt( LLOG_DEBUG,
 						"ii : unmatched %s proposal/transform\n"
 						"ii : lifetime seconds ( %i < %i strict )\n",
 						find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -557,7 +557,7 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 			{
 				if( proposal1->life_sec != proposal2->life_sec )
 				{
-					log.txt( LOG_DEBUG,
+					log.txt( LLOG_DEBUG,
 						"ii : unmatched %s proposal/transform\n"
 						"ii : lifetime seconds ( %i != %i exact )\n",
 						find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -578,7 +578,7 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( initiator )
 		if( proposal1->tnumb != proposal2->tnumb )
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : peer violates RFC, transform number mismatch ( %i != %i )\n",
 				proposal1->tnumb,
 				proposal2->tnumb );
@@ -593,7 +593,7 @@ bool _IKED::phase1_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 	else
 		sprintf_s( klentxt, 32, "default" );
 
-	log.txt( LOG_INFO,
+	log.txt( LLOG_INFO,
 		"ii : matched %s proposal #%i transform #%i\n"
 		"ii : - transform    = %s\n"
 		"ii : - cipher type  = %s\n"
@@ -1155,7 +1155,7 @@ long _IKED::phase2_sel_prop( IDB_PH2 * ph2 )
 
 							if( lproposal->life_sec != rproposal->life_sec )
 							{
-								log.txt( LOG_INFO,
+								log.txt( LLOG_INFO,
 									"ii : adjusting %s lifetime %i -> %i ( obey )\n",
 									find_name( NAME_PROTOCOL, lproposal->proto ),
 									lproposal->life_sec,
@@ -1173,7 +1173,7 @@ long _IKED::phase2_sel_prop( IDB_PH2 * ph2 )
 
 							if( lproposal->life_sec > rproposal->life_sec )
 							{
-								log.txt( LOG_INFO,
+								log.txt( LLOG_INFO,
 									"ii : adjusting %s lifetime %i -> %i ( claim )\n",
 									find_name( NAME_PROTOCOL, lproposal->proto ),
 									lproposal->life_sec,
@@ -1188,7 +1188,7 @@ long _IKED::phase2_sel_prop( IDB_PH2 * ph2 )
 
 							if( lproposal->life_sec < rproposal->life_sec )
 							{
-								log.txt( LOG_INFO,
+								log.txt( LLOG_INFO,
 									"ii : using responder %s lifetime %i seconds, initiators is longer ( claim )\n",
 									find_name( NAME_PROTOCOL, lproposal->proto ),
 									lproposal->life_sec );
@@ -1205,7 +1205,7 @@ long _IKED::phase2_sel_prop( IDB_PH2 * ph2 )
 
 							if( lproposal->life_sec > rproposal->life_sec )
 							{
-								log.txt( LOG_INFO,
+								log.txt( LLOG_INFO,
 									"ii : adjusting %s lifetime %i -> %i ( strict )\n",
 									find_name( NAME_PROTOCOL, lproposal->proto ),
 									lproposal->life_sec,
@@ -1240,7 +1240,7 @@ bool _IKED::phase2_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->proto != proposal2->proto )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched proposal protocol\n"
 			"ii : protocol ( %s != %s )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -1272,7 +1272,7 @@ bool _IKED::phase2_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 		default:
 		{
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : internal error, phase2 protocol unknown %i\n",
 				proposal2->proto );
 
@@ -1286,7 +1286,7 @@ bool _IKED::phase2_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->xform != proposal2->xform )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched %s proposal/transform\n"
 			"ii : crypto transform type ( %s != %s )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -1302,7 +1302,7 @@ bool _IKED::phase2_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->ciph_kl != proposal2->ciph_kl )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched %s proposal/transform\n"
 			"ii : key length ( %i != %i )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -1318,7 +1318,7 @@ bool _IKED::phase2_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->encap != proposal2->encap )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched %s proposal/transform\n"
 			"ii : encapsulation mode ( %s != %s )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -1334,7 +1334,7 @@ bool _IKED::phase2_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->hash_id != proposal2->hash_id )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched %s proposal/transform\n"
 			"ii : msg auth ( %s != %s )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -1350,7 +1350,7 @@ bool _IKED::phase2_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 
 	if( proposal1->dhgr_id != proposal2->dhgr_id )
 	{
-		log.txt( LOG_DEBUG,
+		log.txt( LLOG_DEBUG,
 			"ii : unmatched %s proposal/transform\n"
 			"ii : pfs dh group description ( %s != %s )\n",
 			find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -1376,7 +1376,7 @@ bool _IKED::phase2_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 			{
 				if( proposal1->life_sec < proposal2->life_sec )
 				{
-					log.txt( LOG_DEBUG,
+					log.txt( LLOG_DEBUG,
 						"ii : unmatched %s proposal/transform\n"
 						"ii : lifetime seconds ( %i < %i strict )\n",
 						find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -1393,7 +1393,7 @@ bool _IKED::phase2_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 			{
 				if( proposal1->life_sec != proposal2->life_sec )
 				{
-					log.txt( LOG_DEBUG,
+					log.txt( LLOG_DEBUG,
 						"ii : unmatched %s proposal/transform\n"
 						"ii : lifetime seconds ( %i != %i exact )\n",
 						find_name( NAME_PROTOCOL, proposal1->proto ),
@@ -1415,13 +1415,13 @@ bool _IKED::phase2_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 	if( initiator )
 	{
 		if( proposal1->pnumb != proposal2->pnumb )
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : peer violates RFC, proposal number mismatch ( %i != %i )\n",
 				proposal1->pnumb,
 				proposal2->pnumb );
 
 		if( proposal1->tnumb != proposal2->tnumb )
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : peer violates RFC, transform number mismatch ( %i != %i )\n",
 				proposal1->tnumb,
 				proposal2->tnumb );
@@ -1437,7 +1437,7 @@ bool _IKED::phase2_cmp_prop( IKE_PROPOSAL * proposal1, IKE_PROPOSAL * proposal2,
 	else
 		sprintf_s( klentxt, 32, "default" );
 
-	log.txt( LOG_INFO,
+	log.txt( LLOG_INFO,
 		"ii : matched %s proposal #%i transform #%i\n"
 		"ii : - transform    = %s\n"
 		"ii : - key length   = %s\n"

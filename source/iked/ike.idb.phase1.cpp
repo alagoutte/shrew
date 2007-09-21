@@ -51,7 +51,7 @@ bool _ITH_EVENT_PH1DPD::func()
 
 	if( diff >= 2 )
 	{
-		iked.log.txt( LOG_INFO,
+		iked.log.txt( LLOG_INFO,
 				"ii : phase1 sa dpd timeout\n"
 				"ii : %04x%04x:%04x%04x\n",
 				htonl( *( long * ) &ph1->cookies.i[ 0 ] ),
@@ -128,7 +128,7 @@ bool _ITH_EVENT_PH1NATT::func()
 	iked.text_addr( txtaddr_l, &ph1->tunnel->saddr_l, true );
 	iked.text_addr( txtaddr_r, &ph1->tunnel->saddr_r, true );
 
-	iked.log.txt( LOG_DEBUG,
+	iked.log.txt( LLOG_DEBUG,
 		"-> : send NAT-T:KEEP-ALIVE packet %s -> %s\n",
 		txtaddr_l, 
 		txtaddr_r );
@@ -141,7 +141,7 @@ bool _ITH_EVENT_PH1NATT::func()
 
 bool _ITH_EVENT_PH1HARD::func()
 {
-	iked.log.txt( LOG_INFO,
+	iked.log.txt( LLOG_INFO,
 		"ii : phase1 sa is dead\n"
 		"ii : %04x%04x:%04x%04x\n",
 		htonl( *( long * ) &ph1->cookies.i[ 0 ] ),
@@ -339,7 +339,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	// phase 1 created
 	//
 
-	iked.log.txt( LOG_DEBUG,
+	iked.log.txt( LLOG_DEBUG,
 		"DB : new phase1 ( ISAKMP %s )\n"
 		"DB : exchange type is %s\n"
 		"DB : %s <-> %s\n"
@@ -774,7 +774,7 @@ bool _IKED::get_phase1( bool lock, IDB_PH1 ** ph1, IDB_TUNNEL * tunnel, long lst
 		// looks like we found a match
 		//
 
-		log.txt( LOG_DEBUG, "DB : phase1 found\n" );
+		log.txt( LLOG_DEBUG, "DB : phase1 found\n" );
 
 		//
 		// increase our refrence count
@@ -792,7 +792,7 @@ bool _IKED::get_phase1( bool lock, IDB_PH1 ** ph1, IDB_TUNNEL * tunnel, long lst
 		return true;
 	}
 
-	log.txt( LOG_DEBUG, "DB : phase1 not found\n" );
+	log.txt( LLOG_DEBUG, "DB : phase1 not found\n" );
 
 	if( lock )
 		lock_sdb.unlock();
@@ -810,7 +810,7 @@ bool _IDB_PH1::add( bool lock )
 
 	bool result = iked.list_phase1.add_item( this );
 
-	iked.log.txt( LOG_DEBUG, "DB : phase1 added\n" );
+	iked.log.txt( LLOG_DEBUG, "DB : phase1 added\n" );
 
 	if( lock )
 		iked.lock_sdb.unlock();
@@ -825,7 +825,7 @@ bool _IDB_PH1::inc( bool lock )
 
 	refcount++;
 
-	iked.log.txt( LOG_LOUD,
+	iked.log.txt( LLOG_LOUD,
 		"DB : phase1 ref increment ( ref count = %i, phase1 count = %i )\n",
 		refcount,
 		iked.list_phase1.get_count() );
@@ -852,7 +852,7 @@ bool _IDB_PH1::dec( bool lock )
 		if( iked.ith_timer.del( &event_resend ) )
 		{
 			refcount--;
-			iked.log.txt( LOG_DEBUG,
+			iked.log.txt( LLOG_DEBUG,
 				"DB : phase1 resend event canceled ( ref count = %i )\n",
 				refcount );
 		}
@@ -860,7 +860,7 @@ bool _IDB_PH1::dec( bool lock )
 		if( iked.ith_timer.del( &event_dpd ) )
 		{
 			refcount--;
-			iked.log.txt( LOG_DEBUG,
+			iked.log.txt( LLOG_DEBUG,
 				"DB : phase1 dpd event canceled ( ref count = %i )\n",
 				refcount );
 		}
@@ -868,7 +868,7 @@ bool _IDB_PH1::dec( bool lock )
 		if( iked.ith_timer.del( &event_natt ) )
 		{
 			refcount--;
-			iked.log.txt( LOG_DEBUG,
+			iked.log.txt( LLOG_DEBUG,
 				"DB : phase1 natt event canceled ( ref count = %i )\n",
 				refcount );
 		}
@@ -876,7 +876,7 @@ bool _IDB_PH1::dec( bool lock )
 		if( iked.ith_timer.del( &event_hard ) )
 		{
 			refcount--;
-			iked.log.txt( LOG_DEBUG,
+			iked.log.txt( LLOG_DEBUG,
 				"DB : phase1 hard event canceled ( ref count = %i )\n",
 				refcount );
 		}
@@ -892,7 +892,7 @@ bool _IDB_PH1::dec( bool lock )
 
 	if( refcount || !( lstate & LSTATE_DELETE ) )
 	{
-		iked.log.txt( LOG_LOUD,
+		iked.log.txt( LLOG_LOUD,
 			"DB : phase1 ref decrement ( ref count = %i, phase1 count = %i )\n",
 			refcount,
 			iked.list_phase1.get_count() );
@@ -977,11 +977,11 @@ bool _IDB_PH1::dec( bool lock )
 	//
 
 	if( !( lstate & LSTATE_EXPIRE ) )
-		iked.log.txt( LOG_INFO,
+		iked.log.txt( LLOG_INFO,
 			"DB : phase1 deleted before expire time ( phase1 count = %i )\n",
 			iked.list_phase1.get_count() );
 	else
-		iked.log.txt( LOG_INFO,
+		iked.log.txt( LLOG_INFO,
 			"DB : phase1 deleted after expire time ( phase1 count = %i )\n",
 			iked.list_phase1.get_count() );
 

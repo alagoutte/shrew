@@ -82,7 +82,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	if( ( ph1->lstate & LSTATE_DELETE ) ||
 	    ( cfg->lstate & LSTATE_DELETE ) )
 	{
-		log.txt( LOG_ERROR, "!! : ignore config packet, sa marked for death\n" );
+		log.txt( LLOG_ERROR, "!! : ignore config packet, sa marked for death\n" );
 
 		cfg->dec( true );
 		return LIBIKE_OK;
@@ -191,7 +191,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 			default:
 
-				log.txt( LOG_ERROR,
+				log.txt( LLOG_ERROR,
 					"!! : unhandled config payload \'%s\' ( %i )\n",
 					find_name( NAME_PAYLOAD, payload ),
 					payload );
@@ -208,7 +208,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		size_t bytes_left;
 		packet.chk_payload( bytes_left );
 		if( bytes_left )
-			log.txt( LOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
+			log.txt( LLOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
 
 		//
 		// check the result
@@ -277,7 +277,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 				if( !( cfg->tunnel->state & TSTATE_RECV_XAUTH ) )
 				{
-					log.txt( LOG_INFO, "ii : received xauth request\n" );
+					log.txt( LLOG_INFO, "ii : received xauth request\n" );
 
 					cfg->tunnel->state |= TSTATE_RECV_XAUTH;
 				}
@@ -318,17 +318,17 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						// check xauth result
 						//
 
-						log.txt( LOG_INFO, "ii : received xauth result\n" );
+						log.txt( LLOG_INFO, "ii : received xauth result\n" );
 
 						if( status == 1 )
 						{
-							log.txt( LOG_INFO,
+							log.txt( LLOG_INFO,
 								"ii : user %s authentication succeeded\n",
 								cfg->tunnel->xauth.user.text() );
 						}
 						else
 						{
-							log.txt( LOG_ERROR,
+							log.txt( LLOG_ERROR,
 								"!! : user %s authentication failed\n",
 								cfg->tunnel->xauth.user.text() );
 
@@ -353,7 +353,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 					if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_PUSH )
 					{
-						log.txt( LOG_ERROR,
+						log.txt( LLOG_ERROR,
 							"!! : no xauth status and config mode is not push\n" );
 
 						cfg->tunnel->close = TERM_BADMSG;
@@ -376,7 +376,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						// get xconf attributes
 						//
 
-						log.txt( LOG_INFO, "ii : received config push request\n" );
+						log.txt( LLOG_INFO, "ii : received config push request\n" );
 
 						long getmask = 0;
 
@@ -412,7 +412,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						// get xconf attributes
 						//
 
-						log.txt( LOG_INFO, "ii : received config pull response\n" );
+						log.txt( LLOG_INFO, "ii : received config pull response\n" );
 
 						long getmask = 0;
 
@@ -456,7 +456,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						// get xconf attributes
 						//
 
-						log.txt( LOG_INFO, "ii : received config pull request\n" );
+						log.txt( LLOG_INFO, "ii : received config pull request\n" );
 
 						config_xconf_get( cfg,
 							cfg->tunnel->xconf.rqst,
@@ -480,7 +480,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				if(  ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) &&
 					!( cfg->tunnel->state & TSTATE_RECV_XRSLT ) )
 				{
-					log.txt( LOG_INFO, "ii : received xauth response\n" );
+					log.txt( LLOG_INFO, "ii : received xauth response\n" );
 
 					//
 					// make sure we at least have
@@ -507,10 +507,10 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					}
 
 					if( !cfg->tunnel->xauth.user.size() )
-						log.txt( LOG_ERROR, "!! : missing required username attribute\n" );
+						log.txt( LLOG_ERROR, "!! : missing required username attribute\n" );
 
 					if( !cfg->tunnel->xauth.pass.size() )
-						log.txt( LOG_ERROR, "!! : missing required password attribute\n" );
+						log.txt( LLOG_ERROR, "!! : missing required password attribute\n" );
 
 					cfg->tunnel->state |= TSTATE_RECV_XAUTH;
 				}
@@ -526,7 +526,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 				if( !( cfg->tunnel->state & TSTATE_RECV_XRSLT ) )
 				{
-					log.txt( LOG_INFO, "ii : received xauth ack\n" );
+					log.txt( LLOG_INFO, "ii : received xauth ack\n" );
 
 					cfg->tunnel->state |= TSTATE_RECV_XRSLT;
 
@@ -553,7 +553,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						// get xconf attributes
 						//
 
-						log.txt( LOG_INFO, "ii : received config push acknowledge\n" );
+						log.txt( LLOG_INFO, "ii : received config push acknowledge\n" );
 
 						long readmask = 0;
 
@@ -649,7 +649,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->tunnel->xauth.user.add( 0, 1 );
 
-				log.txt( LOG_INFO,
+				log.txt( LLOG_INFO,
 					"ii : sent xauth response for %s\n",
 					cfg->tunnel->xauth.user.buff() );
 
@@ -681,7 +681,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				config_message_send( ph1, cfg );
 
-				log.txt( LOG_INFO, "ii : sent xauth acknowledge\n" );
+				log.txt( LLOG_INFO, "ii : sent xauth acknowledge\n" );
 
 				//
 				// update state and flag for removal
@@ -704,7 +704,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			// xauth not required
 			//
 
-			log.txt( LOG_INFO, "ii : xauth is not required\n" );
+			log.txt( LLOG_INFO, "ii : xauth is not required\n" );
 
 			cfg->tunnel->state |= TSTATE_RECV_XAUTH;
 			cfg->tunnel->state |= TSTATE_SENT_XAUTH;
@@ -725,7 +725,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// set attributes
 				//
 
-				log.txt( LOG_INFO, "ii : building config attribute list\n" );
+				log.txt( LLOG_INFO, "ii : building config attribute list\n" );
 
 				cfg->mtype = ISAKMP_CFG_REQUEST;
 
@@ -744,7 +744,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_BANNER;
 					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_PFS;
 
-					log.txt( LOG_INFO, "ii : excluding unity attribute set\n" );
+					log.txt( LLOG_INFO, "ii : excluding unity attribute set\n" );
 				}
 
 				config_xconf_set( cfg,
@@ -757,7 +757,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				if( cfg->attr_count() )
 				{
-					log.txt( LOG_INFO, "ii : sending config pull request\n" );
+					log.txt( LLOG_INFO, "ii : sending config pull request\n" );
 
 					//
 					// make sure the msgid is unique
@@ -791,7 +791,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					// config not required
 					//
 
-					log.txt( LOG_INFO, "ii : config is not required\n" );
+					log.txt( LLOG_INFO, "ii : config is not required\n" );
 
 					cfg->tunnel->state |= TSTATE_SENT_CONFIG;
 					cfg->tunnel->state |= TSTATE_RECV_CONFIG;
@@ -812,7 +812,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// set attributes
 				//
 
-				log.txt( LOG_INFO, "ii : building config attribute list\n" );
+				log.txt( LLOG_INFO, "ii : building config attribute list\n" );
 
 				cfg->mtype = ISAKMP_CFG_ACK;
 
@@ -826,7 +826,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// flag as sent and release
 				//
 
-				log.txt( LOG_INFO, "ii : sending config push acknowledge\n" );
+				log.txt( LLOG_INFO, "ii : sending config push acknowledge\n" );
 
 				//
 				// send config packet
@@ -892,7 +892,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->tunnel->state |= TSTATE_SENT_XAUTH;
 
-				log.txt( LOG_INFO, "ii : sent xauth request\n" );
+				log.txt( LLOG_INFO, "ii : sent xauth request\n" );
 			}
 
 			//
@@ -920,12 +920,12 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 								cfg->tunnel->xauth );
 
 					if( allow )
-						iked.log.txt( LOG_INFO,
+						iked.log.txt( LLOG_INFO,
 							"ii : xauth user %s password accepted ( %s )\n",
 							cfg->tunnel->xauth.user.text(),
 							cfg->tunnel->peer->xauth_source->name() );
 					else
-						iked.log.txt( LOG_ERROR,
+						iked.log.txt( LLOG_ERROR,
 							"!! : xauth user %s password rejected ( %s )\n",
 							cfg->tunnel->xauth.user.text(),
 							cfg->tunnel->peer->xauth_source->name() );
@@ -942,13 +942,13 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 								cfg->tunnel->peer->xauth_group );
 
 					if( allow )
-						log.txt( LOG_INFO,
+						log.txt( LLOG_INFO,
 							"ii : xauth user %s group %s membership accepted ( %s )\n",
 							cfg->tunnel->xauth.user.text(),
 							cfg->tunnel->peer->xauth_group.text(),
 							cfg->tunnel->peer->xauth_source->name() );
 					else
-						log.txt( LOG_ERROR,
+						log.txt( LLOG_ERROR,
 							"!! : xauth user %s group %s membership rejected ( %s )\n",
 							cfg->tunnel->xauth.user.text(),
 							cfg->tunnel->peer->xauth_group.text(),
@@ -994,7 +994,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->tunnel->state |= TSTATE_SENT_XRSLT;
 
-				log.txt( LOG_INFO, "ii : sent xauth result\n" );
+				log.txt( LLOG_INFO, "ii : sent xauth result\n" );
 
 				if( !allow )
 				{
@@ -1009,7 +1009,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			// xauth not required
 			//
 
-			log.txt( LOG_INFO, "ii : xauth is not required\n" );
+			log.txt( LLOG_INFO, "ii : xauth is not required\n" );
 
 			cfg->tunnel->state |= TSTATE_RECV_XAUTH;
 			cfg->tunnel->state |= TSTATE_SENT_XAUTH;
@@ -1050,7 +1050,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->mtype = ISAKMP_CFG_REPLY;
 
-				log.txt( LOG_INFO, "ii : building config attribute list\n" );
+				log.txt( LLOG_INFO, "ii : building config attribute list\n" );
 
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.opts,
@@ -1060,7 +1060,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// send config packet
 				//
 
-				log.txt( LOG_INFO, "ii : sending config pull response\n" );
+				log.txt( LLOG_INFO, "ii : sending config pull response\n" );
 
 				config_message_send( ph1, cfg );
 
@@ -1116,7 +1116,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->mtype = ISAKMP_CFG_SET;
 
-				log.txt( LOG_INFO, "ii : building config attribute list\n" );
+				log.txt( LLOG_INFO, "ii : building config attribute list\n" );
 
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.opts,
@@ -1138,7 +1138,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// send config packet
 				//
 
-				log.txt( LOG_INFO, "ii : sending config push request\n" );
+				log.txt( LLOG_INFO, "ii : sending config push request\n" );
 
 				config_message_send( ph1, cfg );
 
@@ -1179,7 +1179,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		if( nullmask & IPSEC_OPTS_ADDR )
 		{
 			cfg->attr_add_v( INTERNAL_IP4_ADDRESS, NULL, 0 );
-			log.txt( LOG_DEBUG,	"ii : - IP4 Address\n" );
+			log.txt( LLOG_DEBUG,	"ii : - IP4 Address\n" );
 		}
 		else
 		{
@@ -1190,7 +1190,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 			text_addr( txtaddr, cfg->tunnel->xconf.addr );
 
-			log.txt( LOG_DEBUG,
+			log.txt( LLOG_DEBUG,
 				"ii : - IP4 Address = %s\n",
 				txtaddr );
 		}
@@ -1201,7 +1201,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		if( nullmask & IPSEC_OPTS_MASK )
 		{
 			cfg->attr_add_v( INTERNAL_IP4_NETMASK, NULL, 0 );
-			log.txt( LOG_DEBUG,	"ii : - IP4 Netamask\n" );
+			log.txt( LLOG_DEBUG,	"ii : - IP4 Netamask\n" );
 		}
 		else
 		{
@@ -1212,7 +1212,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 			text_addr( txtaddr, cfg->tunnel->xconf.mask );
 
-			log.txt( LOG_DEBUG,
+			log.txt( LLOG_DEBUG,
 				"ii : - IP4 Netamask = %s\n",
 				txtaddr );
 		}
@@ -1223,7 +1223,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		if( nullmask & IPSEC_OPTS_DNSS )
 		{
 			cfg->attr_add_v( INTERNAL_IP4_DNS, NULL, 0 );
-			log.txt( LOG_DEBUG, "ii : - IP4 DNS Server\n" );
+			log.txt( LLOG_DEBUG, "ii : - IP4 DNS Server\n" );
 		}
 		else
 		{
@@ -1234,7 +1234,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 			text_addr( txtaddr, cfg->tunnel->xconf.dnss );
 
-			log.txt( LOG_DEBUG,
+			log.txt( LLOG_DEBUG,
 				"ii : - IP4 DNS Server = %s\n",
 				txtaddr );
 		}
@@ -1245,7 +1245,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		if( nullmask & IPSEC_OPTS_NBNS )
 		{
 			cfg->attr_add_v( INTERNAL_IP4_NBNS, NULL, 0 );
-			log.txt( LOG_DEBUG,	"ii : - IP4 WINS Server\n" );
+			log.txt( LLOG_DEBUG,	"ii : - IP4 WINS Server\n" );
 		}
 		else
 		{
@@ -1256,7 +1256,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 			text_addr( txtaddr, cfg->tunnel->xconf.nbns );
 
-			log.txt( LOG_DEBUG,
+			log.txt( LLOG_DEBUG,
 				"ii : - IP4 WINS Server = %s\n",
 				txtaddr );
 		}
@@ -1271,7 +1271,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		if( nullmask & IPSEC_OPTS_DOMAIN )
 		{
 			cfg->attr_add_v( UNITY_DEF_DOMAIN, NULL, 0 );
-			log.txt( LOG_DEBUG,	"ii : - DNS Suffix\n" );
+			log.txt( LLOG_DEBUG,	"ii : - DNS Suffix\n" );
 		}
 		else
 		{
@@ -1282,7 +1282,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 			text_addr( txtaddr, cfg->tunnel->xconf.dnss );
 
-			log.txt( LOG_DEBUG,
+			log.txt( LLOG_DEBUG,
 				"ii : - DNS Suffix = %s\n",
 				cfg->tunnel->xconf.suffix );
 		}
@@ -1293,7 +1293,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		if( nullmask & IPSEC_OPTS_SPLITDNS )
 		{
 			cfg->attr_add_v( UNITY_SPLIT_DOMAIN, NULL, 0 );
-			log.txt( LOG_DEBUG, "ii : - Split DNS Domain\n" );
+			log.txt( LLOG_DEBUG, "ii : - Split DNS Domain\n" );
 		}
 		else
 		{
@@ -1303,7 +1303,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 
 			while( cfg->tunnel->dlist.get( suffix, index++ ) )
 			{
-				log.txt( LOG_DEBUG,
+				log.txt( LLOG_DEBUG,
 					"ii : - Split DNS Domain = %s\n",
 					suffix.text() );
 
@@ -1324,7 +1324,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 			cfg->attr_add_v( UNITY_SPLIT_INCLUDE, NULL, 0 );
 			cfg->attr_add_v( UNITY_SPLIT_EXCLUDE, NULL, 0 );
 
-			log.txt( LOG_DEBUG,
+			log.txt( LLOG_DEBUG,
 				"ii : - IP4 Split Network Include\n"
 				"ii : - IP4 Split Network Exclude\n" );
 		}
@@ -1349,7 +1349,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 				char txtid[ LIBIKE_MAX_TEXTP2ID ];
 				text_ph2id( txtid, &ph2id );
 
-				log.txt( LOG_DEBUG,
+				log.txt( LLOG_DEBUG,
 					"ii : - IP4 Split Network Include = %s\n",
 					txtid );
 
@@ -1382,7 +1382,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 				char txtid[ LIBIKE_MAX_TEXTP2ID ];
 				text_ph2id( txtid, &ph2id );
 
-				log.txt( LOG_DEBUG,
+				log.txt( LLOG_DEBUG,
 					"ii : - IP4 Split Network Exclude = %s\n",
 					txtid );
 			}
@@ -1394,7 +1394,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		if( nullmask & IPSEC_OPTS_BANNER )
 		{
 			cfg->attr_add_v( UNITY_BANNER, NULL, 0 );
-			log.txt( LOG_DEBUG,	"ii : - Login Banner\n" );
+			log.txt( LLOG_DEBUG,	"ii : - Login Banner\n" );
 		}
 		else
 		{
@@ -1404,7 +1404,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 
 			cfg->tunnel->banner.add( 0, 1 );
 
-			log.txt( LOG_DEBUG,
+			log.txt( LLOG_DEBUG,
 				"ii : - Login Banner ( %i bytes )\n",
 				cfg->tunnel->banner.size() );
 		}
@@ -1415,14 +1415,14 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		if( nullmask & IPSEC_OPTS_PFS )
 		{
 			cfg->attr_add_v( UNITY_PFS, NULL, 0 );
-			log.txt( LOG_DEBUG,	"ii : - PFS Group\n" );
+			log.txt( LLOG_DEBUG,	"ii : - PFS Group\n" );
 		}
 		else
 		{
 			cfg->attr_add_b( UNITY_PFS,
 				cfg->tunnel->xconf.dhgr );
 
-			log.txt( LOG_DEBUG,
+			log.txt( LLOG_DEBUG,
 				"ii : - PFS Group = %i\n",
 				cfg->tunnel->xconf.dhgr );
 		}
@@ -1433,14 +1433,14 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 		if( nullmask & IPSEC_OPTS_SAVEPW )
 		{
 			cfg->attr_add_v( UNITY_SAVE_PASSWD, NULL, 0 );
-			log.txt( LOG_DEBUG,	"ii : - Save Password\n" );
+			log.txt( LLOG_DEBUG,	"ii : - Save Password\n" );
 		}
 		else
 		{
 			cfg->attr_add_b( UNITY_SAVE_PASSWD,
 				cfg->tunnel->xconf.svpw );
 
-			log.txt( LOG_DEBUG,
+			log.txt( LLOG_DEBUG,
 				"ii : - Save Password = %i\n",
 				cfg->tunnel->xconf.svpw );
 		}
@@ -1472,7 +1472,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 				{
 					if( attr->vdata.size() != 4 )
 					{
-						log.txt( LOG_ERROR,
+						log.txt( LLOG_ERROR,
 							"!! : - IP4 Address has invalid size ( %i bytes )\n",
 							attr->vdata.size() );
 
@@ -1486,12 +1486,12 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 					char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 					text_addr( txtaddr, cfg->tunnel->xconf.addr );
 
-					log.txt( LOG_DEBUG,
+					log.txt( LLOG_DEBUG,
 						"ii : - IP4 Address = %s\n",
 						txtaddr );
 				}
 				else
-					log.txt( LOG_DEBUG,	"ii : - IP4 Address\n" );
+					log.txt( LLOG_DEBUG,	"ii : - IP4 Address\n" );
 
 				break;
 			}
@@ -1504,7 +1504,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 				{
 					if( attr->vdata.size() != 4 )
 					{
-						log.txt( LOG_ERROR,
+						log.txt( LLOG_ERROR,
 							"!! : - IP4 Netmask has invalid size ( %i bytes )\n",
 							attr->vdata.size() );
 
@@ -1518,12 +1518,12 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 					char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 					text_addr( txtaddr, cfg->tunnel->xconf.mask );
 
-					log.txt( LOG_DEBUG,
+					log.txt( LLOG_DEBUG,
 						"ii : - IP4 Netmask = %s\n",
 						txtaddr );
 				}
 				else
-					log.txt( LOG_DEBUG,	"ii : - IP4 Netmask\n" );
+					log.txt( LLOG_DEBUG,	"ii : - IP4 Netmask\n" );
 
 				break;
 			}
@@ -1536,7 +1536,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 				{
 					if( attr->vdata.size() != 4 )
 					{
-						log.txt( LOG_ERROR,
+						log.txt( LLOG_ERROR,
 							"!! : - IP4 WINS Server has invalid size ( %i bytes )\n",
 							attr->vdata.size() );
 
@@ -1550,12 +1550,12 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 					char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 					text_addr( txtaddr, cfg->tunnel->xconf.nbns );
 
-					log.txt( LOG_DEBUG,
+					log.txt( LLOG_DEBUG,
 						"ii : - IP4 WINS Server = %s\n",
 						txtaddr );
 				}
 				else
-					log.txt( LOG_DEBUG, "ii : - IP4 WINS Server\n" );
+					log.txt( LLOG_DEBUG, "ii : - IP4 WINS Server\n" );
 
 				break;
 			}
@@ -1568,7 +1568,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 				{
 					if( attr->vdata.size() != 4 )
 					{
-						log.txt( LOG_ERROR,
+						log.txt( LLOG_ERROR,
 							"!! : - IP4 DNS Server has invalid size ( %i bytes )\n",
 							attr->vdata.size() );
 
@@ -1582,12 +1582,12 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 					char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 					text_addr( txtaddr, cfg->tunnel->xconf.dnss );
 
-					log.txt( LOG_DEBUG,
+					log.txt( LLOG_DEBUG,
 						"ii : - IP4 DNS Server = %s\n",
 						txtaddr );
 				}
 				else
-					log.txt( LOG_DEBUG, "ii : - IP4 DNS Server\n" );
+					log.txt( LLOG_DEBUG, "ii : - IP4 DNS Server\n" );
 
 				break;
 			}
@@ -1612,12 +1612,12 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 
 					cfg->tunnel->xconf.suffix[ nlen ] = 0;
 
-					log.txt( LOG_DEBUG,
+					log.txt( LLOG_DEBUG,
 						"ii : - DNS Suffix = %s\n",
 						cfg->tunnel->xconf.suffix );
 				}
 				else
-					log.txt( LOG_DEBUG, "ii : - DNS Suffix\n" );
+					log.txt( LLOG_DEBUG, "ii : - DNS Suffix\n" );
 
 				break;
 			}
@@ -1646,7 +1646,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 						BDATA suffix;
 						suffix.set( dnsstr, tmplen );
 
-						log.txt( LOG_DEBUG,
+						log.txt( LLOG_DEBUG,
 							"ii : - Split Domain = %s\n",
 							dnsstr );
 
@@ -1658,7 +1658,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 					}
 				}
 				else
-					log.txt( LOG_DEBUG, "ii : - Split Domain\n" );
+					log.txt( LLOG_DEBUG, "ii : - Split Domain\n" );
 
 				break;
 			}
@@ -1690,7 +1690,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 
 						if( attr->atype == UNITY_SPLIT_INCLUDE )
 						{
-							log.txt( LOG_DEBUG,
+							log.txt( LLOG_DEBUG,
 								"ii : - IP4 Split Network Include = %s\n",
 								txtid );
 
@@ -1709,7 +1709,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 						}
 						else
 						{
-							log.txt( LOG_DEBUG,
+							log.txt( LLOG_DEBUG,
 								"ii : - IP4 Split Network Exclude = %s\n",
 								txtid );
 
@@ -1721,10 +1721,10 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 				else
 				{
 					if( attr->atype == UNITY_SPLIT_INCLUDE )
-						log.txt( LOG_DEBUG,	"ii : - IP4 Split Network Include\n" );
+						log.txt( LLOG_DEBUG,	"ii : - IP4 Split Network Include\n" );
 
 					if( attr->atype == UNITY_SPLIT_EXCLUDE )
-						log.txt( LOG_DEBUG,	"ii : - IP4 Split Network Exclude\n" );
+						log.txt( LLOG_DEBUG,	"ii : - IP4 Split Network Exclude\n" );
 				}
 
 				break;
@@ -1745,7 +1745,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 
 					memcpy( text, attr->vdata.buff(), size );
 
-					log.txt( LOG_DEBUG,
+					log.txt( LLOG_DEBUG,
 						"ii : - Login Banner = %s ...\n",
 						text );
 
@@ -1753,7 +1753,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 					cfg->tunnel->banner.add( 0, 1 );
 				}
 				else
-					log.txt( LOG_DEBUG,	"ii : - Login Banner\n" );
+					log.txt( LLOG_DEBUG,	"ii : - Login Banner\n" );
 
 				break;
 			}
@@ -1764,14 +1764,14 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 
 				if( ( readmask & IPSEC_OPTS_PFS ) && attr->basic )
 				{
-					log.txt( LOG_DEBUG,
+					log.txt( LLOG_DEBUG,
 						"ii : - PFS Group = %d\n",
 						attr->bdata );
 
 					cfg->tunnel->xconf.dhgr = attr->bdata;
 				}
 				else
-					log.txt( LOG_DEBUG,	"ii : - PFS Group\n" );
+					log.txt( LLOG_DEBUG,	"ii : - PFS Group\n" );
 
 				break;
 			}
@@ -1782,14 +1782,14 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 
 				if( ( readmask & IPSEC_OPTS_SAVEPW ) && attr->basic )
 				{
-					log.txt( LOG_DEBUG,
+					log.txt( LLOG_DEBUG,
 						"ii : - Save Password = %d\n",
 						attr->bdata );
 
 					cfg->tunnel->xconf.svpw = attr->bdata;
 				}
 				else
-					log.txt( LOG_DEBUG,	"ii : - Save Password\n" );
+					log.txt( LLOG_DEBUG,	"ii : - Save Password\n" );
 
 				break;
 			}
@@ -1812,26 +1812,26 @@ long _IKED::config_chk_hash( IDB_PH1 * ph1, IDB_CFG * cfg, unsigned long msgid )
 	HMAC_cleanup( &ctx_prf );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		cfg->hash_r.buff(),
 		cfg->hash_r.size(),
 		"== : configure hash_i ( computed )" );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		hash_c.buff(),
 		hash_c.size(),
 		"== : configure hash_c ( computed )" );
 
 	if( memcmp( cfg->hash_r.buff(), hash_c.buff(), hash_c.size() ) )
 	{
-		log.txt( LOG_ERROR,	"!! : configure hash verification failed\n" );
+		log.txt( LLOG_ERROR,	"!! : configure hash verification failed\n" );
 		return LIBIKE_FAILED;
 	}
 
-	log.txt( LOG_DEBUG,	"ii : configure hash verified\n" );
+	log.txt( LLOG_DEBUG,	"ii : configure hash verified\n" );
 	return LIBIKE_OK;
 }
 
@@ -1873,8 +1873,8 @@ long _IKED::config_message_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 	memcpy( packet.buff() + off + 4, hash.buff(), hash.size() );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		hash.buff(),
 		hash.size(),
 		"== : new configure hash" );

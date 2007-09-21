@@ -321,7 +321,7 @@ bool _IKED::cert_subj( BDATA & cert, BDATA & subj )
 
 	X509_free( x509 );
 
-	log.bin( LOG_DEBUG, LOG_DECODE,
+	log.bin( LLOG_DEBUG, LLOG_DECODE,
 		subj.buff(),
 		subj.size(),
 		"ii : obtained x509 cert subject" );
@@ -508,7 +508,7 @@ bool _IKED::text_asn1( BDATA & text, BDATA & asn1 )
 				( unsigned char * ) value,
 				-1,	-1, 0 );
 
-			log.txt( LOG_DECODE,
+			log.txt( LLOG_DECODE,
 				"ii : asn1_text %s = %s\n",
 				field,
 				value );
@@ -566,7 +566,7 @@ static int verify_cb( int ok, X509_STORE_CTX * store_ctx )
 {
 	if( !ok )
 	{
-		long ll = LOG_ERROR;
+		long ll = LLOG_ERROR;
 		char name[ 512 ];
 
 		X509_NAME * x509_name = X509_get_subject_name( store_ctx->current_cert );
@@ -580,7 +580,7 @@ static int verify_cb( int ok, X509_STORE_CTX * store_ctx )
 		{
 			case X509_V_ERR_UNABLE_TO_GET_CRL:
 				ok = 1;
-				ll = LOG_INFO;
+				ll = LLOG_INFO;
 				break;
 		}
 
@@ -655,7 +655,7 @@ bool _IKED::cert_verify( BDATA & cert, BDATA & ca )
 		sprintf_s( tmppath, MAX_PATH, "%s\\certificates\\%s", path_ins, ffd.cFileName );
 
 		if( X509_LOOKUP_load_file( lookup, tmppath, X509_FILETYPE_PEM ) != NULL )
-			log.txt( LOG_DEBUG, "ii : added %s to x509 store\n", ffd.cFileName );
+			log.txt( LLOG_DEBUG, "ii : added %s to x509 store\n", ffd.cFileName );
 
 		if( !FindNextFile( hff, &ffd ) )
 			hff = NULL;

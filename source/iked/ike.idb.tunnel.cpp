@@ -108,7 +108,7 @@ bool _IKED::get_tunnel( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, IKE_SA
 			if( !cmp_sockaddr( tmp_tunnel->saddr_r.saddr, saddr->saddr, port ) )
 				continue;
 
-		log.txt( LOG_DEBUG, "DB : tunnel found\n" );
+		log.txt( LLOG_DEBUG, "DB : tunnel found\n" );
 
 		//
 		// increase our refrence count
@@ -126,7 +126,7 @@ bool _IKED::get_tunnel( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, IKE_SA
 		return true;
 	}
 
-	log.txt( LOG_DEBUG, "DB : tunnel not found\n" );
+	log.txt( LLOG_DEBUG, "DB : tunnel not found\n" );
 
 	if( lock )
 		lock_sdb.unlock();
@@ -144,7 +144,7 @@ bool _IDB_TUNNEL::add( bool lock )
 
 	bool result = iked.list_tunnel.add_item( this );
 
-	iked.log.txt( LOG_DEBUG, "DB : tunnel added\n" );
+	iked.log.txt( LLOG_DEBUG, "DB : tunnel added\n" );
 
 	if( lock )
 		iked.lock_sdb.unlock();
@@ -169,7 +169,7 @@ bool _IDB_TUNNEL::inc( bool lock )
 
 	refcount++;
 
-	iked.log.txt( LOG_LOUD,
+	iked.log.txt( LLOG_LOUD,
 		"DB : tunnel ref increment ( ref count = %i, tunnel count = %i )\n",
 		refcount,
 		iked.list_tunnel.get_count() );
@@ -191,7 +191,7 @@ bool _IDB_TUNNEL::dec( bool lock )
 
 	if( refcount )
 	{
-		iked.log.txt( LOG_LOUD,
+		iked.log.txt( LLOG_LOUD,
 			"DB : tunnel ref decrement ( ref count = %i, tunnel count = %i )\n",
 			refcount,
 			iked.list_tunnel.get_count() );
@@ -212,7 +212,7 @@ bool _IDB_TUNNEL::dec( bool lock )
 	// log deletion
 	//
 
-	iked.log.txt( LOG_DEBUG,
+	iked.log.txt( LLOG_DEBUG,
 		"DB : tunnel deleted ( tunnel count = %i )\n",
 		iked.list_tunnel.get_count() );
 
@@ -249,7 +249,7 @@ void _IDB_TUNNEL::end( bool lock )
 	if( lock )
 		iked.lock_sdb.lock();
 
-	iked.log.txt( LOG_INFO, "DB : removing all tunnel refrences\n" );
+	iked.log.txt( LLOG_INFO, "DB : removing all tunnel refrences\n" );
 
 	//
 	// check for config object refrences

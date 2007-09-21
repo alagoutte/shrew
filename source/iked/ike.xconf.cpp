@@ -139,7 +139,7 @@ bool _IKED_XCONF::pool4_set( in_addr & base, long bits, long max )
 	iked.text_addr( txtbase, base );
 	iked.text_addr( txtlast, last );
 
-	iked.log.txt( LOG_DEBUG,
+	iked.log.txt( LLOG_DEBUG,
 		"ii : created %s address pool\n"
 		"ii : - network   %s\n"
 		"ii : - netmask   %s\n"
@@ -176,7 +176,7 @@ bool _IKED_XCONF::pool4_get( in_addr & addr )
 			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 			iked.text_addr( txtaddr, addr );
 
-			iked.log.txt( LOG_DEBUG,
+			iked.log.txt( LLOG_DEBUG,
 				"ii : address %s aquired from %s pool\n",
 				txtaddr,
 				name() );
@@ -206,7 +206,7 @@ bool _IKED_XCONF::pool4_rel( in_addr & addr )
 				char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 				iked.text_addr( txtaddr, addr );
 
-				iked.log.txt( LOG_DEBUG,
+				iked.log.txt( LLOG_DEBUG,
 					"ii : address %s returned to %s pool\n",
 					txtaddr,
 					name() );

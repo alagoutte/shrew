@@ -47,7 +47,7 @@
 
 bool _ITH_EVENT_PH2SOFT::func()
 {
-	iked.log.txt( LOG_INFO,
+	iked.log.txt( LLOG_INFO,
 			"ii : phase2 sa has expired, death in %i seconds\n",
 			diff );
 
@@ -59,7 +59,7 @@ bool _ITH_EVENT_PH2SOFT::func()
 
 bool _ITH_EVENT_PH2HARD::func()
 {
-	iked.log.txt( LOG_INFO,
+	iked.log.txt( LLOG_INFO,
 			"ii : phase2 sa is dead\n" );
 
 	ph2->lstate |= LSTATE_DELETE;
@@ -131,7 +131,7 @@ _IDB_PH2::_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, uint32_t set_ms
 	// phase 2 created
 	//
 
-	iked.log.txt( LOG_DEBUG,
+	iked.log.txt( LLOG_DEBUG,
 		"DB : new phase2 ( IPSEC %s )\n",
 		iked.find_name( NAME_INITIATOR, initiator ) );
 }
@@ -285,7 +285,7 @@ bool _IKED::get_phase2( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, long lst
 				continue;
 		}
 
-		log.txt( LOG_DEBUG, "DB : phase2 found\n" );
+		log.txt( LLOG_DEBUG, "DB : phase2 found\n" );
 
 		//
 		// increase our refrence count
@@ -303,7 +303,7 @@ bool _IKED::get_phase2( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, long lst
 		return true;
 	}
 
-	log.txt( LOG_DEBUG, "DB : phase2 not found\n" );
+	log.txt( LLOG_DEBUG, "DB : phase2 not found\n" );
 
 	if( lock )
 		lock_sdb.unlock();
@@ -321,7 +321,7 @@ bool _IDB_PH2::add( bool lock )
 
 	bool result = iked.list_phase2.add_item( this );
 
-	iked.log.txt( LOG_DEBUG, "DB : phase2 added\n" );
+	iked.log.txt( LLOG_DEBUG, "DB : phase2 added\n" );
 
 	if( lock )
 		iked.lock_sdb.unlock();
@@ -336,7 +336,7 @@ bool _IDB_PH2::inc( bool lock )
 
 	refcount++;
 
-	iked.log.txt( LOG_LOUD,
+	iked.log.txt( LLOG_LOUD,
 		"DB : phase2 ref increment ( ref count = %i, phase2 count = %i )\n",
 		refcount,
 		iked.list_phase2.get_count() );
@@ -363,7 +363,7 @@ bool _IDB_PH2::dec( bool lock )
 		if( iked.ith_timer.del( &event_resend ) )
 		{
 			refcount--;
-			iked.log.txt( LOG_DEBUG,
+			iked.log.txt( LLOG_DEBUG,
 				"DB : phase2 resend event canceled ( ref count = %i )\n",
 				refcount );
 		}
@@ -371,7 +371,7 @@ bool _IDB_PH2::dec( bool lock )
 		if( iked.ith_timer.del( &event_soft ) )
 		{
 			refcount--;
-			iked.log.txt( LOG_DEBUG,
+			iked.log.txt( LLOG_DEBUG,
 				"DB : phase2 soft event canceled ( ref count = %i )\n",
 				refcount );
 		}
@@ -379,7 +379,7 @@ bool _IDB_PH2::dec( bool lock )
 		if( iked.ith_timer.del( &event_hard ) )
 		{
 			refcount--;
-			iked.log.txt( LOG_DEBUG,
+			iked.log.txt( LLOG_DEBUG,
 				"DB : phase2 hard event canceled ( ref count = %i )\n",
 				refcount );
 		}
@@ -395,7 +395,7 @@ bool _IDB_PH2::dec( bool lock )
 
 	if( refcount || !( lstate & LSTATE_DELETE ) )
 	{
-		iked.log.txt( LOG_LOUD,
+		iked.log.txt( LLOG_LOUD,
 			"DB : phase2 ref decrement ( ref count = %i, phase2 count = %i )\n",
 			refcount,
 			iked.list_phase2.get_count() );
@@ -433,7 +433,7 @@ bool _IDB_PH2::dec( bool lock )
 
 	if( !( lstate & LSTATE_EXPIRE ) )
 	{
-		iked.log.txt( LOG_INFO,
+		iked.log.txt( LLOG_INFO,
 			"DB : phase2 deleted before expire time ( phase2 count = %i )\n",
 			iked.list_phase2.get_count() );
 
@@ -452,7 +452,7 @@ bool _IDB_PH2::dec( bool lock )
 	}
 	else
 	{
-		iked.log.txt( LOG_INFO,
+		iked.log.txt( LLOG_INFO,
 			"DB : phase2 deleted after expire time ( phase2 count = %i )\n",
 			iked.list_phase2.get_count() );
 

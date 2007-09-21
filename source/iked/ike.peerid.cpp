@@ -67,7 +67,7 @@ bool _IKED::gen_ph1id_l( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 					memcpy( temp, ph1->tunnel->peer->iddata_l.buff(), size );
 					temp[ size ] = 0;
 
-					log.txt( LOG_ERROR,
+					log.txt( LLOG_ERROR,
 						"!! : gen_ph1id failed. invalid initiator id data \'%s\'\n", temp );
 
 					return false;
@@ -134,7 +134,7 @@ bool _IKED::gen_ph1id_r( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 					memcpy( temp, ph1->tunnel->peer->iddata_r.buff(), size );
 					temp[ size ] = 0;
 
-					log.txt( LOG_ERROR,
+					log.txt( LLOG_ERROR,
 						"!! : gen_ph1id failed. invalid responder id data \'%s\'\n", temp );
 
 					return false;
@@ -182,7 +182,7 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 
 	if( ids.type != idt.type )
 	{
-		log.txt( LOG_ERROR, 
+		log.txt( LLOG_ERROR, 
 			"!! : phase1 id type mismatch ( %s != %s )\n",
 			find_name( NAME_IDENT, ids.type ),
 			find_name( NAME_IDENT, idt.type ) );
@@ -212,7 +212,7 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 		{
 			if( natt )
 			{
-				log.txt( LOG_INFO, 
+				log.txt( LLOG_INFO, 
 					"ii : phase1 id match ( natt prevents ip match )\n" );
 			}
 			else
@@ -280,7 +280,7 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 			}
 			else
 			{
-				log.txt( LOG_INFO, 
+				log.txt( LLOG_INFO, 
 					"ii : phase1 id match ( cert check only )\n" );
 			}
 
@@ -289,7 +289,7 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 
 		default:
 		{
-			log.txt( LOG_ERROR, 
+			log.txt( LLOG_ERROR, 
 				"!! : phase1 id mismatch ( internal error )\n" );
 
 			match = false;
@@ -300,13 +300,13 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 
 	if( match )
 	{
-		log.txt( LOG_INFO, 
+		log.txt( LLOG_INFO, 
 			"ii : phase1 id match ( %s )\n",
 			txtid_s );
 	}
 	else
 	{
-		log.txt( LOG_ERROR, 
+		log.txt( LLOG_ERROR, 
 			"!! : phase1 id mismatch ( src != trg )\n"
 			"!! : src = %s\n"
 			"!! : trg = %s\n",

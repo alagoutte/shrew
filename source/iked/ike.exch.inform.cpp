@@ -313,7 +313,7 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 			default:
 
-				log.txt( LOG_ERROR,
+				log.txt( LLOG_ERROR,
 					"!! : unhandled informational payload \'%s\' ( %i )\n",
 					find_name( NAME_PAYLOAD, payload ),
 					payload );
@@ -330,7 +330,7 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		size_t bytes_left;
 		packet.chk_payload( bytes_left );
 		if( bytes_left )
-			log.txt( LOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
+			log.txt( LLOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
 
 		//
 		// check the result
@@ -396,27 +396,27 @@ long _IKED::inform_chk_hash( IDB_PH1 * ph1, IDB_XCH * inform )
 	HMAC_cleanup( &ctx_prf );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		hash_c.buff(),
 		hash_c.size(),
 		"== : informational hash_i ( computed )" );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		inform->hash_r.buff(),
 		inform->hash_r.size(),
 		"== : informational hash_c ( received )" );
 
 	if( memcmp( inform->hash_r.buff(), hash_c.buff(), hash_c.size() ) )
 	{
-		log.txt( LOG_ERROR,	"!! : informational hash verification failed\n" );
+		log.txt( LLOG_ERROR,	"!! : informational hash verification failed\n" );
 
 		return LIBIKE_FAILED;
 	}
 
-	log.txt( LOG_DEBUG,	"ii : informational hash verified\n" );
+	log.txt( LLOG_DEBUG,	"ii : informational hash verified\n" );
 
 	return LIBIKE_OK;
 }
@@ -433,8 +433,8 @@ long _IKED::inform_gen_hash( IDB_PH1 * ph1, IDB_XCH * inform )
 	HMAC_cleanup( &ctx_prf );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		inform->hash_l.buff(),
 		inform->hash_l.size(),
 		"== : new informational hash" );
@@ -496,7 +496,7 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 	// log the notification
 	//
 
-	log.txt( LOG_INFO,
+	log.txt( LLOG_INFO,
 		"ii : received peer %s notification\n"
 		"ii : - %s -> %s\n"
 		"ii : - %s spi = %s\n"
@@ -554,11 +554,11 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 
 						if( dpdseq > ph1->dpd_req )
 						{
-							log.txt( LOG_DEBUG, "ii : DPD sequence rejected\n" );
+							log.txt( LLOG_DEBUG, "ii : DPD sequence rejected\n" );
 							break;
 						}
 
-						log.txt( LOG_DEBUG, "ii : DPD sequence accepted\n" );
+						log.txt( LLOG_DEBUG, "ii : DPD sequence accepted\n" );
 						ph1->dpd_res = dpdseq;
 					}
 
@@ -646,7 +646,7 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 
 						if( lsecs )
 						{
-							log.txt( LOG_INFO, "ii : adjusted phase2 sa lifetime to %i seconds\n", lsecs );
+							log.txt( LLOG_INFO, "ii : adjusted phase2 sa lifetime to %i seconds\n", lsecs );
 
 							IKE_PROPOSAL * proposal_l;
 							IKE_PROPOSAL * proposal_r;
@@ -658,17 +658,17 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 								proposal_l->life_sec = lsecs;
 								proposal_r->life_sec = lsecs;
 
-								log.txt( LOG_DEBUG, "XX : spi_l = 0x%08x\n", ntohl( proposal_l->spi.spi ) );
-								log.txt( LOG_DEBUG, "XX : spi_r = 0x%08x\n", ntohl( proposal_r->spi.spi ) );
+								log.txt( LLOG_DEBUG, "XX : spi_l = 0x%08x\n", ntohl( proposal_l->spi.spi ) );
+								log.txt( LLOG_DEBUG, "XX : spi_r = 0x%08x\n", ntohl( proposal_r->spi.spi ) );
 								pindex++;
 							}
 						}
 
 						if( ldata )
-							log.txt( LOG_INFO, "ii : adjusted phase2 sa lifetime to %i kbytes\n", ldata );
+							log.txt( LLOG_INFO, "ii : adjusted phase2 sa lifetime to %i kbytes\n", ldata );
 
 						if( !lsecs && !ldata )
-							log.txt( LOG_INFO, "ii : invalid RESPONDER-LIFETIME attribute data\n" );
+							log.txt( LLOG_INFO, "ii : invalid RESPONDER-LIFETIME attribute data\n" );
 
 						ph2_notify->dec( true );
 					}
@@ -703,7 +703,7 @@ long _IKED::inform_chk_delete( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 	// log the delete notification
 	//
 
-	log.txt( LOG_INFO,
+	log.txt( LLOG_INFO,
 		"ii : received peer DELETE message\n"
 		"ii : - %s -> %s\n"
 		"ii : - %s spi = %s\n",
@@ -740,7 +740,7 @@ long _IKED::inform_chk_delete( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 			IDB_PH1 * ph1_delete;
 			if( get_phase1( true, &ph1_delete, ph1->tunnel, LSTATE_MATURE, LSTATE_DELETE, &notify->spi.cookies ) )
 			{
-				log.txt( LOG_INFO, "ii : cleanup, marked phase1 %s for removal\n", txtspi );
+				log.txt( LLOG_INFO, "ii : cleanup, marked phase1 %s for removal\n", txtspi );
 
 				if( ph1->tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
 					if( !ph1->tunnel->close )
@@ -766,7 +766,7 @@ long _IKED::inform_chk_delete( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 			IDB_PH2 * ph2_delete;
 			if( get_phase2( true, &ph2_delete, ph1->tunnel, LSTATE_MATURE, LSTATE_DELETE, NULL, NULL, NULL, &notify->spi ) )
 			{
-				log.txt( LOG_INFO, "DB : cleanup, marked phase2 %s for removal\n", txtspi );
+				log.txt( LLOG_INFO, "DB : cleanup, marked phase2 %s for removal\n", txtspi );
 
 				ph2_delete->lstate |= ( LSTATE_DELETE | LSTATE_NOTIFY );
 				ph2_delete->dec( true );
@@ -829,7 +829,7 @@ long _IKED::inform_new_notify( IDB_PH1 * ph1, IDB_PH2 * ph2, unsigned short code
 
 		inform_get_spi( txtspi, ph1, &notify );
 
-		log.txt( LOG_INFO,
+		log.txt( LLOG_INFO,
 			"ii : sending peer %s notification\n"
 			"ii : - %s -> %s\n"
 			"ii : - %s spi = %s\n"
@@ -867,7 +867,7 @@ long _IKED::inform_new_notify( IDB_PH1 * ph1, IDB_PH2 * ph2, unsigned short code
 		// log the notification
 		//
 
-		log.txt( LOG_INFO,
+		log.txt( LLOG_INFO,
 			"ii : sending peer %s notification\n"
 			"ii : - %s -> %s\n",
 			find_name( NAME_NOTIFY, notify.code ),
@@ -930,7 +930,7 @@ long _IKED::inform_new_delete( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 		inform_get_spi( txtspi, ph1, &notify );
 
-		log.txt( LOG_INFO,
+		log.txt( LLOG_INFO,
 			"ii : sending peer DELETE message\n"
 			"ii : - %s -> %s\n"
 			"ii : - %s spi = %s\n"
@@ -961,7 +961,7 @@ long _IKED::inform_new_delete( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 		// log the delete addresses
 		//
 
-		log.txt( LOG_INFO,
+		log.txt( LLOG_INFO,
 			"ii : sending peer DELETE message\n"
 			"ii : - %s -> %s\n",
 			txtaddr_l,
@@ -987,7 +987,7 @@ long _IKED::inform_new_delete( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 			inform_get_spi( txtspi, ph1, &notify );
 
-			log.txt( LOG_INFO,
+			log.txt( LLOG_INFO,
 				"ii : - %s spi = %s\n"
 				"ii : - data size %i\n",
 				find_name( NAME_PROTOCOL, notify.proto ),

@@ -43,7 +43,7 @@
 
 long _IKED::payload_add_frag( PACKET_IKE & packet, unsigned char & index, unsigned char * data, size_t & size, size_t max )
 {
-	log.txt( LOG_DEBUG, ">> : fragment payload\n" );
+	log.txt( LLOG_DEBUG, ">> : fragment payload\n" );
 
 	//
 	// adjust the callers max to
@@ -75,7 +75,7 @@ long _IKED::payload_add_frag( PACKET_IKE & packet, unsigned char & index, unsign
 
 	if( ( size + 8 ) > 0xFFFF )
 	{
-		log.txt( LOG_DEBUG, "!! : ike fragment length > 16bit\n" );
+		log.txt( LLOG_DEBUG, "!! : ike fragment length > 16bit\n" );
 		return LIBIKE_FAILED;
 	}
 
@@ -100,7 +100,7 @@ long _IKED::payload_add_frag( PACKET_IKE & packet, unsigned char & index, unsign
 
 long _IKED::payload_get_frag( PACKET_IKE & packet, IDB_PH1 * ph1, bool & complete )
 {
-	log.txt( LOG_DEBUG, "<< : fragment payload\n" );
+	log.txt( LLOG_DEBUG, "<< : fragment payload\n" );
 
 	//
 	// read the frag payload header
@@ -131,7 +131,7 @@ long _IKED::payload_get_frag( PACKET_IKE & packet, IDB_PH1 * ph1, bool & complet
 	size_t data_size = packet.size() - packet.oset();
 	if( data_size < size )
 	{
-		log.txt( LOG_ERROR, "!! : packet size is invalid for given fragment size\n" );
+		log.txt( LLOG_ERROR, "!! : packet size is invalid for given fragment size\n" );
 		return LIBIKE_DECODE;
 	}
 
@@ -232,7 +232,7 @@ long _IKED::payload_add_sa( PACKET_IKE & packet, IKE_PLIST & plist, uint8_t next
 	// write security association payload
 	//
 
-	log.txt( LOG_DEBUG, ">> : security association payload\n" );
+	log.txt( LLOG_DEBUG, ">> : security association payload\n" );
 
 	packet.add_payload( false, next );						// ADD - sa
 	packet.add_quad( ISAKMP_DOI_IPSEC );					// domain of interop
@@ -254,7 +254,7 @@ long _IKED::payload_add_sa( PACKET_IKE & packet, IKE_PLIST & plist, uint8_t next
 		// write proposal payload
 		//
 
-		log.txt( LOG_DEBUG, ">> : - proposal #%i payload \n", proposal->pnumb );
+		log.txt( LLOG_DEBUG, ">> : - proposal #%i payload \n", proposal->pnumb );
 
 		next = ISAKMP_PAYLOAD_PROPOSAL;
 		if( pindex == -1 )
@@ -321,7 +321,7 @@ long _IKED::payload_add_sa( PACKET_IKE & packet, IKE_PLIST & plist, uint8_t next
 
 long _IKED::payload_get_sa( PACKET_IKE & packet, IKE_PLIST & plist )
 {
-	log.txt( LOG_DEBUG, "<< : security association payload\n" );
+	log.txt( LLOG_DEBUG, "<< : security association payload\n" );
 
 	//
 	// read security association packet
@@ -338,7 +338,7 @@ long _IKED::payload_get_sa( PACKET_IKE & packet, IKE_PLIST & plist )
 
 	if( doi != ISAKMP_DOI_IPSEC )
 	{
-		log.txt( LOG_ERROR,
+		log.txt( LLOG_ERROR,
 			"!! : rejecting sa payload, invalid doi ( %i )\n",
 			doi );
 
@@ -355,7 +355,7 @@ long _IKED::payload_get_sa( PACKET_IKE & packet, IKE_PLIST & plist )
 
 	if( doi != ISAKMP_SIT_IDENT_ONLY )
 	{
-		log.txt( LOG_ERROR,
+		log.txt( LLOG_ERROR,
 			"!! : rejecting sa payload, invalid situation ( %i )\n",
 			sit );
 
@@ -390,7 +390,7 @@ long _IKED::payload_get_sa( PACKET_IKE & packet, IKE_PLIST & plist )
 		packet.get_byte( spi.size );
 		packet.get_byte( xform_count );
 
-		log.txt( LOG_DEBUG, "<< : - propsal #%i payload \n", pnumb );
+		log.txt( LLOG_DEBUG, "<< : - propsal #%i payload \n", pnumb );
 
 		//
 		// validate the protocol and spi
@@ -430,7 +430,7 @@ long _IKED::payload_get_sa( PACKET_IKE & packet, IKE_PLIST & plist )
 
 			default:
 
-				log.txt( LOG_ERROR,
+				log.txt( LLOG_ERROR,
 					"\n"
 					"!! : rejecting sa payload\n"
 					"!! : invalid protocol %s ( %i ) \n"
@@ -445,7 +445,7 @@ long _IKED::payload_get_sa( PACKET_IKE & packet, IKE_PLIST & plist )
 
 		if( badspi )
 		{
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : invalid spi size of %i for protocol %s \n",
 				spi.size,
 				find_name( NAME_PROTOCOL, proto ) );
@@ -502,7 +502,7 @@ long _IKED::payload_add_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal, uin
 	// write transform payload
 	//
 
-	log.txt( LOG_DEBUG, ">> : -- transform #%i payload \n", proposal->tnumb );
+	log.txt( LLOG_DEBUG, ">> : -- transform #%i payload \n", proposal->tnumb );
 
 	packet.add_payload( true, next );						// ADD -> sa.proposal.transform
 	packet.add_byte( proposal->tnumb );						// transform number
@@ -626,7 +626,7 @@ long _IKED::payload_add_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal, uin
 
 		default:
 
-			log.txt( LOG_ERROR, "!! : invalid protocol in proposal" );
+			log.txt( LLOG_ERROR, "!! : invalid protocol in proposal" );
 
 			return LIBIKE_FAILED;
 	}
@@ -651,7 +651,7 @@ long _IKED::payload_get_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal )
 	packet.get_byte( proposal->xform );		// transform type
 	packet.get_word( reserved );			// reserved 2 bytes
 
-	log.txt( LOG_DEBUG, "<< : -- transform #%i payload \n", proposal->tnumb );
+	log.txt( LLOG_DEBUG, "<< : -- transform #%i payload \n", proposal->tnumb );
 
 	//
 	// validate the transform type
@@ -838,7 +838,7 @@ long _IKED::payload_get_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal )
 
 							default:
 
-								log.txt( LOG_ERROR,
+								log.txt( LLOG_ERROR,
 									"\n"
 									"!! : rejecting phase1 proposal\n"
 									"!! : unhandled life type ( %i )\n"
@@ -855,7 +855,7 @@ long _IKED::payload_get_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal )
 
 					default:
 					{
-						log.txt( LOG_ERROR,
+						log.txt( LLOG_ERROR,
 							"\n"
 							"!! : rejecting phase1 proposal\n"
 							"!! : unhandled attribute type ( %i )\n"
@@ -909,7 +909,7 @@ long _IKED::payload_get_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal )
 
 							default:
 
-								log.txt( LOG_ERROR,
+								log.txt( LLOG_ERROR,
 									"\n"
 									"!! : rejecting phase2 proposal\n"
 									"!! : unhandled life type ( %i )\n"
@@ -950,7 +950,7 @@ long _IKED::payload_get_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal )
 
 					default:
 					{
-						log.txt( LOG_ERROR,
+						log.txt( LLOG_ERROR,
 							"\n"
 							"!! : rejecting phase2 proposal\n"
 							"!! : unhandled attribute type ( %i )\n"
@@ -981,7 +981,7 @@ long _IKED::payload_get_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal )
 
 long _IKED::payload_add_kex( PACKET_IKE & packet, BDATA & gx, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : key exchange payload\n" );
+	log.txt( LLOG_DEBUG, ">> : key exchange payload\n" );
 
 	//
 	// write key exchange payload
@@ -996,7 +996,7 @@ long _IKED::payload_add_kex( PACKET_IKE & packet, BDATA & gx, uint8_t next )
 
 long _IKED::payload_get_kex( PACKET_IKE & packet, BDATA & gx )
 {
-	log.txt( LOG_DEBUG, "<< : key exchange payload\n" );
+	log.txt( LLOG_DEBUG, "<< : key exchange payload\n" );
 
 	//
 	// read key exchange payload
@@ -1007,7 +1007,7 @@ long _IKED::payload_get_kex( PACKET_IKE & packet, BDATA & gx )
 
 	if( size > LIBIKE_MAX_DHGRP )
 	{
-		log.txt( LOG_ERROR,
+		log.txt( LLOG_ERROR,
 			"<< : invalid dh size ( %i > %i )\n",
 			size,
 			LIBIKE_MAX_DHGRP );
@@ -1024,7 +1024,7 @@ long _IKED::payload_get_kex( PACKET_IKE & packet, BDATA & gx )
 
 long _IKED::payload_add_nonce( PACKET_IKE & packet, BDATA & nonce, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : nonce payload\n" );
+	log.txt( LLOG_DEBUG, ">> : nonce payload\n" );
 
 	//
 	// write nonce payload
@@ -1039,7 +1039,7 @@ long _IKED::payload_add_nonce( PACKET_IKE & packet, BDATA & nonce, uint8_t next 
 
 long _IKED::payload_get_nonce( PACKET_IKE & packet, BDATA & nonce )
 {
-	log.txt( LOG_DEBUG, "<< : nonce payload\n" );
+	log.txt( LLOG_DEBUG, "<< : nonce payload\n" );
 
 	//
 	// read nonce payload
@@ -1059,7 +1059,7 @@ long _IKED::payload_get_nonce( PACKET_IKE & packet, BDATA & nonce )
 
 long _IKED::payload_add_ph1id( PACKET_IKE & packet, IKE_PH1ID & ph1id, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : identification payload\n" );
+	log.txt( LLOG_DEBUG, ">> : identification payload\n" );
 
 	//
 	// write identity payload
@@ -1098,7 +1098,7 @@ long _IKED::payload_add_ph1id( PACKET_IKE & packet, IKE_PH1ID & ph1id, uint8_t n
 
 		default:
 
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : unhandled phase1 id type \'%s\'( %i )\n",
 				find_name( NAME_IDENT, ph1id.type ),
 				ph1id.type );
@@ -1113,7 +1113,7 @@ long _IKED::payload_add_ph1id( PACKET_IKE & packet, IKE_PH1ID & ph1id, uint8_t n
 
 long _IKED::payload_get_ph1id( PACKET_IKE & packet, IKE_PH1ID & ph1id )
 {
-	log.txt( LOG_DEBUG, "<< : identification payload\n" );
+	log.txt( LLOG_DEBUG, "<< : identification payload\n" );
 
 	//
 	// read responder identity payload
@@ -1159,7 +1159,7 @@ long _IKED::payload_get_ph1id( PACKET_IKE & packet, IKE_PH1ID & ph1id )
 
 		default:
 
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : unhandled phase1 id type \'%s\'( %i )\n",
 				find_name( NAME_IDENT, ph1id.type ),
 				ph1id.type );
@@ -1176,7 +1176,7 @@ long _IKED::payload_get_ph1id( PACKET_IKE & packet, IKE_PH1ID & ph1id )
 
 long _IKED::payload_add_ph2id( PACKET_IKE & packet, IKE_PH2ID & ph2id, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : identification payload\n" );
+	log.txt( LLOG_DEBUG, ">> : identification payload\n" );
 
 	//
 	// write identity payload
@@ -1205,7 +1205,7 @@ long _IKED::payload_add_ph2id( PACKET_IKE & packet, IKE_PH2ID & ph2id, uint8_t n
 
 		default:
 
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : unhandled ipv4 id type \'%s\'( %i )\n",
 				find_name( NAME_IDENT, ph2id.type ),
 				ph2id.type );
@@ -1220,7 +1220,7 @@ long _IKED::payload_add_ph2id( PACKET_IKE & packet, IKE_PH2ID & ph2id, uint8_t n
 
 long _IKED::payload_get_ph2id( PACKET_IKE & packet, IKE_PH2ID & ph2id )
 {
-	log.txt( LOG_DEBUG, "<< : identification payload\n" );
+	log.txt( LLOG_DEBUG, "<< : identification payload\n" );
 
 	//
 	// read responder identity payload
@@ -1253,7 +1253,7 @@ long _IKED::payload_get_ph2id( PACKET_IKE & packet, IKE_PH2ID & ph2id )
 
 		default:
 
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : unhandled ipv4 id type \'%s\'( %i )\n",
 				find_name( NAME_IDENT, ph2id.type ),
 				ph2id.type );
@@ -1271,7 +1271,7 @@ long _IKED::payload_get_ph2id( PACKET_IKE & packet, IKE_PH2ID & ph2id )
 
 long _IKED::payload_add_cert( PACKET_IKE & packet, uint8_t type, BDATA & cert, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : certificate payload\n" );
+	log.txt( LLOG_DEBUG, ">> : certificate payload\n" );
 
 	//
 	// write certificate payload
@@ -1287,7 +1287,7 @@ long _IKED::payload_add_cert( PACKET_IKE & packet, uint8_t type, BDATA & cert, u
 
 long _IKED::payload_get_cert( PACKET_IKE & packet, uint8_t & type, BDATA & cert )
 {
-	log.txt( LOG_DEBUG, "<< : certificate payload\n" );
+	log.txt( LLOG_DEBUG, "<< : certificate payload\n" );
 
 	//
 	// read certificate payload
@@ -1299,7 +1299,7 @@ long _IKED::payload_get_cert( PACKET_IKE & packet, uint8_t & type, BDATA & cert 
 
 	if( size > ISAKMP_CERT_MAX )
 	{
-		log.txt( LOG_ERROR, "!! : invalid certificate size ( %i bytes )\n", size );
+		log.txt( LLOG_ERROR, "!! : invalid certificate size ( %i bytes )\n", size );
 
 		packet.notify = ISAKMP_N_INVALID_CERT_ENCODING;
 
@@ -1325,7 +1325,7 @@ long _IKED::payload_get_cert( PACKET_IKE & packet, uint8_t & type, BDATA & cert 
 
 long _IKED::payload_add_creq( PACKET_IKE & packet, uint8_t type, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : cert request payload\n" );
+	log.txt( LLOG_DEBUG, ">> : cert request payload\n" );
 
 	//
 	// write certificate request payload
@@ -1340,7 +1340,7 @@ long _IKED::payload_add_creq( PACKET_IKE & packet, uint8_t type, uint8_t next )
 
 long _IKED::payload_get_creq( PACKET_IKE & packet, uint8_t & type )
 {
-	log.txt( LOG_DEBUG, "<< : cert request payload\n" );
+	log.txt( LLOG_DEBUG, "<< : cert request payload\n" );
 
 	//
 	// read certificate request payload
@@ -1348,7 +1348,7 @@ long _IKED::payload_get_creq( PACKET_IKE & packet, uint8_t & type )
 
 	if( !packet.get_byte( type ) )		// certificate request type
 	{
-		log.txt( LOG_ERROR, "!! : no certificate request type\n" );
+		log.txt( LLOG_ERROR, "!! : no certificate request type\n" );
 
 		packet.notify = ISAKMP_N_INVALID_COOKIE;
 
@@ -1360,7 +1360,7 @@ long _IKED::payload_get_creq( PACKET_IKE & packet, uint8_t & type )
 
 	if( size > ISAKMP_CREQ_MAX )
 	{
-		log.txt( LOG_ERROR, "!! : invalid cert authority payload size\n" );
+		log.txt( LLOG_ERROR, "!! : invalid cert authority payload size\n" );
 
 		return LIBIKE_DECODE;
 	}
@@ -1383,7 +1383,7 @@ long _IKED::payload_get_creq( PACKET_IKE & packet, uint8_t & type )
 
 long _IKED::payload_add_sign( PACKET_IKE & packet, BDATA & sign, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : signature payload\n" );
+	log.txt( LLOG_DEBUG, ">> : signature payload\n" );
 
 	//
 	// write signature payload
@@ -1398,7 +1398,7 @@ long _IKED::payload_add_sign( PACKET_IKE & packet, BDATA & sign, uint8_t next )
 
 long _IKED::payload_get_sign( PACKET_IKE & packet, BDATA & sign )
 {
-	log.txt( LOG_DEBUG, "<< : signature payload\n" );
+	log.txt( LLOG_DEBUG, "<< : signature payload\n" );
 
 	//
 	// read signature payload
@@ -1409,7 +1409,7 @@ long _IKED::payload_get_sign( PACKET_IKE & packet, BDATA & sign )
 
 	if( size > ISAKMP_SIGN_MAX )
 	{
-		log.txt( LOG_ERROR,
+		log.txt( LLOG_ERROR,
 			"!! : invalid signature size ( %i > %i )\n",
 			size,
 			ISAKMP_SIGN_MAX );
@@ -1426,7 +1426,7 @@ long _IKED::payload_get_sign( PACKET_IKE & packet, BDATA & sign )
 
 long _IKED::payload_add_hash( PACKET_IKE & packet, BDATA & hash, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : hash payload\n" );
+	log.txt( LLOG_DEBUG, ">> : hash payload\n" );
 
 	//
 	// write hash payload
@@ -1441,7 +1441,7 @@ long _IKED::payload_add_hash( PACKET_IKE & packet, BDATA & hash, uint8_t next )
 
 long _IKED::payload_get_hash( PACKET_IKE & packet, BDATA & hash, long hash_size )
 {
-	log.txt( LOG_DEBUG, "<< : hash payload\n" );
+	log.txt( LLOG_DEBUG, "<< : hash payload\n" );
 
 	//
 	// read hash payload
@@ -1452,7 +1452,7 @@ long _IKED::payload_get_hash( PACKET_IKE & packet, BDATA & hash, long hash_size 
 
 	if( size != hash_size )
 	{
-		log.txt( LOG_ERROR,
+		log.txt( LLOG_ERROR,
 			"!! : invalid hash size ( %i != %i )\n",
 			size,
 			hash_size );
@@ -1469,7 +1469,7 @@ long _IKED::payload_get_hash( PACKET_IKE & packet, BDATA & hash, long hash_size 
 
 long _IKED::payload_add_vend( PACKET_IKE & packet, BDATA & vend, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : vendor id payload\n" );
+	log.txt( LLOG_DEBUG, ">> : vendor id payload\n" );
 
 	//
 	// write vendor id payload
@@ -1484,7 +1484,7 @@ long _IKED::payload_add_vend( PACKET_IKE & packet, BDATA & vend, uint8_t next )
 
 long _IKED::payload_get_vend( PACKET_IKE & packet, BDATA & vend )
 {
-	log.txt( LOG_DEBUG, "<< : vendor id payload\n" );
+	log.txt( LLOG_DEBUG, "<< : vendor id payload\n" );
 
 	//
 	// read vendor id payload
@@ -1510,7 +1510,7 @@ long _IKED::payload_get_vend( PACKET_IKE & packet, BDATA & vend )
 
 long _IKED::payload_add_cfglist( PACKET_IKE & packet, IDB_CFG * cfg, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : attribute payload\n" );
+	log.txt( LLOG_DEBUG, ">> : attribute payload\n" );
 
 	//
 	// write attribute payload
@@ -1556,7 +1556,7 @@ long _IKED::payload_add_cfglist( PACKET_IKE & packet, IDB_CFG * cfg, uint8_t nex
 
 long _IKED::payload_get_cfglist( PACKET_IKE & packet, IDB_CFG * cfg )
 {
-	log.txt( LOG_DEBUG, "<< : attribute payload\n" );
+	log.txt( LLOG_DEBUG, "<< : attribute payload\n" );
 
 	//
 	// read attribute payload
@@ -1626,7 +1626,7 @@ long _IKED::payload_get_cfglist( PACKET_IKE & packet, IDB_CFG * cfg )
 
 long _IKED::payload_add_natd( PACKET_IKE & packet, BDATA & natd, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : nat discovery payload\n" );
+	log.txt( LLOG_DEBUG, ">> : nat discovery payload\n" );
 
 	//
 	// write natd hash payload
@@ -1641,7 +1641,7 @@ long _IKED::payload_add_natd( PACKET_IKE & packet, BDATA & natd, uint8_t next )
 
 long _IKED::payload_get_natd( PACKET_IKE & packet, BDATA & natd, long natd_size )
 {
-	log.txt( LOG_DEBUG, "<< : nat discovery payload\n" );
+	log.txt( LLOG_DEBUG, "<< : nat discovery payload\n" );
 
 	//
 	// read hash payload
@@ -1652,7 +1652,7 @@ long _IKED::payload_get_natd( PACKET_IKE & packet, BDATA & natd, long natd_size 
 
 	if( size != natd_size )
 	{
-		log.txt( LOG_ERROR,
+		log.txt( LLOG_ERROR,
 			"!! : invalid natd hash size ( %i != %i )\n",
 			size,
 			natd_size );
@@ -1669,7 +1669,7 @@ long _IKED::payload_get_natd( PACKET_IKE & packet, BDATA & natd, long natd_size 
 
 long _IKED::payload_add_notify( PACKET_IKE & packet, IKE_NOTIFY * notify, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : notification payload\n" );
+	log.txt( LLOG_DEBUG, ">> : notification payload\n" );
 
 	//
 	// write notification payload
@@ -1710,7 +1710,7 @@ long _IKED::payload_add_notify( PACKET_IKE & packet, IKE_NOTIFY * notify, uint8_
 
 long _IKED::payload_get_notify( PACKET_IKE & packet, IKE_NOTIFY * notify )
 {
-	log.txt( LOG_DEBUG, "<< : notification payload\n" );
+	log.txt( LLOG_DEBUG, "<< : notification payload\n" );
 
 	//
 	// read notification payload
@@ -1746,7 +1746,7 @@ long _IKED::payload_get_notify( PACKET_IKE & packet, IKE_NOTIFY * notify )
 			break;
 
 		default:
-			log.txt( LOG_ERROR, "<< : notification payload contained invalid spi\n" );
+			log.txt( LLOG_ERROR, "<< : notification payload contained invalid spi\n" );
 			return LIBIKE_FAILED;
 	}
 
@@ -1763,7 +1763,7 @@ long _IKED::payload_get_notify( PACKET_IKE & packet, IKE_NOTIFY * notify )
 
 long _IKED::payload_add_delete( PACKET_IKE & packet, IKE_NOTIFY * notify, uint8_t next )
 {
-	log.txt( LOG_DEBUG, ">> : delete payload\n" );
+	log.txt( LLOG_DEBUG, ">> : delete payload\n" );
 
 	//
 	// write delete payload
@@ -1798,7 +1798,7 @@ long _IKED::payload_add_delete( PACKET_IKE & packet, IKE_NOTIFY * notify, uint8_
 
 long _IKED::payload_get_delete( PACKET_IKE & packet, IKE_NOTIFY * notify )
 {
-	log.txt( LOG_DEBUG, "<< : delete payload\n" );
+	log.txt( LLOG_DEBUG, "<< : delete payload\n" );
 
 	//
 	// read notification payload
@@ -1837,7 +1837,7 @@ long _IKED::payload_get_delete( PACKET_IKE & packet, IKE_NOTIFY * notify )
 			break;
 
 		default:
-			log.txt( LOG_ERROR, "<< : notification payload contained invalid spi\n" );
+			log.txt( LLOG_ERROR, "<< : notification payload contained invalid spi\n" );
 			return LIBIKE_FAILED;
 	}
 

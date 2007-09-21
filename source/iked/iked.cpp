@@ -162,7 +162,7 @@ long _IKED::init( long setlevel )
 	// open our log ( debug and echo )
 	//
 
-	log.open( NULL, LOG_DEBUG, true );
+	log.open( NULL, LLOG_DEBUG, true );
 
 	//
 	// load our configuration
@@ -184,7 +184,7 @@ long _IKED::init( long setlevel )
 	// output our identity
 	//
 
-	log.txt( LOG_NONE,
+	log.txt( LLOG_NONE,
 		"## : IKE Daemon, ver %d.%d.%d\n"
 		"## : Copyright %i Shrew Soft Inc.\n"
 		"## : This product linked %s\n",
@@ -195,9 +195,9 @@ long _IKED::init( long setlevel )
 		SSLeay_version( SSLEAY_VERSION ) );
 
 	if( !logging )
-		log.txt( LOG_ERROR, "!! : failed to open %s\n", path_log );
+		log.txt( LLOG_ERROR, "!! : failed to open %s\n", path_log );
 	else
-		log.txt( LOG_INFO, "ii : opened %s\'\n", path_log );
+		log.txt( LLOG_INFO, "ii : opened %s\'\n", path_log );
 
 	//
 	// open our packet dump interfaces
@@ -206,17 +206,17 @@ long _IKED::init( long setlevel )
 	if( dump_decrypt )
 	{
 		if( !pcap_decrypt.open( path_decrypt ) )
-			log.txt( LOG_ERROR, "!! : failed to open %s\n", path_decrypt );
+			log.txt( LLOG_ERROR, "!! : failed to open %s\n", path_decrypt );
 		else
-			log.txt( LOG_INFO, "ii : opened %s\'\n", path_decrypt );
+			log.txt( LLOG_INFO, "ii : opened %s\'\n", path_decrypt );
 	}
 
 	if( dump_encrypt )
 	{
 		if( !pcap_encrypt.open( path_encrypt ) )
-			log.txt( LOG_ERROR, "!! : failed to open %s\n", path_encrypt );
+			log.txt( LLOG_ERROR, "!! : failed to open %s\n", path_encrypt );
 		else
-			log.txt( LOG_INFO, "ii : opened %s\'\n", path_encrypt );
+			log.txt( LLOG_INFO, "ii : opened %s\'\n", path_encrypt );
 	}
 
 	//
@@ -247,7 +247,7 @@ long _IKED::init( long setlevel )
 		{
 			char txtaddr[ 16 ];
 			text_addr( txtaddr, &saddr, true );
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : unable to open ike socket for %s\n",
 				txtaddr );
 
@@ -269,7 +269,7 @@ long _IKED::init( long setlevel )
 		{
 			char txtaddr[ 16 ];
 			text_addr( txtaddr, &saddr, true );
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : unable to open natt socket for %s\n",
 				txtaddr );
 
@@ -326,7 +326,7 @@ void _IKED::loop()
 
 long _IKED::halt()
 {
-	log.txt( LOG_INFO,
+	log.txt( LLOG_INFO,
 		"ii : halt signal received, shutting down\n" );
 
 	//

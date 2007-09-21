@@ -52,7 +52,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( ph1->lstate & LSTATE_DELETE )
 	{
-		log.txt( LOG_ERROR, "!! : ignore phase1 packet, sa marked for death\n" );
+		log.txt( LLOG_ERROR, "!! : ignore phase1 packet, sa marked for death\n" );
 
 		return LIBIKE_OK;
 	}
@@ -133,7 +133,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_SA:
 
 				if( ph1->xstate & XSTATE_RECV_SA )
-					log.txt( LOG_INFO, "<< : ignoring duplicate security association payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate security association payload\n" );
 				else
 				{
 					size_t beg = packet.oset();
@@ -155,7 +155,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_KEX:
 
 				if( ph1->xstate & XSTATE_RECV_KE )
-					log.txt( LOG_INFO, "<< : ignoring duplicate key excahnge payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate key excahnge payload\n" );
 				else
 					result = payload_get_kex( packet, ph1->xr );
 
@@ -170,7 +170,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_NONCE:
 
 				if( ph1->xstate & XSTATE_RECV_NO )
-					log.txt( LOG_INFO, "<< : ignoring duplicate nonce payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate nonce payload\n" );
 				else
 					result = payload_get_nonce( packet, ph1->nonce_r );
 
@@ -185,7 +185,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_IDENT:
 
 				if( ph1->xstate & XSTATE_RECV_ID )
-					log.txt( LOG_INFO, "<< : ignoring duplicate id payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate id payload\n" );
 				else
 				{
 					size_t beg = packet.oset();
@@ -209,7 +209,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_CERT:
 
 				if( ph1->xstate & XSTATE_RECV_CT )
-					log.txt( LOG_INFO, "<< : ignoring duplicate certificate payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate certificate payload\n" );
 				else
 					result = payload_get_cert( packet, ph1->ctype_r, ph1->cert_r );
 
@@ -224,7 +224,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_CERT_REQ:
 
 				if( ph1->xstate & XSTATE_RECV_CR )
-					log.txt( LOG_INFO, "<< : ignoring duplicate cert request payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate cert request payload\n" );
 				else
 					result = payload_get_creq( packet, ph1->ctype_l );
 
@@ -239,7 +239,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_SIGNATURE:
 
 				if( ph1->xstate & XSTATE_RECV_SI )
-					log.txt( LOG_INFO, "<< : ignoring duplicate signature payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate signature payload\n" );
 				else
 					result = payload_get_sign( packet, ph1->sign_r );
 
@@ -254,7 +254,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_HASH:
 
 				if( ph1->xstate & XSTATE_RECV_HA )
-					log.txt( LOG_INFO, "<< : ignoring duplicate hash payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate hash payload\n" );
 				else
 					result = payload_get_hash( packet, ph1->hash_r, ph1->hash_size );
 
@@ -323,7 +323,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 			default:
 
-				log.txt( LOG_ERROR,
+				log.txt( LLOG_ERROR,
 					"!! : unhandled phase1 payload \'%s\' ( %i )\n",
 					find_name( NAME_PAYLOAD, payload ),
 					payload );
@@ -342,7 +342,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		size_t bytes_left;
 		packet.chk_payload( bytes_left );
 		if( bytes_left )
-			log.txt( LOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
+			log.txt( LLOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
 
 		//
 		// now that we have decoded the payload,
@@ -1500,7 +1500,7 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 
 	if( ph1->xr.size() != ph1->dh_size )
 	{
-		log.txt( LOG_ERROR,
+		log.txt( LLOG_ERROR,
 			"!! : dh group size mismatch ( %d != %d )\n",
 			ph1->xr.size(),
 			ph1->dh_size );
@@ -1521,8 +1521,8 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	BN_free( gx );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		shared.buff(),
 		shared.size(),
 		"== : DH shared secret" );
@@ -1608,8 +1608,8 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	ph1->skeyid.set( skeyid_data, skeyid_size );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		skeyid_data,
 		skeyid_size,
 		"== : SETKEYID" );
@@ -1630,8 +1630,8 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	ph1->skeyid_d.set( skeyid_data, skeyid_size );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		skeyid_data,
 		skeyid_size,
 		"== : SETKEYID_d" );
@@ -1652,8 +1652,8 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	ph1->skeyid_a.set( skeyid_data, skeyid_size );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		skeyid_data,
 		skeyid_size,
 		"== : SETKEYID_a" );
@@ -1674,8 +1674,8 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	ph1->skeyid_e.set( skeyid_data, skeyid_size );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		skeyid_data,
 		skeyid_size,
 		"== : SETKEYID_e" );
@@ -1738,8 +1738,8 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	ph1->key.set( key_data, key_size );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		key_data,
 		key_size,
 		"== : cipher key" );
@@ -1771,8 +1771,8 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	ph1->iv.set( iv_data, iv_size );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		iv_data,
 		iv_size,
 		"== : cipher iv" );
@@ -1816,8 +1816,8 @@ long _IKED::phase1_gen_hash_i( IDB_PH1 * sa, BDATA & hash )
 	HMAC_cleanup( &ctx_prf );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		hash.buff(),
 		hash.size(),
 		"== : phase1 hash_i ( computed )" );
@@ -1855,8 +1855,8 @@ long _IKED::phase1_gen_hash_r( IDB_PH1 * sa, BDATA & hash )
 	HMAC_cleanup( &ctx_prf );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		hash.buff(),
 		hash.size(),
 		"== : phase1 hash_r ( computed )" );
@@ -1916,7 +1916,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		if( !memcmp( vend.buff(), vend_xauth.buff(), vend_xauth.size() ) )
 		{
 			ph1->xauth_r = true;
-			log.txt( LOG_INFO, "ii : peer supports XAUTH\n" );
+			log.txt( LLOG_INFO, "ii : peer supports XAUTH\n" );
 			return LIBIKE_OK;
 		}
 
@@ -1928,7 +1928,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		if( !memcmp( vend.buff(), vend_frag.buff(), vend_frag.size() ) )
 		{
 			ph1->frag_r = true;
-			log.txt( LOG_INFO, "ii : peer supports FRAGMENTATION\n" );
+			log.txt( LLOG_INFO, "ii : peer supports FRAGMENTATION\n" );
 			return LIBIKE_OK;
 		}
 
@@ -1941,7 +1941,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		{
 			ph1->natt_r = true;
 			ph1->natt_v = IPSEC_NATT_V02;
-			log.txt( LOG_INFO, "ii : peer supports NAT-T V02\n" );
+			log.txt( LLOG_INFO, "ii : peer supports NAT-T V02\n" );
 			return LIBIKE_OK;
 		}
 
@@ -1954,7 +1954,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		{
 			ph1->natt_r = true;
 			ph1->natt_v = IPSEC_NATT_RFC;
-			log.txt( LOG_INFO, "ii : peer supports NAT-T RFC\n" );
+			log.txt( LLOG_INFO, "ii : peer supports NAT-T RFC\n" );
 			return LIBIKE_OK;
 		}
 
@@ -1966,7 +1966,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		if( !memcmp( vend.buff(), vend_unity.buff(), vend_unity.size() ) )
 		{
 			ph1->unity_r = true;
-			log.txt( LOG_INFO, "ii : peer supports UNITY\n" );
+			log.txt( LLOG_INFO, "ii : peer supports UNITY\n" );
 			return LIBIKE_OK;
 		}
 
@@ -1978,7 +1978,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		if( !memcmp( vend.buff(), vend_dpd1.buff(), vend_dpd1.size() ) )
 		{
 			ph1->dpd_r = true;
-			log.txt( LOG_INFO, "ii : peer supports DPDv1\n" );
+			log.txt( LLOG_INFO, "ii : peer supports DPDv1\n" );
 			return LIBIKE_OK;
 		}
 
@@ -1989,13 +1989,13 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	if( vend.size() == vend_kame.size() )
 		if( !memcmp( vend.buff(), vend_kame.buff(), vend_kame.size() ) )
 		{
-			log.txt( LOG_INFO, "ii : peer is IPSEC-TOOLS\n" );
+			log.txt( LLOG_INFO, "ii : peer is IPSEC-TOOLS\n" );
 			return LIBIKE_OK;
 		}
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		vend.buff(),
 		vend.size(),
 		"ii : unknown vendor id" );
@@ -2016,8 +2016,8 @@ long _IKED::phase1_chk_hash( IDB_PH1 * ph1 )
 		phase1_gen_hash_r( ph1, hash );
 
 		log.bin(
-			LOG_DEBUG,
-			LOG_DECODE,
+			LLOG_DEBUG,
+			LLOG_DECODE,
 			ph1->hash_r.buff(),
 			hash.size(),
 			"== : phase1 hash_r ( received )" );
@@ -2027,8 +2027,8 @@ long _IKED::phase1_chk_hash( IDB_PH1 * ph1 )
 		phase1_gen_hash_i( ph1, hash );
 
 		log.bin(
-			LOG_DEBUG,
-			LOG_DECODE,
+			LLOG_DEBUG,
+			LLOG_DECODE,
 			ph1->hash_r.buff(),
 			hash.size(),
 			"== : phase1 hash_i ( received )" );
@@ -2043,7 +2043,7 @@ long _IKED::phase1_chk_hash( IDB_PH1 * ph1 )
 	long result = memcmp( hash.buff(), ph1->hash_r.buff(), ph1->hash_size );
 	if( result )
 	{
-		log.txt( LOG_INFO,
+		log.txt( LLOG_INFO,
 			"!! : phase1 sa rejected, invalid auth data\n"
 			"!! : %s <-> %s\n"
 			"!! : %04x%04x:%04x%04x\n",
@@ -2057,7 +2057,7 @@ long _IKED::phase1_chk_hash( IDB_PH1 * ph1 )
 		return LIBIKE_FAILED;
 	}
 
-	log.txt( LOG_INFO,
+	log.txt( LLOG_INFO,
 		"ii : phase1 sa established\n"
 		"ii : %s <-> %s\n"
 		"ii : %04x%04x:%04x%04x\n",
@@ -2081,7 +2081,7 @@ long _IKED::phase1_chk_sign( IDB_PH1 * ph1 )
 
 	if( !cert_verify( ph1->cert_r, ph1->tunnel->peer->cert_r ) )
 	{
-		log.txt( LOG_ERROR, "!! : unable to verify remote peer certificate\n" );
+		log.txt( LLOG_ERROR, "!! : unable to verify remote peer certificate\n" );
 		return LIBIKE_FAILED;
 	}
 
@@ -2095,7 +2095,7 @@ long _IKED::phase1_chk_sign( IDB_PH1 * ph1 )
 
 	if( !pubkey_rsa_read( ph1->cert_r, &evp_pkey ) )
 	{
-		log.txt( LOG_ERROR, "!! : unable to extract public key from remote peer certificate\n" );
+		log.txt( LLOG_ERROR, "!! : unable to extract public key from remote peer certificate\n" );
 		return LIBIKE_FAILED;
 	}
 
@@ -2109,7 +2109,7 @@ long _IKED::phase1_chk_sign( IDB_PH1 * ph1 )
 
 	if( !pubkey_rsa_decrypt( evp_pkey, ph1->hash_r ) )
 	{
-		log.txt( LOG_ERROR, "!! : unable to compute remote peer signed hash\n" );
+		log.txt( LLOG_ERROR, "!! : unable to compute remote peer signed hash\n" );
 		return LIBIKE_FAILED;
 	}
 
@@ -2177,7 +2177,7 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 
 	if( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE )
 	{
-		log.txt( LOG_INFO, "ii : forcing nat traversal to enabled\n" );
+		log.txt( LLOG_INFO, "ii : forcing nat traversal to enabled\n" );
 
 		enable = true;
 	}
@@ -2185,14 +2185,14 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 	{
 		if( !ph1->natt_l )
 		{
-			log.txt( LOG_INFO, "ii : local nat traversal is disabled\n" );
+			log.txt( LLOG_INFO, "ii : local nat traversal is disabled\n" );
 
 			return false;
 		}
 
 		if( !ph1->natt_r )
 		{
-			log.txt( LOG_INFO, "ii : remote nat traversal is disabled\n" );
+			log.txt( LLOG_INFO, "ii : remote nat traversal is disabled\n" );
 
 			return false;
 		}
@@ -2210,7 +2210,7 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 				ph1->natd_ls.buff(),
 				ph1->natd_ls.size() ) )
 		{
-			log.txt( LOG_INFO,
+			log.txt( LLOG_INFO,
 				"ii : nat discovery - local address is translated\n" );
 
 			enable = true;
@@ -2229,7 +2229,7 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 				ph1->natd_ld.buff(),
 				ph1->natd_ld.size() ) )
 		{
-			log.txt( LOG_INFO,
+			log.txt( LLOG_INFO,
 				"ii : nat discovery - remote address is translated\n" );
 
 			enable = true;
@@ -2257,7 +2257,7 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 
 		ph1->tunnel->natt_v = ph1->natt_v;
 
-		log.txt( LOG_INFO,
+		log.txt( LLOG_INFO,
 			"ii : switching to NAT-T UDP port %u\n",
 			ntohs( ph1->tunnel->peer->natt_port ) );
 	}
@@ -2278,7 +2278,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 
 		if( ph1->initiator )
 		{
-			log.txt( LOG_ERROR, "!! : responder port values have changed\n" );
+			log.txt( LLOG_ERROR, "!! : responder port values have changed\n" );
 			return false;
 		}
 		else
@@ -2287,7 +2287,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 			{
 				if( !ph1->natt_l )
 				{
-					log.txt( LOG_INFO,
+					log.txt( LLOG_INFO,
 						"ii : local nat traversal is disabled but initiator port floated\n" );
 
 					return false;
@@ -2295,7 +2295,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 
 				if( !ph1->natt_r )
 				{
-					log.txt( LOG_INFO,
+					log.txt( LLOG_INFO,
 						"ii : remote nat traversal is disabled but initiator port floated\n" );
 
 					return false;
@@ -2305,7 +2305,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 
 		if( ph1->lstate & LSTATE_HASNATP )
 		{
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : remote port should only float once per session\n" );
 
 			return false;
@@ -2330,7 +2330,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 
 		ph1->tunnel->natt_v = ph1->natt_v;
 
-		log.txt( LOG_INFO,
+		log.txt( LLOG_INFO,
 			"ii : floating to NAT-T UDP ports %u -> %u\n",
 			ntohs( ph1->tunnel->saddr_r.saddr4.sin_port ),
 			ntohs( ph1->tunnel->saddr_l.saddr4.sin_port ) );

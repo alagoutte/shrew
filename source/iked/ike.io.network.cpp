@@ -57,7 +57,7 @@ long _IKED::loop_ike_nwork()
 	// begin network thread
 	//
 
-	log.txt( LOG_INFO, "ii : network process thread begin ...\n" );
+	log.txt( LLOG_INFO, "ii : network process thread begin ...\n" );
 
 	refcount++;
 
@@ -72,7 +72,7 @@ long _IKED::loop_ike_nwork()
 
 		if( packets == LIBIKE_SOCKET )
 		{
-			log.txt( LOG_ERROR, "!! : hard socket error\n" );
+			log.txt( LLOG_ERROR, "!! : hard socket error\n" );
 			socket_done();
 			continue;
 		}
@@ -176,8 +176,8 @@ long _IKED::loop_ike_nwork()
 						packet_udp.get( packet_ike );
 
 						log.bin(
-							LOG_DEBUG,
-							LOG_DECODE,
+							LLOG_DEBUG,
+							LLOG_DECODE,
 							packet_ike.buff(),
 							packet_ike.size(),
 							"<- : recv IKE packet %s:%u -> %s:%u",
@@ -208,7 +208,7 @@ long _IKED::loop_ike_nwork()
 
 						if( packet_udp.size() < ( ( long ) sizeof( UDP_HEADER ) + 4 ) )
 						{
-							log.txt( LOG_DEBUG,
+							log.txt( LLOG_DEBUG,
 								"<- : recv NAT-T:KEEP-ALIVE packet %s:%u -> %s:%u\n",
 								txtaddr_src, port_src,
 								txtaddr_dst, port_dst );
@@ -238,8 +238,8 @@ long _IKED::loop_ike_nwork()
 							packet_udp.get( packet_ike );
 
 							log.bin(
-								LOG_DEBUG,
-								LOG_DECODE,
+								LLOG_DEBUG,
+								LLOG_DECODE,
 								packet_ike.buff(),
 								packet_ike.size(),
 								"<- : recv NAT-T:IKE packet %s:%u -> %s:%u",
@@ -265,7 +265,7 @@ long _IKED::loop_ike_nwork()
 
 	refcount--;
 
-	log.txt( LOG_INFO, "ii : network process thread exit ...\n" );
+	log.txt( LLOG_INFO, "ii : network process thread exit ...\n" );
 
 	return LIBIKE_OK;
 }
@@ -311,7 +311,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 		if( !null_cookie )
 		{
-			log.txt( LOG_INFO,
+			log.txt( LLOG_INFO,
 				"XX : ike packet from %s ignored\n"
 				"XX : unknown phase1 sa for peer\n"
 				"XX : %04x%04x:%04x%04x\n",
@@ -342,7 +342,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 			if( !get_peer( true, &peer, &saddr_src ) )
 			{
-				log.txt( LOG_INFO,
+				log.txt( LLOG_INFO,
 					"XX : ike packet from %s ignored\n"
 					"XX : no matching definition for peer\n",
 					inet_ntoa( saddr_src.saddr4.sin_addr ) );
@@ -353,7 +353,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 			if( ( peer->contact != IPSEC_CONTACT_RESP ) &&
 				( peer->contact != IPSEC_CONTACT_BOTH ) )
 			{
-				log.txt( LOG_INFO,
+				log.txt( LLOG_INFO,
 					"XX : ike packet from %s ignored\n"
 					"XX : contact is denied for peer\n",
 					inet_ntoa( saddr_src.saddr4.sin_addr ) );
@@ -367,7 +367,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 			if( tunnel == NULL )
 			{
-				log.txt( LOG_INFO,
+				log.txt( LLOG_INFO,
 					"XX : ike packet from %s ignored\n"
 					"XX : unable to create tunnel object\n",
 					inet_ntoa( saddr_src.saddr4.sin_addr ) );
@@ -388,7 +388,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		
 		if( exchange != tunnel->peer->exchange )
 		{
-			log.txt( LOG_INFO,
+			log.txt( LLOG_INFO,
 				"XX : ike packet from %s ignored\n"
 				"XX : exchange type mismatch for peer\n",
 				inet_ntoa( saddr_src.saddr4.sin_addr ) );
@@ -403,7 +403,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 		if( msgid )
 		{
-			log.txt( LOG_INFO,
+			log.txt( LLOG_INFO,
 				"XX : ike packet from %s ignored\n"
 				"XX : invalid message id for exchange type\n",
 				inet_ntoa( saddr_src.saddr4.sin_addr ) );
@@ -423,7 +423,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 		if( ph1 == NULL )
 		{
-			log.txt( LOG_INFO,
+			log.txt( LLOG_INFO,
 				"XX : ike packet from %s ignored\n"
 				"XX : unable to create ph1 object\n",
 				inet_ntoa( saddr_src.saddr4.sin_addr ) );
@@ -461,7 +461,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 		if( !ph1->frag_l )
 		{
-			log.txt( LOG_ERROR, "!! : fragmented packet received but local support is disabled\n" );
+			log.txt( LLOG_ERROR, "!! : fragmented packet received but local support is disabled\n" );
 
 			return LIBIKE_FAILED;
 		}
@@ -488,7 +488,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 		if( !complete )
 		{
-			log.txt( LOG_INFO, "ii : ike fragment received, waiting on complete packet\n" );
+			log.txt( LLOG_INFO, "ii : ike fragment received, waiting on complete packet\n" );
 
 			ph1->dec( true );
 
@@ -506,7 +506,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 			exchange,
 			flags );
 
-		log.txt( LOG_INFO, "ii : ike fragment received, processing complete packet\n" );
+		log.txt( LLOG_INFO, "ii : ike fragment received, processing complete packet\n" );
 	}
 
 	//
@@ -564,7 +564,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 		default:
 		{
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : unhandled exchange type %s ( %i )\n",
 				find_name( NAME_EXCHANGE, exchange ),
 				exchange );

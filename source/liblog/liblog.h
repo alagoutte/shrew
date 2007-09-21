@@ -58,15 +58,15 @@
 #include "libith.h"
 #include "export.h"
 
-#define	LOG_NONE		0
-#define	LOG_ERROR		1
-#define	LOG_INFO		2
-#define	LOG_DEBUG		3
-#define	LOG_LOUD		4
-#define	LOG_DECODE		5
+#define	LLOG_NONE		0
+#define	LLOG_ERROR		1
+#define	LLOG_INFO		2
+#define	LLOG_DEBUG		3
+#define	LLOG_LOUD		4
+#define	LLOG_DECODE		5
 
-#define LOG_MAX_TXT		2048
-#define LOG_MAX_BIN		16384
+#define LLOG_MAX_TXT		2048
+#define LLOG_MAX_BIN		16384
 
 typedef struct DLX _LOG
 {

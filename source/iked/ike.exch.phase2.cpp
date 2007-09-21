@@ -83,7 +83,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	if( ( ph1->lstate & LSTATE_DELETE ) ||
 	    ( ph2->lstate & LSTATE_DELETE ) )
 	{
-		log.txt( LOG_ERROR, "!! : ignore phase2 packet, sa marked for death\n" );
+		log.txt( LLOG_ERROR, "!! : ignore phase2 packet, sa marked for death\n" );
 
 		ph2->dec( true );
 
@@ -170,7 +170,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			{
 				if( ( ph2->xstate & XSTATE_RECV_HA ) &&
 					( ph2->xstate & XSTATE_RECV_LP ) )
-					log.txt( LOG_INFO, "<< : ignoring duplicate hash payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate hash payload\n" );
 				else
 				{
 					result = payload_get_hash( packet, ph2->hash_r, ph1->hash_size );
@@ -191,7 +191,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_SA:
 			{
 				if( ph2->xstate & XSTATE_RECV_SA )
-					log.txt( LOG_INFO, "<< : ignoring duplicate security association payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate security association payload\n" );
 				else
 				{
 					size_t beg = packet.oset() - 4;
@@ -213,7 +213,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_NONCE:
 			{
 				if( ph2->xstate & XSTATE_RECV_NO )
-					log.txt( LOG_INFO, "<< : ignoring duplicate nonce payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate nonce payload\n" );
 				else
 				{
 					size_t beg = packet.oset() - 4;
@@ -293,7 +293,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 				if( ( ph2->xstate & XSTATE_RECV_IDR ) &&
 				    ( ph2->xstate & XSTATE_RECV_IDL ) )
-					log.txt( LOG_INFO, "<< : ignoring duplicate id payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate id payload\n" );
 
 				break;
 			}
@@ -305,7 +305,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_KEX:
 			{
 				if( ph2->xstate & XSTATE_RECV_KE )
-					log.txt( LOG_INFO, "<< : ignoring duplicate key excahnge payload\n" );
+					log.txt( LLOG_INFO, "<< : ignoring duplicate key excahnge payload\n" );
 				else
 				{
 					size_t beg = packet.oset() - 4;
@@ -346,7 +346,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 			default:
 
-				log.txt( LOG_ERROR,
+				log.txt( LLOG_ERROR,
 					"!! : unhandled phase2 payload \'%s\' ( %i )\n",
 					find_name( NAME_PAYLOAD, payload ),
 					payload );
@@ -365,7 +365,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		size_t bytes_left;
 		packet.chk_payload( bytes_left );
 		if( bytes_left )
-			log.txt( LOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
+			log.txt( LLOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
 
 		//
 		// check the final paylaod process result
@@ -446,7 +446,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				text_addr( txtaddr_l, &ph1->tunnel->saddr_l, true );
 				text_addr( txtaddr_r, &ph1->tunnel->saddr_r, true );
 
-				log.txt( LOG_INFO,
+				log.txt( LLOG_INFO,
 					"ii : phase2 sa established\n"
 					"ii : %s <-> %s\n",
 					txtaddr_l,
@@ -522,7 +522,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					text_addr( txtaddr_l, &ph1->tunnel->saddr_l, true );
 					text_addr( txtaddr_r, &ph1->tunnel->saddr_r, true );
 
-					log.txt( LOG_INFO,
+					log.txt( LLOG_INFO,
 						"ii : phase2 sa established\n"
 						"ii : %s <-> %s\n",
 						txtaddr_l,
@@ -869,8 +869,8 @@ long _IKED::phase2_gen_hash_i( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 	input.add( ph2->hda );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		input.buff(),
 		input.size(),
 		"== : phase2 hash_i ( input )" );
@@ -884,8 +884,8 @@ long _IKED::phase2_gen_hash_i( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 	HMAC_cleanup( &ctx_prf );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		hash.buff(),
 		hash.size(),
 		"== : phase2 hash_i ( computed )" );
@@ -906,8 +906,8 @@ long _IKED::phase2_gen_hash_r( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 	input.add( ph2->hda );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		input.buff(),
 		input.size(),
 		"== : phase2 hash_r ( input )" );
@@ -921,8 +921,8 @@ long _IKED::phase2_gen_hash_r( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 	HMAC_cleanup( &ctx_prf );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		hash.buff(),
 		hash.size(),
 		"== : phase2 hash_r ( computed )" );
@@ -948,8 +948,8 @@ long _IKED::phase2_gen_hash_p( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 	}
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		input.buff(),
 		input.size(),
 		"== : phase2 hash_p ( input )" );
@@ -963,8 +963,8 @@ long _IKED::phase2_gen_hash_p( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 	HMAC_cleanup( &ctx_prf );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		hash.buff(),
 		hash.size(),
 		"== : phase2 hash_p ( computed )" );
@@ -982,8 +982,8 @@ long _IKED::phase2_chk_hash_i( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	phase2_gen_hash_i( ph1, ph2, hash );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		ph2->hash_r.buff(),
 		ph2->hash_r.size(),
 		"== : phase2 hash_i ( received )" );
@@ -1004,7 +1004,7 @@ long _IKED::phase2_chk_hash_i( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 	if( memcmp( hash.buff(), ph2->hash_r.buff(), ph1->hash_size ) )
 	{
-		log.txt( LOG_ERROR,
+		log.txt( LLOG_ERROR,
 			"!! : phase2 sa rejected, initiator quick mode hash invalid\n"
 			"!! : %s <-> %s\n",
 			txtaddr_l,
@@ -1026,8 +1026,8 @@ long _IKED::phase2_chk_hash_r( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	phase2_gen_hash_r( ph1, ph2, hash );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		ph2->hash_r.buff(),
 		ph2->hash_r.size(),
 		"== : phase2 hash_r ( received )" );
@@ -1048,7 +1048,7 @@ long _IKED::phase2_chk_hash_r( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 	if( memcmp( hash.buff(), ph2->hash_r.buff(), ph1->hash_size ) )
 	{
-		log.txt( LOG_ERROR,
+		log.txt( LLOG_ERROR,
 			"!! : phase2 sa rejected, responder quick mode hash invalid\n"
 			"!! : %s <-> %s\n",
 			txtaddr_l,
@@ -1070,8 +1070,8 @@ long _IKED::phase2_chk_hash_p( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	phase2_gen_hash_p( ph1, ph2, hash );
 
 	log.bin(
-		LOG_DEBUG,
-		LOG_DECODE,
+		LLOG_DEBUG,
+		LLOG_DECODE,
 		ph2->hash_r.buff(),
 		ph2->hash_r.size(),
 		"== : phase2 hash_p ( received )" );
@@ -1092,7 +1092,7 @@ long _IKED::phase2_chk_hash_p( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 	if( memcmp( hash.buff(), ph2->hash_r.buff(), ph1->hash_size ) )
 	{
-		log.txt( LOG_ERROR,
+		log.txt( LLOG_ERROR,
 			"!! : phase2 sa rejected, initiator liveliness proof hash invalid\n"
 			"!! : %s <-> %s\n",
 			txtaddr_l,
@@ -1160,7 +1160,7 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 		if( !cmp_ph2id( ph2->ph2id_ls, ph2->ph2id_rd, true ) ||
 			!cmp_ph2id( ph2->ph2id_ld, ph2->ph2id_rs, true ) )
 		{
-			log.txt( LOG_ERROR, 
+			log.txt( LLOG_ERROR, 
 				"ii : phase2 rejected, id value mismatch\n"
 				"ii : - loc %s -> %s\n" 
 				"ii : - rmt %s -> %s\n",
@@ -1190,7 +1190,7 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 				&ph2->ph2id_ls,
 				&ph2->ph2id_ld ) )
 		{
-			log.txt( LOG_ERROR, 
+			log.txt( LLOG_ERROR, 
 				"ii : phase2 rejected, no matching outbound policy found\n"
 				"ii : - loc %s -> %s\n" 
 				"ii : - rmt %s -> %s\n",
@@ -1256,7 +1256,7 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 				&ph2->ph2id_rs,
 				&ph2->ph2id_rd ) )
 		{
-			log.txt( LOG_ERROR, 
+			log.txt( LLOG_ERROR, 
 				"ii : phase2 rejected, no matching inbound policy found\n"
 				"ii : - loc %s -> %s\n" 
 				"ii : - rmt %s -> %s\n",
@@ -1284,7 +1284,7 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 				&ph2->ph2id_rd,
 				&ph2->ph2id_rs ) )
 		{
-			log.txt( LOG_ERROR, 
+			log.txt( LLOG_ERROR, 
 				"ii : phase2 rejected, no matching outbound policy found\n"
 				"ii : - loc %s -> %s\n" 
 				"ii : - rmt %s -> %s\n",
@@ -1305,7 +1305,7 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 
 		if( !policy_cmp_prots( policy_in, policy_out ) )
 		{
-			log.txt( LOG_ERROR, 
+			log.txt( LLOG_ERROR, 
 				"ii : phase2 rejected, inbound / outbound policy mismatch\n"
 				"ii : - loc %s -> %s\n" 
 				"ii : - rmt %s -> %s\n",
@@ -1367,7 +1367,7 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 	// ids accepted
 	//
 
-	log.txt( LOG_INFO,
+	log.txt( LLOG_INFO,
 		"ii : phase2 ids accepted\n"
 		"ii : - loc %s -> %s\n" 
 		"ii : - rmt %s -> %s\n",
@@ -1398,7 +1398,7 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 		if( ph2->xr.size() != ph2->dh_size )
 		{
-			log.txt( LOG_ERROR,
+			log.txt( LLOG_ERROR,
 				"!! : dh group size mismatch ( %d != %d )\n",
 				ph2->xr.size(),
 				ph2->dh_size );
@@ -1414,8 +1414,8 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 		BN_free( gx );
 
 		log.bin(
-			LOG_DEBUG,
-			LOG_DECODE,
+			LLOG_DEBUG,
+			LLOG_DECODE,
 			shared.buff(),
 			shared.size(),
 			"== : pfs dh shared secret" );
@@ -1649,8 +1649,8 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2, long dir, IKE_PROPOSA
 		ekey.set( key_data, key_size_c );
 
 		log.bin(
-			LOG_DEBUG,
-			LOG_DECODE,
+			LLOG_DEBUG,
+			LLOG_DECODE,
 			ekey.buff(),
 			ekey.size(),
 			"== : spi cipher key data" );
@@ -1661,8 +1661,8 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2, long dir, IKE_PROPOSA
 		akey.set( key_data + key_size_c, key_size_h );
 
 		log.bin(
-			LOG_DEBUG,
-			LOG_DECODE,
+			LLOG_DEBUG,
+			LLOG_DECODE,
 			akey.buff(),
 			akey.size(),
 			"== : spi hmac key data" );
@@ -1698,8 +1698,8 @@ long _IKED::phase2_gen_iv( IDB_PH1 * ph1, unsigned long msgid, BDATA & iv )
 		iv.set( iv_data, iv_size );
 
 		log.bin(
-			LOG_DEBUG,
-			LOG_DECODE,
+			LLOG_DEBUG,
+			LLOG_DECODE,
 			iv.buff(),
 			iv.size(),
 			"== : new phase2 iv" );
