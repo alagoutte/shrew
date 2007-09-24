@@ -154,21 +154,190 @@ long _IKED::filter_dhcp_recv( IDB_TUNNEL * tunnel, PACKET_IP & packet )
 
 long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 {
+	// locate the interface name by address
+
+	struct ifaddrs *ifa = NULL, *ifp = NULL;
+
+	if( getifaddrs( &ifp ) < 0 )
+	{
+		log.txt( LLOG_ERROR, "!!: unable to obtain interface address list\n" );
+		return LIBIKE_SOCKET;
+        }
+
+	char 		ifname[ 32 ];
+	uint32_t	ifaddr = tunnel->saddr_l.saddr4.sin_addr.s_addr;
+
+	for( ifa = ifp; ifa != NULL; ifa = ifa->ifa_next )
+	{
+		if( ifa->ifa_addr->sa_family != AF_INET )
+			continue;
+
+		sockaddr_in * saddr = ( sockaddr_in * ) ifa->ifa_addr;
+
+		if( memcmp( &saddr->sin_addr, &ifaddr, 4 ) )
+			continue;
+
+		strcpy( ifname, ifa->ifa_name );
+		break;
+        }
+
+	freeifaddrs( ifp );
+
+	if( ifa == ifp )
+	{
+		log.txt( LLOG_ERROR, "!!: unable to obtain interface name by address\n" );
+		return LIBIKE_SOCKET;
+	}
+
+
+	// open berkley packet filter device
+
+	tunnel->bflt_dhcp = -1;
+	long dnum = 0;
+
+	while( ( tunnel->bflt_dhcp < 0 ) && ( dnum < 16 ) )
+	{
+		char device[ 16 ];
+		sprintf( device, "/dev/bpf%d", dnum++ );
+		tunnel->bflt_dhcp = open( device, O_RDWR );
+	}
+
+	if( tunnel->bflt_dhcp < 0 )
+	{
+		log.txt( LLOG_ERROR, "!!: failed to open DHCP BPF device\n" );
+		return LIBIKE_SOCKET;
+	}
+
+	// assign the filter to a network device
+
+	struct ifreq ifr;
+	strcpy( ifr.ifr_name, ifname );
+	if( ioctl( tunnel->bflt_dhcp, BIOCSETIF, ( uint32_t ) &ifr ) == -1 )
+	{
+		log.txt( LLOG_ERROR, "!!: unable to assign filter to device\n", ifname );
+		return LIBIKE_SOCKET;
+	}
+
+	// dont buffer packet data
+
+	int imm_value = 1; 
+	if( ioctl( tunnel->bflt_dhcp, BIOCIMMEDIATE, &imm_value ) == -1 ) 
+	{
+		log.txt( LLOG_ERROR, "!!: unable to set BIOCIMMEDIATE for filter device\n" );
+		return LIBIKE_SOCKET;
+	}
+
+	// use non-blocking io
+
+	int blk_value = 1;
+	if( ioctl( tunnel->bflt_dhcp, FIONBIO, &blk_value ) == -1 )
+	{
+		log.txt( LLOG_ERROR, "!!: unable to set FIONBIO for filter device\n" );
+		return LIBIKE_SOCKET;
+	}
+
+	// don't return localy generated packets
+
+	int lgp_value = 0;
+	if( ioctl( tunnel->bflt_dhcp, BIOCSSEESENT, &lgp_value ) == -1 )
+	{
+		log.txt( LLOG_ERROR, "!!: unable to set BIOCGSEESENT for filter device\n" );
+		return LIBIKE_SOCKET;
+	}
+
+	// get the filter buffer size
+
+	int32_t buff_size;
+	if( ioctl( tunnel->bflt_dhcp, BIOCGBLEN, &buff_size ) == -1 )
+	{
+		log.txt( LLOG_ERROR, "!!: unable to obtain filter buffer size\n" );
+		return LIBIKE_SOCKET;
+	}
+
+	// setup our bpf filter program ( adapted from ISC DHCP )
+
+	struct bpf_insn dhcp_bpf_filter [] = {
+
+		// Make sure this is an IP packet...
+		BPF_STMT (BPF_LD + BPF_H + BPF_ABS, 12),
+		BPF_JUMP (BPF_JMP + BPF_JEQ + BPF_K, ETHERTYPE_IP, 0, 10),
+
+		// Make sure it's a UDP packet...
+		BPF_STMT (BPF_LD + BPF_B + BPF_ABS, 23),
+		BPF_JUMP (BPF_JMP + BPF_JEQ + BPF_K, IPPROTO_UDP, 0, 8),
+
+		// Make sure this isn't a fragment...
+		BPF_STMT(BPF_LD + BPF_H + BPF_ABS, 20),
+		BPF_JUMP(BPF_JMP + BPF_JSET + BPF_K, 0x1fff, 6, 0),
+
+		// Make sure it's from the right source address...
+		BPF_STMT (BPF_LD + BPF_W + BPF_IND, 26),
+		BPF_JUMP (BPF_JMP + BPF_JEQ + BPF_K, ifaddr, 0, 4),
+
+		// Get the IP header length...
+		BPF_STMT (BPF_LDX + BPF_B + BPF_MSH, 14),
+
+		// Make sure it's from the right source port...
+		BPF_STMT (BPF_LD + BPF_H + BPF_IND, 16),
+		BPF_JUMP (BPF_JMP + BPF_JEQ + BPF_K, 67, 0, 1),
+
+		// If we passed all the tests, ask for the whole packet.
+		BPF_STMT(BPF_RET+BPF_K, (u_int)-1),
+
+		// Otherwise, drop it.
+		BPF_STMT(BPF_RET+BPF_K, 0),
+	};
+
+	// assign the bpf filter program
+
+	struct bpf_program bpfp;
+	bpfp.bf_insns = dhcp_bpf_filter;
+	bpfp.bf_len = sizeof( dhcp_bpf_filter ) / sizeof( struct bpf_insn );;
+
+        if( ioctl( tunnel->bflt_dhcp, BIOCSETF, &bpfp ) == -1 )
+        {
+                printf( "unable to set filter program\n" );
+                printf( "exiting ...\n" );
+                return -1;
+        }
+
 	return LIBIKE_OK;
 }
 
 long _IKED::filter_dhcp_remove( IDB_TUNNEL * tunnel )
 {
+	close( tunnel->bflt_dhcp );
 	return LIBIKE_OK;
 }
 
 long _IKED::filter_dhcp_send( IDB_TUNNEL * tunnel, PACKET_IP & packet )
 {
+	send(
+		tunnel->bflt_dhcp,
+		packet.buff(),
+		packet.size(),
+		0 );
+
 	return LIBIKE_OK;
 }
 
 long _IKED::filter_dhcp_recv( IDB_TUNNEL * tunnel, PACKET_IP & packet )
 {
+	char buff[ 1024 ];
+	long size = 1024;
+
+	size = recv(
+		tunnel->bflt_dhcp,
+		buff,
+		size,
+		0 );
+
+	if( size > 0 )
+	{
+		packet.add( buff, size );
+		return LIBIKE_OK;
+	}
+
 	return LIBIKE_NODATA;
 }
 

@@ -83,7 +83,7 @@ bool _LOG::append( char * buff, long size )
 #ifdef UNIX
 
 	if( log_flags & LOGFLAG_SYSTEM )
-		syslog( LOG_DEBUG, buff );
+		syslog( LOG_NOTICE, buff );
 	else
 	{
 		if( fp != NULL )

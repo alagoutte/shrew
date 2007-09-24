@@ -30,6 +30,7 @@ add_executable(
 	crypto.cpp
 	conf.parse.cpp
 	conf.token.cpp
+	dhcp.cpp
 	ike.cpp
 	ike.exch.config.cpp
 	ike.exch.inform.cpp
