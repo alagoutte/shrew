@@ -328,6 +328,7 @@ typedef class _IKED
 	friend class _ITH_EVENT_RESEND;
 
 	friend class _ITH_EVENT_PH1DPD;
+	friend class _ITH_EVENT_PH1DHCP;
 	friend class _ITH_EVENT_PH1NATT;
 	friend class _ITH_EVENT_PH1HARD;
 
@@ -532,16 +533,29 @@ typedef class _IKED
 	long	process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned char payload );
 	long	process_inform_send( IDB_PH1 * ph1, IDB_XCH * inform );
 
+	// dhcp over ipsec helper functions
+
+	long	filter_dhcp_create( IDB_TUNNEL * tunnel );
+	long	filter_dhcp_remove( IDB_TUNNEL * tunnel );
+	long	filter_dhcp_send( IDB_TUNNEL * tunnel, PACKET_IP & packet );
+	long	filter_dhcp_recv( IDB_TUNNEL * tunnel, PACKET_IP & packet );
+
+	long	process_dhcp_send( IDB_TUNNEL * tunnel );
+	long	process_dhcp_recv( IDB_TUNNEL * tunnel );
+
 	// policy helper functions
 
 	bool	policy_get_addrs( PFKI_SPINFO * spinfo, IKE_SADDR & src, IKE_SADDR & dst );
 	bool	policy_cmp_prots( PFKI_SPINFO * spinfo1, PFKI_SPINFO * spinfo2 );
 
+	bool	policy_dhcp_create( IDB_TUNNEL * tunnel );
+	bool	policy_dhcp_remove( IDB_TUNNEL * tunnel );
+
 	bool	policy_list_create( IDB_TUNNEL * tunnel, bool initiator );
 	bool	policy_list_remove( IDB_TUNNEL * tunnel, bool initiator );
 
-	bool	policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2 );
-	bool	policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2 );
+	bool	policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route );
+	bool	policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route );
 
 	// proposal helper functions
 

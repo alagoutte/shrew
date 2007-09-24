@@ -711,21 +711,19 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	if( tunnel != NULL )
 	{
 		//
-		// cleaup our policy list
+		// cleaup our security policy lists
+		// ( caller must hold the sdb lock )
 		//
 
+		iked.lock_sdb.lock();
+
 		if( tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
-		{
-			//
-			// caller must hold the sdb lock
-			//
-
-			iked.lock_sdb.lock();
-
 			iked.policy_list_remove( tunnel, true );
 
-			iked.lock_sdb.unlock();
-		}
+		if( tunnel->peer->xconf_mode == CONFIG_MODE_DHCP )
+			iked.filter_dhcp_remove( tunnel );
+
+		iked.lock_sdb.unlock();
 
 		//
 		// if we were using a virutal adapter,

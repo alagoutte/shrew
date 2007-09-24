@@ -88,6 +88,14 @@ bool _ITH_EVENT_PH1DPD::func()
 	return true;
 }
 
+bool _ITH_EVENT_PH1DHCP::func()
+{
+	iked.process_dhcp_recv( ph1->tunnel );
+	iked.process_dhcp_send( ph1->tunnel );
+
+	return true;
+}
+
 bool _ITH_EVENT_PH1NATT::func()
 {
 	//
@@ -322,6 +330,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	//
 
 	event_dpd.ph1 = this;
+	event_dhcp.ph1 = this;
 	event_natt.ph1 = this;
 	event_hard.ph1 = this;
 
@@ -854,6 +863,14 @@ bool _IDB_PH1::dec( bool lock )
 			refcount--;
 			iked.log.txt( LLOG_DEBUG,
 				"DB : phase1 resend event canceled ( ref count = %i )\n",
+				refcount );
+		}
+
+		if( iked.ith_timer.del( &event_dhcp ) )
+		{
+			refcount--;
+			iked.log.txt( LLOG_DEBUG,
+				"DB : phase1 dhcp event canceled ( ref count = %i )\n",
 				refcount );
 		}
 

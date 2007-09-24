@@ -161,9 +161,9 @@ X Add support for x86/amd64 Linux platforms
 ----------------------------------------------------------------------
 X Review option flag usage for client struct
 X Add support for dynamic management of divert rules
-. Add support for syslog output on unix targets
+X Add support for syslog output on unix targets
 . Add support for timestamps in the log output
-. Add support for DHCP over IPsec configuration method
+X Add support for DHCP over IPsec configuration method
 . Add support for strictly manual client configuration method
 . Add support for x86/amd64 Windows Vista platforms
 . Add support for multiple DNS/WINS server addresses

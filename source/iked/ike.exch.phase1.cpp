@@ -1381,17 +1381,40 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				policy_list_create( ph1->tunnel, ph1->initiator );
 
 		//
-		// we may need to initiate a config
-		// exchange right now if we need to
-		// initiate xauth to verify our peer
-		// when acting as a responder or if
-		// we need to acquire configuration
-		// info from our peer when acting as
-		// the initiator
+		// determine if a config exchange
+		// is required at this time
 		//
 
-		if( ( !ph1->initiator &&  ph1->xauth_l ) ||
-			(  ph1->initiator && !ph1->xauth_l ) )
+		bool cfgexch = false;
+
+		if( !ph1->initiator && ph1->xauth_l )
+		{
+			//
+			// initiate xauth to verify our peer
+			// when acting as a responder
+			//
+
+			cfgexch = true;
+		}
+
+		if( ph1->initiator && !ph1->xauth_l )
+		{
+			//
+			// initiate a pull config request to
+			// acquire info from our peer when
+			// acting as an initiator and xauth
+			// is not required
+			//
+
+			if( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
+				cfgexch = true;
+		}
+
+		//
+		// possibly initiate a config exchange
+		//
+
+		if( cfgexch )
 		{
 			IDB_CFG * cfg = new IDB_CFG( ph1->tunnel, true, 0 );
 			cfg->add( true );
@@ -1414,6 +1437,20 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		ph1->event_hard.delay = proposal->life_sec * 1000;
 
 		ith_timer.add( &ph1->event_hard );
+
+		//
+		// add pahse1 dhcp event ( client only )
+		//
+
+		if( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_DHCP )
+		{
+			filter_dhcp_create( ph1->tunnel );
+
+			ph1->inc( true );
+			ph1->event_dhcp.delay = 1000;
+
+			ith_timer.add( &ph1->event_dhcp );
+		}
 
 		//
 		// add pahse1 natt event

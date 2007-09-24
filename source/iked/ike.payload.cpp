@@ -1184,8 +1184,8 @@ long _IKED::payload_add_ph2id( PACKET_IKE & packet, IKE_PH2ID & ph2id, uint8_t n
 
 	packet.add_payload( false, next );		// ADD - identity
 	packet.add_byte( ph2id.type );			// id type
-	packet.add_byte( 0 );					// protocol ( ignore )
-	packet.add_word( 0 );					// IP port ( ignore )
+	packet.add_byte( ph2id.prot );			// protocol ( ignore )
+	packet.add_word( ph2id.port );			// IP port ( ignore )
 
 	switch( ph2id.type )
 	{
@@ -1226,14 +1226,12 @@ long _IKED::payload_get_ph2id( PACKET_IKE & packet, IKE_PH2ID & ph2id )
 	// read responder identity payload
 	//
 
-	uint8_t		r_prot;
-	uint16_t	r_port;
 	uint32_t	temp1 = 0;
 	uint32_t	temp2 = 0;
 
 	packet.get_byte( ph2id.type );			// id type
-	packet.get_byte( r_prot );				// protocol ( ignore )
-	packet.get_word( r_port );				// IP port ( ignore )
+	packet.get_byte( ph2id.prot );			// protocol
+	packet.get_word( ph2id.port );			// IP port
 
 	switch( ph2id.type )
 	{

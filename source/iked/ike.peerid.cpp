@@ -319,191 +319,171 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 
 bool _IKED::cmp_ph2id( IKE_PH2ID & idt, IKE_PH2ID & ids, bool exact )
 {
-	if( exact )
-	{
-		//
-		// exact match
-		//
+	//
+	// exact match option enforces
+	// like id value types
+	//
 
+	if( exact )
 		if( ids.type != idt.type )
 			return false;
 
-		switch( ids.type )
-		{
-			//
-			// ipv4 address
-			//
+	//
+	// compare protocol value
+	//
 
-			case ISAKMP_ID_IPV4_ADDR:
+	if( ids.prot != idt.prot )
+		return false;
 
-				if( ids.addr1.s_addr != idt.addr1.s_addr )
-					return false;
+	//
+	// compare port value
+	//
 
-				break;
+	if( ids.port != idt.port )
+		return false;
 
-			//
-			// ipv4 subnet or range 
-			//
+	//
+	// inclusive match
+	//
 
-			case ISAKMP_ID_IPV4_ADDR_SUBNET:
-			case ISAKMP_ID_IPV4_ADDR_RANGE:
-
-				if( ( ids.addr1.s_addr != idt.addr1.s_addr ) ||
-					( ids.addr1.s_addr != idt.addr1.s_addr ) )
-					return false;
-
-				break;
-
-			default:
-
-				return false;
-		}
-	}
-	else
+	switch( ids.type )
 	{
-		//
-		// inclusive match
-		//
-
-		switch( ids.type )
+		case ISAKMP_ID_NONE:
 		{
-			case ISAKMP_ID_NONE:
+			//
+			// anything to ...
+			//
+
+			return true;
+		}
+
+		case ISAKMP_ID_IPV4_ADDR:
+		{
+			switch( idt.type )
 			{
 				//
-				// anything to ...
+				// ipv4 address to ipv4 address
 				//
 
-				return true;
-			}
-
-			case ISAKMP_ID_IPV4_ADDR:
-			{
-				switch( idt.type )
+				case ISAKMP_ID_IPV4_ADDR:
 				{
 					//
-					// ipv4 address to ipv4 address
+					// is ids's address euqal to
+					// idt's address
 					//
 
-					case ISAKMP_ID_IPV4_ADDR:
-					{
-						//
-						// is ids's address euqal to
-						// idt's address
-						//
-
-						if( ids.addr1.s_addr != idt.addr1.s_addr )
-							return false;
-
-						break;
-					}
-
-					//
-					// ipv4 address to ipv4 network
-					//
-
-					case ISAKMP_ID_IPV4_ADDR_SUBNET:
-					{
-						//
-						// convert to subnet addresses
-						//
-
-						unsigned long subnet1 = idt.addr1.s_addr & idt.addr2.s_addr;
-						unsigned long subnet2 = ids.addr1.s_addr & idt.addr2.s_addr;
-
-						//
-						// is ids's subnet address equal
-						// to idt's subnet address
-						//
-
-						if( subnet2 != subnet1 )
-							return false;
-
-						break;
-					}
-
-					//
-					// ipv4 address to ipv4 range
-					//
-
-					case ISAKMP_ID_IPV4_ADDR_RANGE:
-					{
-						//
-						// is ids's address within idt's
-						// address range
-						//
-
-						if( ( ids.addr1.s_addr < idt.addr1.s_addr ) &&
-							( ids.addr1.s_addr > idt.addr2.s_addr ) )
-							return false;
-
-						break;
-					}
-				}
-
-				break;
-			}
-
-			case ISAKMP_ID_IPV4_ADDR_SUBNET:
-			{
-				switch( idt.type )
-				{
-					//
-					// ipv4 network to ipv4 address
-					//
-
-					case ISAKMP_ID_IPV4_ADDR:
-					{
-						//
-						// is ids's address equal to
-						// idt's subnet address with
-						// idt's netmask being 32 bits
-						//
-
-						if( ( ids.addr1.s_addr != idt.addr1.s_addr ) ||
-							( ids.addr2.s_addr != 0xffffffff ) )
-							return false;
-
-						break;
-					}
-
-					//
-					// ipv4 network to ipv4 network
-					//
-
-					case ISAKMP_ID_IPV4_ADDR_SUBNET:
-					{
-						//
-						// is ids's subnet address and mask equal
-						//
-
-						if( ( ids.addr1.s_addr != idt.addr1.s_addr ) ||
-							( ids.addr2.s_addr != idt.addr2.s_addr ) )
-							return false;
-
-						break;
-					}
-
-					//
-					// ipv4 network to ipv4 range
-					//
-
-					case ISAKMP_ID_IPV4_ADDR_RANGE:
-					{
+					if( ids.addr1.s_addr != idt.addr1.s_addr )
 						return false;
-					}
+
+					break;
 				}
 
-				break;
+				//
+				// ipv4 address to ipv4 network
+				//
+
+				case ISAKMP_ID_IPV4_ADDR_SUBNET:
+				{
+					//
+					// convert to subnet addresses
+					//
+
+					unsigned long subnet1 = idt.addr1.s_addr & idt.addr2.s_addr;
+					unsigned long subnet2 = ids.addr1.s_addr & idt.addr2.s_addr;
+
+					//
+					// is ids's subnet address equal
+					// to idt's subnet address
+					//
+
+					if( subnet2 != subnet1 )
+						return false;
+
+					break;
+				}
+
+				//
+				// ipv4 address to ipv4 range
+				//
+
+				case ISAKMP_ID_IPV4_ADDR_RANGE:
+				{
+					//
+					// is ids's address within idt's
+					// address range
+					//
+
+					if( ( ids.addr1.s_addr < idt.addr1.s_addr ) &&
+						( ids.addr1.s_addr > idt.addr2.s_addr ) )
+						return false;
+
+					break;
+				}
 			}
 
-			case ISAKMP_ID_IPV4_ADDR_RANGE:
+			break;
+		}
+
+		case ISAKMP_ID_IPV4_ADDR_SUBNET:
+		{
+			switch( idt.type )
 			{
 				//
-				// ipv4 range to ...
+				// ipv4 network to ipv4 address
 				//
 
-				return false;
+				case ISAKMP_ID_IPV4_ADDR:
+				{
+					//
+					// is ids's address equal to
+					// idt's subnet address with
+					// idt's netmask being 32 bits
+					//
+
+					if( ( ids.addr1.s_addr != idt.addr1.s_addr ) ||
+						( ids.addr2.s_addr != 0xffffffff ) )
+						return false;
+
+					break;
+				}
+
+				//
+				// ipv4 network to ipv4 network
+				//
+
+				case ISAKMP_ID_IPV4_ADDR_SUBNET:
+				{
+					//
+					// is ids's subnet address and mask equal
+					//
+
+					if( ( ids.addr1.s_addr != idt.addr1.s_addr ) ||
+						( ids.addr2.s_addr != idt.addr2.s_addr ) )
+						return false;
+
+					break;
+				}
+
+				//
+				// ipv4 network to ipv4 range
+				//
+
+				case ISAKMP_ID_IPV4_ADDR_RANGE:
+				{
+					return false;
+				}
 			}
+
+			break;
+		}
+
+		case ISAKMP_ID_IPV4_ADDR_RANGE:
+		{
+			//
+			// ipv4 range to ...
+			//
+
+			return false;
 		}
 	}
 

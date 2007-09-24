@@ -163,6 +163,7 @@
 #define BOOTP_REPLY				0x02
 
 #define BOOTP_HW_EHTERNET		0x01
+#define BOOTP_HW_IPSEC			0x1f
 
 #define DHCP_MSG_DISCOVER		0x01
 #define DHCP_MSG_OFFER			0x02

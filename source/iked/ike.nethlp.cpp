@@ -553,22 +553,25 @@ long _IKED::filter_tunnel_add( IDB_TUNNEL * tunnel )
 
 	vflt.rule_add( &rule );
 
-	memset( &rule, 0, sizeof( rule ) );
+	if( tunnel->peer->natt_mode != IPSEC_NATT_DISABLE )
+	{
+		memset( &rule, 0, sizeof( rule ) );
 
-	rule.Level   = RLEVEL_DAEMON;
-	rule.Group   = tunnel->refid;
-	rule.Action  = FLT_ACTION_DIVERT;
-	rule.Flags   = FLT_FLAG_QUICK | FLT_FLAG_RECV | FLT_FLAG_HAS_IPSECSPI;
-	rule.Proto   = htons( PROTO_IP );
-	rule.IpPro   = PROTO_IP_UDP;
-	rule.SrcAddr = tunnel->saddr_r.saddr4.sin_addr.s_addr;
-	rule.SrcMask = FLT_MASK_ADDR;
-	rule.DstAddr = tunnel->saddr_l.saddr4.sin_addr.s_addr;
-	rule.DstMask = FLT_MASK_ADDR;
-	rule.SrcPort = tunnel->peer->natt_port;
-	rule.DstPort = htons( LIBIKE_NATT_PORT );
+		rule.Level   = RLEVEL_DAEMON;
+		rule.Group   = tunnel->refid;
+		rule.Action  = FLT_ACTION_DIVERT;
+		rule.Flags   = FLT_FLAG_QUICK | FLT_FLAG_RECV | FLT_FLAG_HAS_IPSECSPI;
+		rule.Proto   = htons( PROTO_IP );
+		rule.IpPro   = PROTO_IP_UDP;
+		rule.SrcAddr = tunnel->saddr_r.saddr4.sin_addr.s_addr;
+		rule.SrcMask = FLT_MASK_ADDR;
+		rule.DstAddr = tunnel->saddr_l.saddr4.sin_addr.s_addr;
+		rule.DstMask = FLT_MASK_ADDR;
+		rule.SrcPort = tunnel->peer->natt_port;
+		rule.DstPort = htons( LIBIKE_NATT_PORT );
 
-	vflt.rule_add( &rule );
+		vflt.rule_add( &rule );
+	}
 
 	return LIBIKE_OK;
 }

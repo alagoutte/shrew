@@ -291,6 +291,14 @@ typedef class _IDB_TUNNEL : public IDB
 	long		close;
 	long		natt_v;
 
+	uint32_t	dhcp_xid;
+
+#ifdef WIN32
+	VFLT		vflt_dhcp;
+#else
+	int			bflt_dhcp;
+#endif
+
 	_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r );
 	virtual ~_IDB_TUNNEL();
 
@@ -394,6 +402,16 @@ typedef class _ITH_EVENT_PH1DPD : public ITH_EVENT
 
 }ITH_EVENT_PH1DPD;
 
+typedef class _ITH_EVENT_PH1DHCP : public ITH_EVENT
+{
+	public:
+
+	IDB_PH1 *	ph1;
+
+	bool	func();
+
+}ITH_EVENT_PH1DHCP;
+
 typedef class _ITH_EVENT_PH1NATT : public ITH_EVENT
 {
 	public:
@@ -476,6 +494,7 @@ typedef class _IDB_PH1 : public IDB_XCH
 	BDATA	skeyid_e;
 
 	ITH_EVENT_PH1DPD	event_dpd;
+	ITH_EVENT_PH1DHCP	event_dhcp;
 	ITH_EVENT_PH1NATT	event_natt;
 	ITH_EVENT_PH1HARD	event_hard;
 

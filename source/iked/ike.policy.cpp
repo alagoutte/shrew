@@ -216,6 +216,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	{
 		memset( &id2, 0, sizeof( id2 ) );
 		id2.type = ISAKMP_ID_IPV4_ADDR_SUBNET;
+		id2.prot = IPSEC_PROTO_ANY;
 
 		tunnel->idlist_incl.add( id2 );
 
@@ -233,13 +234,15 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	{
 		memset( &id1, 0, sizeof( id1 ) );
 		id1.type = ISAKMP_ID_IPV4_ADDR;
+		id1.prot = IPSEC_PROTO_ANY;
 		id1.addr1 = tunnel->saddr_l.saddr4.sin_addr;
 
 		memset( &id2, 0, sizeof( id2 ) );
 		id2.type = ISAKMP_ID_IPV4_ADDR;
+		id2.prot = IPSEC_PROTO_ANY;
 		id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
-		policy_create( tunnel, IPSEC_POLICY_NONE, id1, id2 );
+		policy_create( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
 
 		tunnel->force_all = true;
 	}
@@ -250,6 +253,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 
 	memset( &id1, 0, sizeof( id1 ) );
 	id1.type  = ISAKMP_ID_IPV4_ADDR;
+	id1.prot = IPSEC_PROTO_ANY;
 	id1.addr1.s_addr = tunnel->xconf.addr.s_addr;
 	id1.addr2.s_addr = 0;
 
@@ -263,9 +267,9 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	while( tunnel->idlist_excl.get( id2, index++ ) )
 	{
 		if( initiator )
-			policy_create( tunnel, IPSEC_POLICY_NONE, id1, id2 );
+			policy_create( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
 		else
-			policy_create( tunnel, IPSEC_POLICY_DISCARD, id2, id1 );
+			policy_create( tunnel, IPSEC_POLICY_DISCARD, id2, id1, true );
 	}
 
 	//
@@ -278,9 +282,9 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	while( tunnel->idlist_incl.get( id2, index++ ) )
 	{
 		if( initiator )
-			policy_create( tunnel, IPSEC_POLICY_IPSEC, id1, id2 );
+			policy_create( tunnel, IPSEC_POLICY_IPSEC, id1, id2, true );
 		else
-			policy_create( tunnel, IPSEC_POLICY_IPSEC, id2, id1 );
+			policy_create( tunnel, IPSEC_POLICY_IPSEC, id2, id1, true );
 	}
 
 	return true;
@@ -295,7 +299,8 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	IKE_PH2ID id1;
 	memset( &id1, 0, sizeof( id1 ) );
 
-	id1.type  = ISAKMP_ID_IPV4_ADDR;
+	id1.type = ISAKMP_ID_IPV4_ADDR;
+	id1.prot = IPSEC_PROTO_ANY;
 	id1.addr1.s_addr = tunnel->xconf.addr.s_addr;
 	id1.addr2.s_addr = 0;
 
@@ -311,9 +316,9 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	while( tunnel->idlist_incl.get( id2, index++ ) )
 	{
 		if( initiator )
-			policy_remove( tunnel, IPSEC_POLICY_IPSEC, id1, id2 );
+			policy_remove( tunnel, IPSEC_POLICY_IPSEC, id1, id2, true );
 		else
-			policy_remove( tunnel, IPSEC_POLICY_IPSEC, id2, id1 );
+			policy_remove( tunnel, IPSEC_POLICY_IPSEC, id2, id1, true );
 	}
 
 	//
@@ -326,9 +331,9 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	while( tunnel->idlist_excl.get( id2, index++ ) )
 	{
 		if( initiator )
-			policy_remove( tunnel, IPSEC_POLICY_NONE, id1, id2 );
+			policy_remove( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
 		else
-			policy_remove( tunnel, IPSEC_POLICY_DISCARD, id2, id1 );
+			policy_remove( tunnel, IPSEC_POLICY_DISCARD, id2, id1, true );
 	}
 
 	//
@@ -340,13 +345,15 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	{
 		memset( &id1, 0, sizeof( id1 ) );
 		id1.type = ISAKMP_ID_IPV4_ADDR;
+		id1.prot = IPSEC_PROTO_ANY;
 		id1.addr1 = tunnel->saddr_l.saddr4.sin_addr;
 
 		memset( &id2, 0, sizeof( id2 ) );
 		id2.type = ISAKMP_ID_IPV4_ADDR;
+		id2.prot = IPSEC_PROTO_ANY;
 		id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
-		policy_remove( tunnel, IPSEC_POLICY_NONE, id1, id2 );
+		policy_remove( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
 
 		tunnel->force_all = false;
 	}
@@ -354,7 +361,57 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	return true;
 }
 
-bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2 )
+bool _IKED::policy_dhcp_create( IDB_TUNNEL * tunnel )
+{
+	//
+	// create our DHCP over IPsec policies
+	//
+
+	log.txt( LLOG_DEBUG, "ii : creating IPsec over DHCP policies\n" );
+
+	IKE_PH2ID src;
+	memset( &src, 0, sizeof( src ) );
+	src.type = ISAKMP_ID_IPV4_ADDR;
+	src.prot = PROTO_IP_UDP;
+	src.port = htons( UDP_PORT_DHCPC );
+	src.addr1 = tunnel->saddr_l.saddr4.sin_addr;
+
+	IKE_PH2ID dst;
+	memset( &dst, 0, sizeof( dst ) );
+	dst.type = ISAKMP_ID_IPV4_ADDR;
+	dst.prot = PROTO_IP_UDP;
+	dst.port = htons( UDP_PORT_DHCPS );
+	dst.addr1 = tunnel->saddr_r.saddr4.sin_addr;
+
+	return policy_create( tunnel, IPSEC_POLICY_IPSEC, src, dst, false );
+}
+
+bool _IKED::policy_dhcp_remove( IDB_TUNNEL * tunnel )
+{
+	//
+	// remove our DHCP over IPsec policies
+	//
+
+	log.txt( LLOG_DEBUG, "ii : removing IPsec over DHCP policies\n" );
+
+	IKE_PH2ID src;
+	memset( &src, 0, sizeof( src ) );
+	src.type = ISAKMP_ID_IPV4_ADDR;
+	src.prot = PROTO_IP_UDP;
+	src.port = htons( UDP_PORT_DHCPC );
+	src.addr1 = tunnel->saddr_l.saddr4.sin_addr;
+
+	IKE_PH2ID dst;
+	memset( &dst, 0, sizeof( dst ) );
+	dst.type = ISAKMP_ID_IPV4_ADDR;
+	dst.prot = PROTO_IP_UDP;
+	dst.port = htons( UDP_PORT_DHCPS );
+	dst.addr1 = tunnel->saddr_r.saddr4.sin_addr;
+
+	return policy_remove( tunnel, IPSEC_POLICY_IPSEC, src, dst, false );
+}
+
+bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route )
 {
 	char txtid_src[ LIBIKE_MAX_TEXTP2ID ];
 	char txtid_dst[ LIBIKE_MAX_TEXTP2ID ];
@@ -435,7 +492,7 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	// create client policy route
 	//
 
-	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
+	if( route && ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) )
 	{
 		bool	routed = false;
 
@@ -516,7 +573,7 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	return true;
 }
 
-bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2 )
+bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route )
 {
 	char txtid_src[ LIBIKE_MAX_TEXTP2ID ];
 	char txtid_dst[ LIBIKE_MAX_TEXTP2ID ];
@@ -608,7 +665,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	// remove client policy route
 	//
 
-	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
+	if( route && ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) )
 	{
 		bool	routed = false;
 
