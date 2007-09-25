@@ -130,12 +130,18 @@ void _IKEC::run()
 
 	// client auto config mode
 
-	peer.xconf_mode = CONFIG_MODE_PULL;
+	peer.xconf_mode = CONFIG_MODE_NONE;
 
 	if( config.get_string( "client-auto-mode", text, MAX_CONFSTRING, 0 ) )
 	{
 		if( !strcmp( "push", text ) )
 			peer.xconf_mode = CONFIG_MODE_PUSH;
+
+		if( !strcmp( "pull", text ) )
+			peer.xconf_mode = CONFIG_MODE_PULL;
+
+		if( !strcmp( "dhcp", text ) )
+			peer.xconf_mode = CONFIG_MODE_DHCP;
 	}
 
 	// nat-t enable

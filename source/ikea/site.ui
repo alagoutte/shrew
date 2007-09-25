@@ -168,12 +168,22 @@
                     <widget class="QComboBox">
                         <item>
                             <property name="text">
-                                <string>pull</string>
+                                <string>disabled</string>
                             </property>
                         </item>
                         <item>
                             <property name="text">
-                                <string>push</string>
+                                <string>ike config pull</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>ike config push</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>dhcp over ipsec</string>
                             </property>
                         </item>
                         <property name="name">
@@ -181,9 +191,9 @@
                         </property>
                         <property name="geometry">
                             <rect>
-                                <x>161</x>
+                                <x>121</x>
                                 <y>70</y>
-                                <width>90</width>
+                                <width>130</width>
                                 <height>21</height>
                             </rect>
                         </property>

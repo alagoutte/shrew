@@ -185,8 +185,19 @@ bool site::Load( CONFIG & config )
 
 	if( config.get_string( "client-auto-mode",
 		text, MAX_CONFSTRING, 0 ) )
-		if( !strcmp( text, "push" ) )
+	{
+		if( !strcmp( text, "disabled" ) )
+			comboBoxConfigMethod->setCurrentItem( 0 );
+
+		if( !strcmp( text, "pull" ) )
 			comboBoxConfigMethod->setCurrentItem( 1 );
+
+		if( !strcmp( text, "push" ) )
+			comboBoxConfigMethod->setCurrentItem( 2 );
+
+		if( !strcmp( text, "dhcp" ) )
+			comboBoxConfigMethod->setCurrentItem( 3 );
+	}
 
 	// local adapter mode ( default virtual )
 
@@ -647,9 +658,28 @@ bool site::Save( CONFIG & config )
 
 	// remote config method
 
-	config.set_string( "client-auto-mode",
-		( char * ) comboBoxConfigMethod->currentText().ascii(),
-		comboBoxConfigMethod->currentText().length() );
+	switch( comboBoxConfigMethod->currentItem() )
+	{
+		case 0:	// disabled
+			config.set_string( "client-auto-mode",
+				"disabled", strlen( "disabled" ) );
+			break;
+
+		case 1: // ike config pull
+			config.set_string( "client-auto-mode",
+				"pull", strlen( "pull" ) );
+			break;
+
+		case 2:	// ike config push
+			config.set_string( "client-auto-mode",
+				"push", strlen( "push" ) );
+			break;
+
+		case 3:	// dhcp over ipsec
+			config.set_string( "client-auto-mode",
+				"dhcp", strlen( "dhcp" ) );
+			break;
+	}
 
 	// local adapter mode
 

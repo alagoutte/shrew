@@ -160,7 +160,7 @@ long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 
 	if( getifaddrs( &ifp ) < 0 )
 	{
-		log.txt( LLOG_ERROR, "!!: unable to obtain interface address list\n" );
+		log.txt( LLOG_ERROR, "!! : unable to obtain interface address list\n" );
 		return LIBIKE_SOCKET;
         }
 
@@ -185,7 +185,7 @@ long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 
 	if( ifa == ifp )
 	{
-		log.txt( LLOG_ERROR, "!!: unable to obtain interface name by address\n" );
+		log.txt( LLOG_ERROR, "!! : unable to obtain interface name by address\n" );
 		return LIBIKE_SOCKET;
 	}
 
@@ -204,7 +204,7 @@ long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 
 	if( tunnel->bflt_dhcp < 0 )
 	{
-		log.txt( LLOG_ERROR, "!!: failed to open DHCP BPF device\n" );
+		log.txt( LLOG_ERROR, "!! : failed to open DHCP BPF device\n" );
 		return LIBIKE_SOCKET;
 	}
 
@@ -214,7 +214,7 @@ long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 	strcpy( ifr.ifr_name, ifname );
 	if( ioctl( tunnel->bflt_dhcp, BIOCSETIF, ( uint32_t ) &ifr ) == -1 )
 	{
-		log.txt( LLOG_ERROR, "!!: unable to assign filter to device\n", ifname );
+		log.txt( LLOG_ERROR, "!! : unable to assign filter to device\n", ifname );
 		return LIBIKE_SOCKET;
 	}
 
@@ -223,7 +223,7 @@ long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 	int imm_value = 1; 
 	if( ioctl( tunnel->bflt_dhcp, BIOCIMMEDIATE, &imm_value ) == -1 ) 
 	{
-		log.txt( LLOG_ERROR, "!!: unable to set BIOCIMMEDIATE for filter device\n" );
+		log.txt( LLOG_ERROR, "!! : unable to set BIOCIMMEDIATE for filter device\n" );
 		return LIBIKE_SOCKET;
 	}
 
@@ -232,7 +232,7 @@ long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 	int blk_value = 1;
 	if( ioctl( tunnel->bflt_dhcp, FIONBIO, &blk_value ) == -1 )
 	{
-		log.txt( LLOG_ERROR, "!!: unable to set FIONBIO for filter device\n" );
+		log.txt( LLOG_ERROR, "!! : unable to set FIONBIO for filter device\n" );
 		return LIBIKE_SOCKET;
 	}
 
@@ -241,7 +241,7 @@ long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 	int lgp_value = 0;
 	if( ioctl( tunnel->bflt_dhcp, BIOCSSEESENT, &lgp_value ) == -1 )
 	{
-		log.txt( LLOG_ERROR, "!!: unable to set BIOCGSEESENT for filter device\n" );
+		log.txt( LLOG_ERROR, "!! : unable to set BIOCGSEESENT for filter device\n" );
 		return LIBIKE_SOCKET;
 	}
 
@@ -250,7 +250,7 @@ long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 	int32_t buff_size;
 	if( ioctl( tunnel->bflt_dhcp, BIOCGBLEN, &buff_size ) == -1 )
 	{
-		log.txt( LLOG_ERROR, "!!: unable to obtain filter buffer size\n" );
+		log.txt( LLOG_ERROR, "!! : unable to obtain filter buffer size\n" );
 		return LIBIKE_SOCKET;
 	}
 
@@ -296,27 +296,57 @@ long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 
         if( ioctl( tunnel->bflt_dhcp, BIOCSETF, &bpfp ) == -1 )
         {
-                printf( "unable to set filter program\n" );
-                printf( "exiting ...\n" );
-                return -1;
+		log.txt( LLOG_ERROR, "!! : unable to set bpf filter program\n" );
+		return LIBIKE_SOCKET;
         }
+
+	//
+	// create dhcp ipsec policies
+	//
+
+	policy_dhcp_create( tunnel );
 
 	return LIBIKE_OK;
 }
 
 long _IKED::filter_dhcp_remove( IDB_TUNNEL * tunnel )
 {
+	//
+	// remove dhcp ipsec policies
+	//
+
+	policy_dhcp_remove( tunnel );
+
+	//
+	// close filter device
+	//
+
 	close( tunnel->bflt_dhcp );
+
 	return LIBIKE_OK;
 }
 
 long _IKED::filter_dhcp_send( IDB_TUNNEL * tunnel, PACKET_IP & packet )
 {
-	send(
+	ETH_HEADER eth_head;
+	memset( &eth_head, 0, sizeof( eth_head ) );
+	eth_head.prot = htons( ETHERTYPE_IP );
+
+	packet.ins(
+		&eth_head,
+		sizeof( eth_head ) );
+
+	long rslt;
+	rslt = write(
 		tunnel->bflt_dhcp,
 		packet.buff(),
-		packet.size(),
-		0 );
+		packet.size() );
+
+	if( rslt < 0 )
+	{
+		log.txt( LLOG_ERROR, "!! : failed to write to BPF filter\n" );
+		return LIBIKE_SOCKET;
+	}
 
 	return LIBIKE_OK;
 }
@@ -408,7 +438,7 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		// send the packet
 		//
 
-		log.txt( LLOG_DEBUG, "ii: sending DHCP over IPsec discover\n" );
+		log.txt( LLOG_DEBUG, "ii : sending DHCP over IPsec discover\n" );
 
 		filter_dhcp_send( tunnel, packet );
 
