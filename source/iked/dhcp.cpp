@@ -469,7 +469,7 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 	log.txt( LLOG_DEBUG, "ii : reading DHCP reply options\n" );
 
 	IKE_XCONF	config;
-	uint8_t		type = -1;
+	uint8_t		type;
 	uint32_t	temp;
 	char		txtaddr[ LIBIKE_MAX_TEXTADDR ];
 	bool		end = false;
