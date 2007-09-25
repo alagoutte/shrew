@@ -216,7 +216,6 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	{
 		memset( &id2, 0, sizeof( id2 ) );
 		id2.type = ISAKMP_ID_IPV4_ADDR_SUBNET;
-		id2.prot = IPSEC_PROTO_ANY;
 
 		tunnel->idlist_incl.add( id2 );
 
@@ -234,12 +233,10 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	{
 		memset( &id1, 0, sizeof( id1 ) );
 		id1.type = ISAKMP_ID_IPV4_ADDR;
-		id1.prot = IPSEC_PROTO_ANY;
 		id1.addr1 = tunnel->saddr_l.saddr4.sin_addr;
 
 		memset( &id2, 0, sizeof( id2 ) );
 		id2.type = ISAKMP_ID_IPV4_ADDR;
-		id2.prot = IPSEC_PROTO_ANY;
 		id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
 		policy_create( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
@@ -253,7 +250,6 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 
 	memset( &id1, 0, sizeof( id1 ) );
 	id1.type  = ISAKMP_ID_IPV4_ADDR;
-	id1.prot = IPSEC_PROTO_ANY;
 	id1.addr1.s_addr = tunnel->xconf.addr.s_addr;
 	id1.addr2.s_addr = 0;
 
@@ -300,7 +296,6 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	memset( &id1, 0, sizeof( id1 ) );
 
 	id1.type = ISAKMP_ID_IPV4_ADDR;
-	id1.prot = IPSEC_PROTO_ANY;
 	id1.addr1.s_addr = tunnel->xconf.addr.s_addr;
 	id1.addr2.s_addr = 0;
 
@@ -345,12 +340,10 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	{
 		memset( &id1, 0, sizeof( id1 ) );
 		id1.type = ISAKMP_ID_IPV4_ADDR;
-		id1.prot = IPSEC_PROTO_ANY;
 		id1.addr1 = tunnel->saddr_l.saddr4.sin_addr;
 
 		memset( &id2, 0, sizeof( id2 ) );
 		id2.type = ISAKMP_ID_IPV4_ADDR;
-		id2.prot = IPSEC_PROTO_ANY;
 		id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
 		policy_remove( tunnel, IPSEC_POLICY_NONE, id1, id2, true );

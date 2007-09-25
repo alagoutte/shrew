@@ -256,7 +256,6 @@ bool _IKED::paddr_ph2id( PFKI_ADDR & paddr, IKE_PH2ID & ph2id )
 			else
 				ph2id.prot = 0;
 
-			ph2id.prot = paddr.proto;
 			ph2id.port = paddr.saddr4.sin_port;
 
 			ph2id.type = ISAKMP_ID_IPV4_ADDR;
