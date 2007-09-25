@@ -393,7 +393,7 @@ long _ITH_TIMER::func( void * arg )
 		
 		if( entry != NULL )
 		{
-			printf( "XX : executing event\n" );
+//			printf( "XX : executing event\n" );
 
 			//
 			// enable the event and

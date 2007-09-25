@@ -721,7 +721,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 			iked.policy_list_remove( tunnel, true );
 
 		if( tunnel->peer->xconf_mode == CONFIG_MODE_DHCP )
-			iked.filter_dhcp_remove( tunnel );
+			iked.socket_dhcp_remove( tunnel );
 
 		iked.lock_sdb.unlock();
 

@@ -294,9 +294,9 @@ typedef class _IDB_TUNNEL : public IDB
 	uint32_t	dhcp_xid;
 
 #ifdef WIN32
-	VFLT		vflt_dhcp;
+	SOCKET		dhcp_sock;
 #else
-	int			bflt_dhcp;
+	int			dhcp_sock;
 #endif
 
 	_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r );

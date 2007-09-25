@@ -290,6 +290,21 @@ int main( int argc, char * argv[], char * envp[] )
 #ifdef WIN32
 
 	//
+	// initialize winsock
+	//
+
+	WORD	reqver;
+	WSADATA	wsadata;
+	memset( &wsadata, 0, sizeof( wsadata ) );
+
+	reqver = MAKEWORD( 1, 1 );
+	if( WSAStartup( reqver, &wsadata ) )
+	{
+		printf( "wsastartup failed\n" );
+		return false;
+	}
+
+	//
 	// check command line parameters
 	//
 
@@ -349,6 +364,12 @@ int main( int argc, char * argv[], char * envp[] )
 
 		iked.loop();
 	}
+
+	//
+	// release winsock
+	//
+
+	WSACleanup(); 
 
 #endif
 

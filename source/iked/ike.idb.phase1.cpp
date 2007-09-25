@@ -90,8 +90,8 @@ bool _ITH_EVENT_PH1DPD::func()
 
 bool _ITH_EVENT_PH1DHCP::func()
 {
-	iked.process_dhcp_recv( ph1->tunnel );
-	iked.process_dhcp_send( ph1->tunnel );
+	iked.process_dhcp_recv( ph1 );
+	iked.process_dhcp_send( ph1 );
 
 	return true;
 }

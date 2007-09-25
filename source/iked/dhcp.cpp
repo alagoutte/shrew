@@ -41,125 +41,20 @@
 
 #include "iked.h"
 
-#ifdef WIN32
-
-long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
+long _IKED::socket_dhcp_create( IDB_TUNNEL * tunnel )
 {
 	//
-	// initialize our vflt device and
-	// install a rule to catch dhcp
-	// reply packets
+	// create dhcp transaction id
 	//
 
-	tunnel->vflt_dhcp.init( &log );
-	tunnel->vflt_dhcp.open();
+	rand_bytes( &tunnel->dhcp_xid, 4 );
 
-	FLT_RULE rule;
-	memset( &rule, 0, sizeof( rule ) );
-
-	rule.Level   = RLEVEL_DAEMON;
-	rule.Group   = tunnel->refid;
-	rule.Action  = FLT_ACTION_DIVERT;
-	rule.Flags   = FLT_FLAG_RECV;
-	rule.Proto   = htons( PROTO_IP );
-	rule.IpPro   = PROTO_IP_UDP;
-	rule.SrcAddr = tunnel->saddr_r.saddr4.sin_addr.s_addr;
-	rule.SrcMask = FLT_MASK_ADDR;
-	rule.DstAddr = tunnel->saddr_l.saddr4.sin_addr.s_addr;
-	rule.DstMask = FLT_MASK_ADDR;
-	rule.SrcPort = htons( UDP_PORT_DHCPS ) ;
-	rule.DstPort = htons( UDP_PORT_DHCPC ) ;
-
-	tunnel->vflt_dhcp.rule_add( &rule );
-
-	//
-	// create dhcp ipsec policies
-	//
-
-	policy_dhcp_create( tunnel );
-
-	return LIBIKE_OK;
-}
-
-long _IKED::filter_dhcp_remove( IDB_TUNNEL * tunnel )
-{
-	//
-	// remove dhcp ipsec policies
-	//
-
-	policy_dhcp_remove( tunnel );
-
-	//
-	// close our vflt device. the rule
-	// will die when the handle closes
-	//
-
-	tunnel->vflt_dhcp.close();
-
-	return LIBIKE_OK;
-}
-
-long _IKED::filter_dhcp_send( IDB_TUNNEL * tunnel, PACKET_IP & packet )
-{
-	ETH_HEADER eth_head;
-	tunnel->vflt_dhcp.head( packet, eth_head );
-
-	packet.ins(
-		&eth_head,
-		sizeof( eth_head ) );
-
-	tunnel->vflt_dhcp.filt(
-		packet.buff(),
-		packet.size(),
-		FLT_SEND_DN );
-
-	pcap_decrypt.dump(
-		packet.buff(),
-		packet.size() );
-
-	return LIBIKE_OK;
-}
-
-long _IKED::filter_dhcp_recv( IDB_TUNNEL * tunnel, PACKET_IP & packet )
-{
-	long result = tunnel->vflt_dhcp.select( 10 );
-	if( result == FLT_NO_SOCK )
-		return LIBIKE_SOCKET;
-
-	if( result < 1 )
-		return LIBIKE_NODATA;
-
-	ETH_HEADER eth_header;
-
-	result = tunnel->vflt_dhcp.recv_ip(
-				packet,
-				&eth_header );
-
-	switch( result )
-	{
-		case FLT_NO_SOCK:
-			return LIBIKE_SOCKET;
-
-		case FLT_NO_DATA:
-			return LIBIKE_NODATA;
-
-		case FLT_NO_BUFF:
-			return LIBIKE_FAILED;
-	}
-
-	return LIBIKE_OK;
-}
-
-#else
-
-long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
-{
 	//
 	// create dhcp socket
 	//
 
-	tunnel->bflt_dhcp = socket( PF_INET, SOCK_DGRAM, IPPROTO_UDP );
-	if( tunnel->bflt_dhcp < 0 )
+	tunnel->dhcp_sock = socket( PF_INET, SOCK_DGRAM, IPPROTO_UDP );
+	if( tunnel->dhcp_sock < 0 )
 	{
 		log.txt( LLOG_ERROR, "!! : failed to create DHCP socket\n" );
 		return LIBIKE_SOCKET;
@@ -172,7 +67,7 @@ long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 	struct sockaddr_in saddr = tunnel->saddr_l.saddr4;
 	saddr.sin_port = htons( UDP_PORT_DHCPC );
 
-	if( bind( tunnel->bflt_dhcp, ( sockaddr * ) &saddr, sizeof( saddr ) ) < 0 )
+	if( bind( tunnel->dhcp_sock, ( sockaddr * ) &saddr, sizeof( saddr ) ) < 0 )
 	{
 		log.txt( LLOG_ERROR, "!! : failed to bind DHCP socket\n" );
 		return LIBIKE_SOCKET;
@@ -182,11 +77,24 @@ long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 	// set non-blocking operation
 	//
 
-	if( fcntl( tunnel->bflt_dhcp, F_SETFL, O_NONBLOCK ) < 0 )
+#ifdef WIN32
+
+	u_long arg = 1;
+	if( ioctlsocket( tunnel->dhcp_sock, FIONBIO, &arg ) < 0 )
 	{
 		log.txt( LLOG_ERROR, "!! : failed to set DHCP socket to non-blocking\n" );
 		return LIBIKE_SOCKET;
 	}
+
+#else
+
+	if( fcntl( tunnel->dhcp_sock, F_SETFL, O_NONBLOCK ) < 0 )
+	{
+		log.txt( LLOG_ERROR, "!! : failed to set DHCP socket to non-blocking\n" );
+		return LIBIKE_SOCKET;
+	}
+
+#endif
 
 	//
 	// create dhcp ipsec policies
@@ -197,7 +105,7 @@ long _IKED::filter_dhcp_create( IDB_TUNNEL * tunnel )
 	return LIBIKE_OK;
 }
 
-long _IKED::filter_dhcp_remove( IDB_TUNNEL * tunnel )
+long _IKED::socket_dhcp_remove( IDB_TUNNEL * tunnel )
 {
 	//
 	// remove dhcp ipsec policies
@@ -209,13 +117,42 @@ long _IKED::filter_dhcp_remove( IDB_TUNNEL * tunnel )
 	// close filter device
 	//
 
-	close( tunnel->bflt_dhcp );
+	if( tunnel->dhcp_sock != -1 )
+	{
+
+#ifdef WIN32
+
+		closesocket( tunnel->dhcp_sock );
+
+#else
+
+		close( tunnel->dhcp_sock );
+
+#endif
+
+		tunnel->dhcp_sock = -1;
+	}
 
 	return LIBIKE_OK;
 }
 
-long _IKED::filter_dhcp_send( IDB_TUNNEL * tunnel, PACKET_IP & packet )
+long _IKED::socket_dhcp_send( IDB_TUNNEL * tunnel, PACKET_IP & packet )
 {
+	//
+	// dump packet
+	//
+
+	if( dump_decrypt )
+	{
+		ETH_HEADER eth_head;
+		memset( &eth_head, 0, sizeof( eth_head ) );
+		eth_head.prot = htons( PROTO_IP );
+
+		pcap_decrypt.dump(
+			eth_head,
+			packet );
+	}
+
 	//
 	// read the ip header
 	//
@@ -259,8 +196,8 @@ long _IKED::filter_dhcp_send( IDB_TUNNEL * tunnel, PACKET_IP & packet )
 
 	int rslt;
 	rslt = sendto(
-		tunnel->bflt_dhcp,
-		packet_dhcp.buff(),
+		tunnel->dhcp_sock,
+		packet_dhcp.text(),
 		packet_dhcp.size(),
 		0,
 		&saddr_dst.saddr,
@@ -275,13 +212,13 @@ long _IKED::filter_dhcp_send( IDB_TUNNEL * tunnel, PACKET_IP & packet )
 	return LIBIKE_OK;
 }
 
-long _IKED::filter_dhcp_recv( IDB_TUNNEL * tunnel, PACKET_IP & packet )
+long _IKED::socket_dhcp_recv( IDB_TUNNEL * tunnel, PACKET_IP & packet )
 {
 	char buff[ 1024 ];
 	long size = 1024;
 
 	size = recv(
-		tunnel->bflt_dhcp,
+		tunnel->dhcp_sock,
 		buff,
 		size,
 		0 );
@@ -318,28 +255,39 @@ long _IKED::filter_dhcp_recv( IDB_TUNNEL * tunnel, PACKET_IP & packet )
 	packet.add( packet_udp );
 	packet.done();
 
+	//
+	// dump packet
+	//
+
+	if( dump_decrypt )
+	{
+		ETH_HEADER eth_head;
+		memset( &eth_head, 0, sizeof( eth_head ) );
+		eth_head.prot = htons( PROTO_IP );
+
+		pcap_decrypt.dump(
+			eth_head,
+			packet );
+	}
+
 	return LIBIKE_OK;
 }
 
-#endif
-
-long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
+long _IKED::process_dhcp_send( IDB_PH1 * ph1 )
 {
 	//
 	// DHCP over IPsec discover packet
 	//
 
-	if( !( tunnel->state & TSTATE_RECV_CONFIG ) )
+	if( !( ph1->tunnel->state & TSTATE_RECV_CONFIG ) )
 	{
 		//
 		// create dhcp discover packet
 		//
 
 		in_addr src, dst;
-		memcpy( &src, &tunnel->saddr_l.saddr4.sin_addr, sizeof( src ) );
-		memcpy( &dst, &tunnel->saddr_r.saddr4.sin_addr, sizeof( dst ) );
-
-		rand_bytes( &tunnel->dhcp_xid, 4 );
+		memcpy( &src, &ph1->tunnel->saddr_l.saddr4.sin_addr, sizeof( src ) );
+		memcpy( &dst, &ph1->tunnel->saddr_r.saddr4.sin_addr, sizeof( dst ) );
 
 		PACKET_UDP packet_dhcp;
 
@@ -354,7 +302,7 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		dhcp_head.op = BOOTP_REQUEST;			// bootp request
 		dhcp_head.htype = BOOTP_HW_IPSEC;		// bootp hardware type
 		dhcp_head.hlen = 6;						// hardware address length
-		dhcp_head.xid = tunnel->dhcp_xid;	// transaction id
+		dhcp_head.xid = ph1->tunnel->dhcp_xid;	// transaction id
 
 		dhcp_head.chaddr[ 0 ] = 0x40;			// locally administered unicast MAC
 		memcpy(									// local ipv4 interface address
@@ -370,7 +318,8 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		packet_dhcp.add_byte( DHCP_MSG_DISCOVER );	// message type value
 
 		packet_dhcp.add_byte( DHCP_OPT_CLIENTID );	// message type
-		packet_dhcp.add_byte( 6 );					// opt size
+		packet_dhcp.add_byte( 7 );					// opt size
+		packet_dhcp.add_byte( BOOTP_HW_IPSEC );		// client hw type
 		packet_dhcp.add( dhcp_head.chaddr, 6 );		// client id value
 
 		packet_dhcp.done( src, dst );
@@ -390,20 +339,92 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 
 		log.txt( LLOG_DEBUG, "ii : sending DHCP over IPsec discover\n" );
 
-		filter_dhcp_send( tunnel, packet );
+		socket_dhcp_send( ph1->tunnel, packet );
 	}
 
 	//
 	// DHCP over IPsec request packet
 	//
 
+	if(  ( ph1->tunnel->state & TSTATE_RECV_CONFIG ) &&
+		!( ph1->tunnel->state & TSTATE_RECV_ACK ) )
+	{
+		//
+		// create dhcp discover packet
+		//
+
+		in_addr src, dst;
+		memcpy( &src, &ph1->tunnel->saddr_l.saddr4.sin_addr, sizeof( src ) );
+		memcpy( &dst, &ph1->tunnel->saddr_r.saddr4.sin_addr, sizeof( dst ) );
+
+		PACKET_UDP packet_dhcp;
+
+		packet_dhcp.write(
+			htons( UDP_PORT_DHCPC ),
+			htons( UDP_PORT_DHCPS ) );
+
+		DHCP_HEADER dhcp_head;
+		memset( &dhcp_head, 0, sizeof( dhcp_head ) );
+
+		dhcp_head.magic = DHCP_MAGIC;
+		dhcp_head.op = BOOTP_REQUEST;			// bootp request
+		dhcp_head.htype = BOOTP_HW_IPSEC;		// bootp hardware type
+		dhcp_head.hlen = 6;						// hardware address length
+		dhcp_head.xid = ph1->tunnel->dhcp_xid;	// transaction id
+
+		dhcp_head.chaddr[ 0 ] = 0x40;			// locally administered unicast MAC
+		memcpy(									// local ipv4 interface address
+			dhcp_head.chaddr + 2,
+			&src, sizeof( src ) );
+
+		packet_dhcp.add(
+			&dhcp_head,
+			sizeof( dhcp_head ) );
+
+		packet_dhcp.add_byte( DHCP_OPT_MSGTYPE );	// message type
+		packet_dhcp.add_byte( 1 );					// opt size
+		packet_dhcp.add_byte( DHCP_MSG_REQUEST );	// message type value
+
+		packet_dhcp.add_byte( DHCP_OPT_SERVER );	// server id
+		packet_dhcp.add_byte( 4 );					// opt size
+		packet_dhcp.add( &ph1->tunnel->xconf.dhcp, 4 );	// server id value
+
+		packet_dhcp.add_byte( DHCP_OPT_ADDRESS );	// requested address
+		packet_dhcp.add_byte( 4 );					// opt size
+		packet_dhcp.add( &ph1->tunnel->xconf.addr, 4 );	// address value
+
+		packet_dhcp.add_byte( DHCP_OPT_CLIENTID );	// client id
+		packet_dhcp.add_byte( 7 );					// opt size
+		packet_dhcp.add_byte( BOOTP_HW_IPSEC );		// client hw type
+		packet_dhcp.add( dhcp_head.chaddr, 6 );		// client id value
+
+		packet_dhcp.done( src, dst );
+
+		//
+		// wrap in ip packet and send
+		//
+
+		PACKET_IP packet;
+		packet.write( src, dst, ident++, PROTO_IP_UDP );
+		packet.add( packet_dhcp );
+		packet.done();
+
+		//
+		// send the packet
+		//
+
+		log.txt( LLOG_DEBUG, "ii : sending DHCP over IPsec discover\n" );
+
+		socket_dhcp_send( ph1->tunnel, packet );
+	}
+
 	return LIBIKE_OK;
 }
 
-long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
+long _IKED::process_dhcp_recv( IDB_PH1 * ph1 )
 {
 	PACKET_IP packet_ip;
-	long result = filter_dhcp_recv( tunnel, packet_ip );
+	long result = socket_dhcp_recv( ph1->tunnel, packet_ip );
 	if( result != LIBIKE_OK )
 		return LIBIKE_FAILED;
 
@@ -447,7 +468,7 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 	if( !packet_dhcp.get( &dhcp_head, sizeof( dhcp_head ) ) )
 	{
 		log.txt( LLOG_ERROR, "!! : malformed DHCP reply packet\n" );
-		tunnel->dec( true );
+		ph1->tunnel->dec( true );
 		return LIBIKE_FAILED;
 	}
 
@@ -458,7 +479,7 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 		( dhcp_head.magic != DHCP_MAGIC ) )			// magic cookie
 	{
 		log.txt( LLOG_ERROR, "!! : invalid DHCP reply parameters\n" );
-		tunnel->dec( true );
+		ph1->tunnel->dec( true );
 		return LIBIKE_FAILED;
 	}
 
@@ -492,22 +513,24 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 		{
 			case DHCP_OPT_MSGTYPE:
 			{
+				config.addr.s_addr = dhcp_head.yiaddr;
+				text_addr( txtaddr, config.addr );
+
 				packet_dhcp.get_byte( type );
+
 				switch( type )
 				{
 					case DHCP_MSG_OFFER:
-						config.addr.s_addr = dhcp_head.yiaddr;
-						text_addr( txtaddr, config.addr );
-						log.txt( LLOG_DEBUG, "ii : - message type = offer %s\n", txtaddr );
+						log.txt( LLOG_DEBUG, "ii : - message type = offer ( %s )\n", txtaddr );
 						break;
 
 					case DHCP_MSG_ACK:
-						log.txt( LLOG_DEBUG, "ii : - message type = acknowledge\n" );
+						log.txt( LLOG_DEBUG, "ii : - message type = ack ( %s )\n", txtaddr );
 						break;
 
 					default:
 						log.txt( LLOG_ERROR, "!! : invalid DHCP message type ( %i )\n", int( type ) );
-						tunnel->dec( true );
+						ph1->tunnel->dec( true );
 						return LIBIKE_FAILED;
 				}
 
@@ -522,6 +545,30 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 					config.mask.s_addr = temp;
 					text_addr( txtaddr, config.mask );
 					log.txt( LLOG_DEBUG, "ii : - IP4 Netmask = %s\n", txtaddr );
+				}
+				packet_dhcp.get_null( len );
+				break;
+
+			case DHCP_OPT_SERVER:
+				if( len >= 4 )
+				{
+					packet_dhcp.get_quad( temp, false );
+					len -= 4;
+					config.dhcp.s_addr = temp;
+					text_addr( txtaddr, config.dhcp );
+					log.txt( LLOG_DEBUG, "ii : - IP4 DHCP Server = %s\n", txtaddr );
+				}
+				packet_dhcp.get_null( len );
+				break;
+
+			case DHCP_OPT_LEASE:
+				if( len >= 4 )
+				{
+					packet_dhcp.get_quad( temp, false );
+					len -= 4;
+					config.dhcp.s_addr = temp;
+					text_addr( txtaddr, config.dhcp );
+					log.txt( LLOG_DEBUG, "ii : - IP4 DHCP Server = %s\n", txtaddr );
 				}
 				packet_dhcp.get_null( len );
 				break;
@@ -586,28 +633,30 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 
 	if( type == DHCP_MSG_OFFER )
 	{
-		if( !( tunnel->state & TSTATE_RECV_CONFIG ) )
+		if( !( ph1->tunnel->state & TSTATE_RECV_CONFIG ) )
 		{
 			//
 			// accept supported options
 			//
 
-			if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
-				tunnel->xconf.addr = config.addr;
+			ph1->tunnel->xconf.dhcp = config.dhcp;
 
-			if( tunnel->xconf.opts & IPSEC_OPTS_MASK )
-				tunnel->xconf.mask = config.mask;
+			if( ph1->tunnel->xconf.opts & IPSEC_OPTS_ADDR )
+				ph1->tunnel->xconf.addr = config.addr;
 
-			if( tunnel->xconf.opts & IPSEC_OPTS_DNSS )
-				tunnel->xconf.dnss = config.dnss;
+			if( ph1->tunnel->xconf.opts & IPSEC_OPTS_MASK )
+				ph1->tunnel->xconf.mask = config.mask;
 
-			if( tunnel->xconf.opts & IPSEC_OPTS_DOMAIN )
-				memcpy( tunnel->xconf.suffix, config.suffix, CONF_STRLEN );
+			if( ph1->tunnel->xconf.opts & IPSEC_OPTS_DNSS )
+				ph1->tunnel->xconf.dnss = config.dnss;
 
-			if( tunnel->xconf.opts & IPSEC_OPTS_NBNS )
-				tunnel->xconf.nbns = config.nbns;
+			if( ph1->tunnel->xconf.opts & IPSEC_OPTS_DOMAIN )
+				memcpy( ph1->tunnel->xconf.suffix, config.suffix, CONF_STRLEN );
 
-			tunnel->state |= TSTATE_RECV_CONFIG;
+			if( ph1->tunnel->xconf.opts & IPSEC_OPTS_NBNS )
+				ph1->tunnel->xconf.nbns = config.nbns;
+
+			ph1->tunnel->state |= TSTATE_RECV_CONFIG;
 		}
 	}
 
@@ -616,8 +665,9 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 	//
 
 	if( type == DHCP_MSG_ACK )
-	{
-	}
+		if(  ( ph1->tunnel->state & TSTATE_RECV_CONFIG ) &&
+			!( ph1->tunnel->state & TSTATE_RECV_ACK ) )
+			ph1->tunnel->state |= TSTATE_RECV_ACK;
 
 	return LIBIKE_OK;
 }

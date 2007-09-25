@@ -246,10 +246,12 @@ YY_DECL;
 #define TSTATE_SENT_XAUTH		0x00000004
 #define TSTATE_RECV_XRSLT		0x00000008
 #define TSTATE_SENT_XRSLT		0x00000010
-#define TSTATE_SENT_CONFIG		0x00000020
-#define TSTATE_RECV_CONFIG		0x00000040
-#define TSTATE_VNET_ENABLE		0x00000080
-#define TSTATE_DELETE			0x00000100
+#define TSTATE_RECV_CONFIG		0x00000020
+#define TSTATE_SENT_CONFIG		0x00000040
+#define TSTATE_RECV_ACK			0x00000080
+#define TSTATE_SENT_ACK			0x00000100
+#define TSTATE_VNET_ENABLE		0x00000200
+#define TSTATE_DELETE			0x00000400
 
 #define DSTATE_ACTIVE			0
 #define DSTATE_TERMINATE		1
@@ -536,13 +538,13 @@ typedef class _IKED
 
 	// dhcp over ipsec helper functions
 
-	long	filter_dhcp_create( IDB_TUNNEL * tunnel );
-	long	filter_dhcp_remove( IDB_TUNNEL * tunnel );
-	long	filter_dhcp_send( IDB_TUNNEL * tunnel, PACKET_IP & packet );
-	long	filter_dhcp_recv( IDB_TUNNEL * tunnel, PACKET_IP & packet );
+	long	socket_dhcp_create( IDB_TUNNEL * tunnel );
+	long	socket_dhcp_remove( IDB_TUNNEL * tunnel );
+	long	socket_dhcp_send( IDB_TUNNEL * tunnel, PACKET_IP & packet );
+	long	socket_dhcp_recv( IDB_TUNNEL * tunnel, PACKET_IP & packet );
 
-	long	process_dhcp_send( IDB_TUNNEL * tunnel );
-	long	process_dhcp_recv( IDB_TUNNEL * tunnel );
+	long	process_dhcp_send( IDB_PH1 * ph1 );
+	long	process_dhcp_recv( IDB_PH1 * ph1 );
 
 	// policy helper functions
 

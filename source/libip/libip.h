@@ -183,6 +183,7 @@
 #define DHCP_OPT_NBNS			0x2c	// netbios name server
 #define DHCP_OPT_NBNT			0x2e	// netbios node type
 #define DHCP_OPT_NBOTS			0x2f	// netbios over tcp scope
+#define DHCP_OPT_ADDRESS		0x32	// requested address
 #define DHCP_OPT_LEASE			0x33	// lease period
 #define DHCP_OPT_MSGTYPE		0x35	// message type
 #define DHCP_OPT_SERVER			0x36	// server address

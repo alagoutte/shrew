@@ -1444,7 +1444,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 		if( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_DHCP )
 		{
-			filter_dhcp_create( ph1->tunnel );
+			socket_dhcp_create( ph1->tunnel );
 
 			ph1->inc( true );
 			ph1->event_dhcp.delay = 1000;

@@ -593,6 +593,7 @@ typedef struct _IKE_XCONF
 
 	in_addr			addr;	// network address
 	in_addr			mask;	// network mask
+	in_addr			dhcp;	// dhcp server
 	in_addr			dnss;	// dns server
 	in_addr			nbns;	// wins server
 	unsigned short	dhgr;	// pfs dh group
