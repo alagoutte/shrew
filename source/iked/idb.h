@@ -408,6 +408,10 @@ typedef class _ITH_EVENT_PH1DHCP : public ITH_EVENT
 
 	IDB_PH1 *	ph1;
 
+	time_t	lease;
+	time_t	renew;
+	time_t	retry;
+
 	bool	func();
 
 }ITH_EVENT_PH1DHCP;

@@ -90,8 +90,27 @@ bool _ITH_EVENT_PH1DPD::func()
 
 bool _ITH_EVENT_PH1DHCP::func()
 {
-	iked.process_dhcp_recv( ph1 );
-	iked.process_dhcp_send( ph1 );
+	//
+	// check for retry timeout
+	//
+
+	if( retry > 8 )
+	{
+		ph1->tunnel->close = TERM_PEER_DHCP;
+		ph1->dec( true );
+
+		return false;
+	}
+
+	//
+	// check renew time
+	//
+
+	if( time( NULL ) > renew )
+	{
+		iked.process_dhcp_recv( ph1 );
+		iked.process_dhcp_send( ph1 );
+	}
 
 	return true;
 }
@@ -330,6 +349,10 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	//
 
 	event_dpd.ph1 = this;
+	event_dhcp.ph1 = this;
+	event_dhcp.lease = 0;
+	event_dhcp.renew = 0;
+	event_dhcp.retry = 0;
 	event_dhcp.ph1 = this;
 	event_natt.ph1 = this;
 	event_hard.ph1 = this;

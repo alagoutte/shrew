@@ -819,6 +819,13 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				break;
 
 			//
+			// dhcp unresponsive
+			//
+			case TERM_PEER_DHCP:
+				ikei->send_msg_status( STATUS_FAIL, "no response from dhcp server\n" );
+				break;
+
+			//
 			// unknown
 			//
 			default:

@@ -267,7 +267,8 @@ YY_DECL;
 #define TERM_PEER_AUTH			6
 #define TERM_USER_CLOSE			7
 #define TERM_PEER_CLOSE			8
-#define TERM_PEER_DEAD			9
+#define TERM_PEER_DHCP			9
+#define TERM_PEER_DEAD			10
 
 #define FILE_OK					0
 #define FILE_FAIL				1
@@ -538,10 +539,12 @@ typedef class _IKED
 
 	// dhcp over ipsec helper functions
 
+	long	socket_dhcp_setup( IDB_TUNNEL * tunnel );
+	long	socket_dhcp_close( IDB_TUNNEL * tunnel );
 	long	socket_dhcp_create( IDB_TUNNEL * tunnel );
 	long	socket_dhcp_remove( IDB_TUNNEL * tunnel );
-	long	socket_dhcp_send( IDB_TUNNEL * tunnel, PACKET_IP & packet );
-	long	socket_dhcp_recv( IDB_TUNNEL * tunnel, PACKET_IP & packet );
+	long	socket_dhcp_send( IDB_TUNNEL * tunnel, PACKET & packet );
+	long	socket_dhcp_recv( IDB_TUNNEL * tunnel, PACKET & packet );
 
 	long	process_dhcp_send( IDB_PH1 * ph1 );
 	long	process_dhcp_recv( IDB_PH1 * ph1 );
