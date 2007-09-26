@@ -106,11 +106,13 @@ bool _ITH_EVENT_PH1DHCP::func()
 	// check renew time
 	//
 
-	if( time( NULL ) > renew )
-	{
+	time_t current = time( NULL );
+
+	if( current > renew )
 		iked.process_dhcp_recv( ph1 );
+
+	if( current > renew )
 		iked.process_dhcp_send( ph1 );
-	}
 
 	return true;
 }

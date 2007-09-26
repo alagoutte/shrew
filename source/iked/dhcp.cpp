@@ -70,16 +70,8 @@ long _IKED::socket_dhcp_setup( IDB_TUNNEL * tunnel )
 	// bind socket to address and port
 	//
 
-	struct sockaddr_in saddr;
-	memset( &saddr, 0, sizeof( saddr ) );
-	SET_SALEN( &saddr, sizeof( saddr ) );
-	saddr.sin_family = AF_INET;
+	struct sockaddr_in saddr = tunnel->saddr_l.saddr4;
 	saddr.sin_port = htons( UDP_PORT_DHCPC );
-
-	if( tunnel->state & TSTATE_DHCP_DIRECT )
-		saddr.sin_addr = tunnel->xconf.addr;
-	else
-		saddr.sin_addr = tunnel->saddr_l.saddr4.sin_addr;
 
 	if( bind( tunnel->dhcp_sock, ( sockaddr * ) &saddr, sizeof( saddr ) ) < 0 )
 	{
@@ -183,16 +175,8 @@ long _IKED::socket_dhcp_send( IDB_TUNNEL * tunnel, PACKET & packet )
 	// send the packet
 	//
 
-	struct sockaddr_in saddr;
-	memset( &saddr, 0, sizeof( saddr ) );
-	SET_SALEN( &saddr, sizeof( saddr ) );
-	saddr.sin_family = AF_INET;
+	struct sockaddr_in saddr = tunnel->saddr_r.saddr4;
 	saddr.sin_port = htons( UDP_PORT_DHCPS );
-
-	if( tunnel->state & TSTATE_DHCP_DIRECT )
-		saddr.sin_addr = tunnel->xconf.dhcp;
-	else
-		saddr.sin_addr = tunnel->saddr_r.saddr4.sin_addr;
 
 	int rslt;
 	rslt = sendto(
@@ -235,21 +219,6 @@ long _IKED::socket_dhcp_recv( IDB_TUNNEL * tunnel, PACKET & packet )
 
 long _IKED::process_dhcp_send( IDB_PH1 * ph1 )
 {
-	//
-	// if we have already aquired a lease
-	// and are renewing, we need to switch
-	// to direct socket communication
-	//
-
-	if( ph1->event_dhcp.renew )
-	{
-		if( !( ph1->tunnel->state & TSTATE_DHCP_DIRECT ) )
-		{
-			ph1->tunnel->state |= TSTATE_DHCP_DIRECT;
-			socket_dhcp_setup( ph1->tunnel );
-		}
-	}
-
 	//
 	// DHCP over IPsec discover packet
 	//
@@ -329,12 +298,6 @@ long _IKED::process_dhcp_send( IDB_PH1 * ph1 )
 		dhcp_head.hlen = 6;						// hardware address length
 		dhcp_head.xid = ph1->tunnel->dhcp_xid;	// transaction id
 
-		if( ph1->tunnel->state & TSTATE_DHCP_DIRECT )
-		{
-			dhcp_head.ciaddr =					// client ip address
-				ph1->tunnel->xconf.addr.s_addr;
-		}
-
 		dhcp_head.chaddr[ 0 ] = 0x40;			// locally administered unicast MAC
 		memcpy(									// local ip interface address
 			dhcp_head.chaddr + 2,
@@ -348,16 +311,13 @@ long _IKED::process_dhcp_send( IDB_PH1 * ph1 )
 		packet.add_byte( 1 );					// opt size
 		packet.add_byte( DHCP_MSG_REQUEST );	// message type value
 
-		if( !( ph1->tunnel->state & TSTATE_DHCP_DIRECT ) )
-		{
-			packet.add_byte( DHCP_OPT_SERVER );			// server id
-			packet.add_byte( 4 );						// opt size
-			packet.add( &ph1->tunnel->xconf.dhcp, 4 );	// server id value
+		packet.add_byte( DHCP_OPT_SERVER );			// server id
+		packet.add_byte( 4 );						// opt size
+		packet.add( &ph1->tunnel->xconf.dhcp, 4 );	// server id value
 
-			packet.add_byte( DHCP_OPT_ADDRESS );		// requested address
-			packet.add_byte( 4 );						// opt size
-			packet.add( &ph1->tunnel->xconf.addr, 4 );	// address value
-		}
+		packet.add_byte( DHCP_OPT_ADDRESS );		// requested address
+		packet.add_byte( 4 );						// opt size
+		packet.add( &ph1->tunnel->xconf.addr, 4 );	// address value
 
 		packet.add_byte( DHCP_OPT_CLIENTID );	// client id
 		packet.add_byte( 7 );					// opt size
@@ -606,6 +566,8 @@ long _IKED::process_dhcp_recv( IDB_PH1 * ph1 )
 			ph1->event_dhcp.retry = 0;
 			ph1->event_dhcp.renew = time( NULL );
 			ph1->event_dhcp.renew += ph1->event_dhcp.lease / 2;
+
+			ph1->tunnel->state |= TSTATE_RECV_ACK;
 		}
 	}
 
