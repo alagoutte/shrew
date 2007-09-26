@@ -72,7 +72,7 @@ long _IKED::socket_dhcp_setup( IDB_TUNNEL * tunnel )
 
 	struct sockaddr_in saddr;
 	memset( &saddr, 0, sizeof( saddr ) );
-	SET_SALEN( saddr, sizeof( saddr ) );
+	SET_SALEN( &saddr, sizeof( saddr ) );
 	saddr.sin_family = AF_INET;
 	saddr.sin_port = htons( UDP_PORT_DHCPC );
 
@@ -185,7 +185,7 @@ long _IKED::socket_dhcp_send( IDB_TUNNEL * tunnel, PACKET & packet )
 
 	struct sockaddr_in saddr;
 	memset( &saddr, 0, sizeof( saddr ) );
-	SET_SALEN( saddr, sizeof( saddr ) );
+	SET_SALEN( &saddr, sizeof( saddr ) );
 	saddr.sin_family = AF_INET;
 	saddr.sin_port = htons( UDP_PORT_DHCPS );
 
