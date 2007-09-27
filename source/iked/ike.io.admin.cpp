@@ -592,6 +592,14 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				}
 
 				//
+				// disable split dns if the domain
+				// list has no elements
+				//
+
+				if( !tunnel->dlist.count() )
+					tunnel->xconf.opts &= ~IPSEC_OPTS_SPLITDNS;
+
+				//
 				// if we are using a virual adapter,
 				// perform additional configuration
 				//
