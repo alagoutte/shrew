@@ -44,6 +44,13 @@
 long _IKED::socket_dhcp_create( IDB_TUNNEL * tunnel )
 {
 	//
+	// only initialize once
+	//
+
+	if( tunnel->dhcp_sock >= 0 )
+		return LIBIKE_OK;
+
+	//
 	// create dhcp transaction id
 	//
 
