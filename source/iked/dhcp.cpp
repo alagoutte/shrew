@@ -177,7 +177,7 @@ long _IKED::socket_dhcp_send( IDB_TUNNEL * tunnel, PACKET & packet )
 
 	if( rslt < 0 )
 	{
-		log.txt( LLOG_ERROR, "!! : failed to write to BPF filter\n" );
+		log.txt( LLOG_ERROR, "!! : failed to write to DHCP socket\n" );
 		return LIBIKE_SOCKET;
 	}
 
