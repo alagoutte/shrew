@@ -74,7 +74,6 @@
 #  include <sys/socket.h>
 #  include <net/if.h>
 #  include <net/if_tap.h>
-#  include <net/ethernet.h>
 # endif
 # ifdef __FreeBSD__
 #  include <sys/linker.h>
