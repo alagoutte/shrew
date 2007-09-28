@@ -279,6 +279,53 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				{
 					log.txt( LLOG_INFO, "ii : received xauth request\n" );
 
+					//
+					// make sure we at least have
+					// user and password attribs
+					//
+
+					long count = cfg->attr_count();
+					long index = 0;
+
+					bool seen_type = false;
+					bool seen_user = false;
+					bool seen_pass = false;
+
+					for( ; index < count; index++ )
+					{
+						IKE_ATTR * attr = cfg->attr_get( index );
+
+						switch( attr->atype )
+						{
+							case XAUTH_TYPE:
+								seen_type = true;
+								break;
+
+							case XAUTH_USER_NAME:
+								seen_user = true;
+								if( attr->basic )
+									log.txt( LLOG_ERROR, "!! : xauth username attribute requested as basic type\n" );
+								break;
+
+							case XAUTH_USER_PASSWORD:
+								seen_pass = true;
+								if( attr->basic )
+									log.txt( LLOG_ERROR, "!! : xauth password attribute requested as basic type\n" );
+								break;
+						}
+					}
+
+					if( !seen_type )
+						log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
+
+					if( !seen_user )
+						log.txt( LLOG_ERROR, "!! : missing required xauth username attribute\n" );
+
+					if( !seen_pass )
+						log.txt( LLOG_ERROR, "!! : missing required xauth password attribute\n" );
+
+					cfg->attr_reset();
+
 					cfg->tunnel->state |= TSTATE_RECV_XAUTH;
 				}
 
@@ -482,36 +529,6 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				{
 					log.txt( LLOG_INFO, "ii : received xauth response\n" );
 
-					//
-					// make sure we at least have
-					// user and password attribs
-					//
-
-					long count = cfg->attr_count();
-					long index = 0;
-
-					for( ; index < count; index++ )
-					{
-						IKE_ATTR * attr = cfg->attr_get( index );
-
-						switch( attr->atype )
-						{
-							case XAUTH_USER_NAME:
-								cfg->tunnel->xauth.user.set( attr->vdata );
-								break;
-
-							case XAUTH_USER_PASSWORD:
-								cfg->tunnel->xauth.pass.set( attr->vdata );
-								break;
-						}
-					}
-
-					if( !cfg->tunnel->xauth.user.size() )
-						log.txt( LLOG_ERROR, "!! : missing required username attribute\n" );
-
-					if( !cfg->tunnel->xauth.pass.size() )
-						log.txt( LLOG_ERROR, "!! : missing required password attribute\n" );
-
 					cfg->tunnel->state |= TSTATE_RECV_XAUTH;
 				}
 
@@ -620,24 +637,15 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->mtype = ISAKMP_CFG_REPLY;
 
-				long count = cfg->attr_count();
-				long index = 0;
+				cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
 
-				for( ; index < count; index++ )
-				{
-					IKE_ATTR * attr = cfg->attr_get( index );
+				cfg->attr_add_v( XAUTH_USER_NAME,
+					cfg->tunnel->xauth.user.buff(),
+					cfg->tunnel->xauth.user.size() );
 
-					switch( attr->atype )
-					{
-						case XAUTH_USER_NAME:
-							attr->vdata.set( cfg->tunnel->xauth.user );
-							break;
-
-						case XAUTH_USER_PASSWORD:
-							attr->vdata.set( cfg->tunnel->xauth.pass );
-							break;
-					}
-				}
+				cfg->attr_add_v( XAUTH_USER_PASSWORD,
+					cfg->tunnel->xauth.pass.buff(),
+					cfg->tunnel->xauth.pass.size() );
 
 				//
 				// send config packet
@@ -805,7 +813,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
 		{
-			if(  ( cfg->tunnel->state & TSTATE_RECV_CONFIG ) &&
+			if(  ( cfg->tunnel->state & TSTATE_RECV_XRSLT ) &&
+				 ( cfg->tunnel->state & TSTATE_RECV_CONFIG ) &&
 				!( cfg->tunnel->state & TSTATE_SENT_CONFIG ) )
 			{
 				//
@@ -841,6 +850,28 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				//
 
 				cfg->tunnel->state |= TSTATE_SENT_CONFIG;
+
+				cfg->lstate |= LSTATE_DELETE;
+			}
+		}
+
+		//
+		// other configuration methods
+		//
+
+		if( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_DHCP )
+		{
+			//
+			// begin after xauth
+			//
+
+			if( cfg->tunnel->state & TSTATE_RECV_XRSLT )
+			{
+				//
+				// begin our DHCP over IPsec processing
+				//
+
+				socket_dhcp_create( ph1->tunnel );
 
 				cfg->lstate |= LSTATE_DELETE;
 			}

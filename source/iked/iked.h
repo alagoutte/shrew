@@ -329,10 +329,11 @@ typedef class _IKED
 	friend class _IDB_CFG;
 	friend class _IDB_INF;
 
+	friend class _ITH_EVENT_TUNDHCP;
+
 	friend class _ITH_EVENT_RESEND;
 
 	friend class _ITH_EVENT_PH1DPD;
-	friend class _ITH_EVENT_PH1DHCP;
 	friend class _ITH_EVENT_PH1NATT;
 	friend class _ITH_EVENT_PH1HARD;
 
@@ -539,15 +540,14 @@ typedef class _IKED
 
 	// dhcp over ipsec helper functions
 
-	long	socket_dhcp_setup( IDB_TUNNEL * tunnel );
-	long	socket_dhcp_close( IDB_TUNNEL * tunnel );
 	long	socket_dhcp_create( IDB_TUNNEL * tunnel );
 	long	socket_dhcp_remove( IDB_TUNNEL * tunnel );
+
 	long	socket_dhcp_send( IDB_TUNNEL * tunnel, PACKET & packet );
 	long	socket_dhcp_recv( IDB_TUNNEL * tunnel, PACKET & packet );
 
-	long	process_dhcp_send( IDB_PH1 * ph1 );
-	long	process_dhcp_recv( IDB_PH1 * ph1 );
+	long	process_dhcp_send( IDB_TUNNEL * tunnel );
+	long	process_dhcp_recv( IDB_TUNNEL * tunnel );
 
 	// policy helper functions
 

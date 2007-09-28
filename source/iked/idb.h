@@ -52,6 +52,7 @@
 typedef class _IKED_XAUTH IKED_XAUTH;
 typedef class _IKED_XCONF IKED_XCONF;
 
+typedef class _IDB_TUNNEL IDB_TUNNEL;
 typedef class _IDB_XCH IDB_XCH;
 typedef class _IDB_PH1 IDB_PH1;
 typedef class _IDB_PH2 IDB_PH2;
@@ -267,6 +268,20 @@ typedef class _IDB_PEER : public IKE_PEER, public IDB
 
 }IDB_PEER;
 
+typedef class _ITH_EVENT_TUNDHCP : public ITH_EVENT
+{
+	public:
+
+	IDB_TUNNEL *	tunnel;
+
+	time_t	lease;
+	time_t	renew;
+	time_t	retry;
+
+	bool	func();
+
+}ITH_EVENT_TUNDHCP;
+
 typedef class _IDB_TUNNEL : public IDB
 {
 	public:
@@ -298,6 +313,8 @@ typedef class _IDB_TUNNEL : public IDB
 #else
 	int			dhcp_sock;
 #endif
+
+	ITH_EVENT_TUNDHCP	event_dhcp;
 
 	_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r );
 	virtual ~_IDB_TUNNEL();
@@ -402,20 +419,6 @@ typedef class _ITH_EVENT_PH1DPD : public ITH_EVENT
 
 }ITH_EVENT_PH1DPD;
 
-typedef class _ITH_EVENT_PH1DHCP : public ITH_EVENT
-{
-	public:
-
-	IDB_PH1 *	ph1;
-
-	time_t	lease;
-	time_t	renew;
-	time_t	retry;
-
-	bool	func();
-
-}ITH_EVENT_PH1DHCP;
-
 typedef class _ITH_EVENT_PH1NATT : public ITH_EVENT
 {
 	public:
@@ -498,7 +501,6 @@ typedef class _IDB_PH1 : public IDB_XCH
 	BDATA	skeyid_e;
 
 	ITH_EVENT_PH1DPD	event_dpd;
-	ITH_EVENT_PH1DHCP	event_dhcp;
 	ITH_EVENT_PH1NATT	event_natt;
 	ITH_EVENT_PH1HARD	event_hard;
 

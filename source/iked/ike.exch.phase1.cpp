@@ -291,7 +291,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					break;
 				}
 
-//				if( !( ph1->xstate & XSTATE_RECV_NDR ) )
+				if( !( ph1->xstate & XSTATE_RECV_NDR ) )
 				{
 					result = payload_get_natd( packet, ph1->natd_rs, ph1->hash_size );
 					ph1->xstate |= XSTATE_RECV_NDR;
@@ -1385,8 +1385,6 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		// is required at this time
 		//
 
-		bool cfgexch = false;
-
 		if( !ph1->initiator && ph1->xauth_l )
 		{
 			//
@@ -1394,32 +1392,29 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			// when acting as a responder
 			//
 
-			cfgexch = true;
+			IDB_CFG * cfg = new IDB_CFG( ph1->tunnel, true, 0 );
+			cfg->add( true );
+			process_config_send( ph1, cfg );
+			cfg->dec( true );
 		}
 
 		if( ph1->initiator && !ph1->xauth_l )
 		{
 			//
-			// initiate a pull config request to
-			// acquire info from our peer when
+			// initiate a pull config request or
+			// dhcp over ipsec processing when
 			// acting as an initiator and xauth
 			// is not required
 			//
 
-			if( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
-				cfgexch = true;
-		}
-
-		//
-		// possibly initiate a config exchange
-		//
-
-		if( cfgexch )
-		{
-			IDB_CFG * cfg = new IDB_CFG( ph1->tunnel, true, 0 );
-			cfg->add( true );
-			process_config_send( ph1, cfg );
-			cfg->dec( true );
+			if( ( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_PULL ) ||
+				( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_DHCP ) )
+			{
+				IDB_CFG * cfg = new IDB_CFG( ph1->tunnel, true, 0 );
+				cfg->add( true );
+				process_config_send( ph1, cfg );
+				cfg->dec( true );
+			}
 		}
 
 		//
@@ -1437,20 +1432,6 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		ph1->event_hard.delay = proposal->life_sec * 1000;
 
 		ith_timer.add( &ph1->event_hard );
-
-		//
-		// add pahse1 dhcp event ( client only )
-		//
-
-		if( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_DHCP )
-		{
-			socket_dhcp_create( ph1->tunnel );
-
-			ph1->inc( true );
-			ph1->event_dhcp.delay = 1000;
-
-			ith_timer.add( &ph1->event_dhcp );
-		}
 
 		//
 		// add pahse1 natt event

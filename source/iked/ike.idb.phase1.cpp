@@ -88,35 +88,6 @@ bool _ITH_EVENT_PH1DPD::func()
 	return true;
 }
 
-bool _ITH_EVENT_PH1DHCP::func()
-{
-	//
-	// check for retry timeout
-	//
-
-	if( retry > 8 )
-	{
-		ph1->tunnel->close = TERM_PEER_DHCP;
-		ph1->dec( true );
-
-		return false;
-	}
-
-	//
-	// check renew time
-	//
-
-	time_t current = time( NULL );
-
-	if( current > renew )
-		iked.process_dhcp_recv( ph1 );
-
-	if( current > renew )
-		iked.process_dhcp_send( ph1 );
-
-	return true;
-}
-
 bool _ITH_EVENT_PH1NATT::func()
 {
 	//
@@ -351,11 +322,6 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	//
 
 	event_dpd.ph1 = this;
-	event_dhcp.ph1 = this;
-	event_dhcp.lease = 0;
-	event_dhcp.renew = 0;
-	event_dhcp.retry = 0;
-	event_dhcp.ph1 = this;
 	event_natt.ph1 = this;
 	event_hard.ph1 = this;
 
@@ -888,14 +854,6 @@ bool _IDB_PH1::dec( bool lock )
 			refcount--;
 			iked.log.txt( LLOG_DEBUG,
 				"DB : phase1 resend event canceled ( ref count = %i )\n",
-				refcount );
-		}
-
-		if( iked.ith_timer.del( &event_dhcp ) )
-		{
-			refcount--;
-			iked.log.txt( LLOG_DEBUG,
-				"DB : phase1 dhcp event canceled ( ref count = %i )\n",
 				refcount );
 		}
 

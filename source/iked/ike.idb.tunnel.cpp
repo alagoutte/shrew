@@ -42,6 +42,40 @@
 #include "iked.h"
 
 //
+// tunnel event functions
+//
+
+bool _ITH_EVENT_TUNDHCP::func()
+{
+	//
+	// check for tunnel close or
+	// retry timeout
+	//
+
+	if( tunnel->close || ( retry > 8 ) )
+	{
+		tunnel->close = TERM_PEER_DHCP;
+		tunnel->dec( true );
+
+		return false;
+	}
+
+	//
+	// check renew time
+	//
+
+	time_t current = time( NULL );
+
+	if( current > renew )
+		iked.process_dhcp_recv( tunnel );
+
+	if( current > renew )
+		iked.process_dhcp_send( tunnel );
+
+	return true;
+}
+
+//
 // tunnel configuration class
 //
 
@@ -73,6 +107,15 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 	//
 
 	xconf.addr = saddr_r.saddr4.sin_addr;
+
+	//
+	// initialize event info
+	//
+
+	event_dhcp.tunnel = this;
+	event_dhcp.lease = 0;
+	event_dhcp.renew = 0;
+	event_dhcp.retry = 0;
 }
 
 _IDB_TUNNEL::~_IDB_TUNNEL()
@@ -187,9 +230,30 @@ bool _IDB_TUNNEL::dec( bool lock )
 	if( lock )
 		iked.lock_sdb.lock();
 
+	//
+	// if we are closing the tunnel,
+	// attempt to remove any events
+	// that may be scheduled
+	//
+
+	if( close )
+	{
+		if( iked.ith_timer.del( &event_dhcp ) )
+		{
+			refcount--;
+			iked.log.txt( LLOG_DEBUG,
+				"DB : tunnel dhcp event canceled ( ref count = %i )\n",
+				refcount );
+		}
+	}
+
 	assert( refcount > 0 );
 
 	refcount--;
+
+	//
+	// check for deletion
+	//
 
 	if( refcount )
 	{
