@@ -751,6 +751,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_SPLITNET;
 					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_BANNER;
 					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_PFS;
+					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_SAVEPW;
 
 					log.txt( LLOG_INFO, "ii : excluding unity attribute set\n" );
 				}
