@@ -130,22 +130,6 @@
                             <set>AlignRight</set>
                         </property>
                     </widget>
-                    <widget class="QLabel">
-                        <property name="name">
-                            <cstring>textLabelConfigMethod</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>10</x>
-                                <y>70</y>
-                                <width>130</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>Configuration Method</string>
-                        </property>
-                    </widget>
                     <widget class="QLineEdit">
                         <property name="name">
                             <cstring>lineEditHost</cstring>
@@ -196,6 +180,22 @@
                                 <width>130</width>
                                 <height>21</height>
                             </rect>
+                        </property>
+                    </widget>
+                    <widget class="QLabel">
+                        <property name="name">
+                            <cstring>textLabelConfigMethod</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>70</y>
+                                <width>110</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Auto Configuration</string>
                         </property>
                     </widget>
                 </widget>
@@ -2261,28 +2261,6 @@
                     <property name="title">
                         <string>IPSEC Policy Configurtaion</string>
                     </property>
-                    <widget class="QCheckBox">
-                        <property name="name">
-                            <cstring>checkBoxPolicyAuto</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>10</x>
-                                <y>20</y>
-                                <width>240</width>
-                                <height>16</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>Obtain remote network topology automatically</string>
-                        </property>
-                        <property name="autoRepeat">
-                            <bool>false</bool>
-                        </property>
-                        <property name="checked">
-                            <bool>true</bool>
-                        </property>
-                    </widget>
                     <widget class="QPushButton">
                         <property name="name">
                             <cstring>pushButtonPolicyAdd</cstring>
@@ -2376,6 +2354,28 @@
                                 <width>241</width>
                                 <height>190</height>
                             </rect>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>checkBoxPolicyAuto</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>20</y>
+                                <width>240</width>
+                                <height>16</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Obtain Topology Automatically or Tunnel All</string>
+                        </property>
+                        <property name="autoRepeat">
+                            <bool>false</bool>
+                        </property>
+                        <property name="checked">
+                            <bool>true</bool>
                         </property>
                     </widget>
                 </widget>
@@ -2591,6 +2591,12 @@
         <signal>clicked()</signal>
         <receiver>site</receiver>
         <slot>AddPolicy()</slot>
+    </connection>
+    <connection>
+        <sender>comboBoxConfigMethod</sender>
+        <signal>activated(const QString&amp;)</signal>
+        <receiver>site</receiver>
+        <slot>Update()</slot>
     </connection>
 </connections>
 <tabstops>

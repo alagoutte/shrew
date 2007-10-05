@@ -540,6 +540,15 @@ void _IKEC::run()
 	// ---------- CLIENT CONFIG ----------
 	//
 
+	// unity save password option
+
+	if( ( proposal_isakmp.auth_id == XAUTH_AUTH_INIT_PSK ) ||
+	    ( proposal_isakmp.auth_id == XAUTH_AUTH_INIT_RSA ) ||
+	    ( proposal_isakmp.auth_id == HYBRID_AUTH_INIT_RSA ) )
+		if( ( peer.xconf_mode == CONFIG_MODE_PULL ) ||
+		    ( peer.xconf_mode == CONFIG_MODE_PUSH ) )
+			xconf.rqst |= IPSEC_OPTS_SAVEPW;
+
 	// network interface type
 
 	if( !config.get_string( "client-iface", text, MAX_CONFSTRING, 0 ) )

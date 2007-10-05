@@ -73,6 +73,8 @@ void site::AddPolicy()
 
 void site::init()
 {
+	comboBoxConfigMethod->setCurrentItem( 1 );
+
 	lineEditAddress->setInputMask( "00D . 00D . 00D . 00D" );
 	lineEditAddress->setText( "0.0.0.0" );
 
@@ -1235,13 +1237,48 @@ bool site::Verify()
 
 void site::Update()
 {
+	// auto configuration
+
+	long aconf = comboBoxConfigMethod->currentItem();
+
+	if( aconf == 3 )
+	{
+		// dhcp over ipsec
+
+		comboBoxAddressMethod->setEnabled( true );
+		comboBoxAddressMethod->clear();
+		comboBoxAddressMethod->insertItem( "Use virtual adapter and assigned address" );
+	}
+	else
+	{
+		// other modes
+
+		comboBoxAddressMethod->setEnabled( true );
+		comboBoxAddressMethod->clear();
+		comboBoxAddressMethod->insertItem( "Use virtual adapter and assigned address" );
+		comboBoxAddressMethod->insertItem( "Use existing adapter and current address" );
+	}
+
 	// local adapter mode
 
 	if( !comboBoxAddressMethod->currentItem() )
 	{
 		// virtual
 
-		checkBoxAddressAuto->setEnabled( true );
+		switch( aconf )
+		{
+			case 0:	// autoconf disabled
+			case 3:	// dhcp over ipsec
+				checkBoxAddressAuto->setEnabled( false );
+				checkBoxAddressAuto->setChecked( false );
+				break;
+
+			case 1: // ike config push
+			case 2: // ike config pull
+				checkBoxAddressAuto->setEnabled( true );
+				break;
+		}
+
 		textLabelAddress->setEnabled( true );
 		textLabelNetmask->setEnabled( true );
 
@@ -1310,13 +1347,29 @@ void site::Update()
 		lineEditFragSize->setEnabled( true );
 	}
 
+	// client long banner
+
+	if( aconf == 0 )
+	{
+		checkBoxBanner->setEnabled( false );
+		checkBoxBanner->setChecked( false );
+	}
+	else
+		checkBoxBanner->setEnabled( true );
+
 	// dns enabled
 
 	if( checkBoxDNSEnable->isChecked() )
 	{
 		// enabled
 
-		checkBoxDNSAuto->setEnabled( true );
+		if( aconf == 0 )
+		{
+			checkBoxDNSAuto->setEnabled( false );
+			checkBoxDNSAuto->setChecked( false );
+		}
+		else
+			checkBoxDNSAuto->setEnabled( true );
 
 		textLabelDNSServer->setEnabled( true );
 		textLabelDNSSuffix->setEnabled( true );
