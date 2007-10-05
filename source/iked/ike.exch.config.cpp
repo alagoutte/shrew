@@ -272,7 +272,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_CFG_REQUEST:
 			{
 				//
-				// xauth server request
+				// gateway xauth request
 				//
 
 				if( !( cfg->tunnel->state & TSTATE_RECV_XAUTH ) )
@@ -280,7 +280,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					log.txt( LLOG_INFO, "ii : received xauth request\n" );
 
 					//
-					// make sure we at least have
+					// make sure have the type,
 					// user and password attribs
 					//
 
@@ -304,25 +304,38 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 							case XAUTH_USER_NAME:
 								seen_user = true;
 								if( attr->basic )
-									log.txt( LLOG_ERROR, "!! : xauth username attribute requested as basic type\n" );
+									log.txt( LLOG_INFO, "!! : warning, xauth username attribute type is basic\n" );
 								break;
 
 							case XAUTH_USER_PASSWORD:
 								seen_pass = true;
 								if( attr->basic )
-									log.txt( LLOG_ERROR, "!! : xauth password attribute requested as basic type\n" );
+									log.txt( LLOG_INFO, "!! : warning, xauth password attribute type is basic\n" );
 								break;
 						}
 					}
 
-					if( !seen_type )
-						log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
+					//
+					// sanity check request
+					//
 
-					if( !seen_user )
-						log.txt( LLOG_ERROR, "!! : missing required xauth username attribute\n" );
+					if( !seen_type || !seen_user || !seen_pass )
+					{
+						if( !seen_type )
+							log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
 
-					if( !seen_pass )
-						log.txt( LLOG_ERROR, "!! : missing required xauth password attribute\n" );
+						if( !seen_user )
+							log.txt( LLOG_ERROR, "!! : missing required xauth username attribute\n" );
+
+						if( !seen_pass )
+							log.txt( LLOG_ERROR, "!! : missing required xauth password attribute\n" );
+
+						cfg->tunnel->close = TERM_BADMSG;
+
+						cfg->lstate |= LSTATE_DELETE;
+
+						break;
+					}
 
 					cfg->attr_reset();
 
@@ -335,7 +348,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_CFG_SET:
 			{
 				//
-				// xauth server result
+				// gateway xauth server result
 				//
 
 				if(  ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) &&
@@ -412,7 +425,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				}
 
 				//
-				// config push request
+				// gateway config push request
 				//
 
 				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
@@ -447,7 +460,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_CFG_REPLY:
 			{
 				//
-				// config pull response
+				// gateway config pull response
 				//
 
 				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
@@ -492,7 +505,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_CFG_REQUEST:
 			{
 				//
-				// config pull request
+				// client config pull request
 				//
 
 				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
@@ -521,7 +534,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_CFG_REPLY:
 			{
 				//
-				// xauth client response
+				// client xauth response
 				//
 
 				if(  ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) &&
@@ -538,7 +551,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_CFG_ACK:
 			{
 				//
-				// xauth client acknowledge
+				// client xauth acknowledge
 				//
 
 				if( !( cfg->tunnel->state & TSTATE_RECV_XRSLT ) )
@@ -559,7 +572,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				}
 
 				//
-				// config push acknowledge
+				// client config push acknowledge
 				//
 
 				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
@@ -625,7 +638,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 		if( ph1->xauth_l )
 		{
 			//
-			// send xauth client response
+			// client xauth response
 			//
 
 			if(  ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) &&
@@ -671,7 +684,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			}
 
 			//
-			// send xauth client acknowledge
+			// client xauth acknowledge
 			//
 
 			if(  ( cfg->tunnel->state & TSTATE_RECV_XRSLT ) &&
@@ -721,7 +734,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 		}
 
 		//
-		// config pull request
+		// client config pull request
 		//
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
@@ -809,7 +822,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 		}
 
 		//
-		// config push acknowledge
+		// client config push acknowledge
 		//
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
@@ -887,7 +900,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 		if( ph1->xauth_l )
 		{
 			//
-			// send xauth server request
+			// gateway xauth request
 			//
 
 			if( !( cfg->tunnel->state & TSTATE_SENT_XAUTH ) )
@@ -928,7 +941,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			}
 
 			//
-			// send xauth server result
+			// gateway xauth result
 			//
 
 			if(  ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) &&
@@ -1050,7 +1063,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 		}
 
 		//
-		// config pull response
+		// gateway config pull response
 		//
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
@@ -1109,7 +1122,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 		}
 
 		//
-		// config push request
+		// gateway config push request
 		//
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )

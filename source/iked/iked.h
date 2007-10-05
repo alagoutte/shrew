@@ -102,6 +102,9 @@
 #include "libdtp.h"
 #endif
 
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET -1
+#endif
 
 //
 // Win32 specific

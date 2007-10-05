@@ -47,7 +47,7 @@ long _IKED::socket_dhcp_create( IDB_TUNNEL * tunnel )
 	// only initialize once
 	//
 
-	if( tunnel->dhcp_sock >= 0 )
+	if( tunnel->dhcp_sock != INVALID_SOCKET )
 		return LIBIKE_OK;
 
 	//
@@ -61,7 +61,7 @@ long _IKED::socket_dhcp_create( IDB_TUNNEL * tunnel )
 	//
 
 	tunnel->dhcp_sock = socket( PF_INET, SOCK_DGRAM, IPPROTO_UDP );
-	if( tunnel->dhcp_sock < 0 )
+	if( tunnel->dhcp_sock == INVALID_SOCKET )
 	{
 		log.txt( LLOG_ERROR, "!! : failed to create DHCP socket\n" );
 		return LIBIKE_SOCKET;
@@ -138,7 +138,7 @@ long _IKED::socket_dhcp_remove( IDB_TUNNEL * tunnel )
 	// close dhcp socket
 	//
 
-	if( tunnel->dhcp_sock != -1 )
+	if( tunnel->dhcp_sock != INVALID_SOCKET )
 	{
 
 #ifdef WIN32
@@ -151,7 +151,7 @@ long _IKED::socket_dhcp_remove( IDB_TUNNEL * tunnel )
 
 #endif
 
-		tunnel->dhcp_sock = -1;
+		tunnel->dhcp_sock = INVALID_SOCKET;
 	}
 
 	return LIBIKE_OK;
