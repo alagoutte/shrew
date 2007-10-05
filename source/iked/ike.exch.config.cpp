@@ -890,6 +890,18 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				cfg->lstate |= LSTATE_DELETE;
 			}
 		}
+
+		if( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_NONE )
+		{
+			//
+			// config not required
+			//
+
+			log.txt( LLOG_INFO, "ii : config method is manual\n" );
+
+			cfg->tunnel->state |= TSTATE_SENT_CONFIG;
+			cfg->tunnel->state |= TSTATE_RECV_CONFIG;
+		}
 	}
 	else
 	{

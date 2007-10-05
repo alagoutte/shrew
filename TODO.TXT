@@ -164,7 +164,7 @@ X Add support for dynamic management of divert rules
 X Add support for syslog output on unix targets
 . Add support for timestamps in the log output
 X Add support for DHCP over IPsec configuration method
-. Add support for strictly manual client configuration method
+X Add support for strictly manual client configuration method
 . Add support for x86/amd64 Windows Vista platforms
 . Add support for multiple DNS/WINS server addresses
 . Make Split DNS work with an adapter specific DNS suffix
