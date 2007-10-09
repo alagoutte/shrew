@@ -177,7 +177,7 @@ bool _IKED_XAUTH_LDAP::open_conn( LDAP ** ld )
 	int res = ldap_initialize( ld, url.text() );
 	if( res != LDAP_SUCCESS )
 	{
-		iked.log.txt( LOG_ERROR,
+		iked.log.txt( LLOG_ERROR,
 			"!! : xauth ldap initialize failed ( %s )\n",
 			ldap_err2string( res ) );
 
@@ -216,7 +216,7 @@ bool _IKED_XAUTH_LDAP::open_conn( LDAP ** ld )
 	
 	if( res != LDAP_SUCCESS )
 	{
-		iked.log.txt( LOG_ERROR,
+		iked.log.txt( LLOG_ERROR,
 			"!! : xauth ldap search bind failed ( %s )\n",
 			ldap_err2string( res ) );
 
@@ -236,7 +236,7 @@ bool _IKED_XAUTH_LDAP::auth_pwd( IKE_XAUTH & xauth )
 	BDATA	filter;
 	char *	atlist[ 1 ] = { NULL };
 	char *	userdn = NULL;
-	int		scope = LDAP_SCOPE_ONE;
+	int		scope = LDAP_SCOPE_ONELEVEL;
 	int	ecount = 0;
 
 	LDAPMessage * lr = NULL;
@@ -277,7 +277,7 @@ bool _IKED_XAUTH_LDAP::auth_pwd( IKE_XAUTH & xauth )
 
 	if( res != LDAP_SUCCESS )
 	{
-		iked.log.txt( LOG_ERROR,
+		iked.log.txt( LLOG_ERROR,
 			"!! : xauth ldap user search failed ( %s )\n",
 			ldap_err2string( res ) );
 
@@ -292,7 +292,7 @@ bool _IKED_XAUTH_LDAP::auth_pwd( IKE_XAUTH & xauth )
 
 	if( ecount > 1 )
 	{
-		iked.log.txt( LOG_ERROR,
+		iked.log.txt( LLOG_ERROR,
 			"!! : warning, ldap return multiple results for user %s\n",
 			xauth.user.buff() );
 	}
@@ -303,7 +303,7 @@ bool _IKED_XAUTH_LDAP::auth_pwd( IKE_XAUTH & xauth )
 
 	if( le == NULL )
 	{
-		iked.log.txt( LOG_ERROR,
+		iked.log.txt( LLOG_ERROR,
 			"!! : xauth ldap unable to read result entry" );
 
 		goto ldap_pwd_end;
@@ -315,7 +315,7 @@ bool _IKED_XAUTH_LDAP::auth_pwd( IKE_XAUTH & xauth )
 
 	if( userdn == NULL )
 	{
-		iked.log.txt( LOG_ERROR,
+		iked.log.txt( LLOG_ERROR,
 			"!! : xauth ldap unable to read result dn" );
 
 		goto ldap_pwd_end;
@@ -370,7 +370,7 @@ bool _IKED_XAUTH_LDAP::auth_grp( IKE_XAUTH & xauth, BDATA & group )
 	LDAP *	ld = NULL;
 	BDATA	filter;
 	char *	atlist[ 1 ] = { NULL };
-	int		scope = LDAP_SCOPE_ONE;
+	int		scope = LDAP_SCOPE_ONELEVEL;
 	int	ecount = 0;
 
 	LDAPMessage * lr = NULL;
@@ -416,7 +416,7 @@ bool _IKED_XAUTH_LDAP::auth_grp( IKE_XAUTH & xauth, BDATA & group )
 
 	if( res != LDAP_SUCCESS )
 	{
-		iked.log.txt( LOG_ERROR,
+		iked.log.txt( LLOG_ERROR,
 			"!! : xauth ldap group search failed ( %s )\n",
 			ldap_err2string( res ) );
 
@@ -431,7 +431,7 @@ bool _IKED_XAUTH_LDAP::auth_grp( IKE_XAUTH & xauth, BDATA & group )
 
 	if( ecount > 1 )
 	{
-		iked.log.txt( LOG_ERROR,
+		iked.log.txt( LLOG_ERROR,
 			"!! : warning, ldap return multiple results for group %s\n",
 			group.buff() );
 	}
