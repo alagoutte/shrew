@@ -288,11 +288,11 @@ bool _IKED::conf_load( const char * path, bool trace )
 	yy_flex_debug = trace;
 	if( !( yyin = fopen( path_conf, "r" ) ) )
 	{
-		log.txt( LLOG_ERROR, "!! : unable to open %s\n", path );
+		log.txt( LLOG_ERROR, "!! : unable to open %s\n", path_conf );
 		return false;
 	}
 
-	log.txt( LOG_INFO, "ii : reading config %s\n", path );
+	log.txt( LOG_INFO, "ii : reading config %s\n", path_conf );
 
 	yy::conf_parser parser( *this );
 	parser.set_debug_level( trace );
