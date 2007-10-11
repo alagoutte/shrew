@@ -14,3 +14,9 @@ include_directories(
 add_library(
 	log
 	liblog.cpp )
+
+set_target_properties(
+	log PROPERTIES
+	VERSION ${RELVER}
+	SOVERSION ${RELVER} )
+

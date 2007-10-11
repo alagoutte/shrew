@@ -14,6 +14,11 @@ add_library(
 	pfk SHARED
 	libpfk.cpp )
 
+set_target_properties(
+        pfk PROPERTIES
+	VERSION ${RELVER}
+	SOVERSION ${RELVER} )
+
 # install support
 
 install(

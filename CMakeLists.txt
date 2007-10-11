@@ -18,6 +18,10 @@ add_definitions( -DUNIX )
 include( CheckCSourceCompiles )
 include( CheckLibraryExists )
 
+set(
+	RELVER
+	"2.0.1" )
+
 subdirs(
 	source/iked
 	source/libike

@@ -23,3 +23,9 @@ add_library(
 	libip.queue.cpp
 	libip.route.unix.cpp
 	utils.list.cpp )
+
+set_target_properties(
+	ip PROPERTIES
+	VERSION ${RELVER}
+	SOVERSION ${RELVER} )
+

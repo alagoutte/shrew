@@ -17,6 +17,11 @@ add_library(
 	ike SHARED
 	libike.cpp )
 
+set_target_properties(
+	ike PROPERTIES
+	VERSION ${RELVER}
+	SOVERSION ${RELVER} )
+
 # install support
 
 install(

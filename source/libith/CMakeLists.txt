@@ -13,3 +13,8 @@ include_directories(
 add_library(
 	ith
 	libith.cpp )
+
+set_target_properties(
+	ith PROPERTIES
+	VERSION ${RELVER}
+	SOVERSION ${RELVER} )
