@@ -327,24 +327,25 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : remote cert \'%s\' message\n", text );
 
-							long loaded = cert_load_pem( tunnel->peer->cert_r, text, true, tunnel->peer->fpass );
+							long loaded = cert_load( tunnel->peer->cert_r, text, true, tunnel->peer->fpass );
 
-							if( loaded != FILE_OK )
-								loaded = cert_load_p12( tunnel->peer->cert_r, text, true, tunnel->peer->fpass );
-
-							if( loaded == FILE_OK )
-								ikei->send_msg_result( IKEI_OK );
-							else
+							switch( loaded )
 							{
-								log.txt( LLOG_ERROR, "!! : \'%s\' load failed\n", text );
+								case FILE_OK:
+									ikei->send_msg_result( IKEI_OK );
+									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text );
+									break;
 
-								if( loaded == FILE_PASS )
-									ikei->send_msg_result( IKEI_PASSWD );
-								else
-								{
+								case FILE_PATH:
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text );
 									ikei->send_msg_result( IKEI_FAILED );
 									tunnel->close = TERM_CLIENT;
-								}
+									break;
+
+								case FILE_FAIL:
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text );
+									ikei->send_msg_result( IKEI_PASSWD );
+									break;
 							}
 
 							break;
@@ -358,24 +359,25 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : local cert \'%s\' message\n", text );
 
-							long loaded = cert_load_pem( tunnel->peer->cert_l, text, false, tunnel->peer->fpass );
+							long loaded = cert_load( tunnel->peer->cert_l, text, false, tunnel->peer->fpass );
 
-							if( loaded != FILE_OK )
-								loaded = cert_load_p12( tunnel->peer->cert_l, text, false, tunnel->peer->fpass );
-
-							if( loaded == FILE_OK )
-								ikei->send_msg_result( IKEI_OK );
-							else
+							switch( loaded )
 							{
-								log.txt( LLOG_ERROR, "!! : \'%s\' load failed\n", text );
+								case FILE_OK:
+									ikei->send_msg_result( IKEI_OK );
+									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text );
+									break;
 
-								if( loaded == FILE_PASS )
-									ikei->send_msg_result( IKEI_PASSWD );
-								else
-								{
+								case FILE_PATH:
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text );
 									ikei->send_msg_result( IKEI_FAILED );
 									tunnel->close = TERM_CLIENT;
-								}
+									break;
+
+								case FILE_FAIL:
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text );
+									ikei->send_msg_result( IKEI_PASSWD );
+									break;
 							}
 
 							break;
@@ -389,24 +391,25 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : local key \'%s\' message\n", text );
 
-							long loaded = prvkey_rsa_load_pem( text, &tunnel->peer->key, tunnel->peer->fpass );
+							long loaded = prvkey_rsa_load( &tunnel->peer->key, text, tunnel->peer->fpass );
 
-							if( loaded != FILE_OK )
-								loaded = prvkey_rsa_load_p12( text, &tunnel->peer->key, tunnel->peer->fpass );
-
-							if( loaded == FILE_OK )
-								ikei->send_msg_result( IKEI_OK );
-							else
+							switch( loaded )
 							{
-								log.txt( LLOG_ERROR, "!! : \'%s\' load failed\n", text );
+								case FILE_OK:
+									ikei->send_msg_result( IKEI_OK );
+									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text );
+									break;
 
-								if( loaded == FILE_PASS )
-									ikei->send_msg_result( IKEI_PASSWD );
-								else
-								{
+								case FILE_PATH:
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text );
 									ikei->send_msg_result( IKEI_FAILED );
 									tunnel->close = TERM_CLIENT;
-								}
+									break;
+
+								case FILE_FAIL:
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text );
+									ikei->send_msg_result( IKEI_PASSWD );
+									break;
 							}
 
 							break;

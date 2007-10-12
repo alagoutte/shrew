@@ -114,7 +114,7 @@ bool _IKED::bdata_2_cert( X509 ** x509, BDATA & cert )
 	return true;
 }
 
-long _IKED::cert_load_pem( BDATA & cert, char * file, bool ca, BDATA & pass )
+long _IKED::cert_load( BDATA & cert, char * file, bool ca, BDATA & pass )
 {
 	char fpath[ MAX_PATH ];
 	load_path( file, fpath );
@@ -123,58 +123,48 @@ long _IKED::cert_load_pem( BDATA & cert, char * file, bool ca, BDATA & pass )
 
 	FILE * fp;
 	if( fopen_s( &fp, fpath, "rb" ) )
-		return FILE_FAIL;
+		return FILE_PATH;
 
 #else
 
 	FILE * fp = fopen( fpath, "rb" );
 	if( !fp )
-		return FILE_FAIL;
+		return FILE_PATH;
 
 #endif
 
-	X509 * x509 = PEM_read_X509( fp, NULL, NULL, NULL );
+	bool loaded = cert_load_pem( cert, fp, ca, pass );
+	if( !loaded )
+		cert_load_p12( cert, fp, ca, pass );
 
-	if( pass.size() && ( x509 == NULL ) )
-		x509 = PEM_read_X509( fp, NULL, keyfile_cb, &pass );
-	
 	fclose( fp );
 
+	if( !loaded )
+		return FILE_FAIL;
+
+	return FILE_OK;
+}
+
+bool _IKED::cert_load_pem( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
+{
+	X509 * x509 = PEM_read_X509( fp, NULL, keyfile_cb, &pass );
+
 	if( x509 == NULL )
-		return FILE_PASS;
+		return false;
 
 	cert_2_bdata( cert, x509 );
 
 	X509_free( x509 );
 
-	return FILE_OK;
+	return true;
 }
 
-long _IKED::cert_load_p12( BDATA & cert, char * file, bool ca, BDATA & pass )
+bool _IKED::cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 {
-	char fpath[ MAX_PATH ];
-	load_path( file, fpath );
-
-#ifdef WIN32
-
-	FILE * fp;
-	if( fopen_s( &fp, fpath, "rb" ) )
-		return FILE_FAIL;
-
-#else
-
-	FILE * fp = fopen( fpath, "rb" );
-	if( !fp )
-		return FILE_FAIL;
-
-#endif
-
 	PKCS12 * p12 = d2i_PKCS12_fp( fp, NULL );
 
-	fclose( fp );
-
 	if( p12 == NULL )
-		return FILE_FAIL;
+		return false;
 
 	X509 * x509 = NULL;
 
@@ -182,7 +172,7 @@ long _IKED::cert_load_p12( BDATA & cert, char * file, bool ca, BDATA & pass )
 	{
 		STACK_OF( X509 ) * stack = NULL;
 
-		if( PKCS12_parse( p12, NULL, NULL, NULL, &stack ) )
+		if( PKCS12_parse( p12, ( const char * ) pass.buff(), NULL, NULL, &stack ) )
 		{
 			if( stack != NULL )
 			{
@@ -192,43 +182,22 @@ long _IKED::cert_load_p12( BDATA & cert, char * file, bool ca, BDATA & pass )
 				sk_X509_free( stack );
 			}
 		}
-
-		stack = NULL;
-
-		if( pass.size() && ( x509 == NULL ) )
-		{
-			if( PKCS12_parse( p12, ( const char * ) pass.buff(), NULL, NULL, &stack ) )
-			{
-				if( stack != NULL )
-				{
-					if( sk_X509_value( stack, 0 ) != NULL )
-						x509 = sk_X509_value( stack, 0 );
-
-					sk_X509_free( stack );
-				}
-			}
-		}
 	}
 	else
-	{
 		PKCS12_parse( p12, NULL, NULL, &x509, NULL );
-
-		if( pass.size() && ( x509 == NULL ) )
-			PKCS12_parse( p12, ( const char * ) pass.buff(), NULL, &x509, NULL );
-	}
 
 	PKCS12_free( p12 );
 
 	if( x509 == NULL )
-		return FILE_PASS;
+		return false;
 
 	cert_2_bdata( cert, x509 );
 	X509_free( x509 );
 
-	return FILE_OK;
+	return true;
 }
 
-long _IKED::cert_save( char * file, BDATA & cert )
+long _IKED::cert_save( BDATA & cert, char * file )
 {
 	char fpath[ MAX_PATH ];
 	load_path( file, fpath );
@@ -603,7 +572,7 @@ bool _IKED::cert_verify( BDATA & cert, BDATA & ca )
 {
 	char fpath[ MAX_PATH ];
 	sprintf_s( fpath, MAX_PATH, "%s\\debug\\remote.crt", path_ins );
-	cert_save( fpath, cert );
+	cert_save( cert, fpath );
 
 	X509 * x509_ca;
 	if( !bdata_2_cert( &x509_ca, ca ) )
@@ -690,7 +659,7 @@ bool _IKED::cert_verify( BDATA & cert, BDATA & ca )
 	return false;
 }
 
-long _IKED::prvkey_rsa_load_pem( char * file, EVP_PKEY ** evp_pkey, BDATA & pass )
+long _IKED::prvkey_rsa_load( EVP_PKEY ** evp_pkey, char * file, BDATA & pass )
 {
 	char fpath[ MAX_PATH ];
 	load_path( file, fpath );
@@ -699,67 +668,50 @@ long _IKED::prvkey_rsa_load_pem( char * file, EVP_PKEY ** evp_pkey, BDATA & pass
 
 	FILE * fp;
 	if( fopen_s( &fp, fpath, "rb" ) )
-		return FILE_FAIL;
+		return FILE_PATH;
 
 #else
 
 	FILE * fp = fopen( fpath, "rb" );
 	if( !fp )
-		return FILE_FAIL;
+		return FILE_PATH;
 
 #endif
 
-	*evp_pkey = PEM_read_PrivateKey( fp, NULL, NULL, NULL );
-
-	if( pass.size() && ( *evp_pkey == NULL ) )
-		*evp_pkey = PEM_read_PrivateKey( fp, NULL, keyfile_cb, &pass );
+	bool loaded = prvkey_rsa_load_pem( evp_pkey, fp, pass );
+	if( !loaded )
+		loaded = prvkey_rsa_load_p12( evp_pkey, fp, pass );
 
 	fclose( fp );
 
-	if( *evp_pkey == NULL )
-		return FILE_PASS;
+	if( !loaded )
+		return FILE_FAIL;
 
 	return FILE_OK;
 }
 
-long _IKED::prvkey_rsa_load_p12( char * file, EVP_PKEY ** evp_pkey, BDATA & pass )
+bool _IKED::prvkey_rsa_load_pem( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass )
 {
-	char fpath[ MAX_PATH ];
-	load_path( file, fpath );
+	*evp_pkey = PEM_read_PrivateKey( fp, NULL, keyfile_cb, &pass );
+	if( *evp_pkey == NULL )
+		return false;
 
-#ifdef WIN32
+	return true;
+}
 
-	FILE * fp;
-	if( fopen_s( &fp, fpath, "rb" ) )
-		return FILE_FAIL;
-
-#else
-
-	FILE * fp = fopen( fpath, "rb" );
-	if( !fp )
-		return FILE_FAIL;
-
-#endif
-
+bool _IKED::prvkey_rsa_load_p12( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass )
+{
 	PKCS12 * p12 = d2i_PKCS12_fp( fp, NULL );
-
-	fclose( fp );
-
 	if( p12 == NULL )
-		return FILE_FAIL;
+		return false;
 
-	PKCS12_parse( p12, NULL, evp_pkey, NULL, NULL );
-
-	if( pass.size() && ( *evp_pkey == NULL ) )
-		PKCS12_parse( p12, ( const char * ) pass.buff(), evp_pkey, NULL, NULL );
-
+	PKCS12_parse( p12, ( const char * ) pass.buff(), evp_pkey, NULL, NULL );
 	PKCS12_free( p12 );
 
 	if( *evp_pkey == NULL )
-		return FILE_PASS;
+		return false;
 
-	return FILE_OK;
-
+	return true;
 }
 
 bool _IKED::pubkey_rsa_read( BDATA & cert, EVP_PKEY ** evp_pkey )
