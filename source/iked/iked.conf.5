@@ -549,62 +549,65 @@ Define the lifetime in kilobytes for this proposal.
 .Pp
 .Sh EXAMPLES
 .Pp
-.Bd
-
+This section contains a few iked configuration examples.
+.Pp
 The first example shows a configuration that only defines the parameters
 required to support client connectivity mode with NATT and debug options
 enabled.
+.Bd -literal -offset
+daemon
+{
+    socket ike 500;
+    socket natt 4500;
 
- daemon
- {
-     socket ike 500;
-     socket natt 4500;
+    log_level debug;
+    log_file "/var/log/iked.log";
 
-     log_level debug;
-     log_file "/var/log/iked.log";
-     pcap_ike "/var/log/ike.pcap";
-     pcap_pub "/var/log/pub.pcap";
-     retry_delay 10;
-     retry_count 2;
- }
+    pcap_decrypt "/var/log/ike-decrypt.pcap";
+    pcap_encrypt "/var/log/ike-encrypt.pcap";
 
+    retry_delay 10;
+    retry_count 2;
+}
+.Ed
+.Pp
 The second example shows a configuration that supports simple peer to peer
 negotiations using mutual preshared key authentication.
+.Bd -literal -offset
+daemon
+{
+    socket ike 500;
 
- daemon
- {
-     socket ike 500;
+    log_level degug;
+    log_file "/var/log/iked.log";
+}
 
-     log_level degug;
-     log_file "/var/log/iked.log";
- }
+peer 1.2.3.4
+{
+    exchange main;
 
- peer 1.2.3.4
- {
-     exchange main;
+    peerid local address;
+    peerid remote address;
 
-     peerid local address;
-     peerid remote address;
+    authdata psk "sharedsecret";
 
-     authdata psk "sharedsecret";
+    life_check claim;
 
-     life_check claim;
+    proposal isakmp
+    {
+        auth mutual_psk;
+        life_sec 28800;
+        life_kbs 0;
+    }
 
-     proposal isakmp
-     {
-         auth mutual_psk;
-
-         life_sec 28800;
-         life_kbs 0;
-     }
-
-     proposal esp
-     {
-         life_sec 3800;
-         life_kbs 0;
-     }
- }
-
+    proposal esp
+    {
+        life_sec 3800;
+        life_kbs 0;
+    }
+}
+.Ed
+.Pp
 The third example shows a configuration that supports client gateway
 negotiations using mutual preshared key authentication with xauth, nat
 traversal, dead peer detection, ike fragmentation and policy generation. The
@@ -614,90 +617,89 @@ the 10.1.1.0/24 and 1.3.3.0/24 networks with the exception of 1.1.1.15/32
 which be accessed directly ( not via IPSEC ). Peers that use an xauth user
 account that is a member of the "netadmin" group would have additional
 policies generated to allow access to the 10.4.4.0/24 network.
+.Bd -literal -offset
+daemon
+{
+    socket ike 500;
+    socket natt 4500;
 
- daemon
- {
-     socket ike 500;
-     socket natt 4500;
-     log_level degug;
-     log_file "/var/log/iked.log";
-     pcap_ike "/var/log/ike.pcap";
-     pcap_pub "/var/log/pub.pcap";
- }
+    log_level degug;
+    log_file "/var/log/iked.log";
 
- netgroup allow
- {
-     10.1.1.0/24;
-     10.3.3.0/24;
- }
+    pcap_decrypt "/var/log/ike-decrypt.pcap";
+    pcap_encrypt "/var/log/ike-encrypt.pcap";
+}
 
- netgroup deny
- {
-     1.1.1.15/32;
- }
+netgroup allow
+{
+    10.1.1.0/24;
+    10.3.3.0/24;
+}
 
- netgroup protect
- {
-     10.4.4.0/24;
- }
+netgroup deny
+{
+    1.1.1.15/32;
+}
 
- xconf_local
- {
-     network4 10.2.1.0/24;
-     dnss4 10.1.1.1;
-     nbns4 10.1.1.1;
-     dns_suffix "foo.com";
-     dns_list "foo.com" "bar.com";
-     banner "/usr/local/etc/iked.motd";
-     pfs_group 2;
- }
+netgroup protect
+{
+    10.4.4.0/24;
+}
 
- peer 0.0.0.0
- {
-     contact responder;
-     exchange main;
+xconf_local
+{
+    network4 10.2.1.0/24;
+    dnss4 10.1.1.1;
+    nbns4 10.1.1.1;
+    dns_suffix "foo.com";
+    dns_list "foo.com" "bar.com";
+    banner "/usr/local/etc/iked.motd";
+    pfs_group 2;
+}
 
-     natt_mode enable;
-     dpd_mode enable;
-     frag_ike_mode enable;
+peer 0.0.0.0
+{
+    contact responder;
+    exchange main;
 
-     peerid local address;
-     peerid remote address;
+    natt_mode enable;
+    dpd_mode enable;
+    frag_ike_mode enable;
 
-     authdata psk "sharedsecret";
+    peerid local address;
+    peerid remote address;
 
-     life_check claim;
+    authdata psk "sharedsecret";
 
-     xauth_source local "remote";
-     xconf_source local;
+    life_check claim;
 
-     plcy_mode config;
-     plcy_list
-     {
-         include allow;
-         exclude deny;
-         include protect "netadmin";
-     }
+    xauth_source local "remote";
+    xconf_source local;
 
-     proposal isakmp
-     {
-         auth mutual_xauth_psk;
+    plcy_mode config;
+    plcy_list
+    {
+        include allow;
+        exclude deny;
+        include protect "netadmin";
+    }
 
-         ciph 3des;
-         hash md5;
-         dhgr 2;
+    proposal isakmp
+    {
+        auth mutual_xauth_psk;
+        ciph 3des;
+        hash md5;
+        dhgr 2;
+        life_sec 28800;
+        life_kbs 0;
+    }
 
-         life_sec 28800;
-         life_kbs 0;
-     }
-
-     proposal esp
-     {
-         life_sec 3800;
-         life_kbs 0;
-     }
- }
-
+    proposal esp
+    {
+        life_sec 3800;
+        life_kbs 0;
+    }
+}
 .Ed
 .Sh SEE ALSO
 .Xr ipsec 4 ,
