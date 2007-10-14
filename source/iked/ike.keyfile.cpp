@@ -57,12 +57,14 @@ int keyfile_cb( char * buf, int size, int rwflag, void * userdata )
 {
 	BDATA * fpass = ( BDATA * ) userdata;
 
+	memset( buf, 0, size );
+
 	if( size > int( fpass->size() ) )
 		size = int( fpass->size() );
 
 	memcpy( buf, fpass->buff(), size );
 
-	return 0;
+	return size;
 }
 
 void _IKED::load_path( char * file, char * fpath )
@@ -135,7 +137,7 @@ long _IKED::cert_load( BDATA & cert, char * file, bool ca, BDATA & pass )
 
 	bool loaded = cert_load_pem( cert, fp, ca, pass );
 	if( !loaded )
-		cert_load_p12( cert, fp, ca, pass );
+		loaded = cert_load_p12( cert, fp, ca, pass );
 
 	fclose( fp );
 
@@ -147,8 +149,9 @@ long _IKED::cert_load( BDATA & cert, char * file, bool ca, BDATA & pass )
 
 bool _IKED::cert_load_pem( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 {
-	X509 * x509 = PEM_read_X509( fp, NULL, keyfile_cb, &pass );
+	fseek( fp, 0, SEEK_SET );
 
+	X509 * x509 = PEM_read_X509( fp, NULL, keyfile_cb, &pass );
 	if( x509 == NULL )
 		return false;
 
@@ -161,18 +164,23 @@ bool _IKED::cert_load_pem( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 
 bool _IKED::cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 {
-	PKCS12 * p12 = d2i_PKCS12_fp( fp, NULL );
+	fseek( fp, 0, SEEK_SET );
 
+	PKCS12 * p12 = d2i_PKCS12_fp( fp, NULL );
 	if( p12 == NULL )
 		return false;
 
 	X509 * x509 = NULL;
 
+	BDATA passnull;
+	passnull.set( pass );
+	passnull.add( 0, 1 );
+
 	if( ca )
 	{
 		STACK_OF( X509 ) * stack = NULL;
 
-		if( PKCS12_parse( p12, ( const char * ) pass.buff(), NULL, NULL, &stack ) )
+		if( PKCS12_parse( p12, ( const char * ) passnull.buff(), NULL, NULL, &stack ) )
 		{
 			if( stack != NULL )
 			{
@@ -184,7 +192,7 @@ bool _IKED::cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 		}
 	}
 	else
-		PKCS12_parse( p12, NULL, NULL, &x509, NULL );
+		PKCS12_parse( p12, ( const char * ) passnull.buff(), NULL, &x509, NULL );
 
 	PKCS12_free( p12 );
 
@@ -692,6 +700,8 @@ long _IKED::prvkey_rsa_load( EVP_PKEY ** evp_pkey, char * file, BDATA & pass )
 
 bool _IKED::prvkey_rsa_load_pem( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass )
 {
+	fseek( fp, 0, SEEK_SET );
+
 	*evp_pkey = PEM_read_PrivateKey( fp, NULL, keyfile_cb, &pass );
 	if( *evp_pkey == NULL )
 		return false;
@@ -701,11 +711,17 @@ bool _IKED::prvkey_rsa_load_pem( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass )
 
 bool _IKED::prvkey_rsa_load_p12( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass )
 {
+	fseek( fp, 0, SEEK_SET );
+
 	PKCS12 * p12 = d2i_PKCS12_fp( fp, NULL );
 	if( p12 == NULL )
 		return false;
 
-	PKCS12_parse( p12, ( const char * ) pass.buff(), evp_pkey, NULL, NULL );
+	BDATA passnull;
+	passnull.set( pass );
+	passnull.add( 0, 1 );
+
+	PKCS12_parse( p12, ( const char * ) passnull.buff(), evp_pkey, NULL, NULL );
 	PKCS12_free( p12 );
 
 	if( *evp_pkey == NULL )

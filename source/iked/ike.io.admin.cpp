@@ -313,7 +313,6 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 							log.txt( LLOG_INFO, "<A : file password\n" );
 
 							tunnel->peer->fpass.set( text, size );
-							tunnel->peer->fpass.add( 0, 1 );
 							ikei->send_msg_result( IKEI_OK );
 
 							break;
