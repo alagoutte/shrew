@@ -469,20 +469,7 @@ long vneterr( long value )
 long _IKED::socket_init()
 {
 	vflt.init( &log );
-
 	vflt.open();
-
-	FLT_RULE rule;
-	memset( &rule, 0, sizeof( rule ) );
-
-	rule.Level   = RLEVEL_DAEMON;
-	rule.Group   = 0;
-	rule.Action  = FLT_ACTION_MIRROR;
-	rule.Flags   = FLT_FLAG_RECV | FLT_FLAG_HAS_IPFRAG;
-	rule.Proto   = htons( PROTO_IP );
-	rule.IpPro   = PROTO_IP_UDP;
-
-	vflt.rule_add( &rule );
 
 	return LIBIKE_OK;
 }
@@ -541,7 +528,7 @@ long _IKED::filter_tunnel_add( IDB_TUNNEL * tunnel )
 	rule.Level   = RLEVEL_DAEMON;
 	rule.Group   = tunnel->refid;
 	rule.Action  = FLT_ACTION_DIVERT;
-	rule.Flags   = FLT_FLAG_QUICK | FLT_FLAG_RECV;
+	rule.Flags   = FLT_FLAG_RECV | FLT_FLAG_KEEP_FRAGS;
 	rule.Proto   = htons( PROTO_IP );
 	rule.IpPro   = PROTO_IP_UDP;
 	rule.SrcAddr = tunnel->saddr_r.saddr4.sin_addr.s_addr;
@@ -560,7 +547,7 @@ long _IKED::filter_tunnel_add( IDB_TUNNEL * tunnel )
 		rule.Level   = RLEVEL_DAEMON;
 		rule.Group   = tunnel->refid;
 		rule.Action  = FLT_ACTION_DIVERT;
-		rule.Flags   = FLT_FLAG_QUICK | FLT_FLAG_RECV | FLT_FLAG_HAS_IPSECSPI;
+		rule.Flags   = FLT_FLAG_RECV | FLT_FLAG_KEEP_FRAGS | FLT_FLAG_HAS_IPSECSPI;
 		rule.Proto   = htons( PROTO_IP );
 		rule.IpPro   = PROTO_IP_UDP;
 		rule.SrcAddr = tunnel->saddr_r.saddr4.sin_addr.s_addr;
