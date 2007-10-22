@@ -542,6 +542,36 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				{
 					log.txt( LLOG_INFO, "ii : received xauth response\n" );
 
+					//
+					// make sure we at least have
+					// user and password attribs
+					//
+
+					long count = cfg->attr_count();
+					long index = 0;
+
+					for( ; index < count; index++ )
+					{
+						IKE_ATTR * attr = cfg->attr_get( index );
+
+						switch( attr->atype )
+						{
+							case XAUTH_USER_NAME:
+								cfg->tunnel->xauth.user.set( attr->vdata );
+								break;
+
+							case XAUTH_USER_PASSWORD:
+								cfg->tunnel->xauth.pass.set( attr->vdata );
+								break;
+						}
+					}
+
+					if( !cfg->tunnel->xauth.user.size() )
+						log.txt( LLOG_ERROR, "!! : missing required username attribute\n" );
+
+					if( !cfg->tunnel->xauth.pass.size() )
+						log.txt( LLOG_ERROR, "!! : missing required password attribute\n" );
+
 					cfg->tunnel->state |= TSTATE_RECV_XAUTH;
 				}
 
