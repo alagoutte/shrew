@@ -177,7 +177,11 @@ X Add stateful fragment evaluation in filter driver
 . Add preference for client minimize to system tray
 . Add preference for auto-reconnect
 . Add support for unattended installations
-. Add adaptive communications during connect ( Frag/NATT )
+. Validate and document support for Cisco ASA gateways
+. Validate and document support for Juniper SSG gateways
+. Validate and document support for Fortigate gateways
+. Validate and document support for Zywall gateways
+? Add adaptive communications during connect ( Frag/NATT )
 ? Move to a purely primitive based tunnel confguration interface
 ? Add support for lzs compression ( patent encumbered )
 ? Add preference for pre-populating user names
