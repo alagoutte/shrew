@@ -109,7 +109,7 @@
                         </spacer>
                         <widget class="QLabel">
                             <property name="name">
-                                <cstring>textLabel3</cstring>
+                                <cstring>textLabelVersion</cstring>
                             </property>
                             <property name="text">
                                 <string>Ver 2.0.0</string>

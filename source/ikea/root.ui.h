@@ -226,5 +226,10 @@ void root::RenameSite( QIconViewItem * item, const QString & name )
 void root::About()
 {
 	about a( this );
+	QString Major, Minor, Build;
+	Major.setNum( CLIENT_VER_MAJ );
+	Minor.setNum( CLIENT_VER_MIN );
+	Build.setNum( CLIENT_VER_BLD );
+	a.textLabelVersion->setText( "Ver " + Major + "." + Minor + "." + Build );
 	a.exec();
 }

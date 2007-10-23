@@ -8,12 +8,14 @@
 #include <arpa/inet.h>
 
 #include <qfiledialog.h>
+#include <qlabel.h>
 #include <qlineedit.h>
 #include <qmessagebox.h>
 #include <qprocess.h>
 #include <qiconview.h>
 #include <qdir.h>
 
+#include "../version.h"
 #include "config.h"
 #include "root.h"
 #include "site.h"
