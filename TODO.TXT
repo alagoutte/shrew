@@ -168,29 +168,33 @@ X Make divert rule management dynamic
 X Add support for syslog output on unix targets
 X Add support for DHCP over IPsec configuration method
 X Add support for strictly manual client configuration method
-X Add stateful fragment evaluation in filter driver
+X Add stateful fragment evaluation to filter driver
+. Add batched packet send and recv support to filter driver
 . Add timestamps in non-syslog log output
 . Add support for x86/amd64 Windows Vista platforms
 . Add support for multiple DNS/WINS server addresses
 . Make Split DNS work with an adapter specific DNS suffix
+. Add support for automatic renegotiation of IKSAMP SAs
+. Add support for storing key and cert data in the site config
 . Add user preference dialog for site manager
 . Add preference for client minimize to system tray
-. Add preference for auto-reconnect
-. Add support for unattended installations
+. Add preference for pre-populating user names
 . Validate and document support for Cisco ASA gateways
 . Validate and document support for Juniper SSG gateways
 . Validate and document support for Fortigate gateways
 . Validate and document support for Zywall gateways
 ? Add adaptive communications during connect ( Frag/NATT )
 ? Move to a purely primitive based tunnel confguration interface
-? Add support for lzs compression ( patent encumbered )
-? Add preference for pre-populating user names
 ? Add ability to drag site connections as shortcuts
+? Add support for lzs compression ( patent encumbered )
+? Add support for microsoft certificate and key storage api
 . !!! All reported bugs !!!
 
 2.2.0 release - Feature Parity ...
 ----------------------------------------------------------------------
 . Stateful client side firewall
+. Finalized kernel drivers signed by Microsoft WHQL
+. Add support for unattended installations ( needs signed drivers )
 . !!! All reported bugs !!!
 
 2.3.0 release - Feature Parity ...
