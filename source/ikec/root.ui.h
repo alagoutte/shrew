@@ -193,4 +193,15 @@ void root::customEvent( QCustomEvent * e )
 		else
 			textLabelDPDValue->setText( "Disabled" );
 	}
+
+	if( e->type() == EVENT_FILEPASS )
+	{
+		FilePassEvent * event = ( FilePassEvent * ) e;
+
+		filepass fp;
+		QFileInfo pathInfo( event->PassData->filepath );
+		fp.setCaption( "Password for " + pathInfo.fileName());
+		event->PassData->result = fp.exec();
+		event->PassData->password = fp.lineEditPassword->text();
+	}
 }

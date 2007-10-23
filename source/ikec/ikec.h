@@ -9,6 +9,7 @@
 #include <qlabel.h>
 #include <qthread.h>
 #include <qevent.h>
+#include <qfileinfo.h>
 
 #include <unistd.h>
 #include <signal.h>
@@ -21,6 +22,7 @@
 
 #include "root.h"
 #include "banner.h"
+#include "filepass.h"
 #include "libike.h"
 #include "config.h"
 
@@ -28,6 +30,7 @@
 #define EVENT_ENABLE		QEvent::User + 2
 #define EVENT_STATUS		QEvent::User + 3
 #define EVENT_STATS		QEvent::User + 4
+#define EVENT_FILEPASS		QEvent::User + 5
 
 class RunningEvent : public QCustomEvent
 {
@@ -78,6 +81,32 @@ class StatsEvent : public QCustomEvent
 	StatsEvent( IKEI_STATS value ) : QCustomEvent( EVENT_STATS )
 	{
 		stats = value;
+	}
+};
+
+class FilePassData
+{
+	public:
+
+	QString	filepath;
+	QString	password;
+	int	result;
+
+	FilePassData()
+	{
+		result = -1;
+	}
+};
+
+class FilePassEvent : public QCustomEvent
+{
+	public:
+
+	FilePassData *	PassData;
+
+	FilePassEvent( FilePassData * CallData ) : QCustomEvent( EVENT_FILEPASS )
+	{
+		PassData = CallData;
 	}
 };
 

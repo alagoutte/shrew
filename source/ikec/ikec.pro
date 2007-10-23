@@ -11,7 +11,8 @@ SOURCES	+= main.cpp \
 	ikec.cpp
 
 FORMS	= root.ui \
-	banner.ui
+	banner.ui \
+	filepass.ui
 
 IMAGES	= png/ikec.png
 

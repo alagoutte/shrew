@@ -21,6 +21,7 @@ link_directories(
 set(
 	UIC_FILES
 	banner.ui
+	filepass.ui
 	root.ui )
 
 set(
