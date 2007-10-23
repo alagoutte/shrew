@@ -179,6 +179,7 @@ X Add stateful fragment evaluation to filter driver
 . Add user preference dialog for site manager
 . Add preference for client minimize to system tray
 . Add preference for pre-populating user names
+. Import new logo and improved icon sets
 . Validate and document support for Cisco ASA gateways
 . Validate and document support for Juniper SSG gateways
 . Validate and document support for Fortigate gateways
@@ -218,5 +219,5 @@ X isakmp_id2str
 X sainfo debug improvements
 X responder ignores inital fragment
 X clientaddr
-. pass firewall rulesets via modecfg
 . review sa cleanup after client disconnect
+. negotiate unity firewall rulesets via modecfg
