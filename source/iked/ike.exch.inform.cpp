@@ -558,13 +558,14 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 						dpdseq = ntohl( dpdseq );
 
 						//
-						// check dpd sequence number
+						// check dpd sequence number. if accepted,
+						// set dpd response to current sequence
 						//
 
 						if( dpdseq <= ph1->dpd_req )
 						{
 							log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE-ACK sequence %08x accepted\n", dpdseq );
-							ph1->dpd_res = dpdseq;
+							ph1->dpd_res = ph1->dpd_req;
 						}
 						else
 							log.txt( LLOG_ERROR, "!! : DPD ARE-YOU-THERE-ACK sequence %08x rejected\n", dpdseq );
