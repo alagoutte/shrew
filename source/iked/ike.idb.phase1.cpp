@@ -51,9 +51,9 @@ bool _ITH_EVENT_PH1DPD::func()
 
 	if( diff >= 2 )
 	{
-		iked.log.txt( LLOG_INFO,
-				"ii : phase1 sa dpd timeout\n"
-				"ii : %04x%04x:%04x%04x\n",
+		iked.log.txt( LLOG_ERROR,
+				"!! : phase1 sa dpd timeout\n"
+				"!! : %04x%04x:%04x%04x\n",
 				htonl( *( long * ) &ph1->cookies.i[ 0 ] ),
 				htonl( *( long * ) &ph1->cookies.i[ 4 ] ),
 				htonl( *( long * ) &ph1->cookies.r[ 0 ] ),
@@ -74,7 +74,7 @@ bool _ITH_EVENT_PH1DPD::func()
 	// order
 	//
 
-	uint32_t dpdseq = htonl( ph1->dpd_req++ );
+	uint32_t dpdseq = htonl( ++ph1->dpd_req );
 
 	//
 	// add sequence number and send
@@ -84,6 +84,8 @@ bool _ITH_EVENT_PH1DPD::func()
 	bdata.add( &dpdseq, sizeof( dpdseq ) );
 
 	iked.inform_new_notify( ph1, NULL, ISAKMP_N_DPD_R_U_THERE, &bdata );
+
+	iked.log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE sequence %08x requested\n", ph1->dpd_req );
 
 	return true;
 }

@@ -532,8 +532,17 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 			switch( notify->code )
 			{
 				case ISAKMP_N_DPD_R_U_THERE:
+				{
+					uint32_t dpdseq;
+					notify->data.get( &dpdseq, sizeof( dpdseq ) );
+					dpdseq = ntohl( dpdseq );
+
 					inform_new_notify( ph1, NULL, ISAKMP_N_DPD_R_U_THERE_ACK, &notify->data );
+
+					log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE sequence %08x returned\n", dpdseq );
+
 					break;
+				}
 
 				case ISAKMP_N_DPD_R_U_THERE_ACK:
 				{
@@ -552,14 +561,13 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 						// check dpd sequence number
 						//
 
-						if( dpdseq > ph1->dpd_req )
+						if( dpdseq <= ph1->dpd_req )
 						{
-							log.txt( LLOG_DEBUG, "ii : DPD sequence rejected\n" );
-							break;
+							log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE-ACK sequence %08x accepted\n", dpdseq );
+							ph1->dpd_res = dpdseq;
 						}
-
-						log.txt( LLOG_DEBUG, "ii : DPD sequence accepted\n" );
-						ph1->dpd_res = dpdseq;
+						else
+							log.txt( LLOG_ERROR, "!! : DPD ARE-YOU-THERE-ACK sequence %08x rejected\n", dpdseq );
 					}
 
 					break;
