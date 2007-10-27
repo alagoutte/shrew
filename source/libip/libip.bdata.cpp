@@ -87,6 +87,7 @@ bool _BDATA::set( void * buff, size_t size )
 
 	data_buff = new_buff;
 	data_size = size;
+	data_oset = 0;
 
 	return true;
 }

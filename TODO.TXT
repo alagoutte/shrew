@@ -184,6 +184,7 @@ X Add stateful fragment evaluation to filter driver
 . Validate and document support for Juniper SSG gateways
 . Validate and document support for Fortigate gateways
 . Validate and document support for Zywall gateways
+? Add support for client connect/disconnect script execution
 ? Add adaptive communications during connect ( Frag/NATT )
 ? Move to a purely primitive based tunnel confguration interface
 ? Add ability to drag site connections as shortcuts

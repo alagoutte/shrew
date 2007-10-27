@@ -507,17 +507,20 @@ long _IKED::socket_select( unsigned long timeout )
 
 long _IKED::header( PACKET_IP & packet, ETH_HEADER & ethhdr )
 {
-	return vneterr( vflt.head( packet, ethhdr ) );
+	return vneterr( vflt.header( packet, ethhdr ) );
 }
 
 long _IKED::recv_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 {
-	return vneterr( vflt.recv_ip( packet, ethhdr ) );
+	vflt.recv( RAWNET_BUFF_SIZE, 1 );
+	unsigned char dir;
+	return vneterr( vflt.recv_get( packet, ethhdr, dir ) );
 }
 
 long _IKED::send_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 {
-	return vneterr( vflt.send_ip( packet, FLT_SEND_DN, ethhdr ) );
+	vflt.send_add( packet, ethhdr, FLT_FLAG_SEND );
+	return vneterr( vflt.send() );
 }
 
 long _IKED::filter_tunnel_add( IDB_TUNNEL * tunnel )
