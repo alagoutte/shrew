@@ -1,0 +1,87 @@
+.\"
+.\" Copyright (c) 2007
+.\"      Shrew Soft Inc.  All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Redistributions in any form must be accompanied by information on
+.\"    how to obtain complete source code for the software and any
+.\"    accompanying software that uses the software.  The source code
+.\"    must either be included in the distribution or be available for no
+.\"    more than the cost of distribution plus a nominal fee, and must be
+.\"    freely redistributable under reasonable conditions.  For an
+.\"    executable file, complete source code means the source code for all
+.\"    modules it contains.  It does not include source code for modules or
+.\"    files that typically accompany the major components of the operating
+.\"    system on which the executable file runs.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY SHREW SOFT INC ``AS IS'' AND ANY EXPRESS
+.\" OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+.\" NON-INFRINGEMENT, ARE DISCLAIMED.  IN NO EVENT SHALL SHREW SOFT INC
+.\" BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+.\" CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+.\" SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+.\" INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+.\" CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+.\" ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+.\" THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" AUTHOR : Matthew Grooms
+.\"          mgrooms@shrew.net
+.\"
+.\"
+.Dd Febuary 2, 2007
+.Dt IKEC 1
+.Os
+.Sh NAME
+.Nm ikec
+.Nd Internet Key Exchange Connect
+.Sh SYNOPSIS
+.Nm
+.Op Fl r Ar name
+.Op Fl u Ar username
+.Op Fl p Ar password
+.Op Fl a
+.Sh DESCRIPTION
+The
+.Nm
+Qt GUI application provides a simple interface for users to interact with
+.Xr iked 8
+( Shrew Soft IKE Daemon ). This interface allows a user to control an IPsec
+VPN Client connection with a remote gateway. The parameters used for the
+connection are described in a Site Configuration file. For more information
+about managing Site Configuration files, please see the
+.Xr ikea 1
+man page. Please note, the ikec application is not typically started
+directly by a user but as a sub-process of the
+.Xr ikea 1
+Qt GUI application.
+.Pp
+The options are as follows:
+.Bl -tag -width Fl
+.It Fl r Ar name
+Specify the Site Configuration name.
+.It Fl u Ar username
+Specify the Xauth username for the connection.
+.It Fl p Ar password
+Specify the Xauth password for the connection.
+.It Fl a
+Automatically initiate the connection.
+.El
+.Sh RETURN VALUES
+The command exits with 0 on success, and non-zero on errors.
+.Sh SEE ALSO
+.Xr ikea 1 ,
+.Xr iked 8 ,
+.Sh HISTORY
+The
+.Nm
+program was written by Matthew Grooms ( mgrooms@shrew.net ) as part
+of the Shrew Soft ( http://www.shrew.net ) family of IPsec products.
