@@ -49,7 +49,7 @@ The
 file is used to configure
 .Xr iked 8
 ( Internet Key Exchange Daemon ). The parameters supplied are used to
-negotiate ISAKMP ( phase1 ) and IPSEC ( phase2 ) SAs for IPSEC capable
+negotiate ISAKMP ( phase1 ) and IPsec ( phase2 ) SAs for IPsec capable
 hosts.
 .Sh SYNTAX
 .Pp
@@ -314,13 +314,13 @@ for this parameter is 520.
 .It Ic frag_esp_mode (disable | enable) ;
 Specifies the ESP Fragmentation mode to be used with a peer. If
 .Ic disable
-is used, the daemon will create IPSEC SAs without the ESP Fragmentation option.
+is used, the daemon will create IPsec SAs without the ESP Fragmentation option.
 If 
 .Ic enable
-is used, the daemon will create IPSEC SAs with the ESP Fragmentation option.
+is used, the daemon will create IPsec SAs with the ESP Fragmentation option.
 The default value for this parameter is
 .Ic disable .
-Note, ESP Fragmentation is only valid for IPSEC SAs using NAT Traversal. The
+Note, ESP Fragmentation is only valid for IPsec SAs using NAT Traversal. The
 operating system must also have support for this feature. ( NetBSD Only )
 .It Ic frag_esp_size Ar number ;
 Specifies the maximum number of bytes for an ESP Fragment. The default value
@@ -441,7 +441,7 @@ Specifies a
 .Ic netgroup
 by label for use with policy generation. When
 .Ic include
-is used, the daemon will generate appropriate ipsec policies and pass all
+is used, the daemon will generate appropriate IPsec policies and pass all
 .Ic netgroup
 defined networks during the Configuration Exchange if requested. A peer would
 use this configuration information to selectively tunnel all traffic destined
@@ -450,7 +450,7 @@ for any one of these networks. If
 is used, the daemon will generate appropriate discard policies and pass all
 .Ic netgroup
 defined networks during the Configuration Exchange if requested. A peer would
-use this configuration information to selectively bypass ipsec processing for
+use this configuration information to selectively bypass IPsec processing for
 all traffic destined to any one of these networks. The optional quoted string
 specifies a group name that can be used to restrict processing of this
 netgroup to only users that are valid members of the group. If XAuth is not
@@ -614,7 +614,7 @@ traversal, dead peer detection, ike fragmentation and policy generation. The
 daemon would allow xauth users that are members of the "remote" group to
 connect to the gateway. Policies would be generated to allow a peer access to
 the 10.1.1.0/24 and 1.3.3.0/24 networks with the exception of 1.1.1.15/32
-which be accessed directly ( not via IPSEC ). Peers that use an xauth user
+which be accessed directly ( not via IPsec ). Peers that use an xauth user
 account that is a member of the "netadmin" group would have additional
 policies generated to allow access to the 10.4.4.0/24 network.
 .Bd -literal -offset
@@ -709,4 +709,4 @@ peer 0.0.0.0
 The
 .Nm
 parser was written by Matthew Grooms ( mgrooms@shrew.net ) as part
-of the Shrew Soft ( http://www.shrew.net ) family of IPSEC products.
+of the Shrew Soft ( http://www.shrew.net ) family of IPsec products.

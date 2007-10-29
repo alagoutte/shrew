@@ -72,3 +72,7 @@ add_custom_command(
 install(
 	TARGETS ikea
 	RUNTIME	DESTINATION bin )
+
+install(
+	FILES ikea.1
+	DESTINATION ${PATH_MAN}/man1 )

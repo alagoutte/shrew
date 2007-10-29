@@ -53,12 +53,16 @@
 The
 .Nm
 program communicates using the IKE protocol ( RFC 2409 ) to provide
-automatic keying for an IPSEC capable host. The daemon communicates
-with the host os via PF_KEY ( RFC 2367 ) to obtain the local policy
-configuration and to receive key aquisition requests. The daemon is
-also capable of acting as a client or client gateway and can create
-appropriate ipsec policy entries on bahalf of the host or peer to 
-faclilitate remote access vpn connectivity.
+automatic keying for an IPsec capable host. The daemon communicates with the
+host os via PF_KEY ( RFC 2367 ) to obtain the local policy configuration and
+to receive key aquisition requests. The daemon is also capable of acting as
+a client or client gateway and can create appropriate IPsec policy entries
+on bahalf of the host or peer to faclilitate remote access IPsec VPN
+connectivity. For more informaiton, please see the
+.Xr ikea 1
+and
+.Xr ikec 1
+man pages.
 .Pp
 The options are as follows:
 .Bl -tag -width Fl
@@ -77,6 +81,8 @@ The command exits with 0 on success, and non-zero on errors.
 The default configuration file is
 .Pa /usr/local/etc/iked.conf
 .Sh SEE ALSO
+.Xr ikea 1 ,
+.Xr ikec 1 ,
 .Xr ipsec 4 ,
 .Xr iked.conf 5 ,
 .Xr setkey 8
@@ -84,4 +90,4 @@ The default configuration file is
 The
 .Nm
 program was written by Matthew Grooms ( mgrooms@shrew.net ) as part
-of the Shrew Soft ( http://www.shrew.net ) family of IPSEC products.
+of the Shrew Soft ( http://www.shrew.net ) family of IPsec products.
