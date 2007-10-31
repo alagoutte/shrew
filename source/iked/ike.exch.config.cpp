@@ -442,7 +442,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 						config_xconf_get( cfg,
 							getmask,
-							cfg->tunnel->xconf.rqst );
+							cfg->tunnel->xconf.rqst,
+							ph1->unity_l && ph1->unity_r );
 
 						//
 						// update state and flag for removal
@@ -478,7 +479,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 						config_xconf_get( cfg,
 							getmask,
-							cfg->tunnel->xconf.rqst );
+							cfg->tunnel->xconf.rqst,
+							ph1->unity_l && ph1->unity_r );
 
 						//
 						// update state and flag for removal
@@ -520,7 +522,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 						config_xconf_get( cfg,
 							cfg->tunnel->xconf.rqst,
-							0 );
+							0,
+							ph1->unity_l && ph1->unity_r );
 
 						cfg->attr_reset();
 
@@ -619,7 +622,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 						config_xconf_get( cfg,
 							readmask,
-							0 );
+							0,
+							ph1->unity_l && ph1->unity_r );
 
 						cfg->attr_reset();
 
@@ -782,26 +786,10 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->attr_reset();
 
-				//
-				// skip unity attributes if the
-				// peer does not support them
-				//
-
-				if( !ph1->unity_l || !ph1->unity_r )
-				{
-					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_DOMAIN;
-					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_SPLITDNS;
-					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_SPLITNET;
-					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_BANNER;
-					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_PFS;
-					cfg->tunnel->xconf.rqst &= ~IPSEC_OPTS_SAVEPW;
-
-					log.txt( LLOG_INFO, "ii : excluding unity attribute set\n" );
-				}
-
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.rqst,
-					0xffffffff );
+					0xffffffff,
+					ph1->unity_l && ph1->unity_r );
 
 				//
 				// flag as sent and release
@@ -857,8 +845,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
 		{
-			if(  ( cfg->tunnel->state & TSTATE_RECV_XRSLT ) &&
-				 ( cfg->tunnel->state & TSTATE_RECV_CONFIG ) &&
+			if(  ( cfg->tunnel->state & TSTATE_RECV_CONFIG ) &&
 				!( cfg->tunnel->state & TSTATE_SENT_CONFIG ) )
 			{
 				//
@@ -873,7 +860,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.rqst,
-					0xffffffff );
+					0xffffffff,
+					ph1->unity_l && ph1->unity_r );
 
 				//
 				// flag as sent and release
@@ -1141,7 +1129,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.opts,
-					0 );
+					0,
+					ph1->unity_l && ph1->unity_r );
 
 				//
 				// send config packet
@@ -1207,7 +1196,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.opts,
-					0 );
+					0,
+					ph1->unity_l && ph1->unity_r );
 
 				//
 				// make sure the msgid is unique
@@ -1255,7 +1245,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 	return LIBIKE_OK;
 }
 
-long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
+long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool unity )
 {
 	//
 	// standard attributes
@@ -1353,190 +1343,193 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask )
 	// cisco unity attributes
 	//
 
-	if( setmask & IPSEC_OPTS_DOMAIN )
+	if( unity )
 	{
-		if( nullmask & IPSEC_OPTS_DOMAIN )
+		if( setmask & IPSEC_OPTS_DOMAIN )
 		{
-			cfg->attr_add_v( UNITY_DEF_DOMAIN, NULL, 0 );
-			log.txt( LLOG_DEBUG,	"ii : - DNS Suffix\n" );
-		}
-		else
-		{
-			cfg->attr_add_v( UNITY_DEF_DOMAIN,
-				&cfg->tunnel->xconf.suffix,
-				strlen( cfg->tunnel->xconf.suffix ) );
-
-			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-			text_addr( txtaddr, cfg->tunnel->xconf.dnss );
-
-			log.txt( LLOG_DEBUG,
-				"ii : - DNS Suffix = %s\n",
-				cfg->tunnel->xconf.suffix );
-		}
-	}
-
-	if( setmask & IPSEC_OPTS_SPLITDNS )
-	{
-		if( nullmask & IPSEC_OPTS_SPLITDNS )
-		{
-			cfg->attr_add_v( UNITY_SPLIT_DOMAIN, NULL, 0 );
-			log.txt( LLOG_DEBUG, "ii : - Split DNS Domain\n" );
-		}
-		else
-		{
-			BDATA suffix;
-
-			long index = 0;
-
-			while( cfg->tunnel->dlist.get( suffix, index++ ) )
+			if( nullmask & IPSEC_OPTS_DOMAIN )
 			{
-				log.txt( LLOG_DEBUG,
-					"ii : - Split DNS Domain = %s\n",
-					suffix.text() );
-
-				if( index > 1 )
-					suffix.ins( ',', 1 );
-
-				cfg->attr_add_v( UNITY_SPLIT_DOMAIN,
-					suffix.buff(),
-					suffix.size() );
+				cfg->attr_add_v( UNITY_DEF_DOMAIN, NULL, 0 );
+				log.txt( LLOG_DEBUG,	"ii : - DNS Suffix\n" );
 			}
-		}
-	}
-
-	if( setmask & IPSEC_OPTS_SPLITNET )
-	{
-		if( nullmask & IPSEC_OPTS_SPLITNET )
-		{
-			cfg->attr_add_v( UNITY_SPLIT_INCLUDE, NULL, 0 );
-			cfg->attr_add_v( UNITY_SPLIT_EXCLUDE, NULL, 0 );
-
-			log.txt( LLOG_DEBUG,
-				"ii : - IP4 Split Network Include\n"
-				"ii : - IP4 Split Network Exclude\n" );
-		}
-		else
-		{
-			IKE_PH2ID ph2id;
-
-			long index = 0;
-
-			while( cfg->tunnel->idlist_incl.get( ph2id, index++ ) )
+			else
 			{
-				IKE_UNITY_NET unity_net;
-				memset( &unity_net, 0, sizeof( unity_net ) );
+				cfg->attr_add_v( UNITY_DEF_DOMAIN,
+					&cfg->tunnel->xconf.suffix,
+					strlen( cfg->tunnel->xconf.suffix ) );
 
-				unity_net.addr = ph2id.addr1;
-				unity_net.mask = ph2id.addr2;
-
-				cfg->attr_add_v( UNITY_SPLIT_INCLUDE,
-					&unity_net,
-					sizeof( unity_net ) );
-
-				char txtid[ LIBIKE_MAX_TEXTP2ID ];
-				text_ph2id( txtid, &ph2id );
+				char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+				text_addr( txtaddr, cfg->tunnel->xconf.dnss );
 
 				log.txt( LLOG_DEBUG,
-					"ii : - IP4 Split Network Include = %s\n",
-					txtid );
-
-				//
-				// we need to perform special
-				// operations if we instruct
-				// our peer to force all via
-				// this tunnel
-				//
-
-				if( !unity_net.addr.s_addr &&
-					!unity_net.mask.s_addr )
-					cfg->tunnel->force_all = true;
+					"ii : - DNS Suffix = %s\n",
+					cfg->tunnel->xconf.suffix );
 			}
+		}
 
-			index = 0;
-
-			while( cfg->tunnel->idlist_excl.get( ph2id, index++ ) )
+		if( setmask & IPSEC_OPTS_SPLITDNS )
+		{
+			if( nullmask & IPSEC_OPTS_SPLITDNS )
 			{
-				IKE_UNITY_NET unity_net;
-				memset( &unity_net, 0, sizeof( unity_net ) );
+				cfg->attr_add_v( UNITY_SPLIT_DOMAIN, NULL, 0 );
+				log.txt( LLOG_DEBUG, "ii : - Split DNS Domain\n" );
+			}
+			else
+			{
+				BDATA suffix;
 
-				unity_net.addr = ph2id.addr1;
-				unity_net.mask = ph2id.addr2;
+				long index = 0;
 
-				cfg->attr_add_v( UNITY_SPLIT_EXCLUDE,
-					&unity_net,
-					sizeof( unity_net ) );
+				while( cfg->tunnel->dlist.get( suffix, index++ ) )
+				{
+					log.txt( LLOG_DEBUG,
+						"ii : - Split DNS Domain = %s\n",
+						suffix.text() );
 
-				char txtid[ LIBIKE_MAX_TEXTP2ID ];
-				text_ph2id( txtid, &ph2id );
+					if( index > 1 )
+						suffix.ins( ',', 1 );
+
+					cfg->attr_add_v( UNITY_SPLIT_DOMAIN,
+						suffix.buff(),
+						suffix.size() );
+				}
+			}
+		}
+
+		if( setmask & IPSEC_OPTS_SPLITNET )
+		{
+			if( nullmask & IPSEC_OPTS_SPLITNET )
+			{
+				cfg->attr_add_v( UNITY_SPLIT_INCLUDE, NULL, 0 );
+				cfg->attr_add_v( UNITY_SPLIT_EXCLUDE, NULL, 0 );
 
 				log.txt( LLOG_DEBUG,
-					"ii : - IP4 Split Network Exclude = %s\n",
-					txtid );
+					"ii : - IP4 Split Network Include\n"
+					"ii : - IP4 Split Network Exclude\n" );
+			}
+			else
+			{
+				IKE_PH2ID ph2id;
+
+				long index = 0;
+
+				while( cfg->tunnel->idlist_incl.get( ph2id, index++ ) )
+				{
+					IKE_UNITY_NET unity_net;
+					memset( &unity_net, 0, sizeof( unity_net ) );
+
+					unity_net.addr = ph2id.addr1;
+					unity_net.mask = ph2id.addr2;
+
+					cfg->attr_add_v( UNITY_SPLIT_INCLUDE,
+						&unity_net,
+						sizeof( unity_net ) );
+
+					char txtid[ LIBIKE_MAX_TEXTP2ID ];
+					text_ph2id( txtid, &ph2id );
+
+					log.txt( LLOG_DEBUG,
+						"ii : - IP4 Split Network Include = %s\n",
+						txtid );
+
+					//
+					// we need to perform special
+					// operations if we instruct
+					// our peer to force all via
+					// this tunnel
+					//
+
+					if( !unity_net.addr.s_addr &&
+						!unity_net.mask.s_addr )
+						cfg->tunnel->force_all = true;
+				}
+
+				index = 0;
+
+				while( cfg->tunnel->idlist_excl.get( ph2id, index++ ) )
+				{
+					IKE_UNITY_NET unity_net;
+					memset( &unity_net, 0, sizeof( unity_net ) );
+
+					unity_net.addr = ph2id.addr1;
+					unity_net.mask = ph2id.addr2;
+
+					cfg->attr_add_v( UNITY_SPLIT_EXCLUDE,
+						&unity_net,
+						sizeof( unity_net ) );
+
+					char txtid[ LIBIKE_MAX_TEXTP2ID ];
+					text_ph2id( txtid, &ph2id );
+
+					log.txt( LLOG_DEBUG,
+						"ii : - IP4 Split Network Exclude = %s\n",
+						txtid );
+				}
 			}
 		}
-	}
 
-	if( setmask & IPSEC_OPTS_BANNER )
-	{
-		if( nullmask & IPSEC_OPTS_BANNER )
+		if( setmask & IPSEC_OPTS_BANNER )
 		{
-			cfg->attr_add_v( UNITY_BANNER, NULL, 0 );
-			log.txt( LLOG_DEBUG,	"ii : - Login Banner\n" );
+			if( nullmask & IPSEC_OPTS_BANNER )
+			{
+				cfg->attr_add_v( UNITY_BANNER, NULL, 0 );
+				log.txt( LLOG_DEBUG,	"ii : - Login Banner\n" );
+			}
+			else
+			{
+				cfg->attr_add_v( UNITY_BANNER,
+					cfg->tunnel->banner.buff(),
+					cfg->tunnel->banner.size() );
+
+				cfg->tunnel->banner.add( 0, 1 );
+
+				log.txt( LLOG_DEBUG,
+					"ii : - Login Banner ( %i bytes )\n",
+					cfg->tunnel->banner.size() );
+			}
 		}
-		else
+
+		if( setmask & IPSEC_OPTS_PFS )
 		{
-			cfg->attr_add_v( UNITY_BANNER,
-				cfg->tunnel->banner.buff(),
-				cfg->tunnel->banner.size() );
+			if( nullmask & IPSEC_OPTS_PFS )
+			{
+				cfg->attr_add_v( UNITY_PFS, NULL, 0 );
+				log.txt( LLOG_DEBUG,	"ii : - PFS Group\n" );
+			}
+			else
+			{
+				cfg->attr_add_b( UNITY_PFS,
+					cfg->tunnel->xconf.dhgr );
 
-			cfg->tunnel->banner.add( 0, 1 );
-
-			log.txt( LLOG_DEBUG,
-				"ii : - Login Banner ( %i bytes )\n",
-				cfg->tunnel->banner.size() );
+				log.txt( LLOG_DEBUG,
+					"ii : - PFS Group = %i\n",
+					cfg->tunnel->xconf.dhgr );
+			}
 		}
-	}
 
-	if( setmask & IPSEC_OPTS_PFS )
-	{
-		if( nullmask & IPSEC_OPTS_PFS )
+		if( setmask & IPSEC_OPTS_SAVEPW )
 		{
-			cfg->attr_add_v( UNITY_PFS, NULL, 0 );
-			log.txt( LLOG_DEBUG,	"ii : - PFS Group\n" );
-		}
-		else
-		{
-			cfg->attr_add_b( UNITY_PFS,
-				cfg->tunnel->xconf.dhgr );
+			if( nullmask & IPSEC_OPTS_SAVEPW )
+			{
+				cfg->attr_add_v( UNITY_SAVE_PASSWD, NULL, 0 );
+				log.txt( LLOG_DEBUG,	"ii : - Save Password\n" );
+			}
+			else
+			{
+				cfg->attr_add_b( UNITY_SAVE_PASSWD,
+					cfg->tunnel->xconf.svpw );
 
-			log.txt( LLOG_DEBUG,
-				"ii : - PFS Group = %i\n",
-				cfg->tunnel->xconf.dhgr );
-		}
-	}
-
-	if( setmask & IPSEC_OPTS_SAVEPW )
-	{
-		if( nullmask & IPSEC_OPTS_SAVEPW )
-		{
-			cfg->attr_add_v( UNITY_SAVE_PASSWD, NULL, 0 );
-			log.txt( LLOG_DEBUG,	"ii : - Save Password\n" );
-		}
-		else
-		{
-			cfg->attr_add_b( UNITY_SAVE_PASSWD,
-				cfg->tunnel->xconf.svpw );
-
-			log.txt( LLOG_DEBUG,
-				"ii : - Save Password = %i\n",
-				cfg->tunnel->xconf.svpw );
+				log.txt( LLOG_DEBUG,
+					"ii : - Save Password = %i\n",
+					cfg->tunnel->xconf.svpw );
+			}
 		}
 	}
 
 	return LIBIKE_OK;
 }
 
-long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
+long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool unity )
 {
 	long count = cfg->attr_count();
 	long index = 0;
@@ -1545,12 +1538,12 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 	{
 		IKE_ATTR * attr = cfg->attr_get( index );
 
+		//
+		// standard attributes
+		//
+
 		switch( attr->atype )
 		{
-			//
-			// standard attributes
-			//
-
 			case INTERNAL_IP4_ADDRESS:
 			{
 				getmask |= IPSEC_OPTS_ADDR;
@@ -1678,207 +1671,213 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask )
 
 				break;
 			}
+		}
 
-			//
-			// cisco unity attributes
-			//
+		//
+		// cisco unity attributes
+		//
 
-			case UNITY_DEF_DOMAIN:
+		if( unity )
+		{
+			switch( attr->atype )
 			{
-				getmask |= IPSEC_OPTS_DOMAIN;
-
-				if( ( readmask & IPSEC_OPTS_DOMAIN ) && attr->vdata.size() )
+				case UNITY_DEF_DOMAIN:
 				{
-					size_t nlen = attr->vdata.size();
-					if( nlen > ( CONF_STRLEN - 1 ) )
-						nlen = ( CONF_STRLEN - 1 );
+					getmask |= IPSEC_OPTS_DOMAIN;
 
-					memcpy(
-						cfg->tunnel->xconf.suffix,
-						attr->vdata.buff(), nlen );
-
-					cfg->tunnel->xconf.suffix[ nlen ] = 0;
-
-					log.txt( LLOG_DEBUG,
-						"ii : - DNS Suffix = %s\n",
-						cfg->tunnel->xconf.suffix );
-				}
-				else
-					log.txt( LLOG_DEBUG, "ii : - DNS Suffix\n" );
-
-				break;
-			}
-
-			case UNITY_SPLIT_DOMAIN:
-			{
-				getmask |= IPSEC_OPTS_SPLITDNS;
-
-				if( ( readmask & IPSEC_OPTS_SPLITDNS ) && attr->vdata.size() )
-				{
-					attr->vdata.add( 0, 1 );
-
-					unsigned char *	dnsstr = attr->vdata.buff();
-					size_t			dnslen = 0;
-
-					while( dnslen < ( attr->vdata.size() - 1 ) )
+					if( ( readmask & IPSEC_OPTS_DOMAIN ) && attr->vdata.size() )
 					{
-						if( *dnsstr == ',' )
-						{
-							dnslen += 1;
-							dnsstr += 1;
-						}
+						size_t nlen = attr->vdata.size();
+						if( nlen > ( CONF_STRLEN - 1 ) )
+							nlen = ( CONF_STRLEN - 1 );
 
-						size_t tmplen = strlen( ( char * ) dnsstr ) + 1;
+						memcpy(
+							cfg->tunnel->xconf.suffix,
+							attr->vdata.buff(), nlen );
 
-						BDATA suffix;
-						suffix.set( dnsstr, tmplen );
+						cfg->tunnel->xconf.suffix[ nlen ] = 0;
 
 						log.txt( LLOG_DEBUG,
-							"ii : - Split Domain = %s\n",
-							dnsstr );
-
-						dnslen += tmplen;
-						dnsstr += tmplen;
-
-						if( readmask & IPSEC_OPTS_SPLITDNS )
-							cfg->tunnel->dlist.add( suffix );
+							"ii : - DNS Suffix = %s\n",
+							cfg->tunnel->xconf.suffix );
 					}
+					else
+						log.txt( LLOG_DEBUG, "ii : - DNS Suffix\n" );
+
+					break;
 				}
-				else
-					log.txt( LLOG_DEBUG, "ii : - Split Domain\n" );
 
-				break;
-			}
-
-			case UNITY_SPLIT_INCLUDE:
-			case UNITY_SPLIT_EXCLUDE:
-			{
-				getmask |= IPSEC_OPTS_SPLITNET;
-
-				if( ( readmask & IPSEC_OPTS_SPLITNET ) && attr->vdata.size() )
+				case UNITY_SPLIT_DOMAIN:
 				{
-					int net_count = int( attr->vdata.size() / sizeof( IKE_UNITY_NET ) );
-					int net_index = 0;
+					getmask |= IPSEC_OPTS_SPLITDNS;
 
-					for( ; net_index < net_count; net_index++ )
+					if( ( readmask & IPSEC_OPTS_SPLITDNS ) && attr->vdata.size() )
 					{
-						long offset = sizeof( IKE_UNITY_NET ) * net_index;
-						IKE_UNITY_NET * unity_net = ( IKE_UNITY_NET * ) ( attr->vdata.buff() + offset );
+						attr->vdata.add( 0, 1 );
 
-						IKE_PH2ID ph2id;
-						memset( &ph2id, 0, sizeof( ph2id ) );
+						unsigned char *	dnsstr = attr->vdata.buff();
+						size_t			dnslen = 0;
 
-						ph2id.type = ISAKMP_ID_IPV4_ADDR_SUBNET;
-						ph2id.addr1 = unity_net->addr;
-						ph2id.addr2 = unity_net->mask;
-
-						char txtid[ LIBIKE_MAX_TEXTP2ID ];
-						text_ph2id( txtid, &ph2id );
-
-						if( attr->atype == UNITY_SPLIT_INCLUDE )
+						while( dnslen < ( attr->vdata.size() - 1 ) )
 						{
+							if( *dnsstr == ',' )
+							{
+								dnslen += 1;
+								dnsstr += 1;
+							}
+
+							size_t tmplen = strlen( ( char * ) dnsstr ) + 1;
+
+							BDATA suffix;
+							suffix.set( dnsstr, tmplen );
+
 							log.txt( LLOG_DEBUG,
-								"ii : - IP4 Split Network Include = %s\n",
-								txtid );
+								"ii : - Split Domain = %s\n",
+								dnsstr );
 
-							if( readmask & IPSEC_OPTS_SPLITNET )
-								cfg->tunnel->idlist_incl.add( ph2id );
+							dnslen += tmplen;
+							dnsstr += tmplen;
 
-							//
-							// we need to perform special
-							// operations if we force all
-							// taffic via this tunnel
-							//
-
-							if( !unity_net->addr.s_addr &&
-								!unity_net->mask.s_addr )
-								cfg->tunnel->force_all = true;
-						}
-						else
-						{
-							log.txt( LLOG_DEBUG,
-								"ii : - IP4 Split Network Exclude = %s\n",
-								txtid );
-
-							if( readmask & IPSEC_OPTS_SPLITNET )
-								cfg->tunnel->idlist_excl.add( ph2id );
+							if( readmask & IPSEC_OPTS_SPLITDNS )
+								cfg->tunnel->dlist.add( suffix );
 						}
 					}
+					else
+						log.txt( LLOG_DEBUG, "ii : - Split Domain\n" );
+
+					break;
 				}
-				else
+
+				case UNITY_SPLIT_INCLUDE:
+				case UNITY_SPLIT_EXCLUDE:
 				{
-					if( attr->atype == UNITY_SPLIT_INCLUDE )
-						log.txt( LLOG_DEBUG,	"ii : - IP4 Split Network Include\n" );
+					getmask |= IPSEC_OPTS_SPLITNET;
 
-					if( attr->atype == UNITY_SPLIT_EXCLUDE )
-						log.txt( LLOG_DEBUG,	"ii : - IP4 Split Network Exclude\n" );
+					if( ( readmask & IPSEC_OPTS_SPLITNET ) && attr->vdata.size() )
+					{
+						int net_count = int( attr->vdata.size() / sizeof( IKE_UNITY_NET ) );
+						int net_index = 0;
+
+						for( ; net_index < net_count; net_index++ )
+						{
+							long offset = sizeof( IKE_UNITY_NET ) * net_index;
+							IKE_UNITY_NET * unity_net = ( IKE_UNITY_NET * ) ( attr->vdata.buff() + offset );
+
+							IKE_PH2ID ph2id;
+							memset( &ph2id, 0, sizeof( ph2id ) );
+
+							ph2id.type = ISAKMP_ID_IPV4_ADDR_SUBNET;
+							ph2id.addr1 = unity_net->addr;
+							ph2id.addr2 = unity_net->mask;
+
+							char txtid[ LIBIKE_MAX_TEXTP2ID ];
+							text_ph2id( txtid, &ph2id );
+
+							if( attr->atype == UNITY_SPLIT_INCLUDE )
+							{
+								log.txt( LLOG_DEBUG,
+									"ii : - IP4 Split Network Include = %s\n",
+									txtid );
+
+								if( readmask & IPSEC_OPTS_SPLITNET )
+									cfg->tunnel->idlist_incl.add( ph2id );
+
+								//
+								// we need to perform special
+								// operations if we force all
+								// taffic via this tunnel
+								//
+
+								if( !unity_net->addr.s_addr &&
+									!unity_net->mask.s_addr )
+									cfg->tunnel->force_all = true;
+							}
+							else
+							{
+								log.txt( LLOG_DEBUG,
+									"ii : - IP4 Split Network Exclude = %s\n",
+									txtid );
+
+								if( readmask & IPSEC_OPTS_SPLITNET )
+									cfg->tunnel->idlist_excl.add( ph2id );
+							}
+						}
+					}
+					else
+					{
+						if( attr->atype == UNITY_SPLIT_INCLUDE )
+							log.txt( LLOG_DEBUG,	"ii : - IP4 Split Network Include\n" );
+
+						if( attr->atype == UNITY_SPLIT_EXCLUDE )
+							log.txt( LLOG_DEBUG,	"ii : - IP4 Split Network Exclude\n" );
+					}
+
+					break;
 				}
 
-				break;
-			}
-
-			case UNITY_BANNER:
-			{
-				getmask |= IPSEC_OPTS_BANNER;
-
-				if( ( readmask & IPSEC_OPTS_BANNER ) && attr->vdata.size() )
+				case UNITY_BANNER:
 				{
-					cfg->tunnel->banner.add( 0, 1 );
+					getmask |= IPSEC_OPTS_BANNER;
 
-					size_t size = 15;
-					char text[ 16 ] = { 0 };
-					if( size > attr->vdata.size() )
-						size = attr->vdata.size();
+					if( ( readmask & IPSEC_OPTS_BANNER ) && attr->vdata.size() )
+					{
+						cfg->tunnel->banner.add( 0, 1 );
 
-					memcpy( text, attr->vdata.buff(), size );
+						size_t size = 15;
+						char text[ 16 ] = { 0 };
+						if( size > attr->vdata.size() )
+							size = attr->vdata.size();
 
-					log.txt( LLOG_DEBUG,
-						"ii : - Login Banner = %s ...\n",
-						text );
+						memcpy( text, attr->vdata.buff(), size );
 
-					cfg->tunnel->banner.set( attr->vdata );
-					cfg->tunnel->banner.add( 0, 1 );
+						log.txt( LLOG_DEBUG,
+							"ii : - Login Banner = %s ...\n",
+							text );
+
+						cfg->tunnel->banner.set( attr->vdata );
+						cfg->tunnel->banner.add( 0, 1 );
+					}
+					else
+						log.txt( LLOG_DEBUG,	"ii : - Login Banner\n" );
+
+					break;
 				}
-				else
-					log.txt( LLOG_DEBUG,	"ii : - Login Banner\n" );
 
-				break;
-			}
-
-			case UNITY_PFS:
-			{
-				getmask |= IPSEC_OPTS_PFS;
-
-				if( ( readmask & IPSEC_OPTS_PFS ) && attr->basic )
+				case UNITY_PFS:
 				{
-					log.txt( LLOG_DEBUG,
-						"ii : - PFS Group = %d\n",
-						attr->bdata );
+					getmask |= IPSEC_OPTS_PFS;
 
-					cfg->tunnel->xconf.dhgr = attr->bdata;
+					if( ( readmask & IPSEC_OPTS_PFS ) && attr->basic )
+					{
+						log.txt( LLOG_DEBUG,
+							"ii : - PFS Group = %d\n",
+							attr->bdata );
+
+						cfg->tunnel->xconf.dhgr = attr->bdata;
+					}
+					else
+						log.txt( LLOG_DEBUG,	"ii : - PFS Group\n" );
+
+					break;
 				}
-				else
-					log.txt( LLOG_DEBUG,	"ii : - PFS Group\n" );
 
-				break;
-			}
-
-			case UNITY_SAVE_PASSWD:
-			{
-				getmask |= IPSEC_OPTS_SAVEPW;
-
-				if( ( readmask & IPSEC_OPTS_SAVEPW ) && attr->basic )
+				case UNITY_SAVE_PASSWD:
 				{
-					log.txt( LLOG_DEBUG,
-						"ii : - Save Password = %d\n",
-						attr->bdata );
+					getmask |= IPSEC_OPTS_SAVEPW;
 
-					cfg->tunnel->xconf.svpw = attr->bdata;
+					if( ( readmask & IPSEC_OPTS_SAVEPW ) && attr->basic )
+					{
+						log.txt( LLOG_DEBUG,
+							"ii : - Save Password = %d\n",
+							attr->bdata );
+
+						cfg->tunnel->xconf.svpw = attr->bdata;
+					}
+					else
+						log.txt( LLOG_DEBUG,	"ii : - Save Password\n" );
+
+					break;
 				}
-				else
-					log.txt( LLOG_DEBUG,	"ii : - Save Password\n" );
-
-				break;
 			}
 		}
 	}

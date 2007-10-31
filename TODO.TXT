@@ -169,7 +169,7 @@ X Add support for syslog output on unix targets
 X Add support for DHCP over IPsec configuration method
 X Add support for strictly manual client configuration method
 X Add stateful fragment evaluation to filter driver
-. Add batched packet send and recv support to filter driver
+X Add batched packet send and recv support to filter driver
 . Add timestamps in non-syslog log output
 . Add support for x86/amd64 Windows Vista platforms
 . Add support for multiple DNS/WINS server addresses
@@ -190,6 +190,10 @@ X Add stateful fragment evaluation to filter driver
 ? Add ability to drag site connections as shortcuts
 ? Add support for lzs compression ( patent encumbered )
 ? Add support for microsoft certificate and key storage api
+. !!! All reported bugs !!!
+
+2.1.1 release - Bug fix and fine tuning
+----------------------------------------------------------------------
 . !!! All reported bugs !!!
 
 2.2.0 release - Feature Parity ...

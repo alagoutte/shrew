@@ -65,8 +65,8 @@
 #define	LLOG_LOUD		4
 #define	LLOG_DECODE		5
 
-#define LOG_MAX_TXT		2048
-#define LOG_MAX_BIN		16384
+#define LOG_MAX_TXT		1024 * 2
+#define LOG_MAX_BIN		1024 * 64
 
 #define LOGFLAG_ECHO		0x01
 #define LOGFLAG_SYSTEM		0x02
