@@ -92,7 +92,7 @@ long _IKED::process_inform_send( IDB_PH1 * ph1, IDB_XCH * inform )
 
 	if( flags & ISAKMP_FLAG_ENCRYPT )
 	{
-		inform->hash_l.set( 0, ph1->hash_size );
+		inform->hash_l.size( ph1->hash_size );
 		payload_add_hash( packet, inform->hash_l, notify.type );
 	}
 
@@ -386,7 +386,7 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 long _IKED::inform_chk_hash( IDB_PH1 * ph1, IDB_XCH * inform )
 {
 	BDATA hash_c;
-	hash_c.set( 0, ph1->hash_size );
+	hash_c.size( ph1->hash_size );
 
 	HMAC_CTX ctx_prf;
 	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ( int ) ph1->skeyid_a.size(), ph1->evp_hash );
@@ -423,7 +423,7 @@ long _IKED::inform_chk_hash( IDB_PH1 * ph1, IDB_XCH * inform )
 
 long _IKED::inform_gen_hash( IDB_PH1 * ph1, IDB_XCH * inform )
 {
-	inform->hash_l.set( 0, ph1->hash_size );
+	inform->hash_l.size( ph1->hash_size );
 
 	HMAC_CTX ctx_prf;
 	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ( int ) ph1->skeyid_a.size(), ph1->evp_hash );

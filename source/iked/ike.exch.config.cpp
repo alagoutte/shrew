@@ -1888,7 +1888,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 long _IKED::config_chk_hash( IDB_PH1 * ph1, IDB_CFG * cfg, unsigned long msgid )
 {
 	BDATA hash_c;
-	hash_c.set( 0, ph1->hash_size );
+	hash_c.size( ph1->hash_size );
 
 	HMAC_CTX ctx_prf;
 	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ( int ) ph1->skeyid_a.size(), ph1->evp_hash );
@@ -1928,7 +1928,7 @@ long _IKED::config_message_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 	//
 
 	BDATA hash;
-	hash.set( 0, ph1->hash_size );
+	hash.size( ph1->hash_size );
 
 	PACKET_IKE packet;
 	packet.set_msgid( cfg->msgid );

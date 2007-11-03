@@ -1534,7 +1534,7 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	BN_bin2bn( ph1->xr.buff(), ph1->dh_size, gx );
 
 	BDATA shared;
-	shared.set( 0, ph1->dh_size );
+	shared.size( ph1->dh_size );
 	DH_compute_key( shared.buff(), gx, ph1->dh );
 	BN_free( gx );
 
@@ -1720,7 +1720,7 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 
 	if( skeyid_size < key_size )
 	{
-		// resize our key to be a multiple
+		// grow our key to be a multiple
 		// of SKEYID_e ( HMAC block size )
 
 		if( key_size % skeyid_size )
@@ -1810,7 +1810,7 @@ long _IKED::phase1_gen_hash_i( IDB_PH1 * sa, BDATA & hash )
 	// compute the initiators signed hash
 	//
 
-	hash.set( 0, sa->hash_size );
+	hash.size( sa->hash_size );
 
 	HMAC_CTX ctx_prf;
 	HMAC_Init( &ctx_prf, sa->skeyid.buff(), ( int ) sa->skeyid.size(), sa->evp_hash );
@@ -1849,7 +1849,7 @@ long _IKED::phase1_gen_hash_r( IDB_PH1 * sa, BDATA & hash )
 	// compute the responders signed hash
 	//
 
-	hash.set( 0, sa->hash_size );
+	hash.size( sa->hash_size );
 
 	HMAC_CTX ctx_prf;
 	HMAC_Init( &ctx_prf, sa->skeyid.buff(), ( int ) sa->skeyid.size(), sa->evp_hash );
@@ -2145,7 +2145,7 @@ long _IKED::phase1_gen_natd( IDB_PH1 * ph1 )
 	// hash for local address
 	//
 
-	if( !ph1->natd_ls.set( 0, ph1->hash_size ) )
+	if( !ph1->natd_ls.size( ph1->hash_size ) )
 		return LIBIKE_MEMORY;
 
 	EVP_MD_CTX ctx_hash;
@@ -2162,7 +2162,7 @@ long _IKED::phase1_gen_natd( IDB_PH1 * ph1 )
 	// hash for remote address
 	//
 
-	if( !ph1->natd_ld.set( 0, ph1->hash_size ) )
+	if( !ph1->natd_ld.size( ph1->hash_size ) )
 		return LIBIKE_MEMORY;
 
 	EVP_DigestInit( &ctx_hash, ph1->evp_hash );

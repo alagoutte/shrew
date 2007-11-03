@@ -126,7 +126,7 @@ bool _PACKET_IP::done()
 
 	IP_HEADER * ip_header = ( IP_HEADER * ) data_buff;
 
-	ip_header->size = htons( ( unsigned short ) data_size );
+	ip_header->size = htons( ( unsigned short ) data_real );
 	ip_header->checksum = 0;
 	ip_header->checksum = checksum();
 

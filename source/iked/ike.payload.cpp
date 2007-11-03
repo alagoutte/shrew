@@ -128,8 +128,8 @@ long _IKED::payload_get_frag( PACKET_IKE & packet, IDB_PH1 * ph1, bool & complet
 	// perform some sanity check
 	//
 
-	size_t data_size = packet.size() - packet.oset();
-	if( data_size < size )
+	size_t data_real = packet.size() - packet.oset();
+	if( data_real < size )
 	{
 		log.txt( LLOG_ERROR, "!! : packet size is invalid for given fragment size\n" );
 		return LIBIKE_DECODE;

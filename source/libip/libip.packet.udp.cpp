@@ -44,7 +44,7 @@
 uint16_t _PACKET_UDP::checksum( in_addr addr_src, in_addr addr_dst )
 {
 	unsigned char * data = data_buff;
-	size_t size = data_size;
+	size_t size = data_real;
 	size_t oset = 0;
 
 	uint32_t cksum = 0;
@@ -77,7 +77,7 @@ bool _PACKET_UDP::read( unsigned short & port_src, unsigned short & port_dst )
 {
 	data_oset = 0;
 
-	if( data_size < ( long ) sizeof( UDP_HEADER ) )
+	if( data_real < ( long ) sizeof( UDP_HEADER ) )
 		return false;
 
 	UDP_HEADER udp_header;
@@ -108,7 +108,7 @@ bool _PACKET_UDP::done( in_addr addr_src, in_addr addr_dst )
 	// sanity checks
 	//
 
-	if( data_size < ( long ) sizeof( UDP_HEADER ) )
+	if( data_real < ( long ) sizeof( UDP_HEADER ) )
 		return false;
 
 	//
@@ -117,7 +117,7 @@ bool _PACKET_UDP::done( in_addr addr_src, in_addr addr_dst )
 
 	UDP_HEADER * udp_header = ( UDP_HEADER * ) data_buff;
 
-	udp_header->size = htons( ( unsigned short ) data_size );
+	udp_header->size = htons( ( unsigned short ) data_real );
 	udp_header->checksum = 0;
 	udp_header->checksum = checksum( addr_src, addr_dst );
 

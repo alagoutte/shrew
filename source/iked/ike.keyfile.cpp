@@ -94,7 +94,7 @@ bool _IKED::cert_2_bdata( BDATA & cert, X509 * x509 )
 {
 	int size = i2d_X509( x509, NULL );
 
-	cert.set( 0, size );
+	cert.size( size );
 
 	unsigned char * cert_buff = cert.buff();
 
@@ -261,7 +261,7 @@ bool _IKED::cert_desc( BDATA & cert, BDATA & desc )
 
 	int size = BIO_get_mem_data( bio, &bio_buff );
 
-	desc.set( 0, size + 1 );
+	desc.size( size + 1 );
 	memcpy( desc.buff(), bio_buff, size );
 
 	BIO_free( bio );
@@ -291,7 +291,7 @@ bool _IKED::cert_subj( BDATA & cert, BDATA & subj )
 		return false;
 	}
 
-	subj.set( 0, size );
+	subj.size( size );
 	unsigned char * temp = subj.buff();
 	
 	size = i2d_X509_NAME( x509_name, &temp );
@@ -513,7 +513,7 @@ bool _IKED::text_asn1( BDATA & text, BDATA & asn1 )
 	if( !tsize )
 		goto text_asn1_failed;
 
-	asn1.set( 0, tsize );
+	asn1.size( tsize );
 	fbuff = asn1.buff();
 
     tsize = i2d_X509_NAME( name, &fbuff );
@@ -751,7 +751,7 @@ bool _IKED::prvkey_rsa_encrypt( EVP_PKEY * evp_pkey, BDATA & data )
 	int size = RSA_size( evp_pkey->pkey.rsa );
 
 	BDATA sign;
-	sign.set( 0, size );
+	sign.size( size );
 
 	size = RSA_private_encrypt(
 				( int ) data.size(),
@@ -773,7 +773,7 @@ bool _IKED::pubkey_rsa_decrypt( EVP_PKEY * evp_pkey, BDATA & sign )
 	int size = RSA_size( evp_pkey->pkey.rsa );
 
 	BDATA data;
-	data.set( 0, size );
+	data.size( size );
 
 	size = RSA_public_decrypt(
 				( int ) sign.size(),

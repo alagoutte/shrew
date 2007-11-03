@@ -353,18 +353,27 @@ typedef class DLX _BDATA
 	protected:
 
 	unsigned char *	data_buff;
+	size_t			data_real;
 	size_t			data_size;
 	size_t			data_oset;
+
+	size_t			grow( size_t new_size = ~0 );
 
 	public:
 
 	_BDATA();
 	~_BDATA();
 
-	bool set( _BDATA & bdata );
-	bool set( int value, size_t size );
-	bool set( char * buff, size_t size );
-	bool set( void * buff, size_t size );
+	size_t			oset( size_t new_oset = ~0 );
+	size_t			size( size_t new_size = ~0 );
+
+	char *			text();
+	unsigned char *	buff();
+
+	bool set( _BDATA & bdata, size_t oset = 0 );
+	bool set( char value, size_t size, size_t oset = 0 );
+	bool set( char * buff, size_t size, size_t oset = 0 );
+	bool set( void * buff, size_t size, size_t oset = 0 );
 
 	bool ins( _BDATA & bdata, size_t oset = 0 );
 	bool ins( int value, size_t size, size_t oset = 0 );
@@ -380,13 +389,7 @@ typedef class DLX _BDATA
 	bool get( char * buff, size_t size );
 	bool get( void * buff, size_t size );
 
-	bool dec( size_t size );
 	void del( bool null = false );
-
-	char *			text();
-	unsigned char *	buff();
-	size_t			size();
-	size_t			oset( size_t newoset = ~0 );
 
 }BDATA, *PBDATA;
 

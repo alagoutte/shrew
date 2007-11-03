@@ -245,7 +245,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	// initialize nonce data
 	//
 
-	nonce_l.set( 0, ISAKMP_NONCE_SIZE );
+	nonce_l.size( ISAKMP_NONCE_SIZE );
 	iked.rand_bytes( nonce_l.buff(), ISAKMP_NONCE_SIZE );
 
 	//
@@ -375,7 +375,7 @@ bool _IDB_PH1::setup_dhgrp( IKE_PROPOSAL * proposal )
 	dh_size = BN_num_bytes( dh->p );
 	dh_create_e( dh, dh_size );
 
-	xl.set( 0, dh_size );
+	xl.size( dh_size );
 	BN_bn2bin( dh->pub_key, xl.buff() );
 
 	return true;

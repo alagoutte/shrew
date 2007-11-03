@@ -601,7 +601,7 @@ long _IKED::process_phase2_send( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 			size_t off = packet.size();
 
-			ph2->hash_l.set( 0, ph1->hash_size );
+			ph2->hash_l.size( ph1->hash_size );
 
 			payload_add_hash( packet, ph2->hash_l, ISAKMP_PAYLOAD_SA );
 
@@ -741,7 +741,7 @@ long _IKED::process_phase2_send( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 			size_t off = packet.size();
 
-			ph2->hash_l.set( 0, ph1->hash_size );
+			ph2->hash_l.size( ph1->hash_size );
 
 			payload_add_hash( packet, ph2->hash_l, ISAKMP_PAYLOAD_SA );
 
@@ -875,7 +875,7 @@ long _IKED::phase2_gen_hash_i( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 		input.size(),
 		"== : phase2 hash_i ( input )" );
 
-	hash.set( 0, ph1->hash_size );
+	hash.size( ph1->hash_size );
 
 	HMAC_CTX ctx_prf;
 	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ( int ) ph1->skeyid_a.size(), ph1->evp_hash );
@@ -912,7 +912,7 @@ long _IKED::phase2_gen_hash_r( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 		input.size(),
 		"== : phase2 hash_r ( input )" );
 
-	hash.set( 0, ph1->hash_size );
+	hash.size( ph1->hash_size );
 
 	HMAC_CTX ctx_prf;
 	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ( int ) ph1->skeyid_a.size(), ph1->evp_hash );
@@ -954,7 +954,7 @@ long _IKED::phase2_gen_hash_p( IDB_PH1 * ph1, IDB_PH2 * ph2, BDATA & hash )
 		input.size(),
 		"== : phase2 hash_p ( input )" );
 
-	hash.set( 0, ph1->hash_size );
+	hash.size( ph1->hash_size );
 
 	HMAC_CTX ctx_prf;
 	HMAC_Init( &ctx_prf, ph1->skeyid_a.buff(), ( int ) ph1->skeyid_a.size(), ph1->evp_hash );
@@ -1409,7 +1409,7 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 		BIGNUM * gx = BN_new();
 		BN_bin2bn( ph2->xr.buff(), ph2->dh_size, gx );
 
-		shared.set( 0, ph2->dh_size );
+		shared.size( ph2->dh_size );
 		DH_compute_key( shared.buff(), gx, ph2->dh );
 		BN_free( gx );
 
@@ -1569,7 +1569,7 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2, long dir, IKE_PROPOSA
 
 
 	//
-	// resize our key to be a multiple
+	// grow our key to be a multiple
 	// of SKEYID_d ( HMAC block size )
 
 	if( key_size % skeyid_size )
