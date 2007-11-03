@@ -67,113 +67,173 @@ long _IKED::loop_ike_nwork()
 		// wait for packet availablility
 		//
 
-		long result;
-		long packets = socket_select( 10 );
+		long result = socket_select( 10 );
 
-		if( packets == LIBIKE_SOCKET )
+		if( result == LIBIKE_SOCKET )
 		{
 			log.txt( LLOG_ERROR, "!! : hard socket error\n" );
 			socket_done();
 			continue;
 		}
 
-		while( packets > 0 )
+		if( result <= 0 )
+			continue;
+
+		//
+		// process inbound ike packets
+		//
+
+		IKE_SADDR saddr_src;
+		IKE_SADDR saddr_dst;
+
+		memset( &saddr_src, 0, sizeof( saddr_src ) );
+		memset( &saddr_dst, 0, sizeof( saddr_dst ) );
+
+		saddr_src.saddr4.sin_family = AF_INET;
+		saddr_dst.saddr4.sin_family = AF_INET;
+
+		unsigned char proto;
+
+		//
+		// attempt to recv packet
+		//
+
+		ETH_HEADER eth_header;
+
+		PACKET_IP packet_ip;
+
+		result = recv_ip(
+					packet_ip,
+					&eth_header );
+
+		if( result == LIBIKE_NODATA )
+			continue;
+
+		//
+		// dump encrypted packets
+		//
+
+		if( dump_encrypt )
+			pcap_encrypt.dump(
+				eth_header,
+				packet_ip );
+
+		//
+		// read the ip header
+		//
+
+		packet_ip.read(
+			saddr_src.saddr4.sin_addr,
+			saddr_dst.saddr4.sin_addr,
+			proto );
+
+		//
+		// convert source ip address
+		// to a string for logging
+		//
+
+		char txtaddr_src[ LIBIKE_MAX_TEXTADDR ];
+		char txtaddr_dst[ LIBIKE_MAX_TEXTADDR ];
+
+		text_addr( txtaddr_src, &saddr_src, false );
+		text_addr( txtaddr_dst, &saddr_dst, false );
+
+		//
+		// is this a UDP packet
+		//
+
+		if( proto == PROTO_IP_UDP )
 		{
 			//
-			// process inbound ike packets
+			// read the udp packet
 			//
 
-			IKE_SADDR saddr_src;
-			IKE_SADDR saddr_dst;
+			PACKET_UDP packet_udp;
+			packet_ip.get( packet_udp );
 
-			memset( &saddr_src, 0, sizeof( saddr_src ) );
-			memset( &saddr_dst, 0, sizeof( saddr_dst ) );
+			packet_udp.read(
+				saddr_src.saddr4.sin_port,
+				saddr_dst.saddr4.sin_port );
 
-			saddr_src.saddr4.sin_family = AF_INET;
-			saddr_dst.saddr4.sin_family = AF_INET;
-
-			unsigned char proto;
-
-			//
-			// attempt to recv packet
-			//
-
-			ETH_HEADER eth_header;
-
-			PACKET_IP packet_ip;
-
-			result = recv_ip(
-						packet_ip,
-						&eth_header );
-
-			if( result == LIBIKE_NODATA )
-				break;
-
-			packets--;
+			unsigned short port_src = htons( saddr_src.saddr4.sin_port );
+			unsigned short port_dst = htons( saddr_dst.saddr4.sin_port );
 
 			//
-			// dump encrypted packets
+			// examine by destination port
 			//
 
-			if( dump_encrypt )
-				pcap_encrypt.dump(
-					eth_header,
-					packet_ip );
-
-			//
-			// read the ip header
-			//
-
-			packet_ip.read(
-				saddr_src.saddr4.sin_addr,
-				saddr_dst.saddr4.sin_addr,
-				proto );
-
-			//
-			// convert source ip address
-			// to a string for logging
-			//
-
-			char txtaddr_src[ LIBIKE_MAX_TEXTADDR ];
-			char txtaddr_dst[ LIBIKE_MAX_TEXTADDR ];
-
-			text_addr( txtaddr_src, &saddr_src, false );
-			text_addr( txtaddr_dst, &saddr_dst, false );
-
-			//
-			// is this a UDP packet
-			//
-
-			if( proto == PROTO_IP_UDP )
+			switch( port_dst )
 			{
 				//
-				// read the udp packet
+				// IKE packet
 				//
 
-				PACKET_UDP packet_udp;
-				packet_ip.get( packet_udp );
-
-				packet_udp.read(
-					saddr_src.saddr4.sin_port,
-					saddr_dst.saddr4.sin_port );
-
-				unsigned short port_src = htons( saddr_src.saddr4.sin_port );
-				unsigned short port_dst = htons( saddr_dst.saddr4.sin_port );
-
-				//
-				// examine by destination port
-				//
-
-				switch( port_dst )
+				case LIBIKE_IKE_PORT:
 				{
 					//
-					// IKE packet
+					// obtain packet payload
 					//
 
-					case LIBIKE_IKE_PORT:
+					PACKET_IKE packet_ike;
+					packet_udp.get( packet_ike );
+
+					log.bin(
+						LLOG_DEBUG,
+						LLOG_DECODE,
+						packet_ike.buff(),
+						packet_ike.size(),
+						"<- : recv IKE packet %s:%u -> %s:%u",
+						txtaddr_src, port_src,
+						txtaddr_dst, port_dst );
+
+					//
+					// process the ike packet
+					//
+
+					process_ike_recv(
+						packet_ike,
+						saddr_src,
+						saddr_dst );
+
+					break;
+				}
+
+				//
+				// is this a NAT-T packet
+				//
+
+				case LIBIKE_NATT_PORT:
+				{
+					//
+					// check for NAT-T keep alive
+					//
+
+					if( packet_udp.size() < ( ( long ) sizeof( UDP_HEADER ) + 4 ) )
+					{
+						log.txt( LLOG_DEBUG,
+							"<- : recv NAT-T:KEEP-ALIVE packet %s:%u -> %s:%u\n",
+							txtaddr_src, port_src,
+							txtaddr_dst, port_dst );
+
+						break;
+					}
+
+					//
+					// check for NAT-T non-esp marker
+					//
+
+					uint32_t * marker = ( uint32_t * )( packet_udp.buff() + packet_udp.oset() );
+
+					if( !marker[ 0 ] )
 					{
 						//
-						// obtain packet payload
+						// skip the null marker
+						//
+
+						packet_udp.get_null( 4 );
+
+						//
+						// obtain IKE packet payload
 						//
 
 						PACKET_IKE packet_ike;
@@ -184,7 +244,7 @@ long _IKED::loop_ike_nwork()
 							LLOG_DECODE,
 							packet_ike.buff(),
 							packet_ike.size(),
-							"<- : recv IKE packet %s:%u -> %s:%u",
+							"<- : recv NAT-T:IKE packet %s:%u -> %s:%u",
 							txtaddr_src, port_src,
 							txtaddr_dst, port_dst );
 
@@ -196,72 +256,9 @@ long _IKED::loop_ike_nwork()
 							packet_ike,
 							saddr_src,
 							saddr_dst );
-
-						break;
 					}
 
-					//
-					// is this a NAT-T packet
-					//
-
-					case LIBIKE_NATT_PORT:
-					{
-						//
-						// check for NAT-T keep alive
-						//
-
-						if( packet_udp.size() < ( ( long ) sizeof( UDP_HEADER ) + 4 ) )
-						{
-							log.txt( LLOG_DEBUG,
-								"<- : recv NAT-T:KEEP-ALIVE packet %s:%u -> %s:%u\n",
-								txtaddr_src, port_src,
-								txtaddr_dst, port_dst );
-
-							break;
-						}
-
-						//
-						// check for NAT-T non-esp marker
-						//
-
-						uint32_t * marker = ( uint32_t * )( packet_udp.buff() + packet_udp.oset() );
-
-						if( !marker[ 0 ] )
-						{
-							//
-							// skip the null marker
-							//
-
-							packet_udp.get_null( 4 );
-
-							//
-							// obtain IKE packet payload
-							//
-
-							PACKET_IKE packet_ike;
-							packet_udp.get( packet_ike );
-
-							log.bin(
-								LLOG_DEBUG,
-								LLOG_DECODE,
-								packet_ike.buff(),
-								packet_ike.size(),
-								"<- : recv NAT-T:IKE packet %s:%u -> %s:%u",
-								txtaddr_src, port_src,
-								txtaddr_dst, port_dst );
-
-							//
-							// process the ike packet
-							//
-
-							process_ike_recv(
-								packet_ike,
-								saddr_src,
-								saddr_dst );
-						}
-
-						break;
-					}
+					break;
 				}
 			}
 		}

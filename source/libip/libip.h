@@ -386,7 +386,7 @@ typedef class DLX _BDATA
 	char *			text();
 	unsigned char *	buff();
 	size_t			size();
-	size_t			oset();
+	size_t			oset( size_t newoset = ~0 );
 
 }BDATA, *PBDATA;
 

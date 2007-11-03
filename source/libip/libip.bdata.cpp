@@ -259,7 +259,10 @@ size_t _BDATA::size()
 	return data_size;
 }
 
-size_t _BDATA::oset()
+size_t _BDATA::oset( size_t newoset )
 {
+	if( newoset < data_size )
+		data_oset = newoset;
+
 	return data_oset;
 }
