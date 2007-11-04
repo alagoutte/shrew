@@ -508,7 +508,9 @@ typedef class DLX _IPFRAG
 {
 	private:
 
-	LIST	frags;
+	LIST	used;
+	LIST	free;
+
 	time_t	lastchk;
 
 	public:

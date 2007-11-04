@@ -210,7 +210,7 @@ bool _IPFRAG::defrag_add( PACKET_IP & fragment, unsigned short & id )
 		// step through all our fragments
 		//
 
-		long count = frags.get_count();
+		long count = used.get_count();
 		long index = 0;
 
 		for( ; index < count; index++ )
@@ -219,7 +219,7 @@ bool _IPFRAG::defrag_add( PACKET_IP & fragment, unsigned short & id )
 			// get the next fragment in our list
 			//
 
-			IPFRAG_ENTRY * entry = ( IPFRAG_ENTRY * ) frags.get_item( index );
+			IPFRAG_ENTRY * entry = ( IPFRAG_ENTRY * ) used.get_item( index );
 			assert( entry != NULL );
 
 			//
@@ -230,12 +230,12 @@ bool _IPFRAG::defrag_add( PACKET_IP & fragment, unsigned short & id )
 			if( entry->expire <= current )
 			{
 				//
-				// remove the fragment from our list
-				// and free its resources
+				// remove the fragment from the used
+				// list and move it to the free list
 				//
 
-				frags.del_item( entry );
-				delete entry;
+				used.del_item( entry );
+				free.add_item( entry );
 
 				//
 				// correct for our change in list
@@ -249,47 +249,56 @@ bool _IPFRAG::defrag_add( PACKET_IP & fragment, unsigned short & id )
 	}
 
 	//
-	// make sure we have not exceeded
-	// our maximum fragment count
+	// attempt to aquire a frag entry from
+	// our free list. if none are available
+	// then create one if appropriate
 	//
 
-	if( frags.get_count() >= IPFRAG_MAX_FRAGCOUNT )
-		return false;
+	IPFRAG_ENTRY * entry = NULL;
 
-	//
-	// encapsulate this packet data
-	//
+	if( free.get_count() > 0 )
+	{
+		entry = ( IPFRAG_ENTRY * ) free.get_item( 0 );
+		entry->packet.size( 0 );
+		free.del_item( entry );
+	}
+	else
+	{
+		long count = used.get_count() + free.get_count();
+		if( count < IPFRAG_MAX_FRAGCOUNT )
+			entry = new IPFRAG_ENTRY();
+	}
 
-	IPFRAG_ENTRY * entry = new IPFRAG_ENTRY();
 	if( entry == NULL )
 		return false;
+
+	//
+	// store the ip packet data in our entry
+	//
 
 	entry->expire = current + IPFRAG_MAX_LIFETIME;
 	entry->packet.add( fragment );
 
 	//
-	// obtain the packet ip header
-	// and set the callers ip id
+	// obtain the packet ip header and record
+	// the ip identity
 	//
 
 	IP_HEADER *	ip_header = ( IP_HEADER * ) fragment.buff();
 	id = ip_header->ident;
 
 	//
-	// add this fragment to our list
-	// and check to see if we have
-	// received all packet fragments
+	// add this fragment to our used list
 	//
 
-	return frags.add_item( entry );
+	return used.add_item( entry );
 }
 
 bool _IPFRAG::defrag_chk( unsigned short ident )
 {
 	//
-	// check to see if we have a complete
-	// list of ip fragments for a given
-	// ip packet identity
+	// check to see if we have a complete list
+	// of ip fragments for a given ip identity
 	//
 
 	unsigned short offset = 0;
@@ -301,7 +310,7 @@ bool _IPFRAG::defrag_chk( unsigned short ident )
 		// on the fragmentation offset
 		//
 
-		long count = frags.get_count();
+		long count = used.get_count();
 		long index = 0;
 		bool found = false;
 
@@ -311,7 +320,7 @@ bool _IPFRAG::defrag_chk( unsigned short ident )
 			// get the next fragment in our list
 			//
 
-			IPFRAG_ENTRY * entry = ( IPFRAG_ENTRY * ) frags.get_item( index );
+			IPFRAG_ENTRY * entry = ( IPFRAG_ENTRY * ) used.get_item( index );
 			assert( entry != NULL );
 
 			//
@@ -399,7 +408,7 @@ bool _IPFRAG::defrag_get( unsigned short ident, PACKET_IP & packet )
 		// on the fragmentation offset
 		//
 
-		long count = frags.get_count();
+		long count = used.get_count();
 		long index = 0;
 		bool found = false;
 
@@ -409,7 +418,7 @@ bool _IPFRAG::defrag_get( unsigned short ident, PACKET_IP & packet )
 			// get the next fragment in our list
 			//
 
-			IPFRAG_ENTRY * entry = ( IPFRAG_ENTRY * ) frags.get_item( index );
+			IPFRAG_ENTRY * entry = ( IPFRAG_ENTRY * ) used.get_item( index );
 			assert( entry != NULL );
 
 			//
@@ -492,8 +501,8 @@ bool _IPFRAG::defrag_get( unsigned short ident, PACKET_IP & packet )
 				// and free its resources
 				//
 
-				frags.del_item( entry );
-				delete entry;
+				used.del_item( entry );
+				free.add_item( entry );
 
 				//
 				// determine if this was the last
