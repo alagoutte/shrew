@@ -164,7 +164,7 @@ X Add support for x86/amd64 Linux platforms
 2.1.0 release - Bug fix and fine tuning
 ----------------------------------------------------------------------
 X Review option flag usage for client struct
-X Make divert rule management dynamic
+X Make divert rule management dynamic ( be nice to other clients )
 X Add support for syslog output on unix targets
 X Add support for DHCP over IPsec configuration method
 X Add support for strictly manual client configuration method
