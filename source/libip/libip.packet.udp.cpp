@@ -93,7 +93,6 @@ bool _PACKET_UDP::write( unsigned short port_src, unsigned short port_dst )
 	del();
 
 	UDP_HEADER udp_header;
-
 	udp_header.port_src = port_src;
 	udp_header.port_dst = port_dst;
 	udp_header.size = 0;
@@ -116,9 +115,7 @@ bool _PACKET_UDP::done( in_addr addr_src, in_addr addr_dst )
 	//
 
 	UDP_HEADER * udp_header = ( UDP_HEADER * ) data_buff;
-
 	udp_header->size = htons( ( unsigned short ) data_real );
-	udp_header->checksum = 0;
 	udp_header->checksum = checksum( addr_src, addr_dst );
 
 	return true;
