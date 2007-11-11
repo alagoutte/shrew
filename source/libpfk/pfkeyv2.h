@@ -28,9 +28,14 @@
  */
 
 /*
- * This file has been derived rfc 2367,
- * And added some flags of SADB_KEY_FLAGS_ as SADB_X_EXT_.
- *	sakane@ydc.co.jp
+ * This file has been derived rfc 2367, And added some flags of
+ * SADB_KEY_FLAGS_ as SADB_X_EXT_.
+ * sakane@ydc.co.jp
+ */
+
+/*
+ * Minor adaption for the Shrew Soft VPN Client on Windows.
+ * mgrooms@shrew.net
  */
 
 #ifndef _NET_PFKEYV2_H_
