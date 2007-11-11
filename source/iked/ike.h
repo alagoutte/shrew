@@ -418,9 +418,10 @@
 #define ISAKMP_NONCE_MIN				4
 #define ISAKMP_NONCE_MAX				252
 #define ISAKMP_VEND_MAX					16
-#define ISAKMP_CERT_MAX					4096
-#define ISAKMP_CREQ_MAX					1024
-#define ISAKMP_SIGN_MAX					256
+
+#define ISAKMP_CERT_MAX					( 1024 * 32 )
+#define ISAKMP_CREQ_MAX					( 1024 * 4 )
+#define ISAKMP_SIGN_MAX					( 1024 * 4 )
 
 //
 // ipsec config constants
