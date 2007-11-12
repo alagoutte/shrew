@@ -172,7 +172,7 @@ bool PACKET_DNS::read_name( char * name, long & size )
 			new_oset <<= 8;
 			new_oset |= tag2;
 
-			if( new_oset >= data_real )
+			if( new_oset >= data_size )
 				break;
 
 			tmp_oset = data_oset;

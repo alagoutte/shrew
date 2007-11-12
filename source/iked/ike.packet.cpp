@@ -96,7 +96,7 @@ bool _PACKET_IKE::write( IKE_COOKIES & cookies, uint8_t payload, uint8_t exchang
 bool _PACKET_IKE::done()
 {
 	uint32_t * total = ( uint32_t * ) data_buff;
-	total[ 6 ] = htonl( ( unsigned long ) data_real );
+	total[ 6 ] = htonl( ( unsigned long ) data_size );
 
 	return true;
 }
@@ -110,7 +110,7 @@ bool _PACKET_IKE::add_payload( bool encap, uint8_t next_payload )
 	
 	// store payload start
 
-	pld_stack[ pld_depth ].oset = data_real;
+	pld_stack[ pld_depth ].oset = data_size;
 	pld_stack[ pld_depth ].size = 0;
 
 	add_byte( next_payload );	// next payload
@@ -123,7 +123,7 @@ bool _PACKET_IKE::add_payload( bool encap, uint8_t next_payload )
 void _PACKET_IKE::end_payload( bool decap, bool write )
 {
 	short	pld_oset = ( short ) pld_stack[ pld_depth ].oset;
-	short	pld_size = ( short ) data_real - pld_oset;
+	short	pld_size = ( short ) data_size - pld_oset;
 
 	//
 	// write the payload params
@@ -171,7 +171,7 @@ bool _PACKET_IKE::read( IKE_COOKIES & cookies, uint8_t & payload, uint8_t & exch
 	get_quad( pkt_msgid, false );	// message id
 	get_quad( length );				// packet length
 
-	data_real = length;
+	size( length );
 
 	return true;
 }
@@ -183,7 +183,7 @@ bool _PACKET_IKE::get_payload( bool encap, uint8_t & next_payload )
 	// data to contain a payload
 	//
 
-	if( ( data_oset + 4 ) > data_real )
+	if( ( data_oset + 4 ) > data_size )
 		return false;
 
 	// encapsulate payload
