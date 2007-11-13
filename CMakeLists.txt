@@ -136,7 +136,7 @@ if( SYSINC )
 
 	message(
 		STATUS
-		"Using system include path ${INC_SYSTEM_DIR} ..." )
+		"Using sys include path ${INC_SYSTEM_DIR} ..." )
 
 endif( SYSINC )
 
@@ -244,7 +244,7 @@ find_library(
 
 find_path(
 	PATH_INC_PFKEYV2
-	NAMES "net/pfkeyv2.h" "linux/pfkeyv3.h"
+	NAMES "net/pfkeyv2.h" "linux/pfkeyv2.h"
 	PATHS ${SEARCH_INC} ${INC_SYSTEM_DIR} )
 
 if( NOT PATH_INC_PFKEYV2 )
