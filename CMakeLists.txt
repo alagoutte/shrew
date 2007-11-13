@@ -20,7 +20,7 @@ include( CheckLibraryExists )
 
 set(
 	RELVER
-	"2.0.1" )
+	"2.1.0" )
 
 subdirs(
 	source/iked
@@ -51,6 +51,94 @@ set(
 	/usr/local
 	/usr/share
 	/usr )
+
+#
+# Path Option Checks
+#
+
+if( NOT EXISTS ${CMAKE_INSTALL_PREFIX} )
+
+	set(
+		CMAKE_INSTALL_PREFIX
+		"/usr" )
+
+endif( NOT EXISTS ${CMAKE_INSTALL_PREFIX} )
+
+message(
+	STATUS 
+	"Using install prefix ${CMAKE_INSTALL_PREFIX} ..." )
+
+# etc path
+
+if( ETCDIR )
+
+	set(	PATH_ETC
+		${ETCDIR} )
+
+else( ETCDIR )
+
+	if( EXISTS ${CMAKE_INSTALL_PREFIX}/etc )
+
+		set(	PATH_ETC
+			"${CMAKE_INSTALL_PREFIX}/etc" )
+
+	else( EXISTS ${CMAKE_INSTALL_PREFIX}/etc )
+		
+		set(	PATH_ETC
+			"/etc" )
+
+	endif( EXISTS ${CMAKE_INSTALL_PREFIX}/etc )
+
+endif( ETCDIR )
+
+message(
+	STATUS
+	"Using etc path ${PATH_ETC} ..." )
+
+# man path
+
+if( MANDIR )
+
+	set(	PATH_MAN
+		${MANDIR} )
+
+else( MANDIR )
+
+	find_path(
+		PATH_MAN
+		NAMES "man"
+		PATHS ${SEARCH_SYS}
+		NO_DEFAULT_PATH )
+
+	if( PATH_MAN )
+
+		set(	PATH_MAN
+			"${PATH_MAN}/man" )
+
+	else( PATH_MAN )
+
+		set(	PATH_MAN
+			"${CMAKE_INSTALL_PREFIX}/man" )
+
+	endif( PATH_MAN )
+
+endif( MANDIR )
+
+message(
+	STATUS
+	"Using man path ${PATH_MAN} ..." )
+
+if( SYSINC )
+
+	set(
+		INC_SYSTEM_DIR
+		${SYSINC} )
+
+	message(
+		STATUS
+		"Using system include path ${INC_SYSTEM_DIR} ..." )
+
+endif( SYSINC )
 
 #
 # PreRequisite Checks
@@ -154,94 +242,27 @@ find_library(
 	NAMES "rt"
 	PATHS ${SEARCH_LIB} )
 
-#
-# Install Path Checks
-#
+find_path(
+	PATH_INC_PFKEYV2
+	NAMES "net/pfkeyv2.h" "linux/pfkeyv3.h"
+	PATHS ${SEARCH_INC} ${INC_SYSTEM_DIR} )
 
-if( NOT EXISTS ${CMAKE_INSTALL_PREFIX} )
+if( NOT PATH_INC_PFKEYV2 )
 
-	set(
-		CMAKE_INSTALL_PREFIX
-		"/usr" )
+	message(
+		FATAL_ERROR
+		"Unable to locate system pfkeyv2 include file" )
 
-endif( NOT EXISTS ${CMAKE_INSTALL_PREFIX} )
-
-message(
-	STATUS 
-	"Using install prefix ${CMAKE_INSTALL_PREFIX} ..." )
-
-# etc path
-
-if( ETCDIR )
-
-	set(	PATH_ETC
-		${ETCDIR} )
-
-else( ETCDIR )
-
-	if( EXISTS ${CMAKE_INSTALL_PREFIX}/etc )
-
-		set(	PATH_ETC
-			"${CMAKE_INSTALL_PREFIX}/etc" )
-
-	else( EXISTS ${CMAKE_INSTALL_PREFIX}/etc )
-		
-		set(	PATH_ETC
-			"/etc" )
-
-	endif( EXISTS ${CMAKE_INSTALL_PREFIX}/etc )
-
-endif( ETCDIR )
-
-message(
-	STATUS
-	"Using etc path ${PATH_ETC} ..." )
-
-# man path
-
-if( MANDIR )
-
-	set(	PATH_MAN
-		${MANDIR} )
-
-else( MANDIR )
-
-	find_path(
-		PATH_MAN
-		NAMES "man"
-		PATHS ${SEARCH_SYS}
-		NO_DEFAULT_PATH )
-
-	if( PATH_MAN )
-
-		set(	PATH_MAN
-			"${PATH_MAN}/man" )
-
-	else( PATH_MAN )
-
-		set(	PATH_MAN
-			"${CMAKE_INSTALL_PREFIX}/man" )
-
-	endif( PATH_MAN )
-
-endif( MANDIR )
-
-message(
-	STATUS
-	"Using man path ${PATH_MAN} ..." )
+endif( NOT PATH_INC_PFKEYV2 )
 
 #
-# Build Options
+# Build Option Checks
 #
 
 OPTION( DEBUG  "include Debug Symbol support" )
 OPTION( NATT   "include NAT Traversal support" )
 OPTION( LDAP   "include LDAP Authentication support" )
 OPTION( QTGUI  "include Client QT GUI support" )
-
-OPTION( ETCDIR "etc install directory" )
-OPTION( MANDIR "man install directory" )
-
 
 # Debug Symbols Option
 

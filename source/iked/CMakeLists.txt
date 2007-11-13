@@ -16,7 +16,8 @@ include_directories(
 	${IKE_SOURCE_DIR}/source/libith
 	${IKE_SOURCE_DIR}/source/libip
 	${IKE_SOURCE_DIR}/source/liblog
-	${IKE_SOURCE_DIR}/source/libpfk )
+	${IKE_SOURCE_DIR}/source/libpfk
+	${INC_SYSTEM_DIR} )
 
 link_directories(
 	${IKE_SOURCE_DIR}/source/libike
