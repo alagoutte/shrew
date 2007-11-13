@@ -9,7 +9,7 @@
 
 include_directories(
         ${IKE_SOURCE_DIR}/source
-	${INC_SYSTEM_DIR} )
+	${INC_KERNEL_DIR} )
 
 add_library(
 	pfk SHARED

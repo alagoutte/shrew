@@ -184,6 +184,9 @@ for linux platforms. Please see the OPTIONS section for more details.
 
 cmake -DCMAKE_INSTALL_PREFIX=/usr -DQTGUI=YES -DETCDIR=/etc -DNATT=YES
 
+NOTE : It may also be necessary to add the KRNINC option to specify the kernel
+header file path on older versions of Linux.
+
 
 ================================================================================
 COMPILING
@@ -212,7 +215,7 @@ NATT	Enable Nat Traversal Support
 LDAP	Enable LDAP Authentication Support
 ETCDIR	System etc configuration path
 MANDIR	System man page path
-SYSINC	System include path
+KRNINC	Kernel include path
 
 For example: enter the following to build and install the software with all
 options enabled ...

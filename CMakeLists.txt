@@ -128,17 +128,17 @@ message(
 	STATUS
 	"Using man path ${PATH_MAN} ..." )
 
-if( SYSINC )
+if( KRNINC )
 
 	set(
-		INC_SYSTEM_DIR
-		${SYSINC} )
+		INC_KERNEL_DIR
+		${KRNINC} )
 
 	message(
 		STATUS
-		"Using sys include path ${INC_SYSTEM_DIR} ..." )
+		"Using kernel include path ${INC_KERNEL_DIR} ..." )
 
-endif( SYSINC )
+endif( KRNINC )
 
 #
 # PreRequisite Checks
