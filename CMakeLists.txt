@@ -245,7 +245,7 @@ find_library(
 find_path(
 	PATH_INC_PFKEYV2
 	NAMES "net/pfkeyv2.h" "linux/pfkeyv2.h"
-	PATHS ${SEARCH_INC} ${INC_SYSTEM_DIR} )
+	PATHS ${SEARCH_INC} ${INC_KERNEL_DIR} )
 
 if( NOT PATH_INC_PFKEYV2 )
 
