@@ -165,7 +165,7 @@ YY_DECL;
 #define LIBIKE_NATT_PORT		4500	// default nat-t port
 
 #define LIBIKE_MAX_TEXTADDR		24		// max text address length
-#define LIBIKE_MAX_TEXTP1ID		128		// max text phase1 id length
+#define LIBIKE_MAX_TEXTP1ID		256		// max text phase1 id length
 #define LIBIKE_MAX_TEXTP2ID		50		// max text phase2 id length
 #define LIBIKE_MAX_TEXTSPI		64		// max text phase2 id length
 #define LIBIKE_MAX_VARID		512		// max variable id length

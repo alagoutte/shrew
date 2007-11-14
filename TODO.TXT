@@ -170,6 +170,7 @@ X Add support for DHCP over IPsec configuration method
 X Add support for strictly manual client configuration method
 X Add stateful fragment evaluation to filter driver
 X Add batched packet send and recv support to filter driver
+. Fix static buffer usage for temporary string data
 . Add timestamps in non-syslog log output
 . Add support for x86/amd64 Windows Vista platforms
 . Add support for multiple DNS/WINS server addresses
