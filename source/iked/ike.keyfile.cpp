@@ -576,45 +576,42 @@ static int verify_cb( int ok, X509_STORE_CTX * store_ctx )
 	return ok;
 }
 
-bool _IKED::cert_verify( BDATA & cert, BDATA & ca )
+bool _IKED::cert_verify( IKE_CLIST & certs, BDATA & ca, BDATA & cert )
 {
-	char fpath[ MAX_PATH ];
-	sprintf_s( fpath, MAX_PATH, "%s\\debug\\remote.crt", path_ins );
-	cert_save( cert, fpath );
+	//
+	// create certificate storage
+	//
 
-	X509 * x509_ca;
-	if( !bdata_2_cert( &x509_ca, ca ) )
-		return false;
-
-	X509 * x509_cert;
-	if( !bdata_2_cert( &x509_cert, cert ) )
-	{
-		X509_free( x509_ca );
-		return false;
-	}
-
-	X509_STORE * store;
-	store = X509_STORE_new();
+	X509_STORE * store = X509_STORE_new();
 	if( store == NULL )
-	{
-		X509_free( x509_cert );
-		X509_free( x509_ca );
 		return false;
-	}
 
 	X509_STORE_set_verify_cb_func( store, verify_cb );
-	X509_STORE_add_cert( store, x509_ca );
-
 	X509_LOOKUP * lookup = X509_STORE_add_lookup( store, X509_LOOKUP_file() );
 	if( lookup == NULL )
 	{
 		X509_STORE_free( store );
-		X509_free( x509_cert );
-		X509_free( x509_ca );
 		return false;
 	}
 
+	//
+	// load ca and add to store
+	//
+
+	X509 * x509_ca;
+	if( !bdata_2_cert( &x509_ca, ca ) )
+	{
+		X509_STORE_free( store );
+		return false;
+	}
+
+	X509_STORE_add_cert( store, x509_ca );
+
 #ifdef WIN32
+
+	//
+	// add all certificates from a path
+	//
 
 	char tmppath[ MAX_PATH ];
 	sprintf_s( tmppath, MAX_PATH, "%s\\certificates\\*.*", path_ins );
@@ -640,31 +637,62 @@ bool _IKED::cert_verify( BDATA & cert, BDATA & ca )
 
 #endif
 
-	X509_STORE_CTX * store_ctx;
-	store_ctx = X509_STORE_CTX_new();
-	if( store_ctx == NULL )
+	//
+	// create certificate chain
+	//
+
+	STACK_OF( X509 ) * chain = sk_X509_new_null();
+	X509 * x509_cert;
+
+	long count = certs.count();
+	long index = 0;
+
+	for( ; index < count; index++ )
+		if( bdata_2_cert( &x509_cert, cert ) )
+			sk_X509_push( chain, x509_cert );
+
+	long result = 0;
+
+	if( x509_cert != NULL )
 	{
-		X509_STORE_free( store );
-		X509_free( x509_cert );
-		X509_free( x509_ca );
-		return false;
+		//
+		// create and init store context
+		//
+
+		X509_STORE_CTX * store_ctx = X509_STORE_CTX_new();
+		if( store_ctx != NULL )
+		{
+			X509_STORE_CTX_init( store_ctx, store, x509_cert, chain );
+			X509_STORE_CTX_set_flags( store_ctx, X509_V_FLAG_CRL_CHECK );
+			X509_STORE_CTX_set_flags( store_ctx, X509_V_FLAG_CRL_CHECK_ALL );
+
+			result = X509_verify_cert( store_ctx );
+
+			X509_STORE_CTX_cleanup( store_ctx );
+		}
 	}
 
-	X509_STORE_CTX_init( store_ctx, store, x509_cert, NULL );
-	X509_STORE_CTX_set_flags( store_ctx, X509_V_FLAG_CRL_CHECK );
-	X509_STORE_CTX_set_flags( store_ctx, X509_V_FLAG_CRL_CHECK_ALL );
+	//
+	// destroy certificate chain
+	//
 
-	long result = X509_verify_cert( store_ctx );
+	while( true )
+	{
+		x509_cert = sk_X509_pop( chain );
+		if( x509_cert == NULL )
+			break;
 
-	X509_STORE_CTX_cleanup( store_ctx );
-	X509_STORE_free( store );
-	X509_free( x509_cert );
+		X509_free( x509_cert );
+	}
+
+	//
+	// cleanup
+	//
+
 	X509_free( x509_ca );
+	X509_STORE_free( store );
 
-	if( result )
-		return true;
-
-	return false;
+	return ( result > 0 );
 }
 
 long _IKED::prvkey_rsa_load( EVP_PKEY ** evp_pkey, char * file, BDATA & pass )

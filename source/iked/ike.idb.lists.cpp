@@ -220,6 +220,57 @@ bool _IKE_PLIST::nextt( IKE_PROPOSAL ** proposal, long & tindex )
 }
 
 //
+// CERTIFICATE LIST
+//
+
+_IKE_CLIST::_IKE_CLIST()
+{
+}
+
+_IKE_CLIST::~_IKE_CLIST()
+{
+	while( true )
+	{
+		BDATA * tmp_cert = ( BDATA * ) list_certs.get_item( 0 );
+		if( tmp_cert == NULL )
+			break;
+
+		list_certs.del_item( tmp_cert );
+		delete tmp_cert;
+	}
+}
+
+long _IKE_CLIST::count()
+{
+	return list_certs.get_count();
+}
+
+bool _IKE_CLIST::add( BDATA & cert )
+{
+	BDATA * tmp_cert = new BDATA;
+	if( tmp_cert == NULL )
+		return false;
+
+	tmp_cert->add( cert );
+
+	list_certs.add_item( tmp_cert );
+
+	return true;
+}
+
+bool _IKE_CLIST::get( BDATA & cert, long index )
+{
+	BDATA * tmp_cert = ( BDATA * ) list_certs.get_item( index );
+	if( tmp_cert == NULL )
+		return false;
+
+	cert.size( 0 );
+	cert.add( *tmp_cert );
+
+	return true;
+}
+
+//
 // IPV4ID LIST
 //
 

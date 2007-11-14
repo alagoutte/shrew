@@ -207,15 +207,16 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			//
 
 			case ISAKMP_PAYLOAD_CERT:
-
-				if( ph1->xstate & XSTATE_RECV_CT )
-					log.txt( LLOG_INFO, "<< : ignoring duplicate certificate payload\n" );
-				else
-					result = payload_get_cert( packet, ph1->ctype_r, ph1->cert_r );
+			{
+				BDATA cert;
+				result = payload_get_cert( packet, ph1->ctype_r, cert );
+				if( result == LIBIKE_OK )
+					ph1->certs_r.add( cert );
 
 				ph1->xstate |= XSTATE_RECV_CT;
 
 				break;
+			}
 
 			//
 			// certificate request payload
@@ -2092,12 +2093,14 @@ long _IKED::phase1_chk_hash( IDB_PH1 * ph1 )
 long _IKED::phase1_chk_sign( IDB_PH1 * ph1 )
 {
 	//
-	// verify the peer certificate
+	// verify the peer certificates
 	// using the ca cert specified
 	// in the peer configuration
 	//
 
-	if( !cert_verify( ph1->cert_r, ph1->tunnel->peer->cert_r ) )
+	BDATA cert;
+
+	if( !cert_verify( ph1->certs_r, ph1->tunnel->peer->cert_r, cert ) )
 	{
 		log.txt( LLOG_ERROR, "!! : unable to verify remote peer certificate\n" );
 		return LIBIKE_FAILED;
@@ -2107,11 +2110,10 @@ long _IKED::phase1_chk_sign( IDB_PH1 * ph1 )
 	// read the public key from the
 	// peer provided certificate
 	//
-	//
 
 	EVP_PKEY * evp_pkey = NULL;
 
-	if( !pubkey_rsa_read( ph1->cert_r, &evp_pkey ) )
+	if( !pubkey_rsa_read( cert, &evp_pkey ) )
 	{
 		log.txt( LLOG_ERROR, "!! : unable to extract public key from remote peer certificate\n" );
 		return LIBIKE_FAILED;

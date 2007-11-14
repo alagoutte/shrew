@@ -494,7 +494,7 @@ typedef class _IKED
 	bool	cert_subj( BDATA & cert, BDATA & subj );
 	bool	asn1_text( BDATA & asn1, BDATA & text );
 	bool	text_asn1( BDATA & text, BDATA & asn1 );
-	bool	cert_verify( BDATA & cert, BDATA & ca );
+	bool	cert_verify( IKE_CLIST & certs, BDATA & ca, BDATA & cert );
 
 	long	prvkey_rsa_load( EVP_PKEY ** evp_pkey, char * file, BDATA & pass );
 	bool	prvkey_rsa_load_pem( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass );

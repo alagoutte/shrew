@@ -141,6 +141,26 @@ typedef class _IKE_PLIST
 
 }IKE_PLIST;
 
+typedef class _IKE_CLIST
+{
+	private:
+
+	LIST	list_certs;
+
+	public:
+
+	BDATA name;
+
+	_IKE_CLIST();
+	~_IKE_CLIST();
+
+	long	count();
+
+	bool	add( BDATA & cert );
+	bool	get( BDATA & cert, long index );
+
+}IKE_CLIST;
+
 typedef class _IKE_ILIST
 {
 	private:
@@ -492,8 +512,8 @@ typedef class _IDB_PH1 : public IDB_XCH
 	BDATA	natd_rs;
 	BDATA	natd_rd;
 
-	BDATA	cert_r;
-	BDATA	sign_r;
+	IKE_CLIST	certs_r;
+	BDATA		sign_r;
 
 	BDATA	skeyid;
 	BDATA	skeyid_d;

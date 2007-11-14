@@ -497,7 +497,6 @@ void _IDB_PH1::clean()
 	natd_rs.del( true );
 	natd_rd.del( true );
 
-	cert_r.del( true );
 	sign_r.del( true );
 
 	resend_clear();
