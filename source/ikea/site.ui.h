@@ -936,7 +936,7 @@ bool site::Save( CONFIG & config )
 
 	if( !locid.compare( IDTXT_NONE ) )
 		config.set_string( "ident-client-type",
-			"asn1dn", strlen( "none" ) );
+			"none", strlen( "none" ) );
 
 	if( !locid.compare( IDTXT_ASN1 ) )
 		config.set_string( "ident-client-type",
