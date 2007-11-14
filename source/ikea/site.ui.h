@@ -41,6 +41,13 @@
 
 #include "ikea.h"
 
+#define AUTH_HYBRID_RSA_XAUTH	0
+#define AUTH_MUTUAL_RSA_XAUTH	1
+#define AUTH_MUTUAL_PSK_XAUTH	2
+#define AUTH_MUTUAL_RSA		3
+#define AUTH_MUTUAL_PSK		4
+
+#define IDTXT_NONE	"No Identity"
 #define IDTXT_ASN1	"ASN.1 Distinguished Name"
 #define IDTXT_FQDN	"Fully Qualified Domain Name"
 #define IDTXT_UFQDN	"User Fully Qualified Domain Name"
@@ -62,6 +69,71 @@ bool combobox_setbytext( const char * text, QComboBox * cbox )
 	}
 
 	return false;
+}
+
+bool dhgrp_to_string( long & dhgrp, QString & string )
+{
+	switch( dhgrp )
+	{
+		case -1:
+			string = "disabled";
+			break;
+
+		case 0:
+			string = "auto";
+			break;
+
+		case 1:
+			string = "group 1";
+			break;
+
+		case 2:
+			string = "group 2";
+			break;
+
+		case 5:
+			string = "group 5";
+			break;
+
+		case 14:
+			string = "group 14";
+			break;
+
+		case 15:
+			string = "group 15";
+			break;
+
+		default:
+			return false;
+	}
+
+	return true;
+}
+
+bool string_to_dhgrp( QString & string, long & dhgrp )
+{
+	if( !strcmp( string.ascii(), "disabled" ) )
+		dhgrp = -1;
+
+	if( !strcmp( string.ascii(), "auto" ) )
+		dhgrp = 0;
+
+	if( !strcmp( string.ascii(), "group 1" ) )
+		dhgrp = 1;
+
+	if( !strcmp( string.ascii(), "group 2" ) )
+		dhgrp = 2;
+
+	if( !strcmp( string.ascii(), "group 5" ) )
+		dhgrp = 5;
+
+	if( !strcmp( string.ascii(), "group 14" ) )
+		dhgrp = 14;
+
+	if( !strcmp( string.ascii(), "group 15" ) )
+		dhgrp = 15;
+
+	return true;
 }
 
 void site::AddPolicy()
@@ -198,6 +270,7 @@ void site::DelPolicy()
 
 bool site::Load( CONFIG & config )
 {
+	QString string;
 	char text[ MAX_CONFSTRING ];
 	long numb;
 
@@ -428,6 +501,9 @@ bool site::Load( CONFIG & config )
 	if( config.get_string( "ident-client-type",
 		text, MAX_CONFSTRING, 0 ) )
 	{
+		if( !strcmp( "none", text ) )
+			combobox_setbytext( IDTXT_NONE, comboBoxLocalIDType );
+
 		if( !strcmp( "asn1dn", text ) )
 			combobox_setbytext( IDTXT_ASN1, comboBoxLocalIDType );
 
@@ -505,28 +581,9 @@ bool site::Load( CONFIG & config )
 
 	numb = 0;
 	config.get_number( "phase1-dhgroup", &numb );
-	switch( numb )
-	{
-		case 1: // group 1
-			comboBoxP1DHGroup->setCurrentItem( 1 );
-			break;
 
-		case 2: // group 2
-			comboBoxP1DHGroup->setCurrentItem( 2 );
-			break;
-
-		case 5: // group 5
-			comboBoxP1DHGroup->setCurrentItem( 3 );
-			break;
-
-		case 14: // group 14
-			comboBoxP1DHGroup->setCurrentItem( 4 );
-			break;
-
-		case 15: // group 15
-			comboBoxP1DHGroup->setCurrentItem( 5 );
-			break;
-	}
+	if( dhgrp_to_string( numb, string ) )
+		combobox_setbytext( string.ascii(), comboBoxP1DHGroup );
 
 	// phase1 cipher algorithm ( default auto )
 
@@ -583,36 +640,8 @@ bool site::Load( CONFIG & config )
 	numb = -1;
 	config.get_number( "phase2-pfsgroup", &numb );
 
-	switch( numb )
-	{
-		case -1: // disabled
-			comboBoxP2PFSGroup->setCurrentItem( 0 );
-			break;
-
-		case 0: // automatic
-			comboBoxP2PFSGroup->setCurrentItem( 1 );
-			break;
-
-		case 1:	// group 1
-			comboBoxP2PFSGroup->setCurrentItem( 2 );
-			break;
-
-		case 2:	// group 2
-			comboBoxP2PFSGroup->setCurrentItem( 3 );
-			break;
-
-		case 5:	// group 5
-			comboBoxP2PFSGroup->setCurrentItem( 4 );
-			break;
-
-		case 14: // group 14
-			comboBoxP2PFSGroup->setCurrentItem( 5 );
-			break;
-
-		case 15: // group 15
-			comboBoxP2PFSGroup->setCurrentItem( 6 );
-			break;
-	}
+	if( dhgrp_to_string( numb, string ) )
+		combobox_setbytext( string.ascii(), comboBoxP2PFSGroup );
 
 	// ipcomp transform algorithm
 
@@ -875,27 +904,27 @@ bool site::Save( CONFIG & config )
 
 	switch( comboBoxAuthMethod->currentItem() )
 	{
-		case 0:	// hybrid rsa xauth
+		case AUTH_HYBRID_RSA_XAUTH:
 			config.set_string( "auth-method",
 				"hybrid-rsa-xauth", strlen( "hybrid-rsa-xauth" ) );
 			break;
 
-		case 1:	// mutual rsa xauth
+		case AUTH_MUTUAL_RSA_XAUTH:
 			config.set_string( "auth-method",
 				"mutual-rsa-xauth", strlen( "mutual-rsa-xauth" ) );
 			break;
 
-		case 2:	// mutual psk xauth
+		case AUTH_MUTUAL_PSK_XAUTH:
 			config.set_string( "auth-method",
 				"mutual-psk-xauth", strlen( "mutual-psk-xauth" ) );
 			break;
 
-		case 3:	// mutual rsa
+		case AUTH_MUTUAL_RSA:
 			config.set_string( "auth-method",
 				"mutual-rsa", strlen( "mutual-rsa" ) );
 			break;
 
-		case 4:	// mutual psk
+		case AUTH_MUTUAL_PSK:
 			config.set_string( "auth-method",
 				"mutual-psk", strlen( "mutual-psk" ) );
 			break;
@@ -904,6 +933,10 @@ bool site::Save( CONFIG & config )
 	// local identity type
 
 	QString locid = comboBoxLocalIDType->currentText();
+
+	if( !locid.compare( IDTXT_NONE ) )
+		config.set_string( "ident-client-type",
+			"asn1dn", strlen( "none" ) );
 
 	if( !locid.compare( IDTXT_ASN1 ) )
 		config.set_string( "ident-client-type",
@@ -1018,39 +1051,11 @@ bool site::Save( CONFIG & config )
 
 	// phase1 dh group
 
-	long dhindex = comboBoxP1DHGroup->currentItem();
-	if( comboBoxP1Exchange->currentItem() )
-	{
-		// aggressive mode ( no auto )
-		dhindex++;
-	}
-
-	switch( dhindex )
-	{
-		case 0: // auto
-			config.set_number( "phase1-dhgroup", 0 );
-			break;
-
-		case 1: // group 1
-			config.set_number( "phase1-dhgroup", 1 );
-			break;
-
-		case 2: // group 2
-			config.set_number( "phase1-dhgroup", 2 );
-			break;
-
-		case 3: // group 5
-			config.set_number( "phase1-dhgroup", 5 );
-			break;
-
-		case 4: // group 14
-			config.set_number( "phase1-dhgroup", 14 );
-			break;
-
-		case 5: // group 15
-			config.set_number( "phase1-dhgroup", 15 );
-			break;
-	}
+	QString string;
+	long dhgrp;
+	string = comboBoxP1DHGroup->currentText();
+	string_to_dhgrp( string, dhgrp );
+	config.set_number( "phase1-dhgroup", dhgrp );
 
 	// phase1 cipher algorithm
 
@@ -1098,36 +1103,9 @@ bool site::Save( CONFIG & config )
 
 	// phase2 pfs group
 
-	switch( comboBoxP2PFSGroup->currentItem() )
-	{
-		case 0:	// disabled
-			config.set_number( "phase2-pfsgroup", -1 );
-			break;
-
-		case 1: // automatic
-			config.set_number( "phase2-pfsgroup", 0 );
-			break;
-
-		case 2:	// group 1
-			config.set_number( "phase2-pfsgroup", 1 );
-			break;
-
-		case 3:	// group 2
-			config.set_number( "phase2-pfsgroup", 2 );
-			break;
-
-		case 4:	// group 5
-			config.set_number( "phase2-pfsgroup", 5 );
-			break;
-
-		case 5:	// group 14
-			config.set_number( "phase2-pfsgroup", 14 );
-			break;
-
-		case 6:	// group 15
-			config.set_number( "phase2-pfsgroup", 15 );
-			break;
-	}
+	string = comboBoxP2PFSGroup->currentText();
+	string_to_dhgrp( string, dhgrp );
+	config.set_number( "phase2-pfsgroup", dhgrp );
 
 	// phase2 key life time
 
@@ -1595,29 +1573,35 @@ void site::UpdateTransform()
 
 void site::UpdateAuth()
 {
+	// authentication method
+
+	long auth = comboBoxAuthMethod->currentItem();
+
 	// local identity
 
 	QString locid = comboBoxLocalIDType->currentText();
 
-	switch( comboBoxAuthMethod->currentItem() )
+	switch( auth )
 	{
-		case 0: // hybrid rsa xauth
-		case 2: // mutual psk xauth
-		case 4: // mutual psk
+		case AUTH_HYBRID_RSA_XAUTH:
+		case AUTH_MUTUAL_PSK_XAUTH:
+		case AUTH_MUTUAL_PSK:
 		{
+			comboBoxLocalIDType->clear();
+
+			if( auth == AUTH_HYBRID_RSA_XAUTH )
+				comboBoxLocalIDType->insertItem( IDTXT_NONE );
 
 			if( !comboBoxP1Exchange->currentItem() )
 			{
 				// main mode
 
-				comboBoxLocalIDType->clear();
 				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
 			}
 			else
 			{
 				// aggressive mode
 
-				comboBoxLocalIDType->clear();
 				comboBoxLocalIDType->insertItem( IDTXT_FQDN );
 				comboBoxLocalIDType->insertItem( IDTXT_UFQDN );
 				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
@@ -1627,14 +1611,13 @@ void site::UpdateAuth()
 			break;
 		}
 
-		case 1: // mutual rsa xauth
-		case 3: // mutual rsa
+		case AUTH_MUTUAL_RSA_XAUTH:
+		case AUTH_MUTUAL_RSA:
 		{
 			if( !comboBoxP1Exchange->currentItem() )
 			{
 				// main mode
 
-				comboBoxLocalIDType->clear();
 				comboBoxLocalIDType->insertItem( IDTXT_ASN1 );
 				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
 			}
@@ -1642,7 +1625,6 @@ void site::UpdateAuth()
 			{
 				// aggressive mode
 
-				comboBoxLocalIDType->clear();
 				comboBoxLocalIDType->insertItem( IDTXT_ASN1 );
 				comboBoxLocalIDType->insertItem( IDTXT_FQDN );
 				comboBoxLocalIDType->insertItem( IDTXT_UFQDN );
@@ -1666,17 +1648,18 @@ void site::UpdateAuth()
 
 	QString rmtid = comboBoxRemoteIDType->currentText();
 
-	switch( comboBoxAuthMethod->currentItem() )
+	switch( auth )
 	{
-		case 0: // hybrid rsa xauth
-		case 1: // mutual rsa xauth
-		case 3: // mutual rsa
+		case AUTH_HYBRID_RSA_XAUTH:
+		case AUTH_MUTUAL_RSA_XAUTH:
+		case AUTH_MUTUAL_RSA:
 		{
+			comboBoxRemoteIDType->clear();
+
 			if( !comboBoxP1Exchange->currentItem() )
 			{
 				// main mode
 
-				comboBoxRemoteIDType->clear();
 				comboBoxRemoteIDType->insertItem( IDTXT_ASN1 );
 				comboBoxRemoteIDType->insertItem( IDTXT_ADDR );
 			}
@@ -1684,7 +1667,6 @@ void site::UpdateAuth()
 			{
 				// aggressive mode
 
-				comboBoxRemoteIDType->clear();
 				comboBoxRemoteIDType->insertItem( IDTXT_ASN1 );
 				comboBoxRemoteIDType->insertItem( IDTXT_FQDN );
 				comboBoxRemoteIDType->insertItem( IDTXT_UFQDN );
@@ -1695,21 +1677,21 @@ void site::UpdateAuth()
 			break;
 		}
 
-		case 2: // mutual psk xauth
-		case 4: // mutual psk
+		case AUTH_MUTUAL_PSK_XAUTH:
+		case AUTH_MUTUAL_PSK:
 		{
+			comboBoxRemoteIDType->clear();
+
 			if( !comboBoxP1Exchange->currentItem() )
 			{
 				// main mode
 
-				comboBoxRemoteIDType->clear();
 				comboBoxRemoteIDType->insertItem( IDTXT_ADDR );
 			}
 			else
 			{
 				// aggressive mode
 
-				comboBoxRemoteIDType->clear();
 				comboBoxRemoteIDType->insertItem( IDTXT_FQDN );
 				comboBoxRemoteIDType->insertItem( IDTXT_UFQDN );
 				comboBoxRemoteIDType->insertItem( IDTXT_ADDR );
@@ -1732,7 +1714,7 @@ void site::UpdateAuth()
 
 	switch( comboBoxAuthMethod->currentItem() )
 	{
-		case 0: // hybrid rsa xauth
+		case AUTH_HYBRID_RSA_XAUTH:
 		{
 			lineEditCAFile->setEnabled( true );
 			toolButtonCAFile->setEnabled( true );
@@ -1748,8 +1730,8 @@ void site::UpdateAuth()
 			break;
 		}
 
-		case 1: // mutual rsa xauth
-		case 3: // mutual rsa
+		case AUTH_MUTUAL_RSA_XAUTH:
+		case AUTH_MUTUAL_RSA:
 		{
 			lineEditCAFile->setEnabled( true );
 			toolButtonCAFile->setEnabled( true );
@@ -1765,8 +1747,8 @@ void site::UpdateAuth()
 			break;
 		}
 
-		case 2: // mutual psk xauth
-		case 4: // mutual psk
+		case AUTH_MUTUAL_PSK_XAUTH:
+		case AUTH_MUTUAL_PSK:
 		{
 			lineEditCAFile->setEnabled( false );
 			toolButtonCAFile->setEnabled( false );
@@ -1790,6 +1772,14 @@ void site::UpdateAuth()
 void site::UpdateLocalID()
 {
 	QString type = comboBoxLocalIDType->currentText();
+
+	if( !type.compare( IDTXT_NONE ) )
+	{
+		textLabelLocalIDData->setText( "" );
+		lineEditLocalIDData->setEnabled( false );
+		checkBoxLocalIDOption->setHidden( true );
+		return;
+	}
 
 	if( !type.compare( IDTXT_ASN1 ) )
 	{

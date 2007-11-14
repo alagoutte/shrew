@@ -264,11 +264,16 @@ void _IKEC::run()
 
 	// client identification type
 
+	peer.idtype_l = ~0;
+
 	if( !config.get_string( "ident-client-type", text, MAX_CONFSTRING, 0 ) )
 	{
 		log( STATUS_FAIL, "config error : auth-client-type undefined\n" );
 		return;
 	}
+
+	if( !strcmp( "none", text ) )
+		peer.idtype_l = ISAKMP_ID_NONE;
 
 	if( !strcmp( "asn1dn", text ) )
 		peer.idtype_l = ISAKMP_ID_ASN1_DN;
@@ -285,13 +290,15 @@ void _IKEC::run()
 	if( !strcmp( "address", text ) )
 		peer.idtype_l = ISAKMP_ID_IPV4_ADDR;
 
-	if( !peer.idtype_l )
+	if( peer.idtype_l == ~0 )
 	{
 		log( STATUS_FAIL, "config error : ident-client-type is invalid\n" );
 		return;
 	}
 
 	// server identification type
+
+	peer.idtype_r = ~0;
 
 	if( !config.get_string( "ident-server-type", text, MAX_CONFSTRING, 0 ) )
 	{
@@ -314,7 +321,7 @@ void _IKEC::run()
 	if( !strcmp( "address", text ) )
 		peer.idtype_r = ISAKMP_ID_IPV4_ADDR;
 
-	if( !peer.idtype_r )
+	if( peer.idtype_r == ~0 )
 	{
 		log( STATUS_FAIL, "config error : ident-server-type is invalid\n" );
 		return;
