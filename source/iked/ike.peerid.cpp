@@ -51,6 +51,9 @@ bool _IKED::gen_ph1id_l( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 
 	switch( ph1id.type )
 	{
+		case ISAKMP_ID_NONE:
+			break;
+
 		case ISAKMP_ID_ASN1_DN:
 		{
 			if( ph1->tunnel->peer->iddata_l.size() )
@@ -68,7 +71,7 @@ bool _IKED::gen_ph1id_l( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 					temp[ size ] = 0;
 
 					log.txt( LLOG_ERROR,
-						"!! : gen_ph1id failed. invalid initiator id data \'%s\'\n", temp );
+						"!! : gen_ph1id_l failed. invalid initiator id data \'%s\'\n", temp );
 
 					return false;
 				}
@@ -106,6 +109,14 @@ bool _IKED::gen_ph1id_l( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 			ph1id.varid.set( ph1->tunnel->peer->iddata_l );
 
 			break;
+		}
+
+		default:
+		{
+			log.txt( LLOG_ERROR,
+				"!! : gen_ph1id_l failed. unhandled id type %i\n", ph1id.type );
+
+			return false;
 		}
 	}
 
@@ -168,6 +179,14 @@ bool _IKED::gen_ph1id_r( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 
 			break;
 		}
+
+		default:
+		{
+			log.txt( LLOG_ERROR,
+				"!! : gen_ph1id_r failed. unhandled id type %i\n", ph1id.type );
+
+			return false;
+		}
 	}
 
 	return true;
@@ -191,16 +210,6 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 	}
 
 	//
-	// generate text ids for logging
-	//
-
-	char txtid_s[ LIBIKE_MAX_TEXTP1ID ];
-	char txtid_t[ LIBIKE_MAX_TEXTP1ID ];
-
-	text_ph1id( txtid_s, &ids );
-	text_ph1id( txtid_t, &idt );
-
-	//
 	// match the id value
 	//
 
@@ -208,6 +217,9 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 
 	switch( ids.type )
 	{
+		case ISAKMP_ID_NONE:
+			break;
+
 		case ISAKMP_ID_IPV4_ADDR:
 		{
 			if( natt )
@@ -300,12 +312,30 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 
 	if( match )
 	{
+		//
+		// generate text id for logging
+		//
+
+		char txtid[ LIBIKE_MAX_TEXTP1ID ];
+		text_ph1id( txtid, &ids );
+
 		log.txt( LLOG_INFO, 
 			"ii : phase1 id match ( %s )\n",
-			txtid_s );
+			txtid );
 	}
 	else
 	{
+		//
+		// generate text ids for logging
+		//
+
+		char txtid_s[ LIBIKE_MAX_TEXTP1ID ];
+		text_ph1id( txtid_s, &ids );
+
+		char txtid_t[ LIBIKE_MAX_TEXTP1ID ];
+		text_ph1id( txtid_t, &idt );
+
+
 		log.txt( LLOG_ERROR, 
 			"!! : phase1 id mismatch ( src != trg )\n"
 			"!! : src = %s\n"

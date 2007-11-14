@@ -649,6 +649,7 @@ const char * _IKED::find_name( long type, long id )
 
 		case NAME_IDENT:
 		{
+			static const char * ident0  = "none";
 			static const char * ident1  = "ipv4-host";
 			static const char * ident2  = "fqdn";
 			static const char * ident3  = "user-fqdn";
@@ -663,6 +664,9 @@ const char * _IKED::find_name( long type, long id )
 
 			switch( id )
 			{
+				case ISAKMP_ID_NONE:
+					return ident0;
+
 				case ISAKMP_ID_IPV4_ADDR:
 					return ident1;
 

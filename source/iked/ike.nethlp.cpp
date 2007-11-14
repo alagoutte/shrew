@@ -1049,6 +1049,17 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 {
 	switch( ph1id->type )
 	{
+		case ISAKMP_ID_NONE:
+		{
+			sprintf_s(
+				text,
+				LIBIKE_MAX_TEXTP1ID,
+				"%s",
+				find_name( NAME_IDENT, ph1id->type ) );
+
+			break;
+		}
+
 		case ISAKMP_ID_IPV4_ADDR:
 		{
 			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
