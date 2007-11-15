@@ -402,7 +402,7 @@ long _IKED::payload_get_sa( PACKET_IKE & packet, IKE_PLIST & plist )
 		{
 			case ISAKMP_PROTO_ISAKMP:
 
-				if( spi.size && ( spi.size != ISAKMP_COOKIE_SIZE * 2 ) )
+				if( spi.size % ISAKMP_COOKIE_SIZE )
 					badspi = true;
 				else
 					packet.get_null( spi.size );
