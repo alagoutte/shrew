@@ -93,13 +93,10 @@ void _IKED::load_path( char * file, char * fpath )
 bool _IKED::cert_2_bdata( BDATA & cert, X509 * x509 )
 {
 	int size = i2d_X509( x509, NULL );
-
 	cert.size( size );
 
 	unsigned char * cert_buff = cert.buff();
-
-	size = i2d_X509( x509, &cert_buff );
-	if( !size )
+	if( i2d_X509( x509, &cert_buff ) < size )
 		return false;
 
 	return true;
@@ -110,7 +107,7 @@ bool _IKED::bdata_2_cert( X509 ** x509, BDATA & cert )
 	X509CONST unsigned char * cert_buff = cert.buff();
 
 	*x509 = d2i_X509( NULL, &cert_buff, ( long ) cert.size() );
-	if( !( *x509 ) )
+	if( *x509 == NULL )
 		return false;
 
 	return true;
@@ -651,21 +648,44 @@ bool _IKED::cert_verify( IKE_CLIST & certs, BDATA & ca, BDATA & cert )
 
 	long result = 0;
 
-	if( x509_cert != NULL )
+	if( sk_X509_num( chain ) > 0 )
 	{
 		//
-		// create and init store context
+		// sort the certificate chain if more
+		// than one element exists
+		//
+
+		if( sk_X509_num( chain ) > 1 )
+			sk_sort( chain );
+
+		//
+		// get the first cert in the chain and
+		// store it for our caller
+		//
+
+		x509_cert = sk_X509_value( chain, 0 );
+		cert_2_bdata( cert, x509_cert );
+
+		//
+		// create our store context
 		//
 
 		X509_STORE_CTX * store_ctx = X509_STORE_CTX_new();
 		if( store_ctx != NULL )
 		{
+			//
+			// iniitialize our store context
+			//
+
 			X509_STORE_CTX_init( store_ctx, store, x509_cert, chain );
 			X509_STORE_CTX_set_flags( store_ctx, X509_V_FLAG_CRL_CHECK );
 			X509_STORE_CTX_set_flags( store_ctx, X509_V_FLAG_CRL_CHECK_ALL );
 
-			result = X509_verify_cert( store_ctx );
+			//
+			// verify our certificate and cleanup
+			//
 
+			result = X509_verify_cert( store_ctx );
 			X509_STORE_CTX_cleanup( store_ctx );
 		}
 	}
@@ -674,7 +694,7 @@ bool _IKED::cert_verify( IKE_CLIST & certs, BDATA & ca, BDATA & cert )
 	// destroy certificate chain
 	//
 
-	while( true )
+	while( sk_X509_num( chain ) > 0 )
 	{
 		x509_cert = sk_X509_pop( chain );
 		if( x509_cert == NULL )
