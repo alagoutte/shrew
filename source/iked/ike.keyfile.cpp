@@ -644,10 +644,8 @@ bool _IKED::cert_verify( IKE_CLIST & certs, BDATA & ca, BDATA & cert )
 	STACK_OF( X509 ) * chain = sk_X509_new_null();
 	X509 * x509_cert;
 
-	long count = certs.count();
 	long index = 0;
-
-	for( ; index < count; index++ )
+	while( certs.get( cert, index++ ) )
 		if( bdata_2_cert( &x509_cert, cert ) )
 			sk_X509_push( chain, x509_cert );
 
