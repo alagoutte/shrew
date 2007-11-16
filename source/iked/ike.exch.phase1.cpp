@@ -1925,8 +1925,10 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 	// add unity vendor id payload
 	//
 
-	payload_add_vend( packet, vend_unity, ISAKMP_PAYLOAD_NONE );
-
+	payload_add_vend( packet, vend_unity, ISAKMP_PAYLOAD_VEND );
+	payload_add_vend( packet, vend_chkpt, ISAKMP_PAYLOAD_VEND );
+	payload_add_vend( packet, vend_netsc, ISAKMP_PAYLOAD_NONE );
+	
 	return LIBIKE_OK;
 }
 
@@ -1983,18 +1985,6 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		}
 
 	//
-	// check for unity vendor id
-	//
-
-	if( vend.size() == vend_unity.size() )
-		if( !memcmp( vend.buff(), vend_unity.buff(), vend_unity.size() ) )
-		{
-			ph1->unity_r = true;
-			log.txt( LLOG_INFO, "ii : peer supports UNITY\n" );
-			return LIBIKE_OK;
-		}
-
-	//
 	// check for dead peer detection vendor id
 	//
 
@@ -2007,13 +1997,49 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		}
 
 	//
+	// check for unity vendor id
+	//
+
+	if( vend.size() == vend_unity.size() )
+		if( !memcmp( vend.buff(), vend_unity.buff(), vend_unity.size() ) )
+		{
+			ph1->unity_r = true;
+			log.txt( LLOG_INFO, "ii : peer is CISCO UNITY compatible\n" );
+			return LIBIKE_OK;
+		}
+
+	//
+	// check for checkpoint vendor id
+	//
+
+	if( vend.size() >= vend_chkpt.size() )
+		if( !memcmp( vend.buff(), vend_chkpt.buff(), vend_chkpt.size() ) )
+		{
+			ph1->chkpt_r = true;
+			log.txt( LLOG_INFO, "ii : peer is CHECKPOINT compatible\n" );
+			return LIBIKE_OK;
+		}
+
+	//
+	// check for netscreen vendor id
+	//
+
+	if( vend.size() >= vend_netsc.size() )
+		if( !memcmp( vend.buff(), vend_netsc.buff(), vend_netsc.size() ) )
+		{
+			ph1->netsc_r = true;
+			log.txt( LLOG_INFO, "ii : peer is NETSCREEN compatible\n" );
+			return LIBIKE_OK;
+		}
+
+	//
 	// check for kame vendor id
 	//
 
 	if( vend.size() == vend_kame.size() )
 		if( !memcmp( vend.buff(), vend_kame.buff(), vend_kame.size() ) )
 		{
-			log.txt( LLOG_INFO, "ii : peer is IPSEC-TOOLS\n" );
+			log.txt( LLOG_INFO, "ii : peer is IPSEC-TOOLS compatible\n" );
 			return LIBIKE_OK;
 		}
 

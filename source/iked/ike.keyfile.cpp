@@ -646,6 +646,8 @@ bool _IKED::cert_verify( IKE_CLIST & certs, BDATA & ca, BDATA & cert )
 		if( bdata_2_cert( &x509_cert, cert ) )
 			sk_X509_push( chain, x509_cert );
 
+	sk_X509_push( chain, x509_ca );
+
 	long result = 0;
 
 	if( sk_X509_num( chain ) > 0 )
@@ -655,8 +657,8 @@ bool _IKED::cert_verify( IKE_CLIST & certs, BDATA & ca, BDATA & cert )
 		// than one element exists
 		//
 
-		if( sk_X509_num( chain ) > 1 )
-			sk_sort( chain );
+//		if( sk_X509_num( chain ) > 1 )
+//			sk_sort( chain );
 
 		//
 		// get the first cert in the chain and

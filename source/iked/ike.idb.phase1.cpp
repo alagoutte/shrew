@@ -174,8 +174,13 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	xauth_l = false;
 	xauth_r = false;
 
-	unity_l = true;		// always true for now
+	unity_l = true;
+	chkpt_l = true;
+	netsc_l = true;
+
 	unity_r = false;
+	chkpt_r = false;
+	netsc_r = false;
 
 	natt_l = false;
 	natt_r = false;

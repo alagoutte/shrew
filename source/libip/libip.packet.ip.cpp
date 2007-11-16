@@ -98,7 +98,7 @@ bool _PACKET_IP::write( in_addr addr_src, in_addr addr_dst, unsigned short ident
 	ip_header.ip_dst	= addr_dst.s_addr;
 	ip_header.checksum	= 0;
 
-	return ins( &ip_header, sizeof( ip_header ) );
+	return add( &ip_header, sizeof( ip_header ) );
 }
 
 bool _PACKET_IP::frag( bool more, size_t oset )

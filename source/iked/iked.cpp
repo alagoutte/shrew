@@ -67,6 +67,9 @@ _IKED::_IKED()
 	unsigned char unity[] = VEND_UNITY;
 	vend_unity.set( unity, sizeof( unity ) );
 
+	unsigned char chkpt[] = VEND_CHKPT;
+	vend_chkpt.set( chkpt, sizeof( chkpt ) );
+
 	unsigned char frag[] = VEND_FRAG;
 	vend_frag.set( frag, sizeof( frag ) );
 

@@ -322,71 +322,41 @@
 // IKE protocol extensions
 //
 
-// ike fragmentation extension
+// ike fragmentation
 
 #define IKE_FRAG_FLAG_LAST			0x01
 
-// dead peer detection extension
+// dead peer detection
 
 #define ISAKMP_N_DPD_R_U_THERE		36136
 #define ISAKMP_N_DPD_R_U_THERE_ACK	36137
 
-// transactional extenstion
+// configuration exchange types
 
 #define ISAKMP_CFG_REQUEST			1
 #define ISAKMP_CFG_REPLY			2
 #define ISAKMP_CFG_SET				3
 #define ISAKMP_CFG_ACK				4
 
-// transactional attributes
+// configuration attributes
 
-#define INTERNAL_IP4_ADDRESS		1	// veriable   0 or 4 octets 
-#define INTERNAL_IP4_NETMASK		2	// veriable   0 or 4 octets
-#define INTERNAL_IP4_DNS			3	// veriable   0 or 4 octets
-#define INTERNAL_IP4_NBNS			4	// veriable   0 or 4 octets
-#define INTERNAL_ADDRESS_EXPIRY		5	// veriable   0 or 4 octets
-#define INTERNAL_IP4_DHCP			6	// veriable   0 or 4 octets
-#define APPLICATION_VERSION			7	// veriable   0 or more 
-#define INTERNAL_IP6_ADDRESS		8	// veriable   0 or 16 octets 
-#define INTERNAL_IP6_NETMASK		9	// veriable   0 or 16 octets 
-#define INTERNAL_IP6_DNS			10	// veriable   0 or 16 octets 
-#define INTERNAL_IP6_NBNS			11	// veriable   0 or 16 octets 
-#define INTERNAL_IP6_DHCP			12	// veriable   0 or 16 octets 
-#define INTERNAL_IP4_SUBNET			13	// veriable   0 or 8 octets 
-#define SUPPORTED_ATTRIBUTES		14	// veriable   0 or multiples of 2 
-#define INTERNAL_IP6_SUBNET			15	// veriable   0 or 17 octets
+#define INTERNAL_IP4_ADDRESS		1	// variable   0 or 4 octets 
+#define INTERNAL_IP4_NETMASK		2	// variable   0 or 4 octets
+#define INTERNAL_IP4_DNS			3	// variable   0 or 4 octets
+#define INTERNAL_IP4_NBNS			4	// variable   0 or 4 octets
+#define INTERNAL_ADDRESS_EXPIRY		5	// variable   0 or 4 octets
+#define INTERNAL_IP4_DHCP			6	// variable   0 or 4 octets
+#define APPLICATION_VERSION			7	// variable   0 or more 
+#define INTERNAL_IP6_ADDRESS		8	// variable   0 or 16 octets 
+#define INTERNAL_IP6_NETMASK		9	// variable   0 or 16 octets 
+#define INTERNAL_IP6_DNS			10	// variable   0 or 16 octets 
+#define INTERNAL_IP6_NBNS			11	// variable   0 or 16 octets 
+#define INTERNAL_IP6_DHCP			12	// variable   0 or 16 octets 
+#define INTERNAL_IP4_SUBNET			13	// variable   0 or 8 octets 
+#define SUPPORTED_ATTRIBUTES		14	// variable   0 or multiples of 2 
+#define INTERNAL_IP6_SUBNET			15	// variable   0 or 17 octets
 
-// unity transactional attributes
-
-#define UNITY_BANNER				28672
-#define UNITY_SAVE_PASSWD			28673
-#define UNITY_DEF_DOMAIN			28674
-#define UNITY_SPLIT_DOMAIN			28675
-#define UNITY_SPLIT_INCLUDE			28676
-#define UNITY_NATT_PORT				28677
-#define UNITY_SPLIT_EXCLUDE			28678
-#define UNITY_PFS					28679
-#define UNITY_FW_TYPE				28680
-#define UNITY_BACKUP_SERVERS		28681
-#define UNITY_DDNS_HOSTNAME			28682
-
-// xauth extension
-
-#define XAUTH_TYPE					16520	// basic
-#define XAUTH_USER_NAME				16521	// variable
-#define XAUTH_USER_PASSWORD			16522	// variable
-#define XAUTH_PASSCODE				16523	// variable
-#define XAUTH_MESSAGE				16524	// variable
-#define XAUTH_CHALLENGE				16525	// variable
-#define XAUTH_DOMAIN				16526	// variable
-#define XAUTH_STATUS				16527	// basic
-#define XAUTH_NEXT_PIN				16528	// variable
-#define XAUTH_ANSWER				16529	// variable
-
-#define XAUTH_TYPE_GENERIC			0
-#define XAUTH_TYPE_RADIUS_CHAP		1
-#define XAUTH_TYPE_OTP				2
-#define XAUTH_TYPE_SKEY				3
+// extended authentication modes
 
 #define XAUTH_AUTH_INIT_PSK			65001
 #define XAUTH_AUTH_RESP_PSK			65002
@@ -399,12 +369,61 @@
 #define XAUTH_AUTH_INIT_RSA_REV		65009
 #define XAUTH_AUTH_RESP_RSA_REV		65010
 
-// hybrid extension
+// hybrid authentication modes
 
 #define HYBRID_AUTH_INIT_RSA		64221
 #define HYBRID_AUTH_RESP_RSA		64222
 #define HYBRID_AUTH_INIT_DSS		64223
 #define HYBRID_AUTH_RESP_DSS		64224
+
+// extended authentication types
+
+#define XAUTH_TYPE_GENERIC			0
+#define XAUTH_TYPE_RADIUS_CHAP		1
+#define XAUTH_TYPE_OTP				2
+#define XAUTH_TYPE_SKEY				3
+
+// extended authentication attributes
+
+#define XAUTH_TYPE					16520	// basic
+#define XAUTH_USER_NAME				16521	// variable
+#define XAUTH_USER_PASSWORD			16522	// variable
+#define XAUTH_PASSCODE				16523	// variable
+#define XAUTH_MESSAGE				16524	// variable
+#define XAUTH_CHALLENGE				16525	// variable
+#define XAUTH_DOMAIN				16526	// variable
+#define XAUTH_STATUS				16527	// basic
+#define XAUTH_NEXT_PIN				16528	// variable
+#define XAUTH_ANSWER				16529	// variable
+
+// unity configuration attributes
+
+#define UNITY_BANNER				28672	// variable
+#define UNITY_SAVE_PASSWD			28673	// basic
+#define UNITY_DEF_DOMAIN			28674	// variable
+#define UNITY_SPLIT_DOMAIN			28675	// variable
+#define UNITY_SPLIT_INCLUDE			28676	// variable
+#define UNITY_NATT_PORT				28677	// basic
+#define UNITY_SPLIT_EXCLUDE			28678	// variable
+#define UNITY_PFS					28679	// basic
+#define UNITY_FW_TYPE				28680	// variable
+#define UNITY_BACKUP_SERVERS		28681	// variable
+#define UNITY_DDNS_HOSTNAME			28682	// variable
+
+// checkpoint extended authentication attributes
+
+#define	CHKPT_TYPE					13
+#define CHKPT_USER_NAME				14
+#define CHKPT_USER_PASSWORD			15
+#define CHKPT_MESSAGE				17
+#define CHKPT_CHALLENGE				18
+#define CHKPT_STATUS				20
+
+// checkpoint configuration attributes
+
+#define CHKPT_DEF_DOMAIN			16387
+#define CHKPT_MAC_ADDRESS			16388
+#define CHKPT_MARCIPAN_REASON_CODE	16389
 
 //
 // implementation specific constants
@@ -417,7 +436,6 @@
 #define ISAKMP_NONCE_SIZE				20
 #define ISAKMP_NONCE_MIN				4
 #define ISAKMP_NONCE_MAX				252
-#define ISAKMP_VEND_MAX					16
 
 #define ISAKMP_CERT_MAX					( 1024 * 32 )
 #define ISAKMP_CREQ_MAX					( 1024 * 4 )
