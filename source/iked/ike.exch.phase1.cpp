@@ -47,13 +47,18 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	//
 	// make sure we are not dealing
-	// whit a sa marked as dead
+	// whith a mature or dead sa
 	//
 
 	if( ph1->lstate & LSTATE_DELETE )
 	{
 		log.txt( LLOG_ERROR, "!! : ignore phase1 packet, sa marked for death\n" );
+		return LIBIKE_OK;
+	}
 
+	if( ph1->lstate & LSTATE_MATURE )
+	{
+		log.txt( LLOG_ERROR, "!! : ignore phase1 packet, sa already mature\n" );
 		return LIBIKE_OK;
 	}
 
