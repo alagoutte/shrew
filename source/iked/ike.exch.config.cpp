@@ -315,14 +315,14 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 							case CHKPT_USER_NAME:
 								cfg->tunnel->state |= TSTATE_RECV_XUSER;
 								if( attr->basic )
-									log.txt( LLOG_INFO, "!! : warning, xauth username attribute type is basic\n" );
+									log.txt( LLOG_INFO, "!! : warning, basic xauth username attribute type\n" );
 								break;
 
 							case XAUTH_USER_PASSWORD:
 							case CHKPT_USER_PASSWORD:
 								cfg->tunnel->state |= TSTATE_RECV_XPASS;
 								if( attr->basic )
-									log.txt( LLOG_INFO, "!! : warning, xauth password attribute type is basic\n" );
+									log.txt( LLOG_INFO, "!! : warning, basic xauth password attribute type\n" );
 								break;
 						}
 					}
@@ -340,10 +340,10 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						if( !auth_type )
 							log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
 
-						if( !( cfg->tunnel->state & TSTATE_RECV_XPASS ) )
+						if( !( cfg->tunnel->state & TSTATE_RECV_XUSER ) )
 							log.txt( LLOG_ERROR, "!! : missing required xauth username attribute\n" );
 
-						if( !( cfg->tunnel->state & TSTATE_RECV_XUSER ) )
+						if( !( cfg->tunnel->state & TSTATE_RECV_XPASS ) )
 							log.txt( LLOG_ERROR, "!! : missing required xauth password attribute\n" );
 
 						if( !( cfg->tunnel->state & TSTATE_RECV_XAUTH ) )
@@ -720,25 +720,10 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 						cfg->tunnel->xauth.pass.buff(),
 						cfg->tunnel->xauth.pass.size() );
 
-					//
-					// send config packet
-					//
-
-					config_message_send( ph1, cfg );
-
-					cfg->tunnel->xauth.user.add( 0, 1 );
-
-					log.txt( LLOG_INFO,
-						"ii : sent xauth response for %s\n",
-						cfg->tunnel->xauth.user.buff() );
-
-					//
-					// update state and flag for removal
-					//
-
 					cfg->tunnel->state |= TSTATE_SENT_XAUTH;
 
-					cfg->lstate |= LSTATE_DELETE;
+					log.txt( LLOG_INFO,
+						"ii : using standard username and password attributes\n" );
 				}
 				else
 				{
@@ -748,36 +733,54 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 					cfg->mtype = ISAKMP_CFG_REPLY;
 
-					cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
+					cfg->attr_add_b( CHKPT_TYPE, XAUTH_TYPE_GENERIC );
 
-					cfg->attr_add_v( XAUTH_USER_NAME,
-						cfg->tunnel->xauth.user.buff(),
-						cfg->tunnel->xauth.user.size() );
+					if(  ( cfg->tunnel->state & TSTATE_RECV_XUSER ) &&
+						!( cfg->tunnel->state & TSTATE_SENT_XUSER ) )
+					{
+						cfg->attr_add_v( CHKPT_USER_NAME,
+							cfg->tunnel->xauth.user.buff(),
+							cfg->tunnel->xauth.user.size() );
 
-					cfg->attr_add_v( XAUTH_USER_PASSWORD,
-						cfg->tunnel->xauth.pass.buff(),
-						cfg->tunnel->xauth.pass.size() );
+						cfg->tunnel->state |= TSTATE_SENT_XUSER;
 
-					//
-					// send config packet
-					//
+						log.txt( LLOG_INFO,
+							"ii : using checkpoint xauth username attribute\n" );
+					}
 
-					config_message_send( ph1, cfg );
+					if(  ( cfg->tunnel->state & TSTATE_RECV_XPASS ) &&
+						!( cfg->tunnel->state & TSTATE_SENT_XPASS ) )
+					{
+						cfg->attr_add_v( CHKPT_USER_PASSWORD,
+							cfg->tunnel->xauth.pass.buff(),
+							cfg->tunnel->xauth.pass.size() );
 
-					cfg->tunnel->xauth.user.add( 0, 1 );
+						cfg->tunnel->state |= TSTATE_SENT_XPASS;
 
-					log.txt( LLOG_INFO,
-						"ii : sent xauth response for %s\n",
-						cfg->tunnel->xauth.user.buff() );
-
-					//
-					// update state and flag for removal
-					//
-
-					cfg->tunnel->state |= TSTATE_SENT_XAUTH;
-
-					cfg->lstate |= LSTATE_DELETE;
+						log.txt( LLOG_INFO,
+							"ii : using checkpoint xauth password attribute\n" );
+					}
 				}
+
+				//
+				// send config packet
+				//
+
+				config_message_send( ph1, cfg );
+
+				BDATA user;
+				user.set( cfg->tunnel->xauth.user );
+				user.add( 0, 1 );
+
+				log.txt( LLOG_INFO,
+					"ii : sent xauth response for %s\n",
+					user.buff() );
+
+				//
+				// flag for removal
+				//
+
+				cfg->lstate |= LSTATE_DELETE;
 			}
 
 			//
