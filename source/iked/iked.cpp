@@ -70,6 +70,9 @@ _IKED::_IKED()
 	unsigned char chkpt[] = VEND_CHKPT;
 	vend_chkpt.set( chkpt, sizeof( chkpt ) );
 
+	unsigned char netsc[] = VEND_NETSC;
+	vend_netsc.set( netsc, sizeof( netsc ) );
+
 	unsigned char frag[] = VEND_FRAG;
 	vend_frag.set( frag, sizeof( frag ) );
 

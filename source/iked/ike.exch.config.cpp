@@ -89,6 +89,17 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	}
 
 	//
+	// make sure we are not dealing
+	// whith an imature phase1 sa
+	//
+
+	if( !( ph1->lstate & LSTATE_MATURE ) )
+	{
+		log.txt( LLOG_ERROR, "!! : ignore config packet, sa not mature\n" );
+		return LIBIKE_OK;
+	}
+
+	//
 	// decrypt packet
 	//
 
@@ -287,9 +298,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					long count = cfg->attr_count();
 					long index = 0;
 
-					bool seen_type = false;
-					bool seen_user = false;
-					bool seen_pass = false;
+					bool auth_type = false;
 
 					for( ; index < count; index++ )
 					{
@@ -298,17 +307,20 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						switch( attr->atype )
 						{
 							case XAUTH_TYPE:
-								seen_type = true;
+							case CHKPT_TYPE:
+								auth_type = true;
 								break;
 
 							case XAUTH_USER_NAME:
-								seen_user = true;
+							case CHKPT_USER_NAME:
+								cfg->tunnel->state |= TSTATE_RECV_XUSER;
 								if( attr->basic )
 									log.txt( LLOG_INFO, "!! : warning, xauth username attribute type is basic\n" );
 								break;
 
 							case XAUTH_USER_PASSWORD:
-								seen_pass = true;
+							case CHKPT_USER_PASSWORD:
+								cfg->tunnel->state |= TSTATE_RECV_XPASS;
 								if( attr->basic )
 									log.txt( LLOG_INFO, "!! : warning, xauth password attribute type is basic\n" );
 								break;
@@ -316,30 +328,38 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					}
 
 					//
-					// sanity check request
+					// check for special vendor processing
 					//
 
-					if( !seen_type || !seen_user || !seen_pass )
+					if( !ph1->chkpt_r )
 					{
-						if( !seen_type )
+						//
+						// standard xauth processing
+						//
+
+						if( !auth_type )
 							log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
 
-						if( !seen_user )
+						if( !( cfg->tunnel->state & TSTATE_RECV_XPASS ) )
 							log.txt( LLOG_ERROR, "!! : missing required xauth username attribute\n" );
 
-						if( !seen_pass )
+						if( !( cfg->tunnel->state & TSTATE_RECV_XUSER ) )
 							log.txt( LLOG_ERROR, "!! : missing required xauth password attribute\n" );
 
-						cfg->tunnel->close = TERM_BADMSG;
-
-						cfg->lstate |= LSTATE_DELETE;
-
-						break;
+						if( !( cfg->tunnel->state & TSTATE_RECV_XAUTH ) )
+						{
+							cfg->tunnel->close = TERM_BADMSG;
+							cfg->lstate |= LSTATE_DELETE;
+						}
+					}
+					else
+					{
+						//
+						// checkpoint xauth processing
+						//
 					}
 
 					cfg->attr_reset();
-
-					cfg->tunnel->state |= TSTATE_RECV_XAUTH;
 				}
 
 				break;
@@ -679,42 +699,85 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				!( cfg->tunnel->state & TSTATE_SENT_XAUTH ) )
 			{
 				//
-				// set attributes
+				// check for special vendor processing
 				//
 
-				cfg->mtype = ISAKMP_CFG_REPLY;
+				if( !ph1->chkpt_r )
+				{
+					//
+					// standard xauth processing
+					//
 
-				cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
+					cfg->mtype = ISAKMP_CFG_REPLY;
 
-				cfg->attr_add_v( XAUTH_USER_NAME,
-					cfg->tunnel->xauth.user.buff(),
-					cfg->tunnel->xauth.user.size() );
+					cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
 
-				cfg->attr_add_v( XAUTH_USER_PASSWORD,
-					cfg->tunnel->xauth.pass.buff(),
-					cfg->tunnel->xauth.pass.size() );
+					cfg->attr_add_v( XAUTH_USER_NAME,
+						cfg->tunnel->xauth.user.buff(),
+						cfg->tunnel->xauth.user.size() );
 
-				//
-				// send config packet
-				//
+					cfg->attr_add_v( XAUTH_USER_PASSWORD,
+						cfg->tunnel->xauth.pass.buff(),
+						cfg->tunnel->xauth.pass.size() );
 
-				config_message_send( ph1, cfg );
+					//
+					// send config packet
+					//
 
-				cfg->attr_reset();
+					config_message_send( ph1, cfg );
 
-				cfg->tunnel->xauth.user.add( 0, 1 );
+					cfg->tunnel->xauth.user.add( 0, 1 );
 
-				log.txt( LLOG_INFO,
-					"ii : sent xauth response for %s\n",
-					cfg->tunnel->xauth.user.buff() );
+					log.txt( LLOG_INFO,
+						"ii : sent xauth response for %s\n",
+						cfg->tunnel->xauth.user.buff() );
 
-				//
-				// update state and flag for removal
-				//
+					//
+					// update state and flag for removal
+					//
 
-				cfg->tunnel->state |= TSTATE_SENT_XAUTH;
+					cfg->tunnel->state |= TSTATE_SENT_XAUTH;
 
-				cfg->lstate |= LSTATE_DELETE;
+					cfg->lstate |= LSTATE_DELETE;
+				}
+				else
+				{
+					//
+					// checkpoint xauth processing
+					//
+
+					cfg->mtype = ISAKMP_CFG_REPLY;
+
+					cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
+
+					cfg->attr_add_v( XAUTH_USER_NAME,
+						cfg->tunnel->xauth.user.buff(),
+						cfg->tunnel->xauth.user.size() );
+
+					cfg->attr_add_v( XAUTH_USER_PASSWORD,
+						cfg->tunnel->xauth.pass.buff(),
+						cfg->tunnel->xauth.pass.size() );
+
+					//
+					// send config packet
+					//
+
+					config_message_send( ph1, cfg );
+
+					cfg->tunnel->xauth.user.add( 0, 1 );
+
+					log.txt( LLOG_INFO,
+						"ii : sent xauth response for %s\n",
+						cfg->tunnel->xauth.user.buff() );
+
+					//
+					// update state and flag for removal
+					//
+
+					cfg->tunnel->state |= TSTATE_SENT_XAUTH;
+
+					cfg->lstate |= LSTATE_DELETE;
+				}
 			}
 
 			//

@@ -646,8 +646,6 @@ bool _IKED::cert_verify( IKE_CLIST & certs, BDATA & ca, BDATA & cert )
 		if( bdata_2_cert( &x509_cert, cert ) )
 			sk_X509_push( chain, x509_cert );
 
-	sk_X509_push( chain, x509_ca );
-
 	long result = 0;
 
 	if( sk_X509_num( chain ) > 0 )
