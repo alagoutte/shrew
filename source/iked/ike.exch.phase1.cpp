@@ -1927,29 +1927,17 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 	payload_add_vend( packet, vend_unity, ISAKMP_PAYLOAD_VEND );
 
 	//
-	// prepair and add checkpoint vendor id payload
-	//
-
-	uint32_t c = htonl( 0x00000002 );	// 01 == server | 02 == client
-	uint32_t v = htonl( 0x00001388 );	// NG
-	uint32_t f = htonl( 0x18800000 );	// unknown
-
-	BDATA vend_chkpt_client;
-	vend_chkpt_client.add( vend_chkpt );	// base
-	vend_chkpt_client.add( &c, 4 );			// client
-	vend_chkpt_client.add( &v, 4 );			// version
-	vend_chkpt_client.add( 0, 4 );			// timestamp
-	vend_chkpt_client.add( 0, 4 );			// reserved
-	vend_chkpt_client.add( &f, 4 );			// features
-
-	payload_add_vend( packet, vend_chkpt_client, ISAKMP_PAYLOAD_VEND );
-
-	//
 	// add netscreen vendor payload
 	//
 
-	payload_add_vend( packet, vend_netsc, ISAKMP_PAYLOAD_NONE );
-	
+	payload_add_vend( packet, vend_netsc, ISAKMP_PAYLOAD_VEND );
+
+	//
+	// add checkpoint vendor id payload ( must be last )
+	//
+
+	payload_add_vend( packet, vend_chkpt, ISAKMP_PAYLOAD_NONE );
+
 	return LIBIKE_OK;
 }
 
