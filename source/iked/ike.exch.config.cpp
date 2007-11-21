@@ -283,84 +283,116 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_CFG_REQUEST:
 			{
 				//
-				// gateway xauth request
+				// check for gateway xauth request
 				//
 
-				if( ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) != TSTATE_RECV_XAUTH )
+				long count = cfg->attr_count();
+				long index = 0;
+
+				bool auth_type = false;
+
+				for( ; index < count; index++ )
+				{
+					IKE_ATTR * attr = cfg->attr_get( index );
+
+					switch( attr->atype )
+					{
+						case XAUTH_TYPE:
+						case CHKPT_TYPE:
+							auth_type = true;
+							break;
+
+						case XAUTH_USER_NAME:
+						case CHKPT_USER_NAME:
+							cfg->tunnel->state |= TSTATE_RECV_XUSER;
+							if( attr->basic )
+								log.txt( LLOG_INFO, "!! : warning, basic xauth username attribute type\n" );
+							break;
+
+						case XAUTH_USER_PASSWORD:
+						case CHKPT_USER_PASSWORD:
+							cfg->tunnel->state |= TSTATE_RECV_XPASS;
+							if( attr->basic )
+								log.txt( LLOG_INFO, "!! : warning, basic xauth password attribute type\n" );
+							break;
+					}
+				}
+
+				//
+				// examine the xauth request
+				//
+
+				if( auth_type )
 				{
 					log.txt( LLOG_INFO, "ii : received xauth request\n" );
 
 					//
-					// make sure have the type,
-					// user and password attribs
+					// if this is the first request
 					//
 
-					long count = cfg->attr_count();
-					long index = 0;
-
-					bool auth_type = false;
-
-					for( ; index < count; index++ )
+					if( ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) != TSTATE_RECV_XAUTH )
 					{
-						IKE_ATTR * attr = cfg->attr_get( index );
+						//
+						// handle special case processing
+						//
 
-						switch( attr->atype )
+						if( !ph1->chkpt_r )
 						{
-							case XAUTH_TYPE:
-							case CHKPT_TYPE:
-								auth_type = true;
-								break;
+							//
+							// standard xauth processing
+							//
 
-							case XAUTH_USER_NAME:
-							case CHKPT_USER_NAME:
-								cfg->tunnel->state |= TSTATE_RECV_XUSER;
-								if( attr->basic )
-									log.txt( LLOG_INFO, "!! : warning, basic xauth username attribute type\n" );
-								break;
+							if( !auth_type )
+								log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
 
-							case XAUTH_USER_PASSWORD:
-							case CHKPT_USER_PASSWORD:
-								cfg->tunnel->state |= TSTATE_RECV_XPASS;
-								if( attr->basic )
-									log.txt( LLOG_INFO, "!! : warning, basic xauth password attribute type\n" );
-								break;
+							if( !( cfg->tunnel->state & TSTATE_RECV_XUSER ) )
+								log.txt( LLOG_ERROR, "!! : missing required xauth username attribute\n" );
+
+							if( !( cfg->tunnel->state & TSTATE_RECV_XPASS ) )
+								log.txt( LLOG_ERROR, "!! : missing required xauth password attribute\n" );
+
+							if( !auth_type || !( cfg->tunnel->state & TSTATE_RECV_XAUTH ) )
+							{
+								cfg->tunnel->close = TERM_BADMSG;
+								cfg->lstate |= LSTATE_DELETE;
+							}
+						}
+						else
+						{
+							//
+							// checkpoint xauth processing
+							//
+
+							if( !auth_type )
+							{
+								log.txt( LLOG_ERROR, "!! : missing required checkpoint xauth type attribute\n" );
+
+								cfg->tunnel->close = TERM_BADMSG;
+								cfg->lstate |= LSTATE_DELETE;
+							}
 						}
 					}
 
 					//
-					// check for special vendor processing
+					// if this is a duplicate request
 					//
 
-					if( !ph1->chkpt_r )
+					if( ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
 					{
 						//
-						// standard xauth processing
+						// looks like we already sent an
+						// xauth response. this means we
+						// failed to authenticate
 						//
 
-						if( !auth_type )
-							log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
+						log.txt( LLOG_ERROR, "!! : duplicate xauth request, authentication failed\n" );
 
-						if( !( cfg->tunnel->state & TSTATE_RECV_XUSER ) )
-							log.txt( LLOG_ERROR, "!! : missing required xauth username attribute\n" );
-
-						if( !( cfg->tunnel->state & TSTATE_RECV_XPASS ) )
-							log.txt( LLOG_ERROR, "!! : missing required xauth password attribute\n" );
-
-						if( !( cfg->tunnel->state & TSTATE_RECV_XAUTH ) )
-						{
-							cfg->tunnel->close = TERM_BADMSG;
-							cfg->lstate |= LSTATE_DELETE;
-						}
+						cfg->tunnel->close = TERM_USER_AUTH;
+						cfg->lstate |= LSTATE_DELETE;
 					}
-					else
-					{
-						//
-						// checkpoint xauth processing
-						//
-					}
-
-					cfg->attr_reset();
 				}
+
+				cfg->attr_reset();
 
 				break;
 			}
@@ -424,17 +456,16 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 					//
 					// unfortunately, not all gateways
-					// are compliant. a config push is
-					// sent before sending the xauth
-					// status. in this case, we fall
-					// through to process config push
-					// requests
+					// are compliant. a config push can
+					// be sent before sending the xauth
+					// status. in this case, we resort
+					// to processing the push request
 					//
 
 					if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_PUSH )
 					{
 						log.txt( LLOG_ERROR,
-							"!! : no xauth status and config mode is not push\n" );
+							"!! : no xauth status received and config mode is not push\n" );
 
 						cfg->tunnel->close = TERM_BADMSG;
 
@@ -699,7 +730,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				( cfg->tunnel->state & TSTATE_SENT_XAUTH ) != TSTATE_SENT_XAUTH )
 			{
 				//
-				// check for special vendor processing
+				// check for special case processing
 				//
 
 				if( !ph1->chkpt_r )
