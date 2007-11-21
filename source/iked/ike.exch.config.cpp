@@ -780,7 +780,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// flag for removal
 				//
 
-				cfg->lstate |= LSTATE_DELETE;
+				if( ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
+					cfg->lstate |= LSTATE_DELETE;
 			}
 
 			//
