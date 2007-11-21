@@ -411,14 +411,33 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					// attribute that shows the result
 					//
 
+					BDATA message;
+
 					long count = cfg->attr_count();
 					long index = 0;
 					long status = -1;
 
-					IKE_ATTR * attr = cfg->attr_get( index );
 					for( ; index < count; index++ )
-						if( ( attr->atype == XAUTH_STATUS ) && attr->basic )
-							status = attr->bdata;
+					{
+						IKE_ATTR * attr = cfg->attr_get( index );
+
+						switch( attr->atype )
+						{
+							case XAUTH_STATUS:
+							case CHKPT_STATUS:
+								if( attr->basic )
+									status = attr->bdata;
+								break;
+
+							case CHKPT_MESSAGE:
+								if( !attr->basic )
+								{
+									message.set( attr->vdata );
+									message.add( 0, 1 );
+								}
+								break;
+						}
+					}
 
 					//
 					// process xauth status if present
@@ -430,7 +449,10 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						// check xauth result
 						//
 
-						log.txt( LLOG_INFO, "ii : received xauth result\n" );
+						if( !message.size() )
+							log.txt( LLOG_INFO, "ii : received xauth result\n" );
+						else
+							log.txt( LLOG_INFO, "ii : received xauth result - %s", message.text() );
 
 						if( status == 1 )
 						{
@@ -741,6 +763,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 					cfg->mtype = ISAKMP_CFG_REPLY;
 
+					cfg->attr_reset();
+
 					cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
 
 					cfg->attr_add_v( XAUTH_USER_NAME,
@@ -769,6 +793,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					//
 
 					cfg->mtype = ISAKMP_CFG_REPLY;
+
+					cfg->attr_reset();
 
 					cfg->attr_add_b( CHKPT_TYPE, XAUTH_TYPE_GENERIC );
 
