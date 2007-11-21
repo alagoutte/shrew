@@ -724,6 +724,12 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 					log.txt( LLOG_INFO,
 						"ii : using standard username and password attributes\n" );
+
+					//
+					// flag for removal
+					//
+
+					cfg->lstate |= LSTATE_DELETE;
 				}
 				else
 				{
@@ -773,13 +779,6 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				log.txt( LLOG_INFO,
 					"ii : sent xauth response for %s\n",
 					cfg->tunnel->xauth.user.buff() );
-
-				//
-				// flag for removal
-				//
-
-				if( ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
-					cfg->lstate |= LSTATE_DELETE;
 			}
 
 			//
