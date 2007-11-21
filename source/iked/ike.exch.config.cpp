@@ -768,13 +768,11 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				config_message_send( ph1, cfg );
 
-				BDATA user;
-				user.set( cfg->tunnel->xauth.user );
-				user.add( 0, 1 );
+				cfg->tunnel->xauth.user.add( 0, 1 );
 
 				log.txt( LLOG_INFO,
 					"ii : sent xauth response for %s\n",
-					user.buff() );
+					cfg->tunnel->xauth.user.buff() );
 
 				//
 				// flag for removal
@@ -1609,6 +1607,8 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 		// standard attributes
 		//
 
+		bool unhandled = false;
+
 		switch( attr->atype )
 		{
 			case INTERNAL_IP4_ADDRESS:
@@ -1738,14 +1738,19 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 
 				break;
 			}
+
+			default:
+				unhandled = true;
 		}
 
 		//
 		// cisco unity attributes
 		//
 
-		if( unity )
+		if( unhandled && unity )
 		{
+			unhandled = false;
+
 			switch( attr->atype )
 			{
 				case UNITY_DEF_DOMAIN:
@@ -1945,7 +1950,28 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 
 					break;
 				}
+
+				default:
+					unhandled = true;
 			}
+		}
+
+		//
+		// unknown attribute type
+		//
+
+		if( unhandled )
+		{
+			if( attr->basic )
+				log.txt( LLOG_DEBUG,
+					"ii : - Unkown BASIC %u = %u\n",
+					attr->atype,
+					attr->bdata );
+			else
+				log.txt( LLOG_DEBUG,
+					"ii : - Unkown VARIABLE %u = %u bytes\n",
+					attr->atype,
+					attr->vdata.size() );
 		}
 	}
 
