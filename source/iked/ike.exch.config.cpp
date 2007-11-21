@@ -286,7 +286,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				// gateway xauth request
 				//
 
-				if( !( cfg->tunnel->state & TSTATE_RECV_XAUTH ) )
+				if( ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) != TSTATE_RECV_XAUTH )
 				{
 					log.txt( LLOG_INFO, "ii : received xauth request\n" );
 
@@ -695,8 +695,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			// client xauth response
 			//
 
-			if(  ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) &&
-				!( cfg->tunnel->state & TSTATE_SENT_XAUTH ) )
+			if( ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) &&
+				( cfg->tunnel->state & TSTATE_SENT_XAUTH ) != TSTATE_SENT_XAUTH )
 			{
 				//
 				// check for special vendor processing
