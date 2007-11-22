@@ -700,8 +700,7 @@ long _IKED::payload_get_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal )
 			break;
 	}
 
-	size_t size;
-	packet.chk_payload( size );
+	size_t size = packet.chk_payload();
 
 	uint32_t lvalue = 0;
 	uint16_t svalue = 0;
@@ -967,7 +966,7 @@ long _IKED::payload_get_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal )
 			}
 		}
 
-		packet.chk_payload( size );
+		size = packet.chk_payload();
 	}
 
 	//
@@ -1002,8 +1001,7 @@ long _IKED::payload_get_kex( PACKET_IKE & packet, BDATA & gx )
 	// read key exchange payload
 	//
 
-	size_t size;
-	packet.chk_payload( size );
+	size_t size = packet.chk_payload();
 
 	if( size > LIBIKE_MAX_DHGRP )
 	{
@@ -1045,8 +1043,7 @@ long _IKED::payload_get_nonce( PACKET_IKE & packet, BDATA & nonce )
 	// read nonce payload
 	//
 
-	size_t size;
-	packet.chk_payload( size );
+	size_t size = packet.chk_payload();
 
 	if( ( size < ISAKMP_NONCE_MIN ) ||
 		( size > ISAKMP_NONCE_MAX ) )
@@ -1145,7 +1142,7 @@ long _IKED::payload_get_ph1id( PACKET_IKE & packet, IKE_PH1ID & ph1id )
 		case ISAKMP_ID_ASN1_GN:
 		case ISAKMP_ID_KEY_ID:
 
-			packet.chk_payload( size );
+			size = packet.chk_payload();
 			if( size < LIBIKE_MAX_VARID )
 				packet.get( ph1id.varid, size );		// string ids
 
@@ -1291,8 +1288,7 @@ long _IKED::payload_get_cert( PACKET_IKE & packet, uint8_t & type, BDATA & cert 
 	// read certificate payload
 	//
 
-	size_t size;
-	packet.chk_payload( size );
+	size_t size = packet.chk_payload();
 	size--;
 
 	if( size > ISAKMP_CERT_MAX )
@@ -1353,8 +1349,7 @@ long _IKED::payload_get_creq( PACKET_IKE & packet, uint8_t & type )
 		return LIBIKE_DECODE;
 	}
 
-	size_t size;
-	packet.chk_payload( size );
+	size_t size = packet.chk_payload();
 
 	if( size > ISAKMP_CREQ_MAX )
 	{
@@ -1402,8 +1397,7 @@ long _IKED::payload_get_sign( PACKET_IKE & packet, BDATA & sign )
 	// read signature payload
 	//
 
-	size_t size;
-	packet.chk_payload( size );
+	size_t size = packet.chk_payload();
 
 	if( size > ISAKMP_SIGN_MAX )
 	{
@@ -1445,8 +1439,7 @@ long _IKED::payload_get_hash( PACKET_IKE & packet, BDATA & hash, long hash_size 
 	// read hash payload
 	//
 
-	size_t size;
-	packet.chk_payload( size );
+	size_t size = packet.chk_payload();
 
 	if( size != hash_size )
 	{
@@ -1488,8 +1481,7 @@ long _IKED::payload_get_vend( PACKET_IKE & packet, BDATA & vend )
 	// read vendor id payload
 	//
 
-	size_t size;
-	packet.chk_payload( size );
+	size_t size = packet.chk_payload();
 
 	//
 	// if the vendor id is greater
@@ -1568,8 +1560,7 @@ long _IKED::payload_get_cfglist( PACKET_IKE & packet, IDB_CFG * cfg )
 	// get remaining payload length
 	//
 
-	size_t size;
-	packet.chk_payload( size );
+	size_t size = packet.chk_payload();
 
 	while( size )
 	{
@@ -1616,7 +1607,7 @@ long _IKED::payload_get_cfglist( PACKET_IKE & packet, IDB_CFG * cfg )
 		// get remaining payload length
 		//
 
-		packet.chk_payload( size );
+		size = packet.chk_payload();
 	}
 
 	return LIBIKE_OK;
@@ -1645,8 +1636,7 @@ long _IKED::payload_get_natd( PACKET_IKE & packet, BDATA & natd, long natd_size 
 	// read hash payload
 	//
 
-	size_t size;
-	packet.chk_payload( size );
+	size_t size = packet.chk_payload();
 
 	if( size != natd_size )
 	{
@@ -1752,8 +1742,7 @@ long _IKED::payload_get_notify( PACKET_IKE & packet, IKE_NOTIFY * notify )
 	// read any extra notify data
 	//
 
-	size_t size;
-	packet.chk_payload( size );
+	size_t size = packet.chk_payload();
 	packet.get( notify->data, size );
 
 	return LIBIKE_OK;

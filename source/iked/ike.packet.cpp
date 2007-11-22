@@ -161,17 +161,12 @@ bool _PACKET_IKE::read( IKE_COOKIES & cookies, uint8_t & payload, uint8_t & exch
 	get( cookies.i, ISAKMP_COOKIE_SIZE );
 	get( cookies.r, ISAKMP_COOKIE_SIZE );
 
-	uint8_t		version;
-	uint32_t	length;
-
 	get_byte( payload );			// initial payload
-	get_byte( version );			// isakmp version
+	get_byte( msg_ver );			// isakmp version
 	get_byte( exchange );			// exchange type
 	get_byte( flags );				// flags
 	get_quad( pkt_msgid, false );	// message id
-	get_quad( length );				// packet length
-
-	size( length );
+	get_quad( msg_len );			// message length
 
 	return true;
 }
@@ -208,11 +203,12 @@ bool _PACKET_IKE::get_payload( bool encap, uint8_t & next_payload )
 	return true;
 }
 
-bool _PACKET_IKE::chk_payload( size_t & bytes_left )
+size_t _PACKET_IKE::chk_payload()
 {
-	bytes_left = pld_stack[ pld_depth ].oset +
-				 pld_stack[ pld_depth ].size -
-				 data_oset;
+	return pld_stack[ pld_depth ].oset + pld_stack[ pld_depth ].size - data_oset;
+}
 
-	return true;
+size_t _PACKET_IKE::chk_length()
+{
+	return msg_len;
 }

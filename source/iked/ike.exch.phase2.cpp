@@ -83,14 +83,14 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	if( ( ph1->lstate & LSTATE_DELETE ) ||
 	    ( ph2->lstate & LSTATE_DELETE ) )
 	{
-		log.txt( LLOG_ERROR, "!! : ignore phase2 packet, sa marked for death\n" );
+		log.txt( LLOG_ERROR, "!! : phase2 packet ignored ( sa marked for death )\n" );
 		ph2->dec( true );
 		return LIBIKE_OK;
 	}
 
 	if( ph2->lstate & LSTATE_MATURE )
 	{
-		log.txt( LLOG_ERROR, "!! : ignore phase2 packet, sa already mature\n" );
+		log.txt( LLOG_ERROR, "!! : phase2 packet ignored ( sa already mature )\n" );
 		ph2->dec( true );
 		return LIBIKE_OK;
 	}
@@ -99,7 +99,14 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// decrypt packet
 	//
 
-	packet_ike_decrypt( ph1, packet, &ph2->iv );
+	if( packet_ike_decrypt( ph1, packet, &ph2->iv ) != LIBIKE_OK )
+	{
+		log.txt( LLOG_ERROR,
+			"!! : phase2 packet ignored ( packet decryption error )\n" );
+
+		return LIBIKE_OK;
+	}
+
 
 	//
 	// if we are dumping decrypted packets,
@@ -367,9 +374,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		// check that the entire payload was read
 		//
 
-		size_t bytes_left;
-		packet.chk_payload( bytes_left );
-		if( bytes_left )
+		if( packet.chk_payload() )
 			log.txt( LLOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
 
 		//

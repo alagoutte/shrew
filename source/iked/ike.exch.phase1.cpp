@@ -52,21 +52,94 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( ph1->lstate & LSTATE_DELETE )
 	{
-		log.txt( LLOG_ERROR, "!! : ignore phase1 packet, sa marked for death\n" );
+		log.txt( LLOG_ERROR, "!! : phase1 packet ignored ( sa marked for death )\n" );
 		return LIBIKE_OK;
 	}
 
 	if( ph1->lstate & LSTATE_MATURE )
 	{
-		log.txt( LLOG_ERROR, "!! : ignore phase1 packet, sa already mature\n" );
+		log.txt( LLOG_ERROR, "!! : phase1 packet ignored ( sa already mature )\n" );
 		return LIBIKE_OK;
 	}
 
 	//
-	// decrypt packet
+	// check for duplicate exchange packets.
+	// if we don't discard these before our
+	// processing, we run the risk of errors
+	// assiciated with erroneous data caused
+	// by decrypting packets using invalid
+	// cipher initialization vector data.
 	//
 
-	packet_ike_decrypt( ph1, packet, &ph1->iv );
+	bool duplicate = false;
+
+	if( ph1->exchange == ISAKMP_EXCH_IDENT_PROTECT )
+	{
+		switch( payload )
+		{
+			case ISAKMP_PAYLOAD_SA:
+				if( ph1->xstate & XSTATE_RECV_SA )
+					duplicate = true;
+				break;
+
+			case ISAKMP_PAYLOAD_KEX:
+				if( ph1->xstate & XSTATE_RECV_KE )
+					duplicate = true;
+				break;
+
+			case ISAKMP_PAYLOAD_IDENT:
+				if( ph1->xstate & XSTATE_RECV_ID )
+					duplicate = true;
+				break;
+
+			case ISAKMP_PAYLOAD_HASH:
+				if( ph1->xstate & XSTATE_RECV_HA )
+					duplicate = true;
+				break;
+		}
+	}
+
+	if( ph1->exchange == ISAKMP_EXCH_AGGRESSIVE )
+	{
+		switch( payload )
+		{
+			case ISAKMP_PAYLOAD_SA:
+				if( ph1->xstate & XSTATE_RECV_SA )
+					duplicate = true;
+				break;
+
+			case ISAKMP_PAYLOAD_CERT:
+				if( ph1->xstate & XSTATE_RECV_CT )
+					duplicate = true;
+				break;
+
+			case ISAKMP_PAYLOAD_HASH:
+				if( ph1->xstate & XSTATE_RECV_HA )
+					duplicate = true;
+				break;
+		}
+	}
+
+	if( duplicate )
+	{
+		log.txt( LLOG_ERROR,
+			"!! : phase1 packet ignored ( duplicate leading %s payload )\n",
+			find_name( NAME_PAYLOAD, payload ) );
+
+		return LIBIKE_OK;
+	}
+
+	//
+	// attempt to decrypt our packet
+	//
+
+	if( packet_ike_decrypt( ph1, packet, &ph1->iv ) != LIBIKE_OK )
+	{
+		log.txt( LLOG_ERROR,
+			"!! : phase1 packet ignored ( packet decryption error )\n" );
+
+		return LIBIKE_OK;
+	}
 
 	//
 	// if we are dumping decrypted packets,
@@ -345,9 +418,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		// check that the entire payload was read
 		//
 
-		size_t bytes_left;
-		packet.chk_payload( bytes_left );
-		if( bytes_left )
+		if( packet.chk_payload() )
 			log.txt( LLOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
 
 		//
@@ -2137,6 +2208,8 @@ long _IKED::phase1_chk_sign( IDB_PH1 * ph1 )
 	// using the ca cert specified
 	// in the peer configuration
 	//
+
+	return LIBIKE_OK;
 
 	BDATA cert;
 

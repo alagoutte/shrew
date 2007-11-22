@@ -356,90 +356,149 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 	unsigned char *	data = packet.buff();
 	size_t		    size = packet.size();
 
-	if( data[ ISAKMP_FLAGS_OFFSET ] & ISAKMP_FLAG_ENCRYPT )
+	if( !( data[ ISAKMP_FLAGS_OFFSET ] & ISAKMP_FLAG_ENCRYPT ) )
+		return LIBIKE_OK;
+
+	log.bin(
+		LLOG_DEBUG,
+		LLOG_DECODE,
+		iv->buff(),
+		iv->size(),
+		"=< : decrypt iv" );
+
+	//
+	// temporarily save enough
+	// of the packet to store
+	// as iv data post decrypt
+	//
+
+	unsigned char iv_data[ HMAC_MAX_MD_CBLOCK ];
+
+	memcpy(
+		iv_data,
+		data + size - iv->size(),
+		iv->size() );
+
+	//
+	// init cipher key and iv
+	//
+
+	EVP_CIPHER_CTX ctx_cipher;
+	EVP_CIPHER_CTX_init( &ctx_cipher );
+
+	EVP_CipherInit_ex(
+		&ctx_cipher,
+		sa->evp_cipher,
+		NULL,
+		NULL,
+		NULL,
+		0 );
+
+	EVP_CIPHER_CTX_set_key_length(
+		&ctx_cipher,
+		( int ) sa->key.size() );
+
+	EVP_CipherInit_ex(
+		&ctx_cipher,
+		NULL,
+		NULL,
+		sa->key.buff(),
+		iv->buff(),
+		0 );
+
+	//
+	// decrypt all but header
+	//
+
+	EVP_Cipher(
+		&ctx_cipher,
+		data + ISAKMP_HEADER_SIZE,
+		data + ISAKMP_HEADER_SIZE,
+		( int ) size - ISAKMP_HEADER_SIZE );
+
+	EVP_CIPHER_CTX_cleanup( &ctx_cipher );
+
+	log.bin(
+		LLOG_DEBUG,
+		LLOG_DECODE,
+		data,
+		size,
+		"<= : decrypt packet" );
+
+	//
+	// validate packet padding. if the encrypted
+	// packet size is equal the the ike message
+	// length, we can skip this step. although the
+	// RFC states there should at least be one pad
+	// byte that describes the padding length, if
+	// we are strict we will break compatibility
+	// with many implementations including cisco
+	//
+
+	if( size != packet.chk_length() )
 	{
-		log.bin(
+		//
+		// sanity check the padding lenght
+		//
+
+		size_t padd = data[ size - 1 ];
+
+		if( padd > ( size - sizeof( ISAKMP_HEADER_SIZE ) ) )
+		{
+			log.txt(
+				LLOG_DEBUG,
+				"<= : verify packet padding failed, invalid size ( %i bytes )\n",
+				 padd + 1 );
+
+			return LIBIKE_FAILED;
+		}
+
+		//
+		// validate that all pad bytes are null
+		//
+
+		for( size_t index = 0; index < padd; index++ )
+		{
+			uint8_t byte = data[ size - padd + index - 1 ];
+
+			if( byte )
+			{
+				log.txt(
+					LLOG_DEBUG,
+					"<= : verify packet padding failed, invalid sequence ( %i bytes )\n",
+					 padd + 1 );
+
+				return LIBIKE_FAILED;
+			}
+		}
+
+		//
+		// trim packet padding
+		//
+
+		packet.size( size - ( padd + 1 ) );
+
+		log.txt(
 			LLOG_DEBUG,
-			LLOG_DECODE,
-			iv->buff(),
-			iv->size(),
-			"=< : decrypt iv" );
-
-		//
-		// temporarily save enough
-		// of the packet to store
-		// as iv data post decrypt
-		//
-
-		unsigned char iv_data[ HMAC_MAX_MD_CBLOCK ];
-
-		memcpy(
-			iv_data,
-			data + size - iv->size(),
-			iv->size() );
-
-		//
-		// init cipher key and iv
-		//
-
-		EVP_CIPHER_CTX ctx_cipher;
-		EVP_CIPHER_CTX_init( &ctx_cipher );
-
-		EVP_CipherInit_ex(
-			&ctx_cipher,
-			sa->evp_cipher,
-			NULL,
-			NULL,
-			NULL,
-			0 );
-
-		EVP_CIPHER_CTX_set_key_length(
-			&ctx_cipher,
-			( int ) sa->key.size() );
-
-		EVP_CipherInit_ex(
-			&ctx_cipher,
-			NULL,
-			NULL,
-			sa->key.buff(),
-			iv->buff(),
-			0 );
-
-		//
-		// decrypt all but header
-		//
-
-		EVP_Cipher(
-			&ctx_cipher,
-			data + ISAKMP_HEADER_SIZE,
-			data + ISAKMP_HEADER_SIZE,
-			( int ) size - ISAKMP_HEADER_SIZE );
-
-		EVP_CIPHER_CTX_cleanup( &ctx_cipher );
-
-		log.bin(
-			LLOG_DEBUG,
-			LLOG_DECODE,
-			data,
-			size,
-			"<= : decrypt packet" );
-
-		//
-		// store cipher iv data
-		//
-
-		memcpy(
-			iv->buff(),
-			iv_data,
-			iv->size() );
-
-		log.bin(
-			LLOG_DEBUG,
-			LLOG_DECODE,
-			iv->buff(),
-			iv->size(),
-			"== : stored iv" );
+			"<= : trim packet padding ( %i bytes )\n",
+			 padd + 1 );
 	}
+
+	//
+	// store cipher iv data
+	//
+
+	memcpy(
+		iv->buff(),
+		iv_data,
+		iv->size() );
+
+	log.bin(
+		LLOG_DEBUG,
+		LLOG_DECODE,
+		iv->buff(),
+		iv->size(),
+		"== : stored iv" );
 	
 	return LIBIKE_OK;
 }

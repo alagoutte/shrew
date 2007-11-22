@@ -82,7 +82,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	if( ( ph1->lstate & LSTATE_DELETE ) ||
 	    ( cfg->lstate & LSTATE_DELETE ) )
 	{
-		log.txt( LLOG_ERROR, "!! : ignore config packet, sa marked for death\n" );
+		log.txt( LLOG_ERROR, "!! : config packet ignored ( sa marked for death )\n" );
 
 		cfg->dec( true );
 		return LIBIKE_OK;
@@ -95,7 +95,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( !( ph1->lstate & LSTATE_MATURE ) )
 	{
-		log.txt( LLOG_ERROR, "!! : ignore config packet, sa not mature\n" );
+		log.txt( LLOG_ERROR, "!! : config packet ignored ( sa not mature )\n" );
 		return LIBIKE_OK;
 	}
 
@@ -103,7 +103,13 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// decrypt packet
 	//
 
-	packet_ike_decrypt( ph1, packet, &cfg->iv );
+	if( packet_ike_decrypt( ph1, packet, &cfg->iv ) != LIBIKE_OK )
+	{
+		log.txt( LLOG_ERROR,
+			"!! : config packet ignored ( packet decryption error )\n" );
+
+		return LIBIKE_OK;
+	}
 
 	//
 	// if we are dumping decrypted packets,
@@ -216,9 +222,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		// was the entire payload read
 		//
 
-		size_t bytes_left;
-		packet.chk_payload( bytes_left );
-		if( bytes_left )
+		if( packet.chk_payload() )
 			log.txt( LLOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
 
 		//

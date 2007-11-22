@@ -74,10 +74,13 @@ typedef class _PACKET_IKE : public _PACKET
 {
 	protected:
 
-	IKE_PAYLOAD		pld_stack[ 8 ];
-	long			pld_depth;
+	IKE_PAYLOAD	pld_stack[ 8 ];
+	long		pld_depth;
 
-	uint32_t		pkt_msgid;
+	uint32_t	pkt_msgid;
+
+	uint8_t		msg_ver;
+	uint32_t	msg_len;
 
 	public:
 
@@ -95,7 +98,8 @@ typedef class _PACKET_IKE : public _PACKET
 	bool	get_payload( bool encap, uint8_t & next_payload );
 	void	end_payload( bool decap, bool write = true );
 
-	bool	chk_payload( size_t & bytes_left );
+	size_t	chk_payload();
+	size_t	chk_length();
 
 	bool	write( IKE_COOKIES & cookies,
 					uint8_t payload,
