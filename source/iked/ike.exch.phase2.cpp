@@ -96,17 +96,15 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	}
 
 	//
-	// decrypt packet
+	// attempt to decrypt our packet
 	//
 
 	if( packet_ike_decrypt( ph1, packet, &ph2->iv ) != LIBIKE_OK )
 	{
-		log.txt( LLOG_ERROR,
-			"!! : phase2 packet ignored ( packet decryption error )\n" );
-
+		log.txt( LLOG_ERROR, "!! : phase2 packet ignored ( packet decryption error )\n" );
+		ph2->dec( true );
 		return LIBIKE_OK;
 	}
-
 
 	//
 	// if we are dumping decrypted packets,

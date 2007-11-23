@@ -50,7 +50,7 @@ _LOG::~_LOG()
 	close();
 }
 
-void _LOG::tstamp( char * buff, long size )
+size_t _LOG::tstamp( char * buff, size_t size )
 {
 /*
 	time_t		ctime;
@@ -59,23 +59,26 @@ void _LOG::tstamp( char * buff, long size )
 	time( &ctime );
 	ltime = localtime( &ctime );
 
-	strftime( buff, length, "%y/%m/%d %H:%M:%S ", ltime );
+	return strftime( buff, length, "%y/%m/%d %H:%M:%S ", ltime );
 */
 	buff[ 0 ] = 0;
+	return 0;
 }
 
-bool _LOG::append( char * buff, long size )
+bool _LOG::append( char * buff, size_t size )
 {
 	lock.lock();
 
 #ifdef WIN32
 
+	DWORD dwsize = ( DWORD ) size;
+
 	if( fp != NULL )
 		WriteFile(
 			fp,
 			buff,
-			size,
-			( DWORD * ) &size,
+			dwsize,
+			&dwsize,
 			NULL );
 
 #endif
@@ -182,11 +185,8 @@ void _LOG::close()
 
 void _LOG::txt( long level, const char * fmt, ... )
 {
-	char fbuff[ 128 ];
-	tstamp( fbuff, 128 );
-
 	char tbuff[ LOG_MAX_TXT ];
-	char bbuff[ LOG_MAX_TXT ];
+	char fbuff[ LOG_MAX_TXT ];
 
 	if( level > log_level )
 		return;
@@ -194,80 +194,85 @@ void _LOG::txt( long level, const char * fmt, ... )
 	va_list list;
 	va_start( list, fmt );
 
-	long size = 0;
-
 	if( ( fp != NULL ) || ( log_flags & LOGFLAG_ECHO ) )
 	{
-		vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list );
-		size = sprintf_s( bbuff, LOG_MAX_TXT, "%s%s", fbuff, tbuff );
+		size_t	tsize = LOG_MAX_TXT;
+		size_t	tused = 0;
 
-		if( size != -1 )
-			append( bbuff, size );
+		vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list );
+
+		tused += tstamp( fbuff, tsize );
+		tused += sprintf_s( fbuff + tused, tsize - tused, tbuff );
+
+		append( fbuff, tused );
 	}
 }
 
 void _LOG::bin( long level, long blevel, void * bin, size_t len, const char * fmt, ... )
 {
-	//
-	// FIXME : Review for buffer overflows
-	//
-
-	char fbuff[ 64 ];
-	tstamp( fbuff, 64 );
-
 	char tbuff[ LOG_MAX_TXT ];
-	char bbuff[ LOG_MAX_BIN ];
+	char fbuff[ LOG_MAX_BIN ];
+
+	if( level > log_level )
+		return;
 
 	va_list list;
 	va_start( list, fmt );
 
-	long size = 0;
-
-	if( ( level <= log_level ) && ( blevel > log_level ) )
+	if( ( fp != NULL ) || ( log_flags & LOGFLAG_ECHO ) )
 	{
+		// tsize = total buffer size - NLx2 - NULL
 
-		size = vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list ); 
+		size_t	tsize = LOG_MAX_BIN  - 3;
+		size_t	tused = 0;
 
-		if( size != -1 )
+		// add our text label
+
+		vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list ); 
+
+		tused += tstamp( fbuff, tsize );
+		tused += sprintf_s( fbuff + tused, tsize - tused, "%s ( %ld bytes )", tbuff, len );
+
+		// check binary log level
+
+		if( blevel <= log_level )
 		{
-			size = sprintf_s( bbuff, LOG_MAX_BIN, "%s%s ( %ld bytes )\n", fbuff, tbuff, len );
+			// setup target and source data pointers
 
-			append( bbuff, size );
-		}
-	}
+			char *	tdata = fbuff;
+			char *	sdata = ( char * ) bin;
 
-	if( blevel <= log_level )
-	{
-		size = vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list );
-		size = sprintf_s( bbuff, LOG_MAX_TXT, "%s%s ( %ld bytes ) = ", fbuff, tbuff, len );
+			// bsize = ( tsize / required chars per line ) * bin bytes per line
 
-		char * cdata = ( char * ) bin;
-		char * bdata = bbuff + size;
+			size_t	ssize = ( ( tsize - tused ) / 77 ) * 32;
+			size_t	sused = 0;
 
-		for( size_t index = 0; index < len; index ++ )
-		{
-			if( LOG_MAX_BIN - ( bdata - bbuff + size ) <= 8 )
+			if( ssize > len )
+				ssize = len;
+
+			// format and log source bytes
+
+			for( ; sused < ssize; sused++ )
 			{
-				bdata += sprintf_s( bdata, LOG_MAX_BIN, " ...\n" );
-				break;
+				if( !( sused & 0x1F ) )
+					tused += sprintf_s( &tdata[ tused ], tsize - tused, "\n0x :" );
+
+				unsigned char bchar = sdata[ sused ];
+
+				if( !( sused & 0x03 ) )
+					tused += sprintf_s( &tdata[ tused ], tsize - tused, " %02x", bchar );
+				else
+					tused += sprintf_s( &tdata[ tused ], tsize - tused, "%02x", bchar );
+
+				assert( tsize > tused );
 			}
-
-			if( !( index % 0x20 ) )
-				bdata += sprintf_s( bdata, LOG_MAX_BIN, "\n0x :" );
-
-			if( !( index % 0x04 ) )
-				bdata += sprintf_s( bdata, LOG_MAX_BIN, " " );
-
-			bdata += sprintf_s( bdata, LOG_MAX_BIN, "%02x", 0xff & cdata[ index ] );
 		}
 
-		sprintf_s( bdata, LOG_MAX_BIN, "\n" );
-		bdata++;
+		// add terminating null and append
 
-		size = long( bdata - bbuff );
+		tused += sprintf_s( &fbuff[ tused ], tsize - tused, "\n" );
 
-		append( bbuff, size );
-
+		append( fbuff, tused );
 	}
 
 	return;

@@ -424,6 +424,9 @@
 #define CHKPT_DEF_DOMAIN			16387
 #define CHKPT_MAC_ADDRESS			16388
 #define CHKPT_MARCIPAN_REASON_CODE	16389
+#define CHKPT_UNKNOWN1				16400
+#define CHKPT_UNKNOWN2				16401
+#define CHKPT_UNKNOWN3				16402
 
 //
 // implementation specific constants

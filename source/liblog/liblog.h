@@ -65,8 +65,8 @@
 #define	LLOG_LOUD		4
 #define	LLOG_DECODE		5
 
-#define LOG_MAX_TXT		1024 * 2
-#define LOG_MAX_BIN		1024 * 64
+#define LOG_MAX_TXT		( 1024 * 2 )
+#define LOG_MAX_BIN		( 1024 * 8 )
 
 #define LOGFLAG_ECHO		0x01
 #define LOGFLAG_SYSTEM		0x02
@@ -95,8 +95,8 @@ typedef struct DLX _LOG
 	long		log_level;
 	long		log_flags;
 
-	void	tstamp( char * buff, long size );
-	bool	append( char * buff, long size );
+	size_t	tstamp( char * buff, size_t size );
+	bool	append( char * buff, size_t size );
 
 	public:
 
