@@ -913,6 +913,9 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				cfg->mtype = ISAKMP_CFG_REQUEST;
 
+				if( ph1->chkpt_l && ph1->chkpt_r )
+					iked.rand_bytes( &cfg->ident, sizeof( cfg->ident ) );
+
 				cfg->attr_reset();
 
 				config_xconf_set( cfg,
