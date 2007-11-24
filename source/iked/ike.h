@@ -612,13 +612,14 @@ typedef struct _IKE_XCONF
 	long		opts;	// enabled options
 	long		rqst;	// request options
 
-	in_addr			addr;	// network address
-	in_addr			mask;	// network mask
-	in_addr			dhcp;	// dhcp server
-	in_addr			dnss;	// dns server
-	in_addr			nbns;	// wins server
-	unsigned short	dhgr;	// pfs dh group
-	unsigned short	svpw;	// save password
+	in_addr		addr;	// network address
+	in_addr		mask;	// network mask
+	uint32_t	expi;	// address expires
+	in_addr		dhcp;	// dhcp server
+	in_addr		dnss;	// dns server
+	in_addr		nbns;	// wins server
+	uint16_t	dhgr;	// pfs dh group
+	uint16_t	svpw;	// save password
 
 	char		suffix[ CONF_STRLEN ];
 

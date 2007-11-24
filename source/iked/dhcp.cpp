@@ -230,7 +230,7 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		dhcp_head.op = BOOTP_REQUEST;			// bootp request
 		dhcp_head.htype = BOOTP_HW_IPSEC;		// bootp hardware type
 		dhcp_head.hlen = 6;						// hardware address length
-		dhcp_head.xid = tunnel->dhcp_xid;	// transaction id
+		dhcp_head.xid = tunnel->dhcp_xid;		// transaction id
 
 		dhcp_head.chaddr[ 0 ] = 0x40;			// locally administered unicast MAC
 		memcpy(									// local ipv4 interface address
@@ -284,7 +284,7 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		dhcp_head.op = BOOTP_REQUEST;			// bootp request
 		dhcp_head.htype = BOOTP_HW_IPSEC;		// bootp hardware type
 		dhcp_head.hlen = 6;						// hardware address length
-		dhcp_head.xid = tunnel->dhcp_xid;	// transaction id
+		dhcp_head.xid = tunnel->dhcp_xid;		// transaction id
 
 		dhcp_head.chaddr[ 0 ] = 0x40;			// locally administered unicast MAC
 		memcpy(									// local ip interface address
@@ -299,12 +299,12 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		packet.add_byte( 1 );					// opt size
 		packet.add_byte( DHCP_MSG_REQUEST );	// message type value
 
-		packet.add_byte( DHCP_OPT_SERVER );			// server id
-		packet.add_byte( 4 );						// opt size
+		packet.add_byte( DHCP_OPT_SERVER );		// server id
+		packet.add_byte( 4 );					// opt size
 		packet.add( &tunnel->xconf.dhcp, 4 );	// server id value
 
-		packet.add_byte( DHCP_OPT_ADDRESS );		// requested address
-		packet.add_byte( 4 );						// opt size
+		packet.add_byte( DHCP_OPT_ADDRESS );	// requested address
+		packet.add_byte( 4 );					// opt size
 		packet.add( &tunnel->xconf.addr, 4 );	// address value
 
 		packet.add_byte( DHCP_OPT_CLIENTID );	// client id
