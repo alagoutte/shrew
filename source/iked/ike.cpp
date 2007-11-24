@@ -492,7 +492,7 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 			 diff );
 
 		header = ( IKE_HEADER * ) packet.buff();
-		header->length = htonl( size );
+		header->length = htonl( ( uint32_t ) size );
 	}
 
 	//
@@ -561,7 +561,7 @@ long _IKED::packet_ike_encrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 	//
 
 	IKE_HEADER * header = ( IKE_HEADER * ) packet.buff();
-	header->length = htonl( size );
+	header->length = htonl( ( uint32_t ) size );
 
 	//
 	// init cipher key and iv and

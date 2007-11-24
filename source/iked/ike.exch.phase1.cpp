@@ -2004,10 +2004,30 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 	payload_add_vend( packet, vend_netsc, ISAKMP_PAYLOAD_VEND );
 
 	//
-	// add checkpoint vendor id payload ( must be last )
+	// prepair and add checkpoint vendor id payload ( must be last )
 	//
 
-	payload_add_vend( packet, vend_chkpt, ISAKMP_PAYLOAD_NONE );
+	uint32_t prod;
+	uint32_t vers;
+	uint32_t feat;
+
+	if( !ph1->initiator )
+		prod = htonl( 1 );			// 01 == gateway
+	else
+		prod = htonl( 2 );			// 02 == client
+
+	vers = htonl( 5006 );			// NG AI R56
+	feat = htonl( 0x18800000 );		// all features
+
+	BDATA vend_chkpt2;
+	vend_chkpt2.add( vend_chkpt );	// base vendor id
+	vend_chkpt2.add( &prod, 4 );	// client
+	vend_chkpt2.add( &vers, 4 );	// version
+	vend_chkpt2.add( 0, 4 );		// timestamp
+	vend_chkpt2.add( 0, 4 );		// reserved
+	vend_chkpt2.add( &feat, 4 );	// features
+
+	payload_add_vend( packet, vend_chkpt2, ISAKMP_PAYLOAD_NONE );
 
 	return LIBIKE_OK;
 }
@@ -2089,18 +2109,6 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		}
 
 	//
-	// check for checkpoint vendor id
-	//
-
-	if( vend.size() >= vend_chkpt.size() )
-		if( !memcmp( vend.buff(), vend_chkpt.buff(), vend_chkpt.size() ) )
-		{
-			ph1->chkpt_r = true;
-			log.txt( LLOG_INFO, "ii : peer is CHECKPOINT compatible\n" );
-			return LIBIKE_OK;
-		}
-
-	//
 	// check for netscreen vendor id
 	//
 
@@ -2109,6 +2117,18 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		{
 			ph1->netsc_r = true;
 			log.txt( LLOG_INFO, "ii : peer is NETSCREEN compatible\n" );
+			return LIBIKE_OK;
+		}
+
+	//
+	// check for checkpoint vendor id
+	//
+
+	if( vend.size() >= vend_chkpt.size() )
+		if( !memcmp( vend.buff(), vend_chkpt.buff(), vend_chkpt.size() ) )
+		{
+			ph1->chkpt_r = true;
+			log.txt( LLOG_INFO, "ii : peer is CHECKPOINT compatible\n" );
 			return LIBIKE_OK;
 		}
 
