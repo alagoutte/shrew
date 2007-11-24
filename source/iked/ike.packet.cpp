@@ -44,9 +44,7 @@
 _PACKET_IKE::_PACKET_IKE()
 {
 	reset();
-
-	pkt_msgid = 0;
-
+	memset( &header, 0, sizeof( header ) );
 	notify = 0;
 }
 
@@ -57,19 +55,18 @@ _PACKET_IKE::~_PACKET_IKE()
 
 void _PACKET_IKE::reset()
 {
-	_BDATA::del();
-
+	size( 0 );
 	pld_depth = 0;
 }
 
 void _PACKET_IKE::set_msgid( uint32_t msgid )
 {
-	pkt_msgid = msgid;
+	header.msgid = msgid;
 }
 
 void _PACKET_IKE::get_msgid( uint32_t & msgid )
 {
-	msgid = pkt_msgid;
+	msgid = header.msgid;
 }
 
 bool _PACKET_IKE::write( IKE_COOKIES & cookies, uint8_t payload, uint8_t exchange, uint8_t flags )
@@ -78,25 +75,26 @@ bool _PACKET_IKE::write( IKE_COOKIES & cookies, uint8_t payload, uint8_t exchang
 
 	reset();
 
-	// add initiator and responder cookies
+	// define header information and add
 
-	add( cookies.i, ISAKMP_COOKIE_SIZE );
-	add( cookies.r, ISAKMP_COOKIE_SIZE );
+	header.cookies = cookies;
+	header.payload = payload;
+	header.version = ISAKMP_VERSION;
+	header.exchange = exchange;
+	header.flags = flags;
+	header.length = 0;
 
-	add_byte( payload );			// initial payload
-	add_byte( ISAKMP_VERSION );		// isakmp version
-	add_byte( exchange );			// exchange type
-	add_byte( flags );				// flags
-	add_quad( pkt_msgid, false );	// message id
-	add_quad( 0 );					// packet length
+	add( &header, sizeof( header ) );
 
 	return true;
 }
 
 bool _PACKET_IKE::done()
 {
-	uint32_t * total = ( uint32_t * ) data_buff;
-	total[ 6 ] = htonl( ( unsigned long ) data_size );
+	header.length = ( uint32_t ) data_size;
+
+	IKE_HEADER * tmp_header = ( IKE_HEADER * ) data_buff;
+	tmp_header->length  = htonl( header.length );
 
 	return true;
 }
@@ -156,17 +154,17 @@ bool _PACKET_IKE::read( IKE_COOKIES & cookies, uint8_t & payload, uint8_t & exch
 	data_oset = 0;
 	pld_depth = 0;
 
-	// get initiator and responder cookies
+	// get and determine header information
 
-	get( cookies.i, ISAKMP_COOKIE_SIZE );
-	get( cookies.r, ISAKMP_COOKIE_SIZE );
+	if( !get( &header, sizeof( header ) ) )
+		return false;
 
-	get_byte( payload );			// initial payload
-	get_byte( msg_ver );			// isakmp version
-	get_byte( exchange );			// exchange type
-	get_byte( flags );				// flags
-	get_quad( pkt_msgid, false );	// message id
-	get_quad( msg_len );			// message length
+	header.length = ntohl( header.length );
+
+	cookies = header.cookies;
+	payload = header.payload;
+	exchange = header.exchange;
+	flags = header.flags;
 
 	return true;
 }
@@ -203,12 +201,7 @@ bool _PACKET_IKE::get_payload( bool encap, uint8_t & next_payload )
 	return true;
 }
 
-size_t _PACKET_IKE::chk_payload()
+size_t _PACKET_IKE::get_payload_left()
 {
 	return pld_stack[ pld_depth ].oset + pld_stack[ pld_depth ].size - data_oset;
-}
-
-size_t _PACKET_IKE::chk_length()
-{
-	return msg_len;
 }

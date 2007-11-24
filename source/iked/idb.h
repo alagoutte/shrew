@@ -63,12 +63,29 @@ typedef class _IDB_CFG IDB_CFG;
 //       into iked.h
 //
 
+#pragma pack( 1 )
+
+typedef struct _IKE_HEADER
+{
+	IKE_COOKIES	cookies;
+
+	uint8_t		payload;	// initial payload
+	uint8_t		version;	// isakmp version
+	uint8_t		exchange;	// exchange type
+	uint8_t		flags;		// flags
+	uint32_t	msgid;		// message id
+	uint32_t	length;		// message length
+
+}IKE_HEADER;
+
 typedef struct _IKE_PAYLOAD
 {
 	size_t	oset;
 	size_t	size;
 
 }IKE_PAYLOAD;
+
+#pragma pack()
 
 typedef class _PACKET_IKE : public _PACKET
 {
@@ -77,17 +94,14 @@ typedef class _PACKET_IKE : public _PACKET
 	IKE_PAYLOAD	pld_stack[ 8 ];
 	long		pld_depth;
 
-	uint32_t	pkt_msgid;
-
-	uint8_t		msg_ver;
-	uint32_t	msg_len;
+	IKE_HEADER	header;
 
 	public:
 
+	unsigned char	notify;
+
 	_PACKET_IKE();
 	~_PACKET_IKE();
-
-	unsigned char	notify;
 
 	void	reset();
 
@@ -98,8 +112,7 @@ typedef class _PACKET_IKE : public _PACKET
 	bool	get_payload( bool encap, uint8_t & next_payload );
 	void	end_payload( bool decap, bool write = true );
 
-	size_t	chk_payload();
-	size_t	chk_length();
+	size_t	get_payload_left();
 
 	bool	write( IKE_COOKIES & cookies,
 					uint8_t payload,
@@ -114,6 +127,10 @@ typedef class _PACKET_IKE : public _PACKET
 	bool	done();
 
 }PACKET_IKE;
+
+//
+// IKE list classes
+//
 
 typedef struct _IKE_PENTRY
 {

@@ -432,7 +432,6 @@
 // implementation specific constants
 //
 
-#define ISAKMP_HEADER_SIZE				28
 #define ISAKMP_COOKIE_SIZE				8
 #define ISAKMP_SPI_SIZE					4
 #define ISAKMP_CPI_SIZE					2

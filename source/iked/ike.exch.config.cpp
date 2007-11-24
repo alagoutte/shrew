@@ -222,7 +222,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		// was the entire payload read
 		//
 
-		if( packet.chk_payload() )
+		if( packet.get_payload_left() )
 			log.txt( LLOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
 
 		//

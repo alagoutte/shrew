@@ -412,9 +412,9 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 
 	EVP_Cipher(
 		&ctx_cipher,
-		data + ISAKMP_HEADER_SIZE,
-		data + ISAKMP_HEADER_SIZE,
-		( int ) size - ISAKMP_HEADER_SIZE );
+		data + sizeof( IKE_HEADER ),
+		data + sizeof( IKE_HEADER ),
+		( int ) size - sizeof( IKE_HEADER ) );
 
 	EVP_CIPHER_CTX_cleanup( &ctx_cipher );
 
@@ -435,7 +435,7 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 	// with many implementations including cisco
 	//
 
-	if( size != packet.chk_length() )
+	if( size != packet.get_payload_left() )
 	{
 		//
 		// sanity check the padding lenght
@@ -443,7 +443,7 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 
 		size_t padd = data[ size - 1 ];
 
-		if( padd > ( size - sizeof( ISAKMP_HEADER_SIZE ) ) )
+		if( padd > ( size - sizeof( IKE_HEADER ) ) )
 		{
 			log.txt(
 				LLOG_DEBUG,
@@ -483,6 +483,12 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 			"<= : trim packet padding ( %i bytes )\n",
 			 padd + 1 );
 	}
+
+	//
+	// validate the packet integrity
+	//
+
+	
 
 	//
 	// store cipher iv data
@@ -535,7 +541,7 @@ long _IKED::packet_ike_encrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 		// determine padding
 		//
 
-		size_t plen = size - ISAKMP_HEADER_SIZE;
+		size_t plen = size - sizeof( IKE_HEADER );
 		size_t blen = EVP_CIPHER_block_size( sa->evp_cipher );
 
 		if( plen % blen )
@@ -583,9 +589,9 @@ long _IKED::packet_ike_encrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 
 		EVP_Cipher(
 			&ctx_cipher,
-			encr + ISAKMP_HEADER_SIZE,
-			encr + ISAKMP_HEADER_SIZE,
-			( int ) size + padd - ISAKMP_HEADER_SIZE );
+			encr + sizeof( IKE_HEADER ),
+			encr + sizeof( IKE_HEADER ),
+			( int ) size + padd - sizeof( IKE_HEADER ) );
 
 		EVP_CIPHER_CTX_cleanup( &ctx_cipher );
 
