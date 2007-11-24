@@ -520,7 +520,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						config_xconf_get( cfg,
 							getmask,
 							cfg->tunnel->xconf.rqst,
-							ph1->unity_l && ph1->unity_r );
+							ph1->unity_l && ph1->unity_r,
+							ph1->chkpt_l && ph1->chkpt_r );
 
 						//
 						// update state and flag for removal
@@ -557,7 +558,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						config_xconf_get( cfg,
 							getmask,
 							cfg->tunnel->xconf.rqst,
-							ph1->unity_l && ph1->unity_r );
+							ph1->unity_l && ph1->unity_r,
+							ph1->chkpt_l && ph1->chkpt_r );
 
 						//
 						// update state and flag for removal
@@ -600,7 +602,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						config_xconf_get( cfg,
 							cfg->tunnel->xconf.rqst,
 							0,
-							ph1->unity_l && ph1->unity_r );
+							ph1->unity_l && ph1->unity_r,
+							ph1->chkpt_l && ph1->chkpt_r );
 
 						cfg->attr_reset();
 
@@ -700,7 +703,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						config_xconf_get( cfg,
 							readmask,
 							0,
-							ph1->unity_l && ph1->unity_r );
+							ph1->unity_l && ph1->unity_r,
+							ph1->chkpt_l && ph1->chkpt_r );
 
 						cfg->attr_reset();
 
@@ -914,7 +918,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.rqst,
 					0xffffffff,
-					ph1->unity_l && ph1->unity_r );
+					ph1->unity_l && ph1->unity_r,
+					ph1->chkpt_l && ph1->chkpt_r );
 
 				//
 				// flag as sent and release
@@ -986,7 +991,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.rqst,
 					0xffffffff,
-					ph1->unity_l && ph1->unity_r );
+					ph1->unity_l && ph1->unity_r,
+					ph1->chkpt_l && ph1->chkpt_r );
 
 				//
 				// flag as sent and release
@@ -1255,7 +1261,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.opts,
 					0,
-					ph1->unity_l && ph1->unity_r );
+					ph1->unity_l && ph1->unity_r,
+					ph1->chkpt_l && ph1->chkpt_r );
 
 				//
 				// send config packet
@@ -1322,7 +1329,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.opts,
 					0,
-					ph1->unity_l && ph1->unity_r );
+					ph1->unity_l && ph1->unity_r,
+					ph1->chkpt_l && ph1->chkpt_r );
 
 				//
 				// make sure the msgid is unique
@@ -1370,7 +1378,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 	return LIBIKE_OK;
 }
 
-long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool unity )
+long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool unity, bool chkpt )
 {
 	//
 	// standard attributes
@@ -1382,6 +1390,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 		{
 			cfg->attr_add_v( INTERNAL_IP4_ADDRESS, NULL, 0 );
 			log.txt( LLOG_DEBUG,	"ii : - IP4 Address\n" );
+
+			cfg->attr_add_v( INTERNAL_ADDRESS_EXPIRY, NULL, 0 );
+			log.txt( LLOG_DEBUG,	"ii : - Address Expiry\n" );
 		}
 		else
 		{
@@ -1395,6 +1406,14 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 			log.txt( LLOG_DEBUG,
 				"ii : - IP4 Address = %s\n",
 				txtaddr );
+
+			cfg->attr_add_v( INTERNAL_ADDRESS_EXPIRY,
+				&cfg->tunnel->xconf.expi,
+				sizeof( cfg->tunnel->xconf.expi ) );
+
+			log.txt( LLOG_DEBUG,
+				"ii : - Address Expiry = %i secs\n",
+				cfg->tunnel->xconf.expi );
 		}
 	}
 
@@ -1475,16 +1494,14 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 			if( nullmask & IPSEC_OPTS_DOMAIN )
 			{
 				cfg->attr_add_v( UNITY_DEF_DOMAIN, NULL, 0 );
-				log.txt( LLOG_DEBUG,	"ii : - DNS Suffix\n" );
+				log.txt( LLOG_DEBUG,
+					"ii : - DNS Suffix\n" );
 			}
 			else
 			{
 				cfg->attr_add_v( UNITY_DEF_DOMAIN,
 					&cfg->tunnel->xconf.suffix,
 					strlen( cfg->tunnel->xconf.suffix ) );
-
-				char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-				text_addr( txtaddr, cfg->tunnel->xconf.dnss );
 
 				log.txt( LLOG_DEBUG,
 					"ii : - DNS Suffix = %s\n",
@@ -1598,7 +1615,8 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 			if( nullmask & IPSEC_OPTS_BANNER )
 			{
 				cfg->attr_add_v( UNITY_BANNER, NULL, 0 );
-				log.txt( LLOG_DEBUG,	"ii : - Login Banner\n" );
+				log.txt( LLOG_DEBUG,
+					"ii : - Login Banner\n" );
 			}
 			else
 			{
@@ -1619,7 +1637,8 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 			if( nullmask & IPSEC_OPTS_PFS )
 			{
 				cfg->attr_add_v( UNITY_PFS, NULL, 0 );
-				log.txt( LLOG_DEBUG,	"ii : - PFS Group\n" );
+				log.txt( LLOG_DEBUG,
+					"ii : - PFS Group\n" );
 			}
 			else
 			{
@@ -1637,7 +1656,8 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 			if( nullmask & IPSEC_OPTS_SAVEPW )
 			{
 				cfg->attr_add_v( UNITY_SAVE_PASSWD, NULL, 0 );
-				log.txt( LLOG_DEBUG,	"ii : - Save Password\n" );
+				log.txt( LLOG_DEBUG,
+					"ii : - Save Password\n" );
 			}
 			else
 			{
@@ -1650,11 +1670,56 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 			}
 		}
 	}
+	//
+	// checkpoint attributes
+	//
+
+	if( chkpt )
+	{
+		cfg->attr_add_v( CHKPT_MARCIPAN_REASON_CODE, NULL, 0 );
+
+		log.txt( LLOG_DEBUG,
+			"ii : - Marcipan Reason Code\n" );
+
+		uint8_t macaddr[ 6 ];
+		rand_bytes( &macaddr, 6 );
+
+		cfg->attr_add_v( CHKPT_MAC_ADDRESS, macaddr, 6 );
+
+		log.txt( LLOG_DEBUG,
+			"ii : - Adapter MAC Address = %02x:%02x:%02x:%02x:%02x:%02x\n",
+			macaddr[ 0 ],
+			macaddr[ 1 ],
+			macaddr[ 2 ],
+			macaddr[ 3 ],
+			macaddr[ 4 ],
+			macaddr[ 5 ] );
+
+		if( setmask & IPSEC_OPTS_DOMAIN )
+		{
+			if( nullmask & IPSEC_OPTS_DOMAIN )
+			{
+				cfg->attr_add_v( CHKPT_DEF_DOMAIN, NULL, 0 );
+				log.txt( LLOG_DEBUG,
+					"ii : - DNS Suffix\n" );
+			}
+			else
+			{
+				cfg->attr_add_v( CHKPT_DEF_DOMAIN,
+					&cfg->tunnel->xconf.suffix,
+					strlen( cfg->tunnel->xconf.suffix ) );
+
+				log.txt( LLOG_DEBUG,
+					"ii : - DNS Suffix = %s\n",
+					cfg->tunnel->xconf.suffix );
+			}
+		}
+	}
 
 	return LIBIKE_OK;
 }
 
-long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool unity )
+long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool unity, bool chkpt )
 {
 	long count = cfg->attr_count();
 	long index = 0;
@@ -1699,6 +1764,35 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 				}
 				else
 					log.txt( LLOG_DEBUG,	"ii : - IP4 Address\n" );
+
+				break;
+			}
+
+			case INTERNAL_ADDRESS_EXPIRY:
+			{
+				getmask |= IPSEC_OPTS_ADDR;
+
+				if( ( readmask & IPSEC_OPTS_ADDR ) && attr->vdata.size() )
+				{
+					if( attr->vdata.size() != 4 )
+					{
+						log.txt( LLOG_ERROR,
+							"!! : - Address Expiry has invalid size ( %i bytes )\n",
+							attr->vdata.size() );
+
+						break;
+					}
+
+					memcpy(
+						&cfg->tunnel->xconf.expi,
+						attr->vdata.buff(), 4 );
+
+					log.txt( LLOG_DEBUG,
+						"ii : - Address Expiry = %s\n",
+						 cfg->tunnel->xconf.expi );
+				}
+				else
+					log.txt( LLOG_DEBUG, "ii : - Address Expiry\n" );
 
 				break;
 			}
