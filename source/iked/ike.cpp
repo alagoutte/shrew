@@ -426,6 +426,48 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 		"<= : decrypt packet" );
 
 	//
+	// validate the packet integrity
+	//
+
+	IKE_HEADER * header = ( IKE_HEADER * ) packet.buff();
+
+	size = sizeof( IKE_HEADER );
+
+	if( packet.size() < size )
+	{
+		log.txt( LLOG_ERROR,
+			"!! : validate packet failed ( truncated header )\n" );
+
+		return LIBIKE_FAILED;
+	}
+
+	while( true )
+	{
+		IKE_PAYLOAD * payload = ( IKE_PAYLOAD * )( packet.buff() + size );
+
+		if( packet.size() < ( size + sizeof( IKE_PAYLOAD ) ) )
+		{
+			log.txt( LLOG_ERROR,
+				"!! : validate packet failed ( truncated payload )\n" );
+
+			return LIBIKE_FAILED;
+		}
+
+		size += ntohs( payload->length );
+
+		if( packet.size() < size )
+		{
+			log.txt( LLOG_ERROR,
+				"!! : validate packet failed ( decryption error or corrupted )\n" );
+
+			return LIBIKE_FAILED;
+		}
+
+		if( payload->next == ISAKMP_PAYLOAD_NONE )
+			break;
+	}
+
+	//
 	// validate packet padding. if the encrypted
 	// packet size is equal the the ike message
 	// length, we can skip this step. although the
@@ -435,60 +477,23 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 	// with many implementations including cisco
 	//
 
-	if( size != packet.get_payload_left() )
+	if( size < packet.size() )
 	{
-		//
-		// sanity check the padding lenght
-		//
-
-		size_t padd = data[ size - 1 ];
-
-		if( padd > ( size - sizeof( IKE_HEADER ) ) )
-		{
-			log.txt(
-				LLOG_DEBUG,
-				"<= : verify packet padding failed, invalid size ( %i bytes )\n",
-				 padd + 1 );
-
-			return LIBIKE_FAILED;
-		}
-
-		//
-		// validate that all pad bytes are null
-		//
-
-		for( size_t index = 0; index < padd; index++ )
-		{
-			uint8_t byte = data[ size - padd + index - 1 ];
-
-			if( byte )
-			{
-				log.txt(
-					LLOG_DEBUG,
-					"<= : verify packet padding failed, invalid sequence ( %i bytes )\n",
-					 padd + 1 );
-
-				return LIBIKE_FAILED;
-			}
-		}
-
 		//
 		// trim packet padding
 		//
 
-		packet.size( size - ( padd + 1 ) );
+		size_t diff = packet.size() - size;
 
-		log.txt(
-			LLOG_DEBUG,
-			"<= : trim packet padding ( %i bytes )\n",
-			 padd + 1 );
+		packet.size( size );
+
+		log.txt( LLOG_DEBUG,
+			"<= : trimmed packet padding ( %i bytes )\n",
+			 diff );
+
+		header = ( IKE_HEADER * ) packet.buff();
+		header->length = htonl( size );
 	}
-
-	//
-	// validate the packet integrity
-	//
-
-	
 
 	//
 	// store cipher iv data
@@ -518,117 +523,97 @@ long _IKED::packet_ike_encrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 	unsigned char *	data = packet.buff();
 	size_t		    size = packet.size();
 
-	if( data[ ISAKMP_FLAGS_OFFSET ] & ISAKMP_FLAG_ENCRYPT )
-	{
-		unsigned char *	encr = 0;
-		size_t			padd = 0;
+	if( !( data[ ISAKMP_FLAGS_OFFSET ] & ISAKMP_FLAG_ENCRYPT ) )
+		return LIBIKE_OK;
 
-		log.bin(
-			LLOG_DEBUG,
-			LLOG_DECODE,
-			iv->buff(),
-			iv->size(),
-			">= : encrypt iv" );
+	log.bin(
+		LLOG_DEBUG,
+		LLOG_DECODE,
+		iv->buff(),
+		iv->size(),
+		">= : encrypt iv" );
 
-		log.bin(
-			LLOG_DEBUG,
-			LLOG_DECODE,
-			data,
-			size,
-			"=> : encrypt packet" );
+	log.bin(
+		LLOG_DEBUG,
+		LLOG_DECODE,
+		packet.buff(),
+		packet.size(),
+		"=> : encrypt packet" );
 
-		//
-		// determine padding
-		//
+	//
+	// determine pad length
+	//
 
-		size_t plen = size - sizeof( IKE_HEADER );
-		size_t blen = EVP_CIPHER_block_size( sa->evp_cipher );
+	size_t plen = size - sizeof( IKE_HEADER );
+	size_t blen = EVP_CIPHER_block_size( sa->evp_cipher );
+	size_t padd = 0;
 
-		if( plen % blen )
-			padd += blen - plen % blen;
+	if( plen % blen )
+		padd += blen - ( plen % blen );
 
-		//
-		// duplicate packet data
-		// and null padding data
-		//
+	packet.add_null( padd );
 
-		encr = new unsigned char[ size + padd ];
-		if( !encr )
-			return LIBIKE_MEMORY;
+	data = packet.buff();
+	size = packet.size();
 
-		memcpy( encr, data, size );
-		memset( encr + size, 0, padd );
+	//
+	// set new packet length in header
+	//
 
-		//
-		// init cipher key and iv and
-		// encrypt all but header
-		//
+	IKE_HEADER * header = ( IKE_HEADER * ) packet.buff();
+	header->length = htonl( size );
 
-		EVP_CIPHER_CTX ctx_cipher;
-		EVP_CIPHER_CTX_init( &ctx_cipher );
+	//
+	// init cipher key and iv and
+	// encrypt all but header
+	//
 
-		EVP_CipherInit_ex(
-			&ctx_cipher,
-			sa->evp_cipher,
-			NULL,
-			NULL,
-			NULL,
-			1 );
+	EVP_CIPHER_CTX ctx_cipher;
+	EVP_CIPHER_CTX_init( &ctx_cipher );
 
-		EVP_CIPHER_CTX_set_key_length(
-			&ctx_cipher,
-			( int ) sa->key.size() );
+	EVP_CipherInit_ex(
+		&ctx_cipher,
+		sa->evp_cipher,
+		NULL,
+		NULL,
+		NULL,
+		1 );
 
-		EVP_CipherInit_ex(
-			&ctx_cipher,
-			NULL,
-			NULL,
-			sa->key.buff(),
-			iv->buff(),
-			1 );
+	EVP_CIPHER_CTX_set_key_length(
+		&ctx_cipher,
+		( int ) sa->key.size() );
 
-		EVP_Cipher(
-			&ctx_cipher,
-			encr + sizeof( IKE_HEADER ),
-			encr + sizeof( IKE_HEADER ),
-			( int ) size + padd - sizeof( IKE_HEADER ) );
+	EVP_CipherInit_ex(
+		&ctx_cipher,
+		NULL,
+		NULL,
+		sa->key.buff(),
+		iv->buff(),
+		1 );
 
-		EVP_CIPHER_CTX_cleanup( &ctx_cipher );
+	EVP_Cipher(
+		&ctx_cipher,
+		data + sizeof( IKE_HEADER ),
+		data + sizeof( IKE_HEADER ),
+		( int ) size - sizeof( IKE_HEADER ) );
 
-		//
-		// set new encrypted packet data
-		//
+	EVP_CIPHER_CTX_cleanup( &ctx_cipher );
 
-		packet.reset();
+	//
+	// store cipher iv data
+	//
 
-		packet.add(
-			encr,
-			size + padd );
+	memcpy(
+		iv->buff(),
+		data + size - iv->size(),
+		iv->size() );
 
-		packet.done();
-
-		//
-		// store cipher iv data
-		//
-
-		memcpy(
-			iv->buff(),
-			encr + size + padd - iv->size(),
-			iv->size() );
-
-		log.bin(
-			LLOG_DEBUG,
-			LLOG_DECODE,
-			iv->buff(),
-			iv->size(),
-			"== : stored iv" );
-
-		//
-		// cleanup
-		//
-
-		delete [] encr;
-	}
+	log.bin(
+		LLOG_DEBUG,
+		LLOG_DECODE,
+		iv->buff(),
+		iv->size(),
+		"== : stored iv" );
 
 	return LIBIKE_OK;
 }

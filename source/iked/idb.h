@@ -80,18 +80,26 @@ typedef struct _IKE_HEADER
 
 typedef struct _IKE_PAYLOAD
 {
-	size_t	oset;
-	size_t	size;
+	uint8_t		next;		// next payload
+	uint8_t		reserved;	// reserved
+	uint16_t	length;		// payload size
 
 }IKE_PAYLOAD;
 
 #pragma pack()
 
+typedef struct _PLD_DATA
+{
+	size_t	oset;
+	size_t	size;
+
+}PLD_DATA;
+
 typedef class _PACKET_IKE : public _PACKET
 {
 	protected:
 
-	IKE_PAYLOAD	pld_stack[ 8 ];
+	PLD_DATA	pld_stack[ 8 ];
 	long		pld_depth;
 
 	IKE_HEADER	header;
@@ -108,8 +116,8 @@ typedef class _PACKET_IKE : public _PACKET
 	void	set_msgid( uint32_t msgid );
 	void	get_msgid( uint32_t & msgid );
 
-	bool	add_payload( bool encap, uint8_t next_payload );
-	bool	get_payload( bool encap, uint8_t & next_payload );
+	bool	add_payload( bool encap, uint8_t next );
+	bool	get_payload( bool encap, uint8_t & next );
 	void	end_payload( bool decap, bool write = true );
 
 	size_t	get_payload_left();

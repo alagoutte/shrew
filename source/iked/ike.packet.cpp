@@ -99,7 +99,7 @@ bool _PACKET_IKE::done()
 	return true;
 }
 
-bool _PACKET_IKE::add_payload( bool encap, uint8_t next_payload )
+bool _PACKET_IKE::add_payload( bool encap, uint8_t next )
 {
 	// encapsulate payload
 
@@ -111,11 +111,14 @@ bool _PACKET_IKE::add_payload( bool encap, uint8_t next_payload )
 	pld_stack[ pld_depth ].oset = data_size;
 	pld_stack[ pld_depth ].size = 0;
 
-	add_byte( next_payload );	// next payload
-	add_byte( 0 );				// reserved
-	add_word( 0 );				// payload size
+	// write payload header
 
-	return true;
+	IKE_PAYLOAD payload;
+	payload.next = next;
+	payload.reserved = 0;
+	payload.length = 0;
+
+	return add( &payload, sizeof( payload ) );
 }
 
 void _PACKET_IKE::end_payload( bool decap, bool write )
@@ -132,7 +135,8 @@ void _PACKET_IKE::end_payload( bool decap, bool write )
 	{
 		// set payload size in packet
 
-		*( short * )( data_buff + pld_oset + 2 ) = htons( pld_size );
+		IKE_PAYLOAD * payload = ( IKE_PAYLOAD * )( data_buff + pld_oset );
+		payload->length = htons( pld_size );
 
 		// potentially add payload size
 		// to the parent payload size
@@ -169,7 +173,7 @@ bool _PACKET_IKE::read( IKE_COOKIES & cookies, uint8_t & payload, uint8_t & exch
 	return true;
 }
 
-bool _PACKET_IKE::get_payload( bool encap, uint8_t & next_payload )
+bool _PACKET_IKE::get_payload( bool encap, uint8_t & next )
 {
 	//
 	// check packet size for enough
@@ -188,15 +192,20 @@ bool _PACKET_IKE::get_payload( bool encap, uint8_t & next_payload )
 
 	pld_stack[ pld_depth ].oset = data_oset;
 
-	uint16_t pld_size;
+	// read payload header
 
-	get_byte( next_payload );		// next payload
-	get_null( 1 );					// reserved
-	get_word( pld_size );			// payload size
+	IKE_PAYLOAD payload;
+
+	if( !get( &payload, sizeof( payload ) ) )
+		return false;
 
 	// store payload size
 
-	pld_stack[ pld_depth ].size = pld_size;
+	pld_stack[ pld_depth ].size = ntohs( payload.length );
+
+	// store caller next payload type
+
+	next = payload.next;
 
 	return true;
 }
