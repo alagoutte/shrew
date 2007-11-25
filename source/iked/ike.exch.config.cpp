@@ -255,21 +255,34 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( config_chk_hash( ph1, cfg, msgid ) != LIBIKE_OK )
 	{
-		//
-		// potentialy notify our peer
-		//
+		if( !ph1->zwall_r )
+		{
+			//
+			// potentialy notify our peer
+			//
 
-		if( cfg->tunnel->peer->notify )
-			inform_new_notify( ph1, NULL, ISAKMP_N_INVALID_HASH_INFORMATION );
+			if( cfg->tunnel->peer->notify )
+				inform_new_notify( ph1, NULL, ISAKMP_N_INVALID_HASH_INFORMATION );
 
-		//
-		// flag sa for removal
-		//
+			//
+			// flag sa for removal
+			//
 
-		cfg->lstate |= LSTATE_DELETE;
-		cfg->dec( true );
+			cfg->lstate |= LSTATE_DELETE;
+			cfg->dec( true );
 
-		return LIBIKE_FAILED;
+			return LIBIKE_FAILED;
+		}
+		else
+		{
+			//
+			// the zywall 5 xauth set response
+			// always includes an invalid hash
+			//
+
+			log.txt( LLOG_ERROR,
+				"!! : zywall sent a bad config hash value, ignored\n" );
+		}
 	}
 
 	//
@@ -792,7 +805,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					// flag for removal
 					//
 
-					cfg->lstate |= LSTATE_DELETE;
+					if( !ph1->zwall_r )
+						cfg->lstate |= LSTATE_DELETE;
 				}
 				else
 				{

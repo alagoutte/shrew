@@ -331,6 +331,23 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			}
 
 			//
+			// natt original address ( ignored )
+			//
+
+			case ISAKMP_PAYLOAD_NAT_RFC_ORIG:
+			{
+				log.txt( LLOG_INFO, "<< : natt original address\n" );
+
+				size_t beg = packet.oset() - 4;
+				packet.get_null( packet.get_payload_left() );
+				size_t end = packet.oset();
+
+				ph2->hda.add( packet.buff() + beg, end - beg );
+
+				break;
+			}
+
+			//
 			// notify payload
 			//
 
