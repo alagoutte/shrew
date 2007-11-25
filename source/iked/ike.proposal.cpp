@@ -855,8 +855,10 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 										proposal.encap = ISAKMP_ENCAP_TUNNEL;
 										break;
 
+									case IPSEC_NATT_V00:
+									case IPSEC_NATT_V01:
 									case IPSEC_NATT_V02:
-										proposal.encap = ISAKMP_ENCAP_V02_UDP_TUNNEL;
+										proposal.encap = ISAKMP_ENCAP_VXX_UDP_TUNNEL;
 										break;
 
 									case IPSEC_NATT_RFC:
@@ -872,8 +874,10 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 										proposal.encap = ISAKMP_ENCAP_TRANSPORT;
 										break;
 
+									case IPSEC_NATT_V00:
+									case IPSEC_NATT_V01:
 									case IPSEC_NATT_V02:
-										proposal.encap = ISAKMP_ENCAP_V02_UDP_TRANSPORT;
+										proposal.encap = ISAKMP_ENCAP_VXX_UDP_TRANSPORT;
 										break;
 
 									case IPSEC_NATT_RFC:

@@ -630,10 +630,10 @@ const char * _IKED::find_name( long type, long id )
 				case ISAKMP_ENCAP_TRANSPORT:
 					return encap2;
 
-				case ISAKMP_ENCAP_V02_UDP_TUNNEL:
+				case ISAKMP_ENCAP_VXX_UDP_TUNNEL:
 					return encap3;
 
-				case ISAKMP_ENCAP_V02_UDP_TRANSPORT:
+				case ISAKMP_ENCAP_VXX_UDP_TRANSPORT:
 					return encap4;
 
 				case ISAKMP_ENCAP_RFC_UDP_TUNNEL:

@@ -1208,14 +1208,14 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 	switch( proposal->encap )
 	{
 		case ISAKMP_ENCAP_TRANSPORT:
+		case ISAKMP_ENCAP_VXX_UDP_TRANSPORT:
 		case ISAKMP_ENCAP_RFC_UDP_TRANSPORT:
-		case ISAKMP_ENCAP_V02_UDP_TRANSPORT:
 			sainfo.sa2.mode = IPSEC_MODE_TRANSPORT;
 			break;
 
 		case ISAKMP_ENCAP_TUNNEL:
+		case ISAKMP_ENCAP_VXX_UDP_TUNNEL:
 		case ISAKMP_ENCAP_RFC_UDP_TUNNEL:
-		case ISAKMP_ENCAP_V02_UDP_TUNNEL:
 			sainfo.sa2.mode = IPSEC_MODE_TUNNEL;
 			break;
 	}
@@ -1312,10 +1312,10 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 
 			switch( proposal->encap )
 			{
+				case ISAKMP_ENCAP_VXX_UDP_TUNNEL:
 				case ISAKMP_ENCAP_RFC_UDP_TUNNEL:
-				case ISAKMP_ENCAP_V02_UDP_TUNNEL:
+				case ISAKMP_ENCAP_VXX_UDP_TRANSPORT:
 				case ISAKMP_ENCAP_RFC_UDP_TRANSPORT:
-				case ISAKMP_ENCAP_V02_UDP_TRANSPORT:
 				{
 					sainfo.natt.type = UDP_ENCAP_ESPINUDP;
 
