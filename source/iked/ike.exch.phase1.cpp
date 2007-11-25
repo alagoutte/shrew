@@ -360,7 +360,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			// nat discovery payload
 			//
 
-			case ISAKMP_PAYLOAD_NAT_V02_DISC:
+			case ISAKMP_PAYLOAD_NAT_VXX_DISC:
 			case ISAKMP_PAYLOAD_NAT_RFC_DISC:
 			{
 				if( !( ph1->xstate & XSTATE_RECV_NDL ) )
@@ -616,11 +616,10 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				{
 					phase1_gen_natd( ph1 );
 
-					if( ph1->natt_v == IPSEC_NATT_V02 )
-						last = ISAKMP_PAYLOAD_NAT_V02_DISC;
-
 					if( ph1->natt_v == IPSEC_NATT_RFC )
 						last = ISAKMP_PAYLOAD_NAT_RFC_DISC;
+					else
+						last = ISAKMP_PAYLOAD_NAT_VXX_DISC;
 				}
 
 				//
@@ -1068,11 +1067,10 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							{
 								phase1_gen_natd( ph1 );
 
-								if( ph1->natt_v == IPSEC_NATT_V02 )
-									last = ISAKMP_PAYLOAD_NAT_V02_DISC;
-
 								if( ph1->natt_v == IPSEC_NATT_RFC )
 									last = ISAKMP_PAYLOAD_NAT_RFC_DISC;
+								else
+									last = ISAKMP_PAYLOAD_NAT_VXX_DISC;
 							}
 
 							//
@@ -1132,11 +1130,10 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							{
 								phase1_gen_natd( ph1 );
 
-								if( ph1->natt_v == IPSEC_NATT_V02 )
-									last = ISAKMP_PAYLOAD_NAT_V02_DISC;
-
 								if( ph1->natt_v == IPSEC_NATT_RFC )
 									last = ISAKMP_PAYLOAD_NAT_RFC_DISC;
+								else
+									last = ISAKMP_PAYLOAD_NAT_VXX_DISC;
 							}
 
 							//
@@ -1217,11 +1214,10 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				{
 					phase1_gen_natd( ph1 );
 
-					if( ph1->natt_v == IPSEC_NATT_V02 )
-						last = ISAKMP_PAYLOAD_NAT_V02_DISC;
-
 					if( ph1->natt_v == IPSEC_NATT_RFC )
 						last = ISAKMP_PAYLOAD_NAT_RFC_DISC;
+					else
+						last = ISAKMP_PAYLOAD_NAT_VXX_DISC;
 				}
 
 				//
@@ -2059,6 +2055,46 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		}
 
 	//
+	// check for dead peer detection vendor id
+	//
+
+	if( vend.size() == vend_dpd1.size() )
+		if( !memcmp( vend.buff(), vend_dpd1.buff(), vend_dpd1.size() ) )
+		{
+			ph1->dpd_r = true;
+			log.txt( LLOG_INFO, "ii : peer supports DPDv1\n" );
+			return LIBIKE_OK;
+		}
+
+	//
+	// check for natt v00 vendor id
+	//
+
+	if( vend.size() == vend_natt_v00.size() )
+		if( !memcmp( vend.buff(), vend_natt_v00.buff(), vend_natt_v00.size() ) )
+		{
+			ph1->natt_r = true;
+			if( ph1->natt_v < IPSEC_NATT_V00 )
+				ph1->natt_v = IPSEC_NATT_V00;
+			log.txt( LLOG_INFO, "ii : peer supports NAT-T draft v00\n" );
+			return LIBIKE_OK;
+		}
+
+	//
+	// check for natt v01 vendor id
+	//
+
+	if( vend.size() == vend_natt_v01.size() )
+		if( !memcmp( vend.buff(), vend_natt_v01.buff(), vend_natt_v01.size() ) )
+		{
+			ph1->natt_r = true;
+			if( ph1->natt_v < IPSEC_NATT_V01 )
+				ph1->natt_v = IPSEC_NATT_V01;
+			log.txt( LLOG_INFO, "ii : peer supports NAT-T draft v01\n" );
+			return LIBIKE_OK;
+		}
+
+	//
 	// check for natt v02 vendor id
 	//
 
@@ -2066,8 +2102,9 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		if( !memcmp( vend.buff(), vend_natt_v02.buff(), vend_natt_v02.size() ) )
 		{
 			ph1->natt_r = true;
-			ph1->natt_v = IPSEC_NATT_V02;
-			log.txt( LLOG_INFO, "ii : peer supports NAT-T V02\n" );
+			if( ph1->natt_v < IPSEC_NATT_V02 )
+				ph1->natt_v = IPSEC_NATT_V02;
+			log.txt( LLOG_INFO, "ii : peer supports NAT-T draft v02\n" );
 			return LIBIKE_OK;
 		}
 
@@ -2085,14 +2122,13 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		}
 
 	//
-	// check for dead peer detection vendor id
+	// check for kame vendor id
 	//
 
-	if( vend.size() == vend_dpd1.size() )
-		if( !memcmp( vend.buff(), vend_dpd1.buff(), vend_dpd1.size() ) )
+	if( vend.size() == vend_kame.size() )
+		if( !memcmp( vend.buff(), vend_kame.buff(), vend_kame.size() ) )
 		{
-			ph1->dpd_r = true;
-			log.txt( LLOG_INFO, "ii : peer supports DPDv1\n" );
+			log.txt( LLOG_INFO, "ii : peer is IPSEC-TOOLS compatible\n" );
 			return LIBIKE_OK;
 		}
 
@@ -2112,11 +2148,23 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for netscreen vendor id
 	//
 
-	if( vend.size() >= vend_netsc.size() )
+	if( vend.size() == vend_netsc.size() )
 		if( !memcmp( vend.buff(), vend_netsc.buff(), vend_netsc.size() ) )
 		{
 			ph1->netsc_r = true;
 			log.txt( LLOG_INFO, "ii : peer is NETSCREEN compatible\n" );
+			return LIBIKE_OK;
+		}
+
+	//
+	// check for zywall vendor id
+	//
+
+	if( vend.size() == vend_zwall.size() )
+		if( !memcmp( vend.buff(), vend_zwall.buff(), vend_zwall.size() ) )
+		{
+			ph1->zwall_r = true;
+			log.txt( LLOG_INFO, "ii : peer is ZYWALL compatible\n" );
 			return LIBIKE_OK;
 		}
 
@@ -2129,17 +2177,6 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		{
 			ph1->chkpt_r = true;
 			log.txt( LLOG_INFO, "ii : peer is CHECKPOINT compatible\n" );
-			return LIBIKE_OK;
-		}
-
-	//
-	// check for kame vendor id
-	//
-
-	if( vend.size() == vend_kame.size() )
-		if( !memcmp( vend.buff(), vend_kame.buff(), vend_kame.size() ) )
-		{
-			log.txt( LLOG_INFO, "ii : peer is IPSEC-TOOLS compatible\n" );
 			return LIBIKE_OK;
 		}
 

@@ -264,8 +264,8 @@ const char * _IKED::find_name( long type, long id )
 			static const char * pload12 = "delete";
 			static const char * pload13 = "vendor";
 			static const char * pload14 = "attribute";
-			static const char * pload15 = "nat discovery v02";
-			static const char * pload16 = "nat original adress v02";
+			static const char * pload15 = "nat discovery draft";
+			static const char * pload16 = "nat original adress draft";
 			static const char * pload17 = "nat discovery rfc";
 			static const char * pload18 = "nat original adress rfc";
 			static const char * pload19 = "fragment";
@@ -317,10 +317,10 @@ const char * _IKED::find_name( long type, long id )
 				case ISAKMP_PAYLOAD_ATTRIB:
 					return pload14;
 
-				case ISAKMP_PAYLOAD_NAT_V02_DISC:
+				case ISAKMP_PAYLOAD_NAT_VXX_DISC:
 					return pload15;
 
-				case ISAKMP_PAYLOAD_NAT_V02_ORIG:
+				case ISAKMP_PAYLOAD_NAT_VXX_ORIG:
 					return pload16;
 
 				case ISAKMP_PAYLOAD_NAT_RFC_DISC:

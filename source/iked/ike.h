@@ -172,8 +172,8 @@
 #define ISAKMP_PAYLOAD_ATTRIB			14  // mode config attibutes
 #define ISAKMP_PAYLOAD_NAT_RFC_DISC		20  // nat discovery
 #define ISAKMP_PAYLOAD_NAT_RFC_ORIG		21  // nat original address
-#define ISAKMP_PAYLOAD_NAT_V02_DISC		130 // nat discovery
-#define ISAKMP_PAYLOAD_NAT_V02_ORIG		131  // nat original address
+#define ISAKMP_PAYLOAD_NAT_VXX_DISC		130 // nat discovery
+#define ISAKMP_PAYLOAD_NAT_VXX_ORIG		131 // nat original address
 #define ISAKMP_PAYLOAD_FRAGMENT			132	// fragmentation payload
 
 // exchange types
@@ -465,7 +465,9 @@
 #define IPSEC_DPD_FORCE			2
 
 #define IPSEC_NATT_NONE			0
-#define IPSEC_NATT_V02			2
+#define IPSEC_NATT_V00			1
+#define IPSEC_NATT_V01			2
+#define IPSEC_NATT_V02			3
 #define IPSEC_NATT_RFC			255
 
 #define IPSEC_OPTS_SPLITNET		0x0001

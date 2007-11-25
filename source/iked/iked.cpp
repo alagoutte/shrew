@@ -64,17 +64,17 @@ _IKED::_IKED()
 	unsigned char xauth[] = VEND_XAUTH;
 	vend_xauth.set( xauth, sizeof( xauth ) );
 
-	unsigned char unity[] = VEND_UNITY;
-	vend_unity.set( unity, sizeof( unity ) );
-
-	unsigned char chkpt[] = VEND_CHKPT;
-	vend_chkpt.set( chkpt, sizeof( chkpt ) );
-
-	unsigned char netsc[] = VEND_NETSC;
-	vend_netsc.set( netsc, sizeof( netsc ) );
-
 	unsigned char frag[] = VEND_FRAG;
 	vend_frag.set( frag, sizeof( frag ) );
+
+	unsigned char dpd1[] = VEND_DPD1;
+	vend_dpd1.set( dpd1, sizeof( dpd1 ) );
+
+	unsigned char natt_v00[] = VEND_NATT_V00;
+	vend_natt_v00.set( natt_v00, sizeof( natt_v00 ) );
+
+	unsigned char natt_v01[] = VEND_NATT_V01;
+	vend_natt_v01.set( natt_v01, sizeof( natt_v01 ) );
 
 	unsigned char natt_v02[] = VEND_NATT_V02;
 	vend_natt_v02.set( natt_v02, sizeof( natt_v02 ) );
@@ -82,11 +82,20 @@ _IKED::_IKED()
 	unsigned char natt_rfc[] = VEND_NATT_RFC;
 	vend_natt_rfc.set( natt_rfc, sizeof( natt_rfc ) );
 
-	unsigned char dpd1[] = VEND_DPD1;
-	vend_dpd1.set( dpd1, sizeof( dpd1 ) );
-
 	unsigned char kame[] = VEND_KAME;
 	vend_kame.set( kame, sizeof( kame ) );
+
+	unsigned char unity[] = VEND_UNITY;
+	vend_unity.set( unity, sizeof( unity ) );
+
+	unsigned char netsc[] = VEND_NETSC;
+	vend_netsc.set( netsc, sizeof( netsc ) );
+
+	unsigned char zwall[] = VEND_ZWALL;
+	vend_zwall.set( zwall, sizeof( zwall ) );
+
+	unsigned char chkpt[] = VEND_CHKPT;
+	vend_chkpt.set( chkpt, sizeof( chkpt ) );
 
 	dump_decrypt = false;
 	dump_encrypt = false;

@@ -510,11 +510,14 @@ typedef class _IDB_PH1 : public IDB_XCH
 	bool	unity_l;	// local is cisco unity compatible
 	bool	unity_r;	// remote is cisco unity compatible
 
-	bool	chkpt_l;	// local is checkpoint compatible
-	bool	chkpt_r;	// remote is checkpoint compatible
-
 	bool	netsc_l;	// local is netscreen compatible
 	bool	netsc_r;	// remote is netscreen compatible
+
+	bool	zwall_l;	// local is zywall compatible
+	bool	zwall_r;	// remote is zywall compatible
+
+	bool	chkpt_l;	// local is checkpoint compatible
+	bool	chkpt_r;	// remote is checkpoint compatible
 
 	bool	natt_l;		// local will support natt
 	bool	natt_r;		// remote will support natt
