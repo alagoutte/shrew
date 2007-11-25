@@ -1384,6 +1384,25 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool unity, bool chkpt )
 {
 	//
+	// the modecfg draft defines valid lengths
+	// for most attribute values. a checkpoint
+	// client always submits 4 null bytes even
+	// for values that are not constrained to
+	// 0 or 4 byte lengths. we mimic this odd
+	// behavior for compatibility sake.
+	//
+
+	void *	null_ptr = NULL;
+	char	null_len = 0;
+	char	null_val[ 4 ] = { 0 };
+
+	if( chkpt )
+	{
+		null_ptr = null_val;
+		null_len = 4;
+	}
+
+	//
 	// standard attributes
 	//
 
@@ -1391,10 +1410,14 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 	{
 		if( nullmask & IPSEC_OPTS_ADDR )
 		{
-			cfg->attr_add_v( INTERNAL_IP4_ADDRESS, NULL, 0 );
+			cfg->attr_add_v( INTERNAL_IP4_ADDRESS,
+				null_ptr, null_len );
+
 			log.txt( LLOG_DEBUG,	"ii : - IP4 Address\n" );
 
-			cfg->attr_add_v( INTERNAL_ADDRESS_EXPIRY, NULL, 0 );
+			cfg->attr_add_v( INTERNAL_ADDRESS_EXPIRY,
+				null_ptr, null_len );
+
 			log.txt( LLOG_DEBUG,	"ii : - Address Expiry\n" );
 		}
 		else
@@ -1424,7 +1447,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 	{
 		if( nullmask & IPSEC_OPTS_MASK )
 		{
-			cfg->attr_add_v( INTERNAL_IP4_NETMASK, NULL, 0 );
+			cfg->attr_add_v( INTERNAL_IP4_NETMASK,
+				null_ptr, null_len );
+
 			log.txt( LLOG_DEBUG,	"ii : - IP4 Netamask\n" );
 		}
 		else
@@ -1446,7 +1471,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 	{
 		if( nullmask & IPSEC_OPTS_DNSS )
 		{
-			cfg->attr_add_v( INTERNAL_IP4_DNS, NULL, 0 );
+			cfg->attr_add_v( INTERNAL_IP4_DNS,
+				null_ptr, null_len );
+
 			log.txt( LLOG_DEBUG, "ii : - IP4 DNS Server\n" );
 		}
 		else
@@ -1468,7 +1495,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 	{
 		if( nullmask & IPSEC_OPTS_NBNS )
 		{
-			cfg->attr_add_v( INTERNAL_IP4_NBNS, NULL, 0 );
+			cfg->attr_add_v( INTERNAL_IP4_NBNS,
+				null_ptr, null_len );
+
 			log.txt( LLOG_DEBUG,	"ii : - IP4 WINS Server\n" );
 		}
 		else
@@ -1679,14 +1708,14 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 
 	if( chkpt )
 	{
-		cfg->attr_add_v( CHKPT_MARCIPAN_REASON_CODE, NULL, 0 );
+		cfg->attr_add_v( CHKPT_MARCIPAN_REASON_CODE,
+				null_ptr, null_len );
 
 		log.txt( LLOG_DEBUG,
 			"ii : - Marcipan Reason Code\n" );
 
 		uint8_t macaddr[ 6 ];
 		rand_bytes( &macaddr, 6 );
-
 		cfg->attr_add_v( CHKPT_MAC_ADDRESS, macaddr, 6 );
 
 		log.txt( LLOG_DEBUG,
@@ -1702,7 +1731,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 		{
 			if( nullmask & IPSEC_OPTS_DOMAIN )
 			{
-				cfg->attr_add_v( CHKPT_DEF_DOMAIN, NULL, 0 );
+				cfg->attr_add_v( CHKPT_DEF_DOMAIN,
+					null_ptr, null_len );
+
 				log.txt( LLOG_DEBUG,
 					"ii : - DNS Suffix\n" );
 			}
@@ -1791,7 +1822,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 						attr->vdata.buff(), 4 );
 
 					log.txt( LLOG_DEBUG,
-						"ii : - Address Expiry = %s\n",
+						"ii : - Address Expiry = %i\n",
 						 cfg->tunnel->xconf.expi );
 				}
 				else
