@@ -186,6 +186,8 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	natt_l = false;
 	natt_r = false;
 
+	natt_v = 0;
+
 	dpd_l = false;
 	dpd_r = false;
 
