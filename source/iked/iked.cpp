@@ -82,6 +82,9 @@ _IKED::_IKED()
 	unsigned char natt_rfc[] = VEND_NATT_RFC;
 	vend_natt_rfc.set( natt_rfc, sizeof( natt_rfc ) );
 
+	unsigned char ssoft[] = VEND_SSOFT;
+	vend_ssoft.set( ssoft, sizeof( ssoft ) );
+
 	unsigned char kame[] = VEND_KAME;
 	vend_kame.set( kame, sizeof( kame ) );
 

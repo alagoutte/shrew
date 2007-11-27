@@ -1969,8 +1969,17 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 
 	if( ph1->natt_l )
 	{
-		payload_add_vend( packet, vend_natt_v02, ISAKMP_PAYLOAD_VEND );
-		payload_add_vend( packet, vend_natt_rfc, ISAKMP_PAYLOAD_VEND );
+		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
+			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_DRAFT ) )
+		{
+			payload_add_vend( packet, vend_natt_v00, ISAKMP_PAYLOAD_VEND );
+			payload_add_vend( packet, vend_natt_v01, ISAKMP_PAYLOAD_VEND );
+			payload_add_vend( packet, vend_natt_v02, ISAKMP_PAYLOAD_VEND );
+		}
+
+		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
+			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC ) )
+			payload_add_vend( packet, vend_natt_rfc, ISAKMP_PAYLOAD_VEND );
 	}
 
 	//
@@ -1986,6 +1995,12 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 
 	if( ph1->dpd_l )
 		payload_add_vend( packet, vend_dpd1, ISAKMP_PAYLOAD_VEND );
+
+	//
+	// add shrew soft vendor id payload
+	//
+
+	payload_add_vend( packet, vend_ssoft, ISAKMP_PAYLOAD_VEND );
 
 	//
 	// add unity vendor id payload
@@ -2118,6 +2133,17 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 			ph1->natt_r = true;
 			ph1->natt_v = IPSEC_NATT_RFC;
 			log.txt( LLOG_INFO, "ii : peer supports NAT-T RFC\n" );
+			return LIBIKE_OK;
+		}
+
+	//
+	// check for shrew soft vendor id
+	//
+
+	if( vend.size() == vend_ssoft.size() )
+		if( !memcmp( vend.buff(), vend_ssoft.buff(), vend_ssoft.size() ) )
+		{
+			log.txt( LLOG_INFO, "ii : peer is SHREW SOFT compatible\n" );
 			return LIBIKE_OK;
 		}
 
@@ -2352,81 +2378,124 @@ long _IKED::phase1_gen_natd( IDB_PH1 * ph1 )
 
 bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 {
-	bool enable = false;
-
-	//
-	// generate nat discovery if neccessary
-	//
-
-	if( !( ph1->lstate & LSTATE_GENNATD ) )
-		phase1_gen_natd( ph1 );
-
 	//
 	// verify that both support natt
 	//
 
-	if( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE )
+	switch( ph1->tunnel->peer->natt_mode )
 	{
-		log.txt( LLOG_INFO, "ii : forcing nat traversal to enabled\n" );
-
-		enable = true;
-	}
-	else
-	{
-		if( !ph1->natt_l )
+		case IPSEC_NATT_DISABLE:
 		{
-			log.txt( LLOG_INFO, "ii : local nat traversal is disabled\n" );
-
-			return false;
+			log.txt( LLOG_INFO, "ii : nat-t is disabled locally\n" );
+			break;
 		}
 
-		if( !ph1->natt_r )
+		case IPSEC_NATT_ENABLE:
 		{
-			log.txt( LLOG_INFO, "ii : remote nat traversal is disabled\n" );
+			//
+			// make sure remote peer negotiated natt
+			//
 
-			return false;
+			if( !ph1->natt_v )
+			{
+				log.txt( LLOG_INFO, "ii : nat-t is unsupported by remote peer\n" );
+				break;
+			}
+
+			//
+			// generate nat discovery if neccessary
+			//
+
+			if( !( ph1->lstate & LSTATE_GENNATD ) )
+				phase1_gen_natd( ph1 );
+
+			bool xlated = false;
+
+			//
+			// compare the remote destination
+			// hash to the local source hash
+			//
+
+			if( ph1->natd_rd.size() == ph1->natd_ls.size() )
+			{
+				if( memcmp(
+						ph1->natd_rd.buff(),
+						ph1->natd_ls.buff(),
+						ph1->natd_ls.size() ) )
+				{
+					log.txt( LLOG_INFO,
+						"ii : nat discovery - local address is translated\n" );
+				}
+
+				xlated = true;
+			}
+
+			//
+			// compare the remote source hash
+			// to the local destination hash
+			//
+
+			if( ph1->natd_rs.size() == ph1->natd_ld.size() )
+			{
+				if( memcmp(
+						ph1->natd_rs.buff(),
+						ph1->natd_ld.buff(),
+						ph1->natd_ld.size() ) )
+				{
+					log.txt( LLOG_INFO,
+						"ii : nat discovery - remote address is translated\n" );
+				}
+
+				xlated = true;
+			}
+
+			//
+			// only set the nat-t port if translation was detected
+			//
+
+			if( xlated )
+				ph1->tunnel->natt_v = ph1->natt_v;
+			else
+			{
+				log.txt( LLOG_INFO,
+					"ii : disabled nat-t ( no nat detected )\n" );
+			}
+
+			break;
 		}
+
+		case IPSEC_NATT_FORCE_DRAFT:
+
+			log.txt( LLOG_INFO, "ii : forcing nat-t to enabled ( draft )\n" );
+
+			//
+			// set natt to negotiated version
+			//
+
+			ph1->tunnel->natt_v = IPSEC_NATT_V02;
+
+			break;
+
+		case IPSEC_NATT_FORCE_RFC:
+
+			log.txt( LLOG_INFO, "ii : forcing nat-t to enabled ( draft )\n" );
+
+			//
+			// set natt to negotiated version
+			//
+
+			ph1->tunnel->natt_v = IPSEC_NATT_RFC;
+
+			break;
 	}
-
+	
 	//
-	// compare the remote destination
-	// hash to the local source hash
-	//
-
-	if( ph1->natd_rd.size() == ph1->natd_ls.size() )
-	{
-		if( memcmp(
-				ph1->natd_rd.buff(),
-				ph1->natd_ls.buff(),
-				ph1->natd_ls.size() ) )
-		{
-			log.txt( LLOG_INFO,
-				"ii : nat discovery - local address is translated\n" );
-
-			enable = true;
-		}
-	}
-
-	//
-	// compare the remote source hash
-	// to the local destination hash
+	// switch to natt ports if required
 	//
 
-	if( ph1->natd_rs.size() == ph1->natd_ld.size() )
-	{
-		if( memcmp(
-				ph1->natd_rs.buff(),
-				ph1->natd_ld.buff(),
-				ph1->natd_ld.size() ) )
-		{
-			log.txt( LLOG_INFO,
-				"ii : nat discovery - remote address is translated\n" );
+	ph1->lstate |= LSTATE_CHKNATD;
 
-			enable = true;
-		}
-	}
-
-	if( enable && ph1->initiator )
+	if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
 	{
 		//
 		// switch our port to natt
@@ -2440,21 +2509,14 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 
 		ph1->tunnel->saddr_r.saddr4.sin_port = ph1->tunnel->peer->natt_port;
 
-		//
-		// switch the tunnel to the
-		// negotiated natt version
-		//
-
-		ph1->tunnel->natt_v = ph1->natt_v;
-
 		log.txt( LLOG_INFO,
-			"ii : switching to NAT-T UDP port %u\n",
+			"ii : switching to nat-t udp port %u\n",
 			ntohs( ph1->tunnel->peer->natt_port ) );
+
+		return true;
 	}
 
-	ph1->lstate |= LSTATE_CHKNATD;
-
-	return enable;
+	return false;
 }
 
 bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * saddr_l )
