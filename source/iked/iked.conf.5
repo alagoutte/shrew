@@ -265,7 +265,7 @@ contact.
 Specifies the exchange type to be used for phase1 negotiations with a peer.
 The default value for this paramater is
 .Ic main .
-.It Ic natt_mode (disable | enable | force) ;
+.It Ic natt_mode (disable | enable | force [ draft | rfc ] ) ;
 Specifies the NAT Traversal mode to be used for phase1 negotiations with a
 peer. If
 .Ic disable
@@ -275,7 +275,13 @@ is used, the daemon will attempt to negotiate and use NAT Traversal when
 appropriate. If
 .Ic force
 is used, the daemon will use NAT Traversal even if the peer does not negotiate
- support for this feature. The default value for this parameter is
+support for this feature. When force is used, the
+.Ic draft
+or
+.Ic rfc
+modifiers can optionally be specified to select the required method with
+.Ic rfc
+being the default if omitted. The default value for this parameter is
 .Ic disable .
 .It Ic natt_port Ar number ;
 Specifies the NAT Traversal port number to be used for phase1 negotiations

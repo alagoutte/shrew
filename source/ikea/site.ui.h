@@ -1184,15 +1184,17 @@ bool site::Verify()
 
 	// check local id data
 
-	if( lineEditLocalIDData->isEnabled() )
-		if( lineEditLocalIDData->text().length() < 1 )
-			errmsg = "Please enter valid local ID data.";
+	if( !comboBoxLocalIDType->currentText().compare( IDTXT_ADDR ) )
+		if( lineEditLocalIDData->isEnabled() )
+			if( lineEditLocalIDData->text().length() < 1 )
+				errmsg = "Please enter valid local ID address data.";
 
 	// check remote id data
 
-	if( lineEditRemoteIDData->isEnabled() )
-		if( lineEditRemoteIDData->text().length() < 1 )
-			errmsg = "Please enter valid remote ID data.";
+	if( !comboBoxRemoteIDType->currentText().compare( IDTXT_ADDR ) )
+		if( lineEditRemoteIDData->isEnabled() )
+			if( lineEditRemoteIDData->text().length() < 1 )
+				errmsg = "Please enter valid remote ID address data.";
 
 	// check cert authority file
 
@@ -1589,8 +1591,8 @@ void site::UpdateAuth()
 		{
 			comboBoxLocalIDType->clear();
 
-			if( auth == AUTH_HYBRID_RSA_XAUTH )
-				comboBoxLocalIDType->insertItem( IDTXT_NONE );
+//			if( auth == AUTH_HYBRID_RSA_XAUTH )
+//				comboBoxLocalIDType->insertItem( IDTXT_NONE );
 
 			if( !comboBoxP1Exchange->currentItem() )
 			{
@@ -1614,6 +1616,8 @@ void site::UpdateAuth()
 		case AUTH_MUTUAL_RSA_XAUTH:
 		case AUTH_MUTUAL_RSA:
 		{
+			comboBoxLocalIDType->clear();
+
 			if( !comboBoxP1Exchange->currentItem() )
 			{
 				// main mode

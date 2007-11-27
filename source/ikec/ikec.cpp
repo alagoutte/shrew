@@ -199,7 +199,13 @@ void _IKEC::run()
 			peer.natt_mode = IPSEC_NATT_ENABLE;
 
 		if( !strcmp( "force", text ) )
-			peer.natt_mode = IPSEC_NATT_FORCE;
+			peer.natt_mode = IPSEC_NATT_FORCE_RFC;
+
+		if( !strcmp( "force-draft", text ) )
+			peer.natt_mode = IPSEC_NATT_FORCE_DRAFT;
+
+		if( !strcmp( "force-rfc", text ) )
+			peer.natt_mode = IPSEC_NATT_FORCE_RFC;
 
 		// nat-t udp port
 
@@ -836,54 +842,33 @@ void _IKEC::run()
 
 	// client id data
 
-	if( !config.get_string( "ident-client-data", text, MAX_CONFSTRING, 0 ) )
-	{
-		
-		if( ( peer.idtype_l == ISAKMP_ID_KEY_ID ) ||
-			( peer.idtype_l == ISAKMP_ID_FQDN ) ||
-			( peer.idtype_l == ISAKMP_ID_USER_FQDN ) )
-		{
-			log( STATUS_FAIL, "config error : ident-client-data undefined\n" );
-			goto config_failed;
-		}
-	}
-	else
-	{
-		result = ikei.send_msg_cfgstr( CFGSTR_CRED_LID, text, strlen( text ), &msgres );
+	text[ 0 ] = 0;
 
-		if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
-		{
-			log( STATUS_FAIL, "local id config failed\n" );
-			goto config_failed;
-		}
+	config.get_string( "ident-client-data", text, MAX_CONFSTRING, 0 );
+	result = ikei.send_msg_cfgstr( CFGSTR_CRED_LID, text, strlen( text ), &msgres );
 
-		log( STATUS_INFO, "local id configured\n" );
+	if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
+	{
+		log( STATUS_FAIL, "local id config failed\n" );
+		goto config_failed;
 	}
+
+	log( STATUS_INFO, "local id configured\n" );
 
 	// server id data
 
-	if( !config.get_string( "ident-server-data", text, MAX_CONFSTRING, 0 ) )
-	{
-		if( ( peer.idtype_r == ISAKMP_ID_KEY_ID ) ||
-			( peer.idtype_r == ISAKMP_ID_FQDN ) ||
-			( peer.idtype_r == ISAKMP_ID_USER_FQDN ) )
-		{
-			log( STATUS_FAIL, "config error : ident-server-data undefined\n" );
-			goto config_failed;
-		}
-	}
-	else
-	{
-		result = ikei.send_msg_cfgstr( CFGSTR_CRED_RID, text, strlen( text ), &msgres );
+	text[ 0 ] = 0;
 
-		if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
-		{
-			log( STATUS_FAIL, "remote id config failed\n" );
-			goto config_failed;
-		}
+	config.get_string( "ident-server-data", text, MAX_CONFSTRING, 0 );
+	result = ikei.send_msg_cfgstr( CFGSTR_CRED_RID, text, strlen( text ), &msgres );
 
-		log( STATUS_INFO, "remote id configured\n" );
+	if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
+	{
+		log( STATUS_FAIL, "remote id config failed\n" );
+		goto config_failed;
 	}
+
+	log( STATUS_INFO, "remote id configured\n" );
 
 	//
 	// verify and send our peer authentication info

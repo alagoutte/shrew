@@ -170,6 +170,8 @@ if( yy_first_time )
 <SEC_PEER>enable		{ return( token::ENABLE ); }
 <SEC_PEER>disable		{ return( token::DISABLE ); }
 <SEC_PEER>force			{ return( token::FORCE ); }
+<SEC_PEER>draft			{ return( token::DRAFT ); }
+<SEC_PEER>rfc			{ return( token::RFC ); }
 <SEC_PEER>natt_mode		{ return( token::NATT_MODE ); }
 <SEC_PEER>natt_rate		{ return( token::NATT_RATE ); }
 <SEC_PEER>dpd_mode		{ return( token::DPD_MODE ); }

@@ -88,6 +88,8 @@ IDB_PEER *	peer;
 %token		ENABLE		"enable"
 %token		DISABLE		"disable"
 %token		FORCE		"force"
+%token		DRAFT		"draft"
+%token		RFC		"rfc"
 
 %token		DAEMON		"deamon section"
 %token		SOCKET		"socket"
@@ -766,7 +768,25 @@ peer_line
   |	NATT_MODE FORCE
 	{
 #ifdef OPT_NATT
-		peer->natt_mode = IPSEC_NATT_FORCE;
+		peer->natt_mode = IPSEC_NATT_FORCE_RFC;
+#else
+		error( @$, std::string( "iked was compiled without NATT support" ) );
+#endif
+	}
+	EOS
+  |	NATT_MODE FORCE DRAFT
+	{
+#ifdef OPT_NATT
+		peer->natt_mode = IPSEC_NATT_FORCE_DRAFT;
+#else
+		error( @$, std::string( "iked was compiled without NATT support" ) );
+#endif
+	}
+	EOS
+  |	NATT_MODE FORCE RFC
+	{
+#ifdef OPT_NATT
+		peer->natt_mode = IPSEC_NATT_FORCE_RFC;
 #else
 		error( @$, std::string( "iked was compiled without NATT support" ) );
 #endif

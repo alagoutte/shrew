@@ -600,7 +600,12 @@
                         </item>
                         <item>
                             <property name="text">
-                                <string>force</string>
+                                <string>force-draft</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>force-rfc</string>
                             </property>
                         </item>
                         <property name="name">
