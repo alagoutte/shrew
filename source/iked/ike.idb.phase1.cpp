@@ -180,8 +180,9 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	chkpt_l = true;
 
 	unity_r = false;
-	chkpt_r = false;
 	netsc_r = false;
+	zwall_r = false;
+	chkpt_r = false;
 
 	natt_l = false;
 	natt_r = false;

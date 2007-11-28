@@ -1984,7 +1984,10 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 	//
 
 	if( ph1->xauth_l )
+	{
 		payload_add_vend( packet, vend_xauth, ISAKMP_PAYLOAD_VEND );
+		log.txt( LLOG_INFO, "ii : local supports XAUTH\n" );
+	}
 
 	//
 	// optionally add natt vendor id payload
@@ -1996,13 +1999,19 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_DRAFT ) )
 		{
 			payload_add_vend( packet, vend_natt_v00, ISAKMP_PAYLOAD_VEND );
+			log.txt( LLOG_INFO, "ii : local supports nat-t ( draft v00 )\n" );
 			payload_add_vend( packet, vend_natt_v01, ISAKMP_PAYLOAD_VEND );
+			log.txt( LLOG_INFO, "ii : local supports nat-t ( draft v01 )\n" );
 			payload_add_vend( packet, vend_natt_v02, ISAKMP_PAYLOAD_VEND );
+			log.txt( LLOG_INFO, "ii : local supports nat-t ( draft v02 )\n" );
 		}
 
 		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
 			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC ) )
+		{
 			payload_add_vend( packet, vend_natt_rfc, ISAKMP_PAYLOAD_VEND );
+			log.txt( LLOG_INFO, "ii : local supports nat-t ( rfc )\n" );
+		}
 	}
 
 	//
@@ -2010,32 +2019,41 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 	//
 
 	if( ph1->frag_l )
+	{
 		payload_add_vend( packet, vend_frag, ISAKMP_PAYLOAD_VEND );
+		log.txt( LLOG_INFO, "ii : local supports FRAGMENTATION\n" );
+	}
 
 	//
 	// optionally add dpd vendor id payload
 	//
 
 	if( ph1->dpd_l )
+	{
 		payload_add_vend( packet, vend_dpd1, ISAKMP_PAYLOAD_VEND );
+		log.txt( LLOG_INFO, "ii : local supports DPDv1\n" );
+	}
 
 	//
 	// add shrew soft vendor id payload
 	//
 
 	payload_add_vend( packet, vend_ssoft, ISAKMP_PAYLOAD_VEND );
+	log.txt( LLOG_INFO, "ii : local is SHREW SOFT compatible\n" );
 
 	//
 	// add unity vendor id payload
 	//
 
 	payload_add_vend( packet, vend_unity, ISAKMP_PAYLOAD_VEND );
+	log.txt( LLOG_INFO, "ii : local is CISCO UNITY compatible\n" );
 
 	//
 	// add netscreen vendor payload
 	//
 
 	payload_add_vend( packet, vend_netsc, ISAKMP_PAYLOAD_VEND );
+	log.txt( LLOG_INFO, "ii : local is NETSCREEN compatible\n" );
 
 	//
 	// prepair and add checkpoint vendor id payload ( must be last )
@@ -2062,6 +2080,7 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 	vend_chkpt2.add( &feat, 4 );	// features
 
 	payload_add_vend( packet, vend_chkpt2, ISAKMP_PAYLOAD_NONE );
+	log.txt( LLOG_INFO, "ii : local is CHECKPOINT compatible\n" );
 
 	return LIBIKE_OK;
 }
@@ -2125,7 +2144,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 			ph1->natt_r = true;
 			if( ph1->natt_v < IPSEC_NATT_V00 )
 				ph1->natt_v = IPSEC_NATT_V00;
-			log.txt( LLOG_INFO, "ii : peer supports NAT-T draft v00\n" );
+			log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v00 )\n" );
 			return LIBIKE_OK;
 		}
 
@@ -2139,7 +2158,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 			ph1->natt_r = true;
 			if( ph1->natt_v < IPSEC_NATT_V01 )
 				ph1->natt_v = IPSEC_NATT_V01;
-			log.txt( LLOG_INFO, "ii : peer supports NAT-T draft v01\n" );
+			log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v01 )\n" );
 			return LIBIKE_OK;
 		}
 
@@ -2153,7 +2172,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 			ph1->natt_r = true;
 			if( ph1->natt_v < IPSEC_NATT_V02 )
 				ph1->natt_v = IPSEC_NATT_V02;
-			log.txt( LLOG_INFO, "ii : peer supports NAT-T draft v02\n" );
+			log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v02 )\n" );
 			return LIBIKE_OK;
 		}
 
@@ -2166,7 +2185,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		{
 			ph1->natt_r = true;
 			ph1->natt_v = IPSEC_NATT_RFC;
-			log.txt( LLOG_INFO, "ii : peer supports NAT-T RFC\n" );
+			log.txt( LLOG_INFO, "ii : peer supports nat-t ( rfc )\n" );
 			return LIBIKE_OK;
 		}
 
@@ -2512,7 +2531,7 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 
 		case IPSEC_NATT_FORCE_RFC:
 
-			log.txt( LLOG_INFO, "ii : forcing nat-t to enabled ( draft )\n" );
+			log.txt( LLOG_INFO, "ii : forcing nat-t to enabled ( rfc )\n" );
 
 			//
 			// set natt to negotiated version
@@ -2617,7 +2636,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 		ph1->tunnel->natt_v = ph1->natt_v;
 
 		log.txt( LLOG_INFO,
-			"ii : floating to NAT-T UDP ports %u -> %u\n",
+			"ii : floating to nat-t udp ports %u -> %u\n",
 			ntohs( ph1->tunnel->saddr_r.saddr4.sin_port ),
 			ntohs( ph1->tunnel->saddr_l.saddr4.sin_port ) );
 

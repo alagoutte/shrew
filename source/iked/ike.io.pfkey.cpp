@@ -127,12 +127,12 @@ long _IKED::loop_ike_pfkey()
 
 				if( msg.local() )
 					log.txt( LLOG_DEBUG,
-						"K< : recv %s %s pfkey message\n",
+						"K< : recv pfkey %s %s message\n",
 						pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 						pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
 				else
 					log.txt( LLOG_DEBUG,
-						"K< : recv %s %s pfkey message ( ignored )\n",
+						"K< : recv pfkey %s %s message ( ignored )\n",
 						pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 						pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
 
@@ -141,7 +141,7 @@ long _IKED::loop_ike_pfkey()
 			case SADB_FLUSH:
 
 				log.txt( LLOG_DEBUG,
-					"K< : recv %s %s pfkey message\n",
+					"K< : recv pfkey %s %s message\n",
 					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
 
@@ -152,7 +152,7 @@ long _IKED::loop_ike_pfkey()
 			case SADB_ACQUIRE:
 
 				log.txt( LLOG_DEBUG,
-					"K< : recv %s %s pfkey message\n",
+					"K< : recv pfkey %s %s message\n",
 					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
 
@@ -163,7 +163,7 @@ long _IKED::loop_ike_pfkey()
 			case SADB_GETSPI:
 
 				log.txt( LLOG_DEBUG,
-					"K< : recv %s %s pfkey message\n",
+					"K< : recv pfkey %s %s message\n",
 					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
 
@@ -174,7 +174,7 @@ long _IKED::loop_ike_pfkey()
 			case SADB_UPDATE:
 
 				log.txt( LLOG_DEBUG,
-					"K< : recv %s %s pfkey message\n",
+					"K< : recv pfkey %s %s message\n",
 					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
 
@@ -183,7 +183,7 @@ long _IKED::loop_ike_pfkey()
 			case SADB_DELETE:
 
 				log.txt( LLOG_DEBUG,
-					"K< : recv %s %s pfkey message\n",
+					"K< : recv pfkey %s %s message\n",
 					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
 
@@ -192,7 +192,7 @@ long _IKED::loop_ike_pfkey()
 			case SADB_X_SPDFLUSH:
 
 				log.txt( LLOG_DEBUG,
-					"K< : recv %s %s pfkey message\n",
+					"K< : recv pfkey %s %s message\n",
 					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
 
@@ -205,7 +205,7 @@ long _IKED::loop_ike_pfkey()
 			case SADB_X_SPDADD:
 
 				log.txt( LLOG_DEBUG,
-					"K< : recv %s %s pfkey message\n",
+					"K< : recv pfkey %s %s message\n",
 					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
 
@@ -216,7 +216,7 @@ long _IKED::loop_ike_pfkey()
 			case SADB_X_SPDDELETE2:
 				
 				log.txt( LLOG_DEBUG,
-					"K< : recv %s %s pfkey message\n",
+					"K< : recv pfkey %s %s message\n",
 					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
 
@@ -1168,7 +1168,7 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 		//
 
 		log.txt( LLOG_DEBUG,
-			"K> : send %s %s pfkey message\n",
+			"K> : send pfkey %s %s message\n",
 			pfki.name( NAME_MSGTYPE, SADB_GETSPI ),
 			pfki.name( NAME_SATYPE, sainfo.satype ) );
 
@@ -1489,7 +1489,7 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 		nametype = NAME_SACOMP;
 
 	log.txt( LLOG_DEBUG,
-		"K> : send %s %s pfkey message\n",
+		"K> : send pfkey %s %s message\n",
 		pfki.name( NAME_MSGTYPE, SADB_UPDATE ),
 		pfki.name( NAME_SATYPE, sainfo.satype ) );
 
@@ -1579,7 +1579,7 @@ long _IKED::pfkey_send_delete( IDB_PH2 * ph2 )
 		}
 
 		log.txt( LLOG_DEBUG,
-			"K> : send %s %s pfkey message\n",
+			"K> : send pfkey %s %s message\n",
 			pfki.name( NAME_MSGTYPE, SADB_DELETE ),
 			pfki.name( NAME_SATYPE, sainfo.satype ) );
 
@@ -1641,7 +1641,7 @@ long _IKED::pfkey_send_delete( IDB_PH2 * ph2 )
 		}
 
 		log.txt( LLOG_DEBUG,
-			"K> : send %s %s pfkey message\n",
+			"K> : send pfkey %s %s message\n",
 			pfki.name( NAME_MSGTYPE, SADB_DELETE ),
 			pfki.name( NAME_SATYPE, sainfo.satype ) );
 
@@ -1662,7 +1662,7 @@ long _IKED::pfkey_send_delete( IDB_PH2 * ph2 )
 long _IKED::pfkey_send_spadd( PFKI_SPINFO * spinfo )
 {
 	log.txt( LLOG_DEBUG,
-		"K> : send %s %s pfkey message\n",
+		"K> : send pfkey %s %s message\n",
 		pfki.name( NAME_MSGTYPE, SADB_X_SPDADD ),
 		pfki.name( NAME_SATYPE, SADB_SATYPE_UNSPEC ) );
 
@@ -1676,7 +1676,7 @@ long _IKED::pfkey_send_spadd( PFKI_SPINFO * spinfo )
 long _IKED::pfkey_send_spdel( PFKI_SPINFO * spinfo )
 {
 	log.txt( LLOG_DEBUG,
-		"K> : send %s %s pfkey message\n",
+		"K> : send pfkey %s %s message\n",
 		pfki.name( NAME_MSGTYPE, SADB_X_SPDDELETE2 ),
 		pfki.name( NAME_SATYPE, SADB_SATYPE_UNSPEC ) );
 

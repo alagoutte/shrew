@@ -617,10 +617,10 @@ const char * _IKED::find_name( long type, long id )
 		{
 			static const char * encap1 = "tunnel";
 			static const char * encap2 = "transport";
-			static const char * encap3 = "udp-tunnel v02";
-			static const char * encap4 = "udp-transport v02";
-			static const char * encap5 = "udp-tunnel rfc";
-			static const char * encap6 = "udp-transport rfc";
+			static const char * encap3 = "udp-tunnel ( draft )";
+			static const char * encap4 = "udp-transport ( draft )";
+			static const char * encap5 = "udp-tunnel ( rfc )";
+			static const char * encap6 = "udp-transport ( rfc )";
 
 			switch( id )
 			{
