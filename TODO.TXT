@@ -170,6 +170,9 @@ X Add support for DHCP over IPsec configuration method
 X Add support for strictly manual client configuration method
 X Add stateful fragment evaluation to filter driver
 X Add batched packet send and recv support to filter driver
+X Add support for older Linux distributions
+X Fix errors associated with iked processing duplicate packets
+X Fix validation and trimming of trailing packet data
 . Fix static buffer usage for temporary string data
 . Add timestamps in non-syslog log output
 . Add support for x86/amd64 Windows Vista platforms
@@ -181,10 +184,12 @@ X Add batched packet send and recv support to filter driver
 . Add preference for client minimize to system tray
 . Add preference for pre-populating user names
 . Import new logo and improved icon sets
-. Validate and document support for Cisco ASA gateways
-. Validate and document support for Juniper SSG gateways
-. Validate and document support for Fortigate gateways
-. Validate and document support for Zywall gateways
+x Validate and document support for Cisco ASA gateways
+x Validate and document support for Juniper SSG gateways
+x Validate and document support for Fortigate gateways
+x Validate and document support for Zywall gateways
+x Validate and document support for Checkpoint gateways
+. Validate and document support for SonicWall gateways
 ? Add support for client connect/disconnect script execution
 ? Add adaptive communications during connect ( Frag/NATT )
 ? Move to a purely primitive based tunnel confguration interface
