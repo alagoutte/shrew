@@ -2345,8 +2345,6 @@ long _IKED::phase1_chk_sign( IDB_PH1 * ph1 )
 	// in the peer configuration
 	//
 
-	return LIBIKE_OK;
-
 	BDATA cert;
 
 	if( !cert_verify( ph1->certs_r, ph1->tunnel->peer->cert_r, cert ) )

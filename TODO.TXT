@@ -161,7 +161,11 @@ X Add support for x86/amd64 Linux platforms
 ----------------------------------------------------------------------
 . !!! All reported bugs !!!
 
-2.1.0 release - Bug fix and fine tuning
+2.0.3 release - Bug fix and fine tuning
+----------------------------------------------------------------------
+. !!! All reported bugs !!!
+
+2.1.0 release - Improve platform and gateway support
 ----------------------------------------------------------------------
 X Review option flag usage for client struct
 X Make divert rule management dynamic ( be nice to other clients )
