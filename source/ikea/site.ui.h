@@ -1586,29 +1586,16 @@ void site::UpdateAuth()
 	switch( auth )
 	{
 		case AUTH_HYBRID_RSA_XAUTH:
-		case AUTH_MUTUAL_PSK_XAUTH:
-		case AUTH_MUTUAL_PSK:
 		{
 			comboBoxLocalIDType->clear();
 
-//			if( auth == AUTH_HYBRID_RSA_XAUTH )
-//				comboBoxLocalIDType->insertItem( IDTXT_NONE );
+			// main or aggressive mode
 
-			if( !comboBoxP1Exchange->currentItem() )
-			{
-				// main mode
-
-				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
-			}
-			else
-			{
-				// aggressive mode
-
-				comboBoxLocalIDType->insertItem( IDTXT_FQDN );
-				comboBoxLocalIDType->insertItem( IDTXT_UFQDN );
-				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
-				comboBoxLocalIDType->insertItem( IDTXT_KEYID );
-			}
+//			comboBoxLocalIDType->insertItem( IDTXT_NONE );
+			comboBoxLocalIDType->insertItem( IDTXT_FQDN );
+			comboBoxLocalIDType->insertItem( IDTXT_UFQDN );
+			comboBoxLocalIDType->insertItem( IDTXT_ADDR );
+			comboBoxLocalIDType->insertItem( IDTXT_KEYID );
 
 			break;
 		}
@@ -1630,6 +1617,30 @@ void site::UpdateAuth()
 				// aggressive mode
 
 				comboBoxLocalIDType->insertItem( IDTXT_ASN1 );
+				comboBoxLocalIDType->insertItem( IDTXT_FQDN );
+				comboBoxLocalIDType->insertItem( IDTXT_UFQDN );
+				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
+				comboBoxLocalIDType->insertItem( IDTXT_KEYID );
+			}
+
+			break;
+		}
+
+		case AUTH_MUTUAL_PSK_XAUTH:
+		case AUTH_MUTUAL_PSK:
+		{
+			comboBoxLocalIDType->clear();
+
+			if( !comboBoxP1Exchange->currentItem() )
+			{
+				// main mode
+
+				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
+			}
+			else
+			{
+				// aggressive mode
+
 				comboBoxLocalIDType->insertItem( IDTXT_FQDN );
 				comboBoxLocalIDType->insertItem( IDTXT_UFQDN );
 				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
