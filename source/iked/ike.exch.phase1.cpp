@@ -526,15 +526,6 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	}
 
 	//
-	// check and enable natt if ready
-	//
-
-	if( !( ph1->lstate & LSTATE_CHKNATD ) &&
-		 ( ph1->xstate & XSTATE_RECV_NDL ) &&
-		 ( ph1->xstate & XSTATE_RECV_NDR ) )
-		phase1_chk_natd( ph1 );
-
-	//
 	// now build and send any response
 	// packets that may be necessary
 	//
@@ -667,6 +658,12 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				 ( ph1->xstate & XSTATE_RECV_NO ) &&
 				!( ph1->xstate & XSTATE_SENT_ID ) )
 			{
+				//
+				// check and enable natt if ready
+				//
+
+				phase1_chk_natd( ph1 );
+
 				//
 				// calculate key material
 				//
@@ -853,6 +850,12 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				!( ph1->xstate & XSTATE_SENT_ID ) )
 			{
 				//
+				// check and enable natt if ready
+				//
+
+				phase1_chk_natd( ph1 );
+
+				//
 				// obtain our negotiated proposal
 				//
 
@@ -1034,6 +1037,12 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				 ( ph1->xstate & XSTATE_RECV_NO ) &&
 				 ( ph1->xstate & XSTATE_RECV_ID ) )
 			{
+				//
+				// check and enable natt if required
+				//
+
+				phase1_chk_natd( ph1 );
+
 				//
 				// obtain our negotiated proposal
 				//
@@ -1333,6 +1342,20 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				ph1->xstate |= XSTATE_SENT_KE;
 				ph1->xstate |= XSTATE_SENT_NO;
 				ph1->xstate |= XSTATE_SENT_ID;
+			}
+
+			//
+			// post negotiation processing
+			//
+
+			if( ( ph1->xstate & XSTATE_RECV_HA ) ||
+				( ph1->xstate & XSTATE_RECV_CT ) )
+			{
+				//
+				// check and enable natt if required
+				//
+
+				phase1_chk_natd( ph1 );
 			}
 		}
 	}
@@ -2082,6 +2105,17 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		}
 
 	//
+	// check for heartbeat notify detection vendor id
+	//
+
+	if( vend.size() == vend_hbeat.size() )
+		if( !memcmp( vend.buff(), vend_hbeat.buff(), vend_hbeat.size() ) )
+		{
+			log.txt( LLOG_INFO, "ii : peer supports HEARTBEAT-NOTIFY\n" );
+			return LIBIKE_OK;
+		}
+
+	//
 	// check for natt v00 vendor id
 	//
 
@@ -2174,7 +2208,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for netscreen vendor id
 	//
 
-	if( vend.size() == vend_netsc.size() )
+	if( vend.size() >= vend_netsc.size() )
 		if( !memcmp( vend.buff(), vend_netsc.buff(), vend_netsc.size() ) )
 		{
 			ph1->netsc_r = true;

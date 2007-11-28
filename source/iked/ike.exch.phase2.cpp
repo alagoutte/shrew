@@ -147,7 +147,84 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			ethhdr,
 			packet_ip_dump );
 	}
+/*
+	//
+	// read and validate the hash
+	//
 
+	if( !packet.get_payload( false, payload ) )
+	{
+		log.txt( LLOG_ERROR, "!! : phase2 packet ignored ( invalid hash payload )\n" );
+		ph2->dec( true );
+		return LIBIKE_OK;
+	}
+
+	if( payload_get_hash( packet, ph2->hash_r, ph1->hash_size ) != LIBIKE_OK )
+	{
+		log.txt( LLOG_ERROR, "!! : phase2 packet ignored ( invalid hash value )\n" );
+		ph2->dec( true );
+		return LIBIKE_OK;
+	}
+
+	//
+	// populate hash data accumulator
+	//
+
+	ph2->hda.size( 0 );
+	ph2->hda.add(
+		packet.buff() + packet.oset(),
+		packet.size() - packet.oset() );
+
+	if( ph2->initiator )
+	{
+		//
+		// check responders hash
+		//
+
+		if( !( ph2->xstate & XSTATE_RECV_HA ) )
+		{
+			//
+			// quick mode hash
+			//
+
+			if( phase2_chk_hash_r( ph1, ph2 ) != LIBIKE_OK )
+				packet.notify = ISAKMP_N_INVALID_HASH_INFORMATION;
+
+			ph2->xstate |= XSTATE_RECV_HA;
+//			ph2->lstate |= LSTATE_CHKHASH;
+		}
+	}
+	else
+	{
+		//
+		// check initiators hash
+		//
+
+		if( !( ph2->xstate & XSTATE_RECV_HA ) )
+		{
+			//
+			// quick mode hash
+			//
+
+			if( phase2_chk_hash_i( ph1, ph2 ) != LIBIKE_OK )
+				packet.notify = ISAKMP_N_INVALID_HASH_INFORMATION;
+
+			ph2->xstate |= XSTATE_RECV_HA;
+//			ph2->lstate |= LSTATE_CHKHASH;
+		}
+		else
+		{
+			//
+			// livliness proof hash
+			//
+
+			if( phase2_chk_hash_p( ph1, ph2 ) != LIBIKE_OK )
+				packet.notify = ISAKMP_N_INVALID_HASH_INFORMATION;
+
+			ph2->xstate |= XSTATE_RECV_LP;
+		}
+	}
+*/
 	//
 	// read and process all payloads
 	//

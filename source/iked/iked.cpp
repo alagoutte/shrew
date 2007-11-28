@@ -70,6 +70,9 @@ _IKED::_IKED()
 	unsigned char dpd1[] = VEND_DPD1;
 	vend_dpd1.set( dpd1, sizeof( dpd1 ) );
 
+	unsigned char hbeat[] = VEND_HBEAT;
+	vend_hbeat.set( hbeat, sizeof( hbeat ) );
+
 	unsigned char natt_v00[] = VEND_NATT_V00;
 	vend_natt_v00.set( natt_v00, sizeof( natt_v00 ) );
 
