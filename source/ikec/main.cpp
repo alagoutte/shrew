@@ -61,7 +61,8 @@ int main( int argc, char ** argv )
 
 	// read our command line args
 
-	bool syntax_error = true;
+	bool syntax_error = false;
+	bool auto_connect = false;
 
 	for( int argi = 0; argi < argc; argi++ )
 	{
@@ -70,10 +71,51 @@ int main( int argc, char ** argv )
 		if( !strcmp( argv[ argi ], "-r" ) )
 		{
 			if( ++argi >= argc )
+			{
+				syntax_error = true;
 				break;
+			}
 
-			ikec.file_spec( argv[ argi++ ] );
+			ikec.file_spec( argv[ argi ] );
+			continue;
+		}
+
+		// remote site username
+
+		if( !strcmp( argv[ argi ], "-u" ) )
+		{
+			if( ++argi >= argc )
+			{
+				syntax_error = true;
+				break;
+			}
+
+			w.lineEditUsername->setText( argv[ argi ] );
+			continue;
+		}
+
+		// remote site password
+
+		if( !strcmp( argv[ argi ], "-p" ) )
+		{
+			if( ++argi >= argc )
+			{
+				syntax_error = true;
+				break;
+			}
+
+			w.lineEditPassword->setText( argv[ argi ] );
 			syntax_error = false;
+			
+			continue;
+		}
+
+		// auto connect
+
+		if( !strcmp( argv[ argi ], "-a" ) )
+		{
+			auto_connect = true;
+			continue;
 		}
 	}
 
@@ -128,6 +170,11 @@ int main( int argc, char ** argv )
 	// show the root window
 
 	w.show();
+
+	// auto connect if requested
+
+	if( auto_connect )
+		w.SiteConnect();
 
 	a.connect( &a, SIGNAL( lastWindowClosed() ), &a, SLOT( quit() ) );
 
