@@ -46,6 +46,14 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	long result = LIBIKE_OK;
 
 	//
+	// log packet type
+	//
+
+	log.txt( LLOG_INFO,
+		"ii : processing phase1 packet ( %i bytes )\n",
+		packet.size() );
+
+	//
 	// make sure we are not dealing
 	// whith a mature or dead sa
 	//

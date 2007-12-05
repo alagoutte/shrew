@@ -45,12 +45,20 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 {
 	long result = LIBIKE_OK;
 
-	IDB_CFG * cfg = NULL;
+	//
+	// log packet type
+	//
+
+	log.txt( LLOG_INFO,
+		"ii : processing config packet ( %i bytes )\n",
+		packet.size() );
 
 	//
 	// attempt to locate a known
 	// config for this message id
 	//
+
+	IDB_CFG * cfg = NULL;
 
 	uint32_t msgid;
 	packet.get_msgid( msgid );

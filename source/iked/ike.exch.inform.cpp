@@ -182,6 +182,14 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	long	result = LIBIKE_OK;
 
 	//
+	// log packet type
+	//
+
+	log.txt( LLOG_INFO,
+		"ii : processing informational packet ( %i bytes )\n",
+		packet.size() );
+
+	//
 	// calculate iv for this
 	// informational exchange
 	//
@@ -194,7 +202,13 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// decrypt packet
 	//
 
-	packet_ike_decrypt( ph1, packet, &inform.iv );
+	if( packet_ike_decrypt( ph1, packet, &inform.iv ) != LIBIKE_OK )
+	{
+		log.txt( LLOG_ERROR,
+			"!! : informational packet ignored ( packet decryption error )\n" );
+
+		return LIBIKE_OK;
+	}
 
 	//
 	// if we are dumping decrypted packets,

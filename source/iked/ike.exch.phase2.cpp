@@ -45,12 +45,20 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 {
 	long result = LIBIKE_OK;
 
-	IDB_PH2 * ph2 = NULL;
+	//
+	// log packet type
+	//
+
+	log.txt( LLOG_INFO,
+		"ii : processing phase2 packet ( %i bytes )\n",
+		packet.size() );
 
 	//
 	// attempt to locate a known
 	// sa for this message id
 	//
+
+	IDB_PH2 * ph2 = NULL;
 
 	uint32_t msgid;
 	packet.get_msgid( msgid );
