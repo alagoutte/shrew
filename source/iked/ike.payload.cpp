@@ -46,31 +46,28 @@ long _IKED::payload_add_frag( PACKET_IKE & packet, unsigned char & index, unsign
 	log.txt( LLOG_DEBUG, ">> : fragment payload\n" );
 
 	//
-	// adjust the callers max to
-	// account for the fragment
-	// header size
+	// adjust the callers max to account for
+	// the fragment header size
 	//
 
 	max -= 8;
 
 	//
-	// calculate the source packets
-	// fragment offset, size and if
-	// this is the last fragment
+	// check if this will be the last fragment
+	// and calculate the source packets offset
+	// and size
 	//
+
+	unsigned char flags = 0;
+	if( size <= max )
+		flags |= IKE_FRAG_FLAG_LAST;
 
 	if( size > max )
 		size = max;
 
-	unsigned char flags = 0;
-	if( size < max )
-		flags |= IKE_FRAG_FLAG_LAST;
-
 	//
-	// sanity check size to make
-	// sure it doesn't overflow
-	// the 16bit value ( really
-	// should never happen )
+	// sanity check size to make sure it doesn't
+	// overflow the 16bit value
 	//
 
 	if( ( size + 8 ) > 0xFFFF )

@@ -188,6 +188,7 @@ X Fix validation and trimming of trailing packet data
 . Add preference for client minimize to system tray
 . Add preference for pre-populating user names
 . Import new logo and improved icon sets
+. Add checks for illegal site configuration names
 x Validate and document support for Cisco ASA gateways
 x Validate and document support for Juniper SSG gateways
 x Validate and document support for Fortigate gateways

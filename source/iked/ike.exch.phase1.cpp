@@ -342,21 +342,6 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				break;
 
 			//
-			// vendor id payload
-			//
-
-			case ISAKMP_PAYLOAD_VEND:
-			{
-				BDATA vend;
-
-				result = payload_get_vend( packet, vend );
-
-				phase1_chk_vend( ph1, vend );
-
-				break;
-			}
-
-			//
 			// nat discovery payload
 			//
 
@@ -381,15 +366,27 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			}
 
 			//
+			// vendor id payload
+			//
+
+			case ISAKMP_PAYLOAD_VEND:
+			{
+				BDATA vend;
+				result = payload_get_vend( packet, vend );
+				if( result == LIBIKE_OK )
+					phase1_chk_vend( ph1, vend );
+
+				break;
+			}
+
+			//
 			// notify payload
 			//
 
 			case ISAKMP_PAYLOAD_NOTIFY:
 			{
 				IKE_NOTIFY notify;
-
 				result = payload_get_notify( packet, &notify );
-
 				if( result == LIBIKE_OK )
 					ph1->nlist.add( notify );
 
@@ -735,11 +732,9 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						// calculate the hash and rsa signature
 						//
 
-						phase1_gen_hash_i( ph1, ph1->hash_l );
-
 						BDATA sign;
-						sign.set( ph1->hash_l );
-						prvkey_rsa_encrypt( ph1->tunnel->peer->key, sign );
+						phase1_gen_hash_i( ph1, ph1->hash_l );
+						prvkey_rsa_encrypt( ph1->tunnel->peer->key, ph1->hash_l, sign );
 
 						//
 						// add the signature and certificate request payloads
@@ -930,14 +925,15 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 						ph1->idr.set( packet.buff() + pld_beg, pld_end - pld_beg );
 
-						phase1_gen_hash_r( ph1, ph1->hash_l );
-
 						payload_add_cert( packet, ISAKMP_CERT_X509_SIG, ph1->tunnel->peer->cert_l, ISAKMP_PAYLOAD_SIGNATURE );
 
-						BDATA sign;
-						sign.set( ph1->hash_l );
-						prvkey_rsa_encrypt( ph1->tunnel->peer->key, sign );
+						//
+						// compute and add our rsa signature
+						//
 
+						BDATA sign;
+						phase1_gen_hash_r( ph1, ph1->hash_l );
+						prvkey_rsa_encrypt( ph1->tunnel->peer->key, ph1->hash_l, sign );
 						payload_add_sign( packet, sign, ISAKMP_PAYLOAD_NONE );
 
 						//
@@ -1126,7 +1122,6 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							!( ph1->xstate & XSTATE_SENT_SI ) )
 						{
 							phase1_gen_keys( ph1 );
-							phase1_gen_hash_i( ph1, ph1->hash_l );
 
 							//
 							// if both endpoints support natt and
@@ -1163,9 +1158,8 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							//
 
 							BDATA sign;
-							sign.set( ph1->hash_l );
-							prvkey_rsa_encrypt( ph1->tunnel->peer->key, sign );
-
+							phase1_gen_hash_i( ph1, ph1->hash_l );
+							prvkey_rsa_encrypt( ph1->tunnel->peer->key, ph1->hash_l, sign );
 							payload_add_sign( packet, sign, last );
 
 							//
@@ -1309,12 +1303,9 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						// generate and add our signature payload
 						//
 
-						phase1_gen_hash_r( ph1, ph1->hash_l );
-
 						BDATA sign;
-						sign.set( ph1->hash_l );
-						prvkey_rsa_encrypt( ph1->tunnel->peer->key, sign );
-
+						phase1_gen_hash_r( ph1, ph1->hash_l );
+						prvkey_rsa_encrypt( ph1->tunnel->peer->key, ph1->hash_l, sign );
 						payload_add_sign( packet, sign, ISAKMP_PAYLOAD_VEND );
 
 						ph1->xstate |= XSTATE_SENT_CT;
@@ -1902,7 +1893,7 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 long _IKED::phase1_gen_hash_i( IDB_PH1 * sa, BDATA & hash )
 {
 	//
-	// compute the initiators signed hash
+	// compute the initiators hash
 	//
 
 	hash.size( sa->hash_size );
@@ -1941,7 +1932,7 @@ long _IKED::phase1_gen_hash_i( IDB_PH1 * sa, BDATA & hash )
 long _IKED::phase1_gen_hash_r( IDB_PH1 * sa, BDATA & hash )
 {
 	//
-	// compute the responders signed hash
+	// compute the responders hash
 	//
 
 	hash.size( sa->hash_size );
@@ -2372,9 +2363,7 @@ long _IKED::phase1_chk_sign( IDB_PH1 * ph1 )
 	// by the remote peer
 	//
 
-	ph1->hash_r.set( ph1->sign_r );
-
-	if( !pubkey_rsa_decrypt( evp_pkey, ph1->hash_r ) )
+	if( !pubkey_rsa_decrypt( evp_pkey, ph1->sign_r, ph1->hash_r ) )
 	{
 		log.txt( LLOG_ERROR, "!! : unable to compute remote peer signed hash\n" );
 		return LIBIKE_FAILED;

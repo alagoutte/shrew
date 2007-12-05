@@ -388,10 +388,10 @@ const char * _IKED::find_name( long type, long id )
 			static const char * auth9 = "hybrid-responder-dss";
 			static const char * auth10 = "xauth-initiator-psk";
 			static const char * auth11 = "xauth-responder-psk";
-			static const char * auth12 = "xauth-initiator-rsa";
-			static const char * auth13 = "xauth-responder-rsa";
-			static const char * auth14 = "xauth-initiator-dss";
-			static const char * auth15 = "xauth-responder-dss";
+			static const char * auth12 = "xauth-initiator-dss";
+			static const char * auth13 = "xauth-responder-dss";
+			static const char * auth14 = "xauth-initiator-rsa";
+			static const char * auth15 = "xauth-responder-rsa";
 			static const char * auth16 = "xauth-initiator-rsa-encryption";
 			static const char * auth17 = "xauth-responder-rsa-encryption";
 			static const char * auth18 = "xauth-initiator-rsa-revised-encryption";

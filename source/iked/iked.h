@@ -538,8 +538,8 @@ typedef class _IKED
 	bool	prvkey_rsa_load_pem( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass );
 	bool	prvkey_rsa_load_p12( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass );
 	bool	pubkey_rsa_read( BDATA & cert, EVP_PKEY ** evp_pkey );
-	bool	prvkey_rsa_encrypt( EVP_PKEY * evp_pkey, BDATA & data );
-	bool	pubkey_rsa_decrypt( EVP_PKEY * evp_pkey, BDATA & sign );
+	bool	prvkey_rsa_encrypt( EVP_PKEY * evp_pkey, BDATA & hash, BDATA & sign );
+	bool	pubkey_rsa_decrypt( EVP_PKEY * evp_pkey, BDATA & sign, BDATA & hash );
 
 	// id helper functions
 

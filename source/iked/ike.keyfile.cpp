@@ -792,16 +792,15 @@ bool _IKED::pubkey_rsa_read( BDATA & cert, EVP_PKEY ** evp_pkey )
 	return true;
 }
 
-bool _IKED::prvkey_rsa_encrypt( EVP_PKEY * evp_pkey, BDATA & data )
+bool _IKED::prvkey_rsa_encrypt( EVP_PKEY * evp_pkey, BDATA & hash, BDATA & sign )
 {
 	int size = RSA_size( evp_pkey->pkey.rsa );
 
-	BDATA sign;
 	sign.size( size );
 
 	size = RSA_private_encrypt(
-				( int ) data.size(),
-				data.buff(),
+				( int ) hash.size(),
+				hash.buff(),
 				sign.buff(),
 				evp_pkey->pkey.rsa,
 				RSA_PKCS1_PADDING );
@@ -809,29 +808,28 @@ bool _IKED::prvkey_rsa_encrypt( EVP_PKEY * evp_pkey, BDATA & data )
 	if( size == -1 )
 		return false;
 
-	data.set( sign );
+	sign.size( size );
 
 	return true;
 }
 
-bool _IKED::pubkey_rsa_decrypt( EVP_PKEY * evp_pkey, BDATA & sign )
+bool _IKED::pubkey_rsa_decrypt( EVP_PKEY * evp_pkey, BDATA & sign, BDATA & hash )
 {
 	int size = RSA_size( evp_pkey->pkey.rsa );
 
-	BDATA data;
-	data.size( size );
+	hash.size( size );
 
 	size = RSA_public_decrypt(
 				( int ) sign.size(),
 				sign.buff(),
-				data.buff(),
+				hash.buff(),
 				evp_pkey->pkey.rsa,
 				RSA_PKCS1_PADDING );
 
 	if( size == -1 )
 		return false;
 
-	sign.set( data );
+	hash.size( size );
 
 	return true;
 }
