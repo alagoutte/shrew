@@ -91,7 +91,6 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	    ( cfg->lstate & LSTATE_DELETE ) )
 	{
 		log.txt( LLOG_ERROR, "!! : config packet ignored ( sa marked for death )\n" );
-
 		cfg->dec( true );
 		return LIBIKE_OK;
 	}
@@ -104,6 +103,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	if( !( ph1->lstate & LSTATE_MATURE ) )
 	{
 		log.txt( LLOG_ERROR, "!! : config packet ignored ( sa not mature )\n" );
+		cfg->dec( true );
 		return LIBIKE_OK;
 	}
 
@@ -113,9 +113,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( packet_ike_decrypt( ph1, packet, &cfg->iv ) != LIBIKE_OK )
 	{
-		log.txt( LLOG_ERROR,
-			"!! : config packet ignored ( packet decryption error )\n" );
-
+		log.txt( LLOG_ERROR, "!! : config packet ignored ( packet decryption error )\n" );
+		cfg->dec( true );
 		return LIBIKE_OK;
 	}
 
