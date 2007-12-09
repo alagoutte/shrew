@@ -2473,9 +2473,9 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 				{
 					log.txt( LLOG_INFO,
 						"ii : nat discovery - local address is translated\n" );
-				}
 
-				xlated = true;
+					xlated = true;
+				}
 			}
 
 			//
@@ -2492,9 +2492,9 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 				{
 					log.txt( LLOG_INFO,
 						"ii : nat discovery - remote address is translated\n" );
-				}
 
-				xlated = true;
+					xlated = true;
+				}
 			}
 
 			//
@@ -2504,10 +2504,8 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 			if( xlated )
 				ph1->tunnel->natt_v = ph1->natt_v;
 			else
-			{
 				log.txt( LLOG_INFO,
 					"ii : disabled nat-t ( no nat detected )\n" );
-			}
 
 			break;
 		}

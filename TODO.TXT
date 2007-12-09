@@ -177,6 +177,9 @@ X Add batched packet send and recv support to filter driver
 X Add support for older Linux distributions
 X Fix errors associated with iked processing duplicate packets
 X Fix validation and trimming of trailing packet data
+X Fix IM driver conflicts with the Cisco VPN Client ( DNE driver )
+. Use undocumented MS adapter configuration methods
+. Fix iked to work with any udp service port
 . Fix static buffer usage for temporary string data
 . Add timestamps in non-syslog log output
 . Add support for x86/amd64 Windows Vista platforms
