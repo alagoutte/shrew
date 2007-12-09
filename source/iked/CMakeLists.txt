@@ -45,7 +45,7 @@ add_executable(
 	ike.idb.peer.cpp
 	ike.idb.policy.cpp
 	ike.idb.tunnel.cpp
-	ike.idb.xch.cpp
+	ike.idb.exch.cpp
 	ike.io.admin.cpp
 	ike.io.network.cpp
 	ike.io.pfkey.cpp
