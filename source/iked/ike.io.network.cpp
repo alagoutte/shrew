@@ -159,107 +159,88 @@ long _IKED::loop_ike_nwork()
 			unsigned short port_dst = htons( saddr_dst.saddr4.sin_port );
 
 			//
-			// examine by destination port
+			// examine the packet contents
+			// for a NAT-T non-ESP marker
 			//
 
-			switch( port_dst )
+			uint32_t * marker = ( uint32_t * )( packet_udp.buff() + packet_udp.oset() );
+
+			if( marker[ 0 ] )
 			{
 				//
-				// IKE packet
+				// obtain packet payload
 				//
 
-				case LIBIKE_IKE_PORT:
+				PACKET_IKE packet_ike;
+				packet_udp.get( packet_ike );
+
+				log.bin(
+					LLOG_DEBUG,
+					LLOG_DECODE,
+					packet_ike.buff(),
+					packet_ike.size(),
+					"<- : recv IKE packet %s:%u -> %s:%u",
+					txtaddr_src, port_src,
+					txtaddr_dst, port_dst );
+
+				//
+				// process the ike packet
+				//
+
+				process_ike_recv(
+					packet_ike,
+					saddr_src,
+					saddr_dst );
+
+				continue;
+			}
+			else
+			{
+				//
+				// skip the null marker
+				//
+
+				packet_udp.get_null( 4 );
+
+				//
+				// obtain IKE packet payload
+				//
+
+				PACKET_IKE packet_ike;
+				packet_udp.get( packet_ike );
+
+				//
+				// check for NAT-T keep alive
+				//
+
+				if( packet_ike.size() < sizeof( IKE_HEADER ) )
 				{
-					//
-					// obtain packet payload
-					//
-
-					PACKET_IKE packet_ike;
-					packet_udp.get( packet_ike );
-
-					log.bin(
-						LLOG_DEBUG,
-						LLOG_DECODE,
-						packet_ike.buff(),
-						packet_ike.size(),
-						"<- : recv IKE packet %s:%u -> %s:%u",
+					log.txt( LLOG_DEBUG,
+						"<- : recv NAT-T:KEEP-ALIVE packet %s:%u -> %s:%u\n",
 						txtaddr_src, port_src,
 						txtaddr_dst, port_dst );
 
-					//
-					// process the ike packet
-					//
-
-					process_ike_recv(
-						packet_ike,
-						saddr_src,
-						saddr_dst );
-
-					break;
+					continue;
 				}
 
 				//
-				// is this a NAT-T packet
+				// process the ike packet
 				//
 
-				case LIBIKE_NATT_PORT:
-				{
-					//
-					// check for NAT-T keep alive
-					//
+				log.bin(
+					LLOG_DEBUG,
+					LLOG_DECODE,
+					packet_ike.buff(),
+					packet_ike.size(),
+					"<- : recv NAT-T:IKE packet %s:%u -> %s:%u",
+					txtaddr_src, port_src,
+					txtaddr_dst, port_dst );
 
-					if( packet_udp.size() < ( ( long ) sizeof( UDP_HEADER ) + 4 ) )
-					{
-						log.txt( LLOG_DEBUG,
-							"<- : recv NAT-T:KEEP-ALIVE packet %s:%u -> %s:%u\n",
-							txtaddr_src, port_src,
-							txtaddr_dst, port_dst );
+				process_ike_recv(
+					packet_ike,
+					saddr_src,
+					saddr_dst );
 
-						break;
-					}
-
-					//
-					// check for NAT-T non-esp marker
-					//
-
-					uint32_t * marker = ( uint32_t * )( packet_udp.buff() + packet_udp.oset() );
-
-					if( !marker[ 0 ] )
-					{
-						//
-						// skip the null marker
-						//
-
-						packet_udp.get_null( 4 );
-
-						//
-						// obtain IKE packet payload
-						//
-
-						PACKET_IKE packet_ike;
-						packet_udp.get( packet_ike );
-
-						log.bin(
-							LLOG_DEBUG,
-							LLOG_DECODE,
-							packet_ike.buff(),
-							packet_ike.size(),
-							"<- : recv NAT-T:IKE packet %s:%u -> %s:%u",
-							txtaddr_src, port_src,
-							txtaddr_dst, port_dst );
-
-						//
-						// process the ike packet
-						//
-
-						process_ike_recv(
-							packet_ike,
-							saddr_src,
-							saddr_dst );
-					}
-
-					break;
-				}
 			}
 		}
 	}
