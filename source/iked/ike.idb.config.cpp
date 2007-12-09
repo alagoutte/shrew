@@ -313,3 +313,25 @@ bool _IDB_CFG::dec( bool lock )
 	return true;
 }
 
+//
+// config specific re-send check
+//
+
+bool _IDB_CFG::resend( long attempt, long count )
+{
+	if( attempt >= iked.retry_count )
+	{
+		iked.log.txt( LLOG_INFO,
+				"ii : config packet resend limit exceeded\n" );
+
+		lstate |= ( LSTATE_DELETE );
+
+		return false;
+	}
+
+	iked.log.txt( LLOG_INFO,
+		"ii : resending %i config exchange packet(s)\n",
+		count );
+
+	return true;
+}

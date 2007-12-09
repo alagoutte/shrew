@@ -47,14 +47,15 @@
 
 bool _ITH_EVENT_RESEND::func()
 {
-	if( attempt >= iked.retry_count )
+	//
+	// call our exchange specific re-send
+	// function which returns true if we
+	// are allowed to re-transmit packets
+	//
+
+	if( !xch->resend( attempt, ipqueue.count() ) )
 	{
-		iked.log.txt( LLOG_INFO,
-				"ii : exchange packet resend limit exceeded\n" );
-
-		xch->lstate |= ( LSTATE_DELETE );
 		xch->dec( true );
-
 		return false;
 	}
 
@@ -62,10 +63,6 @@ bool _ITH_EVENT_RESEND::func()
 
 	long count = ipqueue.count();
 	long index = 0;
-
-	iked.log.txt( LLOG_INFO,
-		"ii : resending %i exchange packet(s)\n",
-		count );
 
 	for( ; index < count; index++ )
 	{

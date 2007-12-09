@@ -452,6 +452,10 @@ typedef class _IDB_XCH : public IDB
 	bool	resend_sched();
 	void	resend_clear() ;
 
+	// implemented by sub classes
+
+	bool virtual	resend( long attempt, long count ) = 0;
+
 }IDB_XCH;
 
 //
@@ -577,6 +581,10 @@ typedef class _IDB_PH1 : public IDB_XCH
 	bool	frag_add( unsigned char * data, unsigned long size, long index, bool last );
 	bool	frag_get( PACKET_IKE & packet );
 
+	// implemented by sub classes
+
+	bool virtual	resend( long attempt, long count );
+
 }IDB_PH1;
 
 //
@@ -638,6 +646,10 @@ typedef class _IDB_PH2 : public IDB_XCH
 
 	void	clean();
 
+	// implemented by sub classes
+
+	bool virtual	resend( long attempt, long count );
+
 }IDB_PH2;
 
 //
@@ -675,6 +687,10 @@ typedef class _IDB_CFG : public IDB_XCH
 	bool	setup();
 	void	clean();
 
+	// implemented by sub classes
+
+	bool virtual	resend( long attempt, long count );
+
 }IDB_CFG;
 
 //
@@ -691,6 +707,10 @@ typedef class _IDB_INF : public IDB_XCH
 	virtual bool add( bool lock );
 	virtual bool inc( bool lock );
 	virtual bool dec( bool lock );
+
+	// implemented by sub classes
+
+	bool virtual	resend( long attempt, long count );
 
 }IDB_INF;
 

@@ -476,3 +476,26 @@ bool _IDB_PH2::dec( bool lock )
 
 	return true;
 }
+
+//
+// phase2 specific re-send check
+//
+
+bool _IDB_PH2::resend( long attempt, long count )
+{
+	if( attempt >= iked.retry_count )
+	{
+		iked.log.txt( LLOG_INFO,
+				"ii : phase2 packet resend limit exceeded\n" );
+
+		lstate |= ( LSTATE_DELETE );
+
+		return false;
+	}
+
+	iked.log.txt( LLOG_INFO,
+		"ii : resending %i phase2 exchange packet(s)\n",
+		count );
+
+	return true;
+}

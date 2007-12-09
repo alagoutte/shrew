@@ -178,6 +178,7 @@ X Add support for older Linux distributions
 X Fix errors associated with iked processing duplicate packets
 X Fix validation and trimming of trailing packet data
 X Fix IM driver conflicts with the Cisco VPN Client ( DNE driver )
+X Use exchange specific re-send timeout handlers for better logging
 . Use undocumented MS adapter configuration methods
 . Fix iked to work with any udp service port
 . Fix static buffer usage for temporary string data

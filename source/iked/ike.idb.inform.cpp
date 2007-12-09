@@ -82,3 +82,17 @@ bool _IDB_INF::dec( bool lock )
 	return false;
 }
 
+//
+// inform specific re-send check
+//
+
+bool _IDB_INF::resend( long attempt, long count )
+{
+	//
+	// no-op. should never get here
+	//
+
+	assert( 0 );
+
+	return false;
+}
