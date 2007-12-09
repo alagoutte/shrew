@@ -259,7 +259,7 @@ long _IKED::init( long setlevel )
 	socket_init();
 
 	//
-	// socket stuff
+	// default socket initialization
 	//
 
 	if( !sock_ike_open )
