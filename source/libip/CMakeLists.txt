@@ -21,7 +21,7 @@ add_library(
 	libip.packet.udp.cpp
 	libip.pcap.cpp
 	libip.queue.cpp
-	libip.route.unix.cpp
+	libip.route.cpp
 	utils.list.cpp )
 
 set_target_properties(

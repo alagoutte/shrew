@@ -57,7 +57,7 @@ add_executable(
 	ike.peerid.cpp
 	ike.policy.cpp
 	ike.proposal.cpp
-	ike.utility.cpp
+	ike.socket.cpp
 	ike.xauth.cpp
 	ike.xconf.cpp
 	iked.cpp
