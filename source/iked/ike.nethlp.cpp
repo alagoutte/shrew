@@ -390,4 +390,108 @@ bool _IKED::find_addr_l( IKE_SADDR & saddr_r, IKE_SADDR & saddr_l, unsigned shor
 	return found;
 }
 
+bool has_sockaddr( sockaddr * saddr )
+{
+	switch( saddr->sa_family )
+	{
+		case AF_INET:
+		{
+			sockaddr_in * saddr_in = ( sockaddr_in * ) saddr;
+			if( saddr_in->sin_addr.s_addr )
+				return true;
+		}
+	}
 
+	return false;
+}
+
+bool cmp_sockaddr( sockaddr & saddr1, sockaddr & saddr2, bool port )
+{
+	if( saddr1.sa_family !=
+		saddr2.sa_family )
+		return false;
+
+	switch( saddr1.sa_family )
+	{
+		case AF_INET:
+		{
+			sockaddr_in * saddr1_in = ( sockaddr_in * ) &saddr1;
+			sockaddr_in * saddr2_in = ( sockaddr_in * ) &saddr2;
+
+			if( saddr1_in->sin_addr.s_addr !=
+				saddr2_in->sin_addr.s_addr )
+				return false;
+
+			if( port )
+				if( saddr1_in->sin_port !=
+					saddr2_in->sin_port )
+					return false;
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool cpy_sockaddr( sockaddr & saddr1, sockaddr & saddr2, bool port )
+{
+	switch( saddr1.sa_family )
+	{
+		case AF_INET:
+		{
+			sockaddr_in * saddr1_in = ( sockaddr_in * ) &saddr1;
+			sockaddr_in * saddr2_in = ( sockaddr_in * ) &saddr2;
+
+			SET_SALEN( saddr2_in, sizeof( sockaddr_in  ) );
+			saddr2_in->sin_family = AF_INET;
+			saddr2_in->sin_addr = saddr1_in->sin_addr;
+
+			if( port )
+				saddr2_in->sin_port = saddr1_in->sin_port;
+			else
+				saddr2_in->sin_port = 0;
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool get_sockport( sockaddr & saddr, u_int16_t & port )
+{
+	switch( saddr.sa_family )
+	{
+		case AF_INET:
+		{
+			sockaddr_in * saddr_in = ( sockaddr_in * ) &saddr;
+			port = saddr_in->sin_port;
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool set_sockport( sockaddr & saddr, u_int16_t port )
+{
+	switch( saddr.sa_family )
+	{
+		case AF_INET:
+		{
+			sockaddr_in * saddr_in = ( sockaddr_in * ) &saddr;
+			saddr_in->sin_port = port;
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool cmp_ikeaddr( IKE_SADDR & addr1, IKE_SADDR & addr2, bool port )
+{
+	return cmp_sockaddr( addr1.saddr, addr2.saddr, port );
+}
