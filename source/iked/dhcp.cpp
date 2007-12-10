@@ -455,10 +455,14 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			case DHCP_OPT_DNSS:
 				if( len >= 4 )
 				{
-					packet.get( &config.dnss, 4 );
-					len -= 4;
-					text_addr( txtaddr, config.dnss );
-					log.txt( LLOG_DEBUG, "ii : - IP4 DNS Server = %s\n", txtaddr );
+					if( config.dnss_count < IPSEC_DNSS_MAX )
+					{
+						packet.get(	&config.dnss_list[ config.dnss_count ], 4 );
+						len -= 4;
+						text_addr( txtaddr, config.dnss_list[ config.dnss_count ] );
+						config.dnss_count++;
+						log.txt( LLOG_DEBUG, "ii : - IP4 DNS Server = %s\n", txtaddr );
+					}
 				}
 				packet.get_null( len );
 				break;
@@ -466,10 +470,14 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			case DHCP_OPT_NBNS:
 				if( len >= 4 )
 				{
-					packet.get( &config.nbns, false );
-					len -= 4;
-					text_addr( txtaddr, config.nbns );
-					log.txt( LLOG_DEBUG, "ii : - IP4 WINS Server = %s\n", txtaddr );
+					if( config.nbns_count < IPSEC_NBNS_MAX )
+					{
+						packet.get( &config.nbns_list[ config.nbns_count ], 4 );
+						len -= 4;
+						text_addr( txtaddr, config.nbns_list[ config.dnss_count ] );
+						config.nbns_count++;
+						log.txt( LLOG_DEBUG, "ii : - IP4 WINS Server = %s\n", txtaddr );
+					}
 				}
 				packet.get_null( len );
 				break;
@@ -525,13 +533,19 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 				tunnel->xconf.mask = config.mask;
 
 			if( tunnel->xconf.opts & IPSEC_OPTS_DNSS )
-				tunnel->xconf.dnss = config.dnss;
+			{
+				memcpy( tunnel->xconf.dnss_list, config.dnss_list, sizeof( config.dnss_list ) );
+				tunnel->xconf.dnss_count =  config.dnss_count;
+			}
 
 			if( tunnel->xconf.opts & IPSEC_OPTS_DOMAIN )
 				memcpy( tunnel->xconf.suffix, config.suffix, CONF_STRLEN );
 
 			if( tunnel->xconf.opts & IPSEC_OPTS_NBNS )
-				tunnel->xconf.nbns = config.nbns;
+			{
+				memcpy( tunnel->xconf.nbns_list, config.nbns_list, sizeof( config.nbns_list ) );
+				tunnel->xconf.nbns_count =  config.nbns_count;
+			}
 
 			tunnel->event_dhcp.retry = 0;
 

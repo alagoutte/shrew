@@ -648,7 +648,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						// set dns redirect target
 						//
 
-						dtpi.send_msg_server( &tunnel->xconf.dnss );
+						dtpi.send_msg_server( tunnel->xconf.dnss_list );
 
 						//
 						// set dns redirect domain suffixes

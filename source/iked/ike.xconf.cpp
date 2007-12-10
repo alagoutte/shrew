@@ -252,7 +252,10 @@ bool _IKED_XCONF_LOCAL::rslt( IDB_TUNNEL * tunnel )
 		tunnel->xconf.mask = config.mask;
 
 	if( tunnel->xconf.opts & IPSEC_OPTS_DNSS )
-		tunnel->xconf.dnss = config.dnss;
+	{
+		memcpy( tunnel->xconf.dnss_list, config.dnss_list, sizeof( config.dnss_list ) );
+		tunnel->xconf.dnss_count = config.dnss_count;
+	}
 
 	if( tunnel->xconf.opts & IPSEC_OPTS_DOMAIN )
 		memcpy( tunnel->xconf.suffix, config.suffix, CONF_STRLEN );
@@ -266,7 +269,10 @@ bool _IKED_XCONF_LOCAL::rslt( IDB_TUNNEL * tunnel )
 	}
 
 	if( tunnel->xconf.opts & IPSEC_OPTS_NBNS )
-		tunnel->xconf.nbns = config.nbns;
+	{
+		memcpy( tunnel->xconf.nbns_list, config.nbns_list, sizeof( config.nbns_list ) );
+		tunnel->xconf.nbns_count = config.nbns_count;
+	}
 
 	if( tunnel->xconf.opts & IPSEC_OPTS_PFS )
 		tunnel->xconf.dhgr = config.dhgr;

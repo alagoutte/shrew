@@ -482,6 +482,9 @@
 #define IPSEC_OPTS_SPLITDNS		0x0100
 #define IPSEC_OPTS_SAVEPW		0x0200
 
+#define IPSEC_DNSS_MAX			4
+#define IPSEC_NBNS_MAX			2
+
 #define CONFIG_MODE_NONE		0
 #define CONFIG_MODE_PULL		1
 #define CONFIG_MODE_PUSH		2
@@ -612,17 +615,22 @@ typedef struct _IKE_XAUTH
 
 typedef struct _IKE_XCONF
 {
-	long		opts;	// enabled options
-	long		rqst;	// request options
+	long		opts;		// enabled options
+	long		rqst;		// request options
 
-	in_addr		addr;	// network address
-	in_addr		mask;	// network mask
-	uint32_t	expi;	// address expires
-	in_addr		dhcp;	// dhcp server
-	in_addr		dnss;	// dns server
-	in_addr		nbns;	// wins server
-	uint16_t	dhgr;	// pfs dh group
-	uint16_t	svpw;	// save password
+	in_addr		addr;		// network address
+	in_addr		mask;		// network mask
+	uint32_t	expi;		// address expires
+	in_addr		dhcp;		// dhcp servers
+
+	in_addr		dnss_list[ IPSEC_DNSS_MAX ];	// dns server list
+	uint32_t	dnss_count;						// dns server count
+
+	in_addr		nbns_list[ IPSEC_NBNS_MAX ];	// wins server list
+	uint32_t	nbns_count;						// wins server count
+
+	uint16_t	dhgr;		// pfs dh group
+	uint16_t	svpw;		// save password
 
 	char		suffix[ CONF_STRLEN ];
 

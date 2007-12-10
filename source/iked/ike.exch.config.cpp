@@ -1499,16 +1499,21 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 		}
 		else
 		{
-			cfg->attr_add_v( INTERNAL_IP4_DNS,
-				&cfg->tunnel->xconf.dnss,
-				sizeof( cfg->tunnel->xconf.dnss ) );
+			uint32_t index = 0;
+			uint32_t count = cfg->tunnel->xconf.dnss_count;
 
-			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-			text_addr( txtaddr, cfg->tunnel->xconf.dnss );
+			for( ; index < count; index++ )
+			{
+				cfg->attr_add_v( INTERNAL_IP4_DNS,
+					&cfg->tunnel->xconf.dnss_list[ index ], 4 );
 
-			log.txt( LLOG_DEBUG,
-				"ii : - IP4 DNS Server = %s\n",
-				txtaddr );
+				char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+				text_addr( txtaddr, cfg->tunnel->xconf.dnss_list[ index ] );
+
+				log.txt( LLOG_DEBUG,
+					"ii : - IP4 DNS Server = %s\n",
+					txtaddr );
+			}
 		}
 	}
 
@@ -1523,16 +1528,21 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 		}
 		else
 		{
-			cfg->attr_add_v( INTERNAL_IP4_NBNS,
-				&cfg->tunnel->xconf.nbns,
-				sizeof( cfg->tunnel->xconf.nbns ) );
+			uint32_t index = 0;
+			uint32_t count = cfg->tunnel->xconf.nbns_count;
 
-			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-			text_addr( txtaddr, cfg->tunnel->xconf.nbns );
+			for( ; index < count; index++ )
+			{
+				cfg->attr_add_v( INTERNAL_IP4_NBNS,
+					&cfg->tunnel->xconf.nbns_list[ index ], 4 );
 
-			log.txt( LLOG_DEBUG,
-				"ii : - IP4 WINS Server = %s\n",
-				txtaddr );
+				char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+				text_addr( txtaddr, cfg->tunnel->xconf.nbns_list[ index ] );
+
+				log.txt( LLOG_DEBUG,
+					"ii : - IP4 WINS Server = %s\n",
+					txtaddr );
+			}
 		}
 	}
 
@@ -1890,25 +1900,30 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 
 				if( ( readmask & IPSEC_OPTS_NBNS ) && attr->vdata.size() )
 				{
-					if( attr->vdata.size() != 4 )
+					if( cfg->tunnel->xconf.nbns_count < IPSEC_NBNS_MAX )
 					{
-						log.txt( LLOG_ERROR,
-							"!! : - IP4 WINS Server has invalid size ( %i bytes )\n",
-							attr->vdata.size() );
+						if( attr->vdata.size() != 4 )
+						{
+							log.txt( LLOG_ERROR,
+								"!! : - IP4 WINS Server has invalid size ( %i bytes )\n",
+								attr->vdata.size() );
 
-						break;
+							break;
+						}
+
+						memcpy(
+							&cfg->tunnel->xconf.nbns_list[ cfg->tunnel->xconf.nbns_count ],
+							attr->vdata.buff(), 4 );
+
+						char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+						text_addr( txtaddr, cfg->tunnel->xconf.nbns_list[ cfg->tunnel->xconf.nbns_count ] );
+
+						cfg->tunnel->xconf.nbns_count++;
+
+						log.txt( LLOG_DEBUG,
+							"ii : - IP4 WINS Server = %s\n",
+							txtaddr );
 					}
-
-					memcpy(
-						&cfg->tunnel->xconf.nbns,
-						attr->vdata.buff(), 4 );
-
-					char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-					text_addr( txtaddr, cfg->tunnel->xconf.nbns );
-
-					log.txt( LLOG_DEBUG,
-						"ii : - IP4 WINS Server = %s\n",
-						txtaddr );
 				}
 				else
 					log.txt( LLOG_DEBUG, "ii : - IP4 WINS Server\n" );
@@ -1922,25 +1937,30 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 
 				if( ( readmask & IPSEC_OPTS_DNSS ) && attr->vdata.size() )
 				{
-					if( attr->vdata.size() != 4 )
+					if( cfg->tunnel->xconf.dnss_count < IPSEC_DNSS_MAX )
 					{
-						log.txt( LLOG_ERROR,
-							"!! : - IP4 DNS Server has invalid size ( %i bytes )\n",
-							attr->vdata.size() );
+						if( attr->vdata.size() != 4 )
+						{
+							log.txt( LLOG_ERROR,
+								"!! : - IP4 DNS Server has invalid size ( %i bytes )\n",
+								attr->vdata.size() );
 
-						break;
+							break;
+						}
+
+						memcpy(
+							&cfg->tunnel->xconf.dnss_list[ cfg->tunnel->xconf.dnss_count ],
+							attr->vdata.buff(), 4 );
+
+						char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+						text_addr( txtaddr, cfg->tunnel->xconf.dnss_list[ cfg->tunnel->xconf.dnss_count ] );
+
+						cfg->tunnel->xconf.dnss_count++;
+
+						log.txt( LLOG_DEBUG,
+							"ii : - IP4 DNS Server = %s\n",
+							txtaddr );
 					}
-
-					memcpy(
-						&cfg->tunnel->xconf.dnss,
-						attr->vdata.buff(), 4 );
-
-					char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-					text_addr( txtaddr, cfg->tunnel->xconf.dnss );
-
-					log.txt( LLOG_DEBUG,
-						"ii : - IP4 DNS Server = %s\n",
-						txtaddr );
 				}
 				else
 					log.txt( LLOG_DEBUG, "ii : - IP4 DNS Server\n" );
