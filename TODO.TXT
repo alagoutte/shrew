@@ -180,6 +180,7 @@ X Fix validation and trimming of trailing packet data
 X Fix IM driver conflicts with the Cisco VPN Client ( DNE driver )
 X Use exchange specific re-send timeout handlers for better logging
 X Fix iked to work with any udp service port
+X Add site connection support using the access manager system tray
 . Fix static buffer usage for temporary string data
 . Add timestamps in non-syslog log output
 . Add support for x86/amd64 Windows Vista platforms
