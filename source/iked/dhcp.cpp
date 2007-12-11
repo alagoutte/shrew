@@ -362,6 +362,8 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 	log.txt( LLOG_DEBUG, "ii : reading DHCP reply options\n" );
 
 	IKE_XCONF	config;
+	memset( &config, 0, sizeof( config ) );
+
 	uint8_t		type;
 	char		txtaddr[ LIBIKE_MAX_TEXTADDR ];
 	bool		end = false;
@@ -453,12 +455,12 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 				break;
 
 			case DHCP_OPT_DNSS:
-				if( len >= 4 )
+				while( len >= 4 )
 				{
-					if( config.dnss_count < IPSEC_DNSS_MAX )
+					len -= 4;
+					if( config.dnss_count <= IPSEC_DNSS_MAX )
 					{
 						packet.get(	&config.dnss_list[ config.dnss_count ], 4 );
-						len -= 4;
 						text_addr( txtaddr, config.dnss_list[ config.dnss_count ] );
 						config.dnss_count++;
 						log.txt( LLOG_DEBUG, "ii : - IP4 DNS Server = %s\n", txtaddr );
@@ -468,13 +470,13 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 				break;
 
 			case DHCP_OPT_NBNS:
-				if( len >= 4 )
+				while( len >= 4 )
 				{
-					if( config.nbns_count < IPSEC_NBNS_MAX )
+					len -= 4;
+					if( config.nbns_count <= IPSEC_NBNS_MAX )
 					{
 						packet.get( &config.nbns_list[ config.nbns_count ], 4 );
-						len -= 4;
-						text_addr( txtaddr, config.nbns_list[ config.dnss_count ] );
+						text_addr( txtaddr, config.nbns_list[ config.nbns_count ] );
 						config.nbns_count++;
 						log.txt( LLOG_DEBUG, "ii : - IP4 WINS Server = %s\n", txtaddr );
 					}
