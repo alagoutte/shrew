@@ -667,7 +667,8 @@ void _IKEC::run()
 						return;
 					}
 
-					xconf.nbns.s_addr = inet_addr( text );
+					xconf.nbns_list[ 0 ].s_addr = inet_addr( text );
+					xconf.nbns_count = 1;
 					xconf.rqst &= ~IPSEC_OPTS_NBNS;
 				}
 			}
@@ -696,7 +697,8 @@ void _IKEC::run()
 					return;
 				}
 
-				xconf.dnss.s_addr = inet_addr( text );
+				xconf.dnss_list[ 0 ].s_addr = inet_addr( text );
+				xconf.dnss_count = 1;
 				xconf.rqst &= ~IPSEC_OPTS_DNSS;
 
 				// domain name suffix

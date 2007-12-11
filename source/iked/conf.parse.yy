@@ -579,18 +579,14 @@ xconf_local_line
 		delete $2;
 	}
 	EOS
-  |	DNSS4 ADDRESS
+  |	DNSS4 xconf_local_dns_servers
 	{
 		iked.xconf_local.config.opts |= IPSEC_OPTS_DNSS;
-		iked.xconf_local.config.dnss.s_addr = inet_addr( $2->text() );
-		delete $2;
 	}
 	EOS
-  |	NBNS4 ADDRESS
+  |	NBNS4 xconf_local_nbn_servers
 	{
 		iked.xconf_local.config.opts |= IPSEC_OPTS_NBNS;
-		iked.xconf_local.config.nbns.s_addr = inet_addr( $2->text() );
-		delete $2;
 	}
 	EOS
   |	DNS_SUFFIX QUOTED
@@ -632,6 +628,42 @@ xconf_local_line
 		iked.xconf_local.config.dhgr = $2;
 	}
 	EOS
+  ;
+
+xconf_local_dns_servers
+  :	/* nothing */
+  |	xconf_local_dns_servers xconf_local_dns_server
+  ;
+xconf_local_dns_server
+  :	QUOTED
+	{
+		int count = iked.xconf_local.config.dnss_count;
+		if( count <= IPSEC_DNSS_MAX )
+		{
+			iked.xconf_local.config.dnss_list[ count ].s_addr =
+				inet_addr( $1->text() );
+			iked.xconf_local.config.dnss_count++;
+		}
+		delete $1;
+	}
+  ;
+
+xconf_local_nbn_servers
+  :	/* nothing */
+  |	xconf_local_nbn_servers xconf_local_nbn_server
+  ;
+xconf_local_nbn_server
+  :	QUOTED
+	{
+		int count = iked.xconf_local.config.nbns_count;
+		if( count <= IPSEC_NBNS_MAX )
+		{
+			iked.xconf_local.config.nbns_list[ count ].s_addr =
+				inet_addr( $1->text() );
+			iked.xconf_local.config.nbns_count++;
+		}
+		delete $1;
+	}
   ;
 
 xconf_local_dns_names

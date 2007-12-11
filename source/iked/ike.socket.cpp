@@ -728,7 +728,9 @@ bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 				fprintf( fp, "domain\t%s\n", xconf.suffix );
 
 			if( xconf.opts & IPSEC_OPTS_DNSS )
-				fprintf( fp, "nameserver\t%s\n", inet_ntoa( xconf.dnss ) );
+				for( int i = 0; i < xconf.dnss_count; i++ )
+					fprintf( fp, "nameserver\t%s\n",
+						inet_ntoa( xconf.dnss_list[ i ] ) );
 
 			fclose( fp );
 		}
