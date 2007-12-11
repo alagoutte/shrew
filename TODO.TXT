@@ -181,10 +181,10 @@ X Fix IM driver conflicts with the Cisco VPN Client ( DNE driver )
 X Use exchange specific re-send timeout handlers for better logging
 X Fix iked to work with any udp service port
 X Add site connection support using the access manager system tray
+x Add support for multiple DNS/WINS server addresses
 . Fix static buffer usage for temporary string data
 . Add timestamps in non-syslog log output
 . Add support for x86/amd64 Windows Vista platforms
-. Add support for multiple DNS/WINS server addresses
 . Make Split DNS work with an adapter specific DNS suffix
 . Add support for automatic renegotiation of IKSAMP SAs
 . Add support for storing key and cert data in the site config

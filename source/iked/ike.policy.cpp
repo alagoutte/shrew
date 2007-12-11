@@ -404,7 +404,7 @@ bool _IKED::policy_dhcp_remove( IDB_TUNNEL * tunnel )
 	return policy_remove( tunnel, IPSEC_POLICY_IPSEC, src, dst, false );
 }
 
-#define ROUTE_RETRIES 5
+#define ROUTE_RETRIES 3
 
 bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route )
 {
@@ -514,8 +514,10 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 								mask,
 								tunnel->xconf.addr );
 
-					if( !routed )
-						Sleep( 1000 );
+					if( routed )
+						break;
+
+					Sleep( 1000 );
 				}
 
 				break;
@@ -538,8 +540,10 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 								cur_mask,
 								cur_next );
 
-					if( !routed )
-						Sleep( 1000 );
+					if( routed )
+						break;
+
+					Sleep( 1000 );
 				}
 
 				if( routed )
@@ -559,8 +563,10 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 									mask,
 									cur_next );
 
-						if( !routed )
-							Sleep( 1000 );
+						if( routed )
+							break;
+
+						Sleep( 1000 );
 					}
 				}
 
