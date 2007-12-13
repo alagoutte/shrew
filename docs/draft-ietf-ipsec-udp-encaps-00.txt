@@ -1,0 +1,452 @@
+
+IP Security Protocol Working Group (IPSEC)                   A. Huttunen
+INTERNET-DRAFT                                      F-Secure Corporation 
+Category: Standards track                           W. Dixon, B. Swander 
+Expires: 18 December 2001                                      Microsoft 
+                                                 T. Kivinen, M. Stenberg
+                                        SSH Communications Security Corp
+                                                                V. Volpe 
+                                                           Cisco Systems 
+                                                              L. DiBurro
+                                                         Nortel Networks
+                                                            18 June 2001 
+
+                   UDP Encapsulation of IPsec Packets
+                   draft-ietf-ipsec-udp-encaps-00.txt
+
+Status of this Memo
+
+   This document is an Internet-Draft and is in full conformance with
+   all provisions of Section 10 of RFC2026.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF), its areas, and its working groups. Note that
+   other groups may also distribute working documents as
+   Internet-Drafts.
+
+   Internet-Drafts are draft documents valid for a maximum of six
+   months and may be updated, replaced, or obsoleted by other documents
+   at any time. It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   The list of current Internet-Drafts can be accessed at
+   http://www.ietf.org/ietf/1id-abstracts.txt.
+
+   The list of Internet-Draft Shadow Directories can be accessed at
+   http://www.ietf.org/shadow.html.
+
+   This Internet-Draft will expire on December, 2001.
+
+Copyright Notice
+
+   Copyright (C) The Internet Society (2001). All Rights Reserved.
+
+Abstract
+
+   This draft defines methods to encapsulate and decapsulate ESP and 
+   AH packets inside UDP packets for the purpose of traversing NATs.
+
+   ESP encapsulation as defined in this document is capable of being
+   used in both IPv4 and IPv6 scenarios. AH encapsulation is defined
+   for IPv4 scenarios only.
+
+   The encapsulation is used whenever negotiated using IKE, as 
+   defined in [Kiv00]. The design choices are documented in [Dixon00].
+
+1. Introduction
+
+   UDP encapsulation of ESP packets MUST be supported. It is up to 
+   the need of the clients whether transport mode or tunnel mode is to
+   be supported. L2TP/IPsec clients MUST support transport mode, and
+   IPsec tunnel mode clients MUST support tunnel mode.
+
+   An IKE implementation supporting this draft MUST NOT generate 
+   packets where the Initiator Cookie field is all zeroes.
+
+   UDP encapsulation of AH MAY be supported. 
+
+   An IKE implementation supporting this draft for AH use MUST NOT 
+   generate ESP SPIs that are all zeroes.
+
+   ESP encapsulation as defined in this document is capable of being
+   used in both IPv4 and IPv6 scenarios. AH encapsulation is defined
+   for IPv4 scenarios only.
+
+2. Packet Formats
+
+2.1  UDP-encapsulated ESP Header Format
+
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|        Source Port            |      Destination Port         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|           Length              |           Checksum            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       Non-IKE Marker                          |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       Non-IKE Marker                          |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                      ESP header [RFC 2406]                    |
+~                                                               ~
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+The UDP header is a standard [RFC 768] header, where
+- Source Port and Destination Port are the same as used by IKE 
+  traffic.
+- Checksum is zero.
+
+Non-IKE Marker is 8 bytes of zero aligning with the Initiator 
+Cookie of an IKE packet.
+
+2.2  UDP-encapsulated AH Header Format
+
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|        Source Port            |      Destination Port         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|           Length              |           Checksum            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       Non-IKE Marker                          |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       Non-IKE Marker                          |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       Non-ESP Marker                          |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|Version|   Reserved    |  IHL  | Identification                |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                      AH header [RFC 2402]                     |
+~                                                               ~
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+The UDP header is a standard [RFC 768] header, where
+- Source Port and Destination Port are the same as used by IKE 
+  traffic.
+- Checksum is zero.
+
+Non-IKE Marker is 8 bytes of zero aligning with the Initiator 
+Cookie of an IKE packet.
+
+Non-ESP Marker is 4 bytes of zero aligning with the SPI field
+of an ESP packet.
+
+Version is a copy of the original header IP version field.
+
+When version is IPv4, the following fields are defined:
+- Reserved field MUST be zero.
+- IHL is a copy of the original header length field of the IP packet.
+- Identification is a copy of the original Identification field
+  of the IP packet.
+
+Version, Reserved, IHL and Identification fields are later referred to 
+as AH Envelope.
+
+2.3 NAT-keepalive Packet Format
+
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|        Source Port            |      Destination Port         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|           Length              |           Checksum            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    0xFF       |
++-+-+-+-+-+-+-+-+
+
+The UDP header is a standard [RFC 768] header, where
+- Source Port and Destination Port are the same as used by IKE 
+  traffic.
+- Checksum is zero.
+
+The sender SHOULD use a one octet long payload with the value 0xFF.
+The receiver SHOULD ignore a received NAT-keepalive packet.
+
+3. Encapsulation and Decapsulation Procedures
+
+3.1 Auxiliary Procedures
+
+3.1.1 Tunnel Mode Decapsulation NAT Procedure
+
+When a tunnel mode has been used to transmit packets, the inner
+IP header can contain addresses that are not suitable for the 
+current network. This procedure defines how these addresses are
+to be converted to suitable addresses for the current network.
+
+Depending on local policy, one of the following MUST be done:
+a) If a valid source IP address space has been defined in the policy
+   for the encapsulated packets from the peer, check that the source
+   IP address of the inner packet is valid according to the policy.
+b) If an address has been assigned for the remote peer, check
+   that the source IP address used in the inner packet is the
+   same as the IP address assigned.
+c) NAT is performed for the packet, making it suitable for transport
+   in the local network.
+
+3.1.2 Transport Mode Decapsulation NAT Procedure
+
+When a transport mode has been used to transmit packets, contained
+TCP or UDP headers will contain incorrect checksums due to the change
+of parts of the IP header during transit. This procedure defines how
+to fix these checksums.
+
+Depending on local policy, one of the following MUST be done:
+a) If the protocol header after the ESP/AH header is a TCP/UDP
+   header, zero the checksum field in the TCP/UDP header.
+b) If the protocol header after the ESP/AH header is a TCP/UDP
+   header, recompute the checksum field in the TCP/UDP header.
+c) If the protocol header after the ESP/AH header is a TCP/UDP
+   header and the peer's real source IP address has been received
+   according to [Kiv00], incrementally recompute the TCP/UDP checksum:
+   - subtract the IP source address in the received packet
+     from the checksum
+   - add the real IP source address received via IKE to the checksum
+
+In addition an implementation MAY fix any contained protocols that
+have been broken by NAT.
+
+3.2 Transport Mode ESP Encapsulation
+
+              BEFORE APPLYING ESP/UDP
+         ----------------------------
+   IPv4  |orig IP hdr  |     |      |
+         |(any options)| TCP | Data |
+         ----------------------------
+
+              AFTER APPLYING ESP/UDP
+         -------------------------------------------------------------
+   IPv4  |orig IP hdr  | UDP | Non-| ESP |     |      |   ESP   | ESP|
+         |(any options)| Hdr | IKE | Hdr | TCP | Data | Trailer |Auth|
+         -------------------------------------------------------------
+                                         |<----- encrypted ---->|
+                                   |<------ authenticated ----->|
+
+1) Ordinary ESP encapsulation procedure is used.
+2) A properly formatted UDP header and a Non-IKE Marker 
+   are inserted where shown.
+3) The Total Length, Protocol and Header Checksum fields in the
+   IP header are edited to match the resulting IP packet.
+
+3.3 Transport Mode ESP Decapsulation
+
+1) The UDP header and the Non-IKE Marker are removed from
+   the packet.
+2) The Total Length, Protocol and Header Checksum fields in the
+   new IP header are edited to match the resulting IP packet.
+3) Ordinary ESP decapsulation procedure is used.
+4) Transport mode decapsulation NAT procedure is used.
+
+
+3.4 Tunnel Mode ESP Encapsulation
+
+              BEFORE APPLYING ESP/UDP
+         ----------------------------
+   IPv4  |orig IP hdr  |     |      |
+         |(any options)| TCP | Data |
+         ----------------------------
+
+              AFTER APPLYING ESP/UDP
+     --------------------------------------------------------------------
+IPv4 |new h.| UDP | Non-| ESP |orig IP hdr  |     |      |   ESP   | ESP|
+     |(opts)| Hdr | IKE | Hdr |(any options)| TCP | Data | Trailer |Auth|
+     --------------------------------------------------------------------
+                              |<------------ encrypted ----------->|
+                        |<------------- authenticated ------------>|
+
+1) Ordinary ESP encapsulation procedure is used.
+2) A properly formatted UDP header and a Non-IKE Marker 
+   are inserted where shown.
+3) The Total Length, Protocol and Header Checksum fields in the
+   new IP header are edited to match the resulting IP packet.
+
+
+3.5 Tunnel Mode ESP Decapsulation
+
+1) The UDP header and the Non-IKE Marker are removed from
+   the packet.
+2) The Total Length, Protocol and Header Checksum fields in the
+   new IP header are edited to match the resulting IP packet.
+3) Ordinary ESP decapsulation procedure is used.
+4) Tunnel mode decapsulation NAT procedure is used.
+
+3.6 Transport Mode AH Encapsulation
+
+                  BEFORE APPLYING AH/UDP
+            ----------------------------
+      IPv4  |orig IP hdr  |     |      |
+            |(any options)| TCP | Data |
+            ----------------------------
+
+                  AFTER APPLYING AH/UDP
+            ----------------------------------------------------------
+      IPv4  |orig IP hdr  | UDP | Non-| Non-| AH   |    |     |      |
+            |(any options)| Hdr | IKE | ESP | Env. | AH | TCP | Data |
+            ----------------------------------------------------------
+            |<--auth.---->|                        |<---auth.------->|
+              except for                   
+             mutable fields                
+
+1) If the Version number field in the IP header is not 4, 
+   drop the packet, otherwise continue.
+2) Ordinary AH encapsulation procedure is used.
+3) A properly formatted UDP header, Non-IKE marker, Non-ESP marker 
+   and AH Envelope are inserted where shown.
+4) The AH Envelope is filled with information from the IP header.
+5) The Total Length, Protocol and Header Checksum fields in the
+   IP header are edited to match the resulting IP packet.
+
+3.7 Transport Mode AH Decapsulation
+
+1) If the Version number field in the AH envelope and the outer
+   IP header are not both 4, drop the packet, otherwise continue.
+2) The values in the AH Envelope are copied to the IP header.
+3) The UDP header, Non-IKE marker, Non-ESP marker and AH Envelope
+   are removed from the packet.
+4) The Total Length, Protocol and Header Checksum fields in the
+   IP header are edited to match the resulting IP packet.
+5) Ordinary AH decapsulation procedure is used.
+6) Transport mode decapsulation NAT procedure is used.
+
+3.8 Tunnel Mode AH Encapsulation
+
+                  BEFORE APPLYING AH/UDP
+            ----------------------------
+      IPv4  |orig IP hdr  |     |      |
+            |(any options)| TCP | Data |
+            ----------------------------
+
+            AFTER APPLYING AH/UDP
+      ------------------------------------------------------------------
+IPv4  |new h. | UDP | Non-| Non-| AH   |    |orig IP hdr  |     |      |
+      |(opts) | Hdr | IKE | ESP | Env. | AH |(any options)| TCP | Data |
+      ------------------------------------------------------------------
+      |<--auth.---->|                  |<----authenticated------------>|
+         except for 
+       mutable fields
+
+1) If the Version number field in the IP header is not 4, 
+   drop the packet, otherwise continue.
+2) Ordinary AH encapsulation procedure is used.
+3) A properly formatted UDP header, Non-IKE marker, Non-ESP marker 
+   and AH Envelope are inserted where shown.
+4) The AH Envelope is filled with information from the new IP header.
+5) The Total Length, Protocol and Header Checksum fields in the
+   new IP header are edited to match the resulting IP packet.
+
+3.9 Tunnel Mode AH Decapsulation
+
+1) If the Version number field in the AH envelope and the outer
+   IP header are not both 4, drop the packet, otherwise continue.
+2) The values in the AH Envelope are copied to the outer IP header.
+3) The UDP header, Non-IKE marker, Non-ESP marker and AH Envelope
+   are removed from the packet.
+4) The Total Length, Protocol and Header Checksum fields in the
+   IP header are edited to match the resulting IP packet.
+5) Ordinary AH decapsulation procedure is used.
+6) Tunnel mode decapsulation NAT procedure is used.
+
+
+4. NAT Keepalive Procedure
+
+The sole purpose of sending NAT-keepalive packets is to keep
+NAT mappings alive for the duration of a connection between
+the peers. Reception of NAT-keepalive packets MUST NOT be
+used to detect liveness of a connection.
+
+A peer MAY send a NAT-keepalive packet if there exists one
+or more phase I or phase II SAs between the peers, or such
+an SA has existed at most N minutes earlier. N is a locally
+configurable parameter with a default value of 5 minutes.
+
+A peer SHOULD send a NAT-keepalive packet if a need to send such
+packets is detected according to [Kiv00] and if no other packet to
+the peer has been sent in M seconds. M is a locally configurable
+parameter with a default value of 20 seconds.
+
+5.  Intellectual property rights
+
+The IETF has been notified of intellectual property rights claimed in
+regard to some or all of the specification contained in this document.
+For more information consult the online list of claimed rights.
+
+SSH Communications Security Corp has notified the working group of one
+or more patents or patent applications that may be relevant to this
+internet-draft. SSH Communications Security Corp has already given a
+licence for those patents to the IETF. For more information consult the
+online list of claimed rights.
+
+6.  Acknowledgments
+
+Thanks to Joern Sierwald, Tamir Zegman, Larry DiBurro, Tatu Ylonen
+and Santeri Paavolainen who contributed to the previous drafts
+about NAT traversal.
+
+7.  References
+
+[RFC 768] Postel, J., "User Datagram Protocol", August 1980
+
+[RFC-2119] Bradner, S., "Key words for use in RFCs to indicate
+Requirement Levels", March 1997
+
+[RFC 2402] Kent, S., "IP Authentication Header", November 1998
+
+[RFC 2406] Kent, S., "IP Encapsulating Security Payload (ESP)",
+November 1998
+
+[Dixon00] Dixon, W. et. al., 
+draft-ietf-ipsec-udp-encaps-justification-00.txt,
+"IPSec over NAT Justification for UDP Encapsulation", June 2001
+
+[Kiv00] Kivinen, T. et. al., draft-ietf-ipsec-nat-t-ike-00.txt,
+"Negotiation of NAT-Traversal in the IKE", June 2001
+
+
+8.  Authors' Addresses
+ 
+    Ari Huttunen
+    F-Secure Corporation
+    Tammasaarenkatu 7,
+    FIN-00181 HELSINKI
+    Finland
+    E-mail: Ari.Huttunen@F-Secure.com
+
+    William Dixon
+    Microsoft
+    One Microsoft Way
+    Redmond WA 98052
+    E-mail: wdixon@microsoft.com
+
+    Brian Swander
+    Microsoft
+    One Microsoft Way
+    Redmond WA 98052
+    E-mail: briansw@microsoft.com
+
+    Tero Kivinen
+    SSH Communications Security Corp
+    Fredrikinkatu 42
+    FIN-00100 HELSINKI
+    Finland
+    E-mail: kivinen@ssh.fi
+
+    Markus Stenberg
+    SSH Communications Security Corp
+    Fredrikinkatu 42
+    FIN-00100 HELSINKI
+    Finland
+    E-mail: mstenber@ssh.com
+
+    Victor Volpe
+    Cisco Systems
+    124 Grove Street
+    Suite 205
+    Franklin, MA 02038
+    E-mail: vvolpe@cisco.com
+
+    Larry DiBurro
+    Nortel Networks
+    80 Central Street       
+    Boxborough, MA 01719
+    ldiburro@nortelnetworks.com
