@@ -1492,15 +1492,19 @@ const char * _PFKI::name( long type, long value )
 		case NAME_NTTYPE:
 		{
 			static const char * nattype_00 = "NONE";
-			static const char * nattype_01 = "ESPINUDP";
+			static const char * nattype_01 = "ESPINUDP-NON-IKE";
+			static const char * nattype_02 = "ESPINUDP";
 
 			switch( value )
 			{
 				case 0:
 					return nattype_00;
 #ifdef OPT_NATT
-				case UDP_ENCAP_ESPINUDP:
+				case UDP_ENCAP_ESPINUDP_NON_IKE:
 					return nattype_01;
+
+				case UDP_ENCAP_ESPINUDP:
+					return nattype_02;
 #endif
 				default:
 					return unknown;

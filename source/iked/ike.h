@@ -469,6 +469,7 @@
 #define IPSEC_NATT_V00			1
 #define IPSEC_NATT_V01			2
 #define IPSEC_NATT_V02			3
+#define IPSEC_NATT_V03			4
 #define IPSEC_NATT_RFC			255
 
 #define IPSEC_OPTS_SPLITNET		0x0001

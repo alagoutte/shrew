@@ -419,6 +419,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			// natt original address ( ignored )
 			//
 
+			case ISAKMP_PAYLOAD_NAT_VXX_ORIG:
 			case ISAKMP_PAYLOAD_NAT_RFC_ORIG:
 			{
 				log.txt( LLOG_INFO, "<< : natt original address\n" );

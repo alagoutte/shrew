@@ -129,7 +129,7 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	encap_size += sizeof( UDP_HEADER );
 
 	// account for non-esp marker
-	if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
+	if( ph1->tunnel->natt_v >= IPSEC_NATT_V02 )
 		encap_size += sizeof( unsigned long );
 
 	//
@@ -255,7 +255,7 @@ long _IKED::packet_ike_xmit( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	text_addr( txtaddr_r, &ph1->tunnel->saddr_r, true );
 
 	char * encap_mode = encap_ike;
-	if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
+	if( ph1->tunnel->natt_v >= IPSEC_NATT_NONE )
 		encap_mode = encap_nat;
 
 	//
@@ -325,7 +325,7 @@ long _IKED::packet_ike_encap( PACKET_IKE & packet_ike, PACKET_IP & packet_ip, IK
 		src.saddr4.sin_port,
 		dst.saddr4.sin_port );
 
-	if( natt != IPSEC_NATT_NONE )
+	if( natt >= IPSEC_NATT_V02 )
 		packet_udp.add_null( 4 );
 
 	packet_udp.add( packet_ike );

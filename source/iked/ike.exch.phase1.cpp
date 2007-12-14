@@ -1989,11 +1989,15 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 	}
 
 	//
-	// optionally add natt vendor id payload
+	// optionally add natt vendor id payloads
 	//
 
 	if( ph1->natt_l )
 	{
+		//
+		// add natt draft 00-01 id paylaods
+		//
+
 		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
 			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_DRAFT ) )
 		{
@@ -2001,13 +2005,19 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 			log.txt( LLOG_INFO, "ii : local supports nat-t ( draft v00 )\n" );
 			payload_add_vend( packet, vend_natt_v01, ISAKMP_PAYLOAD_VEND );
 			log.txt( LLOG_INFO, "ii : local supports nat-t ( draft v01 )\n" );
-			payload_add_vend( packet, vend_natt_v02, ISAKMP_PAYLOAD_VEND );
-			log.txt( LLOG_INFO, "ii : local supports nat-t ( draft v02 )\n" );
 		}
+
+		//
+		// add natt draft 02-rfc id paylaods
+		//
 
 		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
 			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC ) )
 		{
+			payload_add_vend( packet, vend_natt_v02, ISAKMP_PAYLOAD_VEND );
+			log.txt( LLOG_INFO, "ii : local supports nat-t ( draft v02 )\n" );
+			payload_add_vend( packet, vend_natt_v03, ISAKMP_PAYLOAD_VEND );
+			log.txt( LLOG_INFO, "ii : local supports nat-t ( draft v03 )\n" );
 			payload_add_vend( packet, vend_natt_rfc, ISAKMP_PAYLOAD_VEND );
 			log.txt( LLOG_INFO, "ii : local supports nat-t ( rfc )\n" );
 		}
@@ -2134,59 +2144,89 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		}
 
 	//
-	// check for natt v00 vendor id
+	// check for natt draft 00-01 vendor ids
 	//
 
-	if( vend.size() == vend_natt_v00.size() )
-		if( !memcmp( vend.buff(), vend_natt_v00.buff(), vend_natt_v00.size() ) )
-		{
-			ph1->natt_r = true;
-			if( ph1->natt_v < IPSEC_NATT_V00 )
-				ph1->natt_v = IPSEC_NATT_V00;
-			log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v00 )\n" );
-			return LIBIKE_OK;
-		}
+	if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
+		( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_DRAFT ) )
+	{
+		//
+		// check for natt v00 vendor id
+		//
+
+		if( vend.size() == vend_natt_v00.size() )
+			if( !memcmp( vend.buff(), vend_natt_v00.buff(), vend_natt_v00.size() ) )
+			{
+				ph1->natt_r = true;
+				if( ph1->natt_v < IPSEC_NATT_V00 )
+					ph1->natt_v = IPSEC_NATT_V00;
+				log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v00 )\n" );
+				return LIBIKE_OK;
+			}
+
+		//
+		// check for natt v01 vendor id
+		//
+
+		if( vend.size() == vend_natt_v01.size() )
+			if( !memcmp( vend.buff(), vend_natt_v01.buff(), vend_natt_v01.size() ) )
+			{
+				ph1->natt_r = true;
+				if( ph1->natt_v < IPSEC_NATT_V01 )
+					ph1->natt_v = IPSEC_NATT_V01;
+				log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v01 )\n" );
+				return LIBIKE_OK;
+			}
+	}
 
 	//
-	// check for natt v01 vendor id
+	// check for natt draft 02-rfc vendor ids
 	//
 
-	if( vend.size() == vend_natt_v01.size() )
-		if( !memcmp( vend.buff(), vend_natt_v01.buff(), vend_natt_v01.size() ) )
-		{
-			ph1->natt_r = true;
-			if( ph1->natt_v < IPSEC_NATT_V01 )
-				ph1->natt_v = IPSEC_NATT_V01;
-			log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v01 )\n" );
-			return LIBIKE_OK;
-		}
+	if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
+		( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC ) )
+	{
+		//
+		// check for natt v02 vendor id
+		//
 
-	//
-	// check for natt v02 vendor id
-	//
+		if( vend.size() == vend_natt_v02.size() )
+			if( !memcmp( vend.buff(), vend_natt_v02.buff(), vend_natt_v02.size() ) )
+			{
+				ph1->natt_r = true;
+				if( ph1->natt_v < IPSEC_NATT_V02 )
+					ph1->natt_v = IPSEC_NATT_V02;
+				log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v02 )\n" );
+				return LIBIKE_OK;
+			}
 
-	if( vend.size() == vend_natt_v02.size() )
-		if( !memcmp( vend.buff(), vend_natt_v02.buff(), vend_natt_v02.size() ) )
-		{
-			ph1->natt_r = true;
-			if( ph1->natt_v < IPSEC_NATT_V02 )
-				ph1->natt_v = IPSEC_NATT_V02;
-			log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v02 )\n" );
-			return LIBIKE_OK;
-		}
+		//
+		// check for natt v03 vendor id
+		//
 
-	//
-	// check for natt rfc vendor id
-	//
+		if( vend.size() == vend_natt_v03.size() )
+			if( !memcmp( vend.buff(), vend_natt_v03.buff(), vend_natt_v03.size() ) )
+			{
+				ph1->natt_r = true;
+				if( ph1->natt_v < IPSEC_NATT_V03 )
+					ph1->natt_v = IPSEC_NATT_V03;
+				log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v03 )\n" );
+				return LIBIKE_OK;
+			}
 
-	if( vend.size() == vend_natt_rfc.size() )
-		if( !memcmp( vend.buff(), vend_natt_rfc.buff(), vend_natt_rfc.size() ) )
-		{
-			ph1->natt_r = true;
-			ph1->natt_v = IPSEC_NATT_RFC;
-			log.txt( LLOG_INFO, "ii : peer supports nat-t ( rfc )\n" );
-			return LIBIKE_OK;
-		}
+		//
+		// check for natt rfc vendor id
+		//
+
+		if( vend.size() == vend_natt_rfc.size() )
+			if( !memcmp( vend.buff(), vend_natt_rfc.buff(), vend_natt_rfc.size() ) )
+			{
+				ph1->natt_r = true;
+				ph1->natt_v = IPSEC_NATT_RFC;
+				log.txt( LLOG_INFO, "ii : peer supports nat-t ( rfc )\n" );
+				return LIBIKE_OK;
+			}
+	}
 
 	//
 	// check for shrew soft vendor id
@@ -2502,10 +2542,13 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 			//
 
 			if( xlated )
+			{
 				ph1->tunnel->natt_v = ph1->natt_v;
-			else
-				log.txt( LLOG_INFO,
-					"ii : disabled nat-t ( no nat detected )\n" );
+				break;
+			}
+
+			log.txt( LLOG_INFO,
+				"ii : disabled nat-t ( no nat detected )\n" );
 
 			break;
 		}
@@ -2515,10 +2558,13 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 			log.txt( LLOG_INFO, "ii : forcing nat-t to enabled ( draft )\n" );
 
 			//
-			// set natt to negotiated version
+			// set natt to negotiated version or draft v00
 			//
 
-			ph1->tunnel->natt_v = IPSEC_NATT_V02;
+			if( ph1->natt_v != IPSEC_NATT_NONE )
+				ph1->tunnel->natt_v = ph1->natt_v;
+			else
+				ph1->tunnel->natt_v = IPSEC_NATT_V00;
 
 			break;
 
@@ -2527,10 +2573,13 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 			log.txt( LLOG_INFO, "ii : forcing nat-t to enabled ( rfc )\n" );
 
 			//
-			// set natt to negotiated version
+			// set natt to negotiated version or rfc
 			//
 
-			ph1->tunnel->natt_v = IPSEC_NATT_RFC;
+			if( ph1->natt_v != IPSEC_NATT_NONE )
+				ph1->tunnel->natt_v = ph1->natt_v;
+			else
+				ph1->tunnel->natt_v = IPSEC_NATT_RFC;
 
 			break;
 	}
@@ -2541,7 +2590,7 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 
 	ph1->lstate |= LSTATE_CHKNATD;
 
-	if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
+	if( ph1->tunnel->natt_v >= IPSEC_NATT_V02 )
 	{
 		//
 		// switch our port to natt
@@ -2558,6 +2607,16 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 		log.txt( LLOG_INFO,
 			"ii : switching to nat-t udp port %u\n",
 			ntohs( ph1->tunnel->peer->natt_port ) );
+
+		//
+		// setup our filter
+		//
+
+#ifdef WIN32
+
+		iked.filter_tunnel_add( ph1->tunnel, true );
+
+#endif
 
 		return true;
 	}
@@ -2581,12 +2640,12 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 		}
 		else
 		{
-			if( ph1->tunnel->peer->natt_mode == IPSEC_NATT_NONE )
+			if( ph1->tunnel->peer->natt_mode <= IPSEC_NATT_V02 )
 			{
 				if( !ph1->natt_l )
 				{
 					log.txt( LLOG_INFO,
-						"ii : local nat traversal is disabled but initiator port floated\n" );
+						"ii : local nat traversal is <= v02 but initiator port floated\n" );
 
 					return false;
 				}
@@ -2594,7 +2653,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 				if( !ph1->natt_r )
 				{
 					log.txt( LLOG_INFO,
-						"ii : remote nat traversal is disabled but initiator port floated\n" );
+						"ii : remote nat traversal is <= v02 but initiator port floated\n" );
 
 					return false;
 				}
@@ -2632,6 +2691,15 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 			"ii : floating to nat-t udp ports %u -> %u\n",
 			ntohs( ph1->tunnel->saddr_r.saddr4.sin_port ),
 			ntohs( ph1->tunnel->saddr_l.saddr4.sin_port ) );
+		//
+		// setup our filter
+		//
+
+#ifdef WIN32
+
+		iked.filter_tunnel_add( ph1->tunnel, true );
+
+#endif
 
 		ph1->lstate |= LSTATE_HASNATP;
 	}

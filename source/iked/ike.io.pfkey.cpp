@@ -1317,7 +1317,10 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 				case ISAKMP_ENCAP_VXX_UDP_TRANSPORT:
 				case ISAKMP_ENCAP_RFC_UDP_TRANSPORT:
 				{
-					sainfo.natt.type = UDP_ENCAP_ESPINUDP;
+					if( ph2->tunnel->natt_v >= IPSEC_NATT_V02 )
+						sainfo.natt.type = UDP_ENCAP_ESPINUDP;
+					else
+						sainfo.natt.type = UDP_ENCAP_ESPINUDP_NON_IKE;
 
 					switch( dir )
 					{

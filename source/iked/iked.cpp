@@ -82,6 +82,9 @@ _IKED::_IKED()
 	unsigned char natt_v02[] = VEND_NATT_V02;
 	vend_natt_v02.set( natt_v02, sizeof( natt_v02 ) );
 
+	unsigned char natt_v03[] = VEND_NATT_V03;
+	vend_natt_v03.set( natt_v03, sizeof( natt_v03 ) );
+
 	unsigned char natt_rfc[] = VEND_NATT_RFC;
 	vend_natt_rfc.set( natt_rfc, sizeof( natt_rfc ) );
 

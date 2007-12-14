@@ -200,7 +200,7 @@ bool _IDB_TUNNEL::add( bool lock )
 
 #ifdef WIN32
 
-	iked.filter_tunnel_add( this );
+	iked.filter_tunnel_add( this, false );
 
 #endif
 

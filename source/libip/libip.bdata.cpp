@@ -202,7 +202,7 @@ bool _BDATA::add( int value, size_t size )
 	if( !add( ( void * ) NULL, size ) )
 		return false;
 
-	memset( data_buff + data_real - size, value, size );
+	memset( data_buff + data_size - size, value, size );
 
 	return true;
 }
