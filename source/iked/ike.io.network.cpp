@@ -296,7 +296,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 			log.txt( LLOG_INFO,
 				"XX : ike packet from %s ignored\n"
 				"XX : unknown phase1 sa for peer\n"
-				"XX : %04x%04x:%04x%04x\n",
+				"XX : %08x%08x:%08x%08x\n",
 				inet_ntoa( saddr_src.saddr4.sin_addr ),
 				htonl( *( long * ) &cookies.i[ 0 ] ),
 				htonl( *( long * ) &cookies.i[ 4 ] ),
