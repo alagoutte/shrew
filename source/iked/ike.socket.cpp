@@ -644,10 +644,6 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 
 bool _IKED::vnet_rel( VNET_ADAPTER * adapter )
 {
-	// restore the previous resolv.conf file
-
-	rename( "/etc/resolv.iked", "/etc/resolv.conf" );
-
 	// close adapter
 
 	if( adapter->fn != -1 )
@@ -662,14 +658,9 @@ bool _IKED::vnet_rel( VNET_ADAPTER * adapter )
 	return true;
 }
 
-bool _IKED::vnet_set( VNET_ADAPTER * adapter, bool enable )
+bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 {
-	return false;
-}
-
-bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
-{
-	if( xconf.opts & IPSEC_OPTS_ADDR )
+	if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
 	{
 		struct ifreq ifr;
 		memset( &ifr, 0, sizeof( struct ifreq ) );
@@ -688,7 +679,7 @@ bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 
 		strncpy( ifr.ifr_name, adapter->name, IFNAMSIZ );
 
-		addr->sin_addr = xconf.addr;
+		addr->sin_addr = tunnel->xconf.addr;
 
 		if( ioctl( sock, SIOCSIFADDR, &ifr ) != 0 )
 		{
@@ -699,7 +690,7 @@ bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 			return false;
 		}
 
-		addr->sin_addr = xconf.mask;
+		addr->sin_addr = tunnel->xconf.mask;
 
 		if( ioctl( sock, SIOCSIFNETMASK, &ifr ) != 0 )
 		{
@@ -715,7 +706,7 @@ bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 		close( sock );
 	}
 
-	if( xconf.opts & ( IPSEC_OPTS_DNSS | IPSEC_OPTS_DOMAIN ) )
+	if( tunnel->xconf.opts & ( IPSEC_OPTS_DNSS | IPSEC_OPTS_DOMAIN ) )
 	{
 		// backup the current resolv.conf file
 
@@ -724,13 +715,13 @@ bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 		FILE * fp = fopen( "/etc/resolv.conf", "w+" );
 		if( fp != NULL )
 		{
-			if( xconf.opts & IPSEC_OPTS_DOMAIN )
-				fprintf( fp, "domain\t%s\n", xconf.suffix );
+			if( tunnel->xconf.opts & IPSEC_OPTS_DOMAIN )
+				fprintf( fp, "domain\t%s\n", tunnel->xconf.nscfg.suffix );
 
-			if( xconf.opts & IPSEC_OPTS_DNSS )
-				for( int i = 0; i < xconf.dnss_count; i++ )
+			if( tunnel->xconf.opts & IPSEC_OPTS_DNSS )
+				for( int i = 0; i < tunnel->xconf.nscfg.dnss_count; i++ )
 					fprintf( fp, "nameserver\t%s\n",
-						inet_ntoa( xconf.dnss_list[ i ] ) );
+						inet_ntoa( tunnel->xconf.nscfg.dnss_list[ i ] ) );
 
 			fclose( fp );
 		}
@@ -738,3 +729,17 @@ bool _IKED::vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf )
 
 	return true;
 }
+
+bool _IKED::client_cleanup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
+{
+	if( tunnel->xconf.opts & ( IPSEC_OPTS_DNSS | IPSEC_OPTS_DOMAIN ) )
+	{
+		// restore the previous resolv.conf file
+
+		rename( "/etc/resolv.iked", "/etc/resolv.conf" );
+	}
+
+	return true;
+}
+
+

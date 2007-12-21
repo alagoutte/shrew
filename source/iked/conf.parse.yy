@@ -597,8 +597,8 @@ xconf_local_line
 		if( len >= CONF_STRLEN )
 			len = CONF_STRLEN - 1;
 
-		memcpy( iked.xconf_local.config.suffix, $2->text(), len );
-		iked.xconf_local.config.suffix[ len ] = 0;
+		memcpy( iked.xconf_local.config.nscfg.suffix, $2->text(), len );
+		iked.xconf_local.config.nscfg.suffix[ len ] = 0;
 		delete $2;
 	}
 	EOS
@@ -637,12 +637,12 @@ xconf_local_dns_servers
 xconf_local_dns_server
   :	QUOTED
 	{
-		int count = iked.xconf_local.config.dnss_count;
+		int count = iked.xconf_local.config.nscfg.dnss_count;
 		if( count <= IPSEC_DNSS_MAX )
 		{
-			iked.xconf_local.config.dnss_list[ count ].s_addr =
+			iked.xconf_local.config.nscfg.dnss_list[ count ].s_addr =
 				inet_addr( $1->text() );
-			iked.xconf_local.config.dnss_count++;
+			iked.xconf_local.config.nscfg.dnss_count++;
 		}
 		delete $1;
 	}
@@ -655,12 +655,12 @@ xconf_local_nbn_servers
 xconf_local_nbn_server
   :	QUOTED
 	{
-		int count = iked.xconf_local.config.nbns_count;
+		int count = iked.xconf_local.config.nscfg.nbns_count;
 		if( count <= IPSEC_NBNS_MAX )
 		{
-			iked.xconf_local.config.nbns_list[ count ].s_addr =
+			iked.xconf_local.config.nscfg.nbns_list[ count ].s_addr =
 				inet_addr( $1->text() );
-			iked.xconf_local.config.nbns_count++;
+			iked.xconf_local.config.nscfg.nbns_count++;
 		}
 		delete $1;
 	}

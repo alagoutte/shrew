@@ -644,33 +644,33 @@ void _IKEC::run()
 			}
 		}
 
-		// enable wins options
+	}
 
-		numb = 0;
-		if( config.get_number( "client-wins-used", &numb ) )
+	// enable wins options
+
+	if( config.get_number( "client-wins-enable", &numb ) )
+	{
+		if( numb )
 		{
-			if( numb )
+			xconf.opts |= IPSEC_OPTS_NBNS;
+			xconf.rqst |= IPSEC_OPTS_NBNS;
+
+			// netbios name server address
+
+			numb = 0;
+			config.get_number( "client-wins-auto", &numb );
+
+			if( !numb )
 			{
-				xconf.opts |= IPSEC_OPTS_NBNS;
-				xconf.rqst |= IPSEC_OPTS_NBNS;
-
-				// netbios name server address
-
-				numb = 0;
-				config.get_number( "client-wins-auto", &numb );
-
-				if( !numb )
+				if( !config.get_string( "client-wins-addr", text, MAX_CONFSTRING, 0 ) )
 				{
-					if( !config.get_string( "client-wins-addr", text, MAX_CONFSTRING, 0 ) )
-					{
-						log( STATUS_FAIL, "config error : client-wins-addr undefined\n" );
-						return;
-					}
-
-					xconf.nbns_list[ 0 ].s_addr = inet_addr( text );
-					xconf.nbns_count = 1;
-					xconf.rqst &= ~IPSEC_OPTS_NBNS;
+					log( STATUS_FAIL, "config error : client-wins-addr undefined\n" );
+					return;
 				}
+
+				xconf.nscfg.nbns_list[ 0 ].s_addr = inet_addr( text );
+				xconf.nscfg.nbns_count = 1;
+				xconf.rqst &= ~IPSEC_OPTS_NBNS;
 			}
 		}
 	}
@@ -697,8 +697,8 @@ void _IKEC::run()
 					return;
 				}
 
-				xconf.dnss_list[ 0 ].s_addr = inet_addr( text );
-				xconf.dnss_count = 1;
+				xconf.nscfg.dnss_list[ 0 ].s_addr = inet_addr( text );
+				xconf.nscfg.dnss_count = 1;
 				xconf.rqst &= ~IPSEC_OPTS_DNSS;
 
 				// domain name suffix
@@ -709,7 +709,7 @@ void _IKEC::run()
 					xconf.rqst &= ~IPSEC_OPTS_DOMAIN;
 				}
 				else
-					strncpy( xconf.suffix, text, CONF_STRLEN );
+					strncpy( xconf.nscfg.suffix, text, CONF_STRLEN );
 			}
 		}
 	}
