@@ -614,6 +614,21 @@ typedef struct _IKE_XAUTH
 
 }IKE_XAUTH;
 
+typedef struct _IKE_NSCFG
+{
+	char		suffix[ CONF_STRLEN ];
+
+	in_addr		dnss_list[ IPSEC_DNSS_MAX ];	// dns server list
+	uint32_t	dnss_count;						// dns server count
+
+	in_addr		nbns_list[ IPSEC_NBNS_MAX ];	// wins server list
+	uint32_t	nbns_count;						// wins server count
+	uint32_t	nbns_nopts;						// wins options
+	uint32_t	nbns_ntype;						// wins node type
+
+}IKE_NSCFG;
+
+
 typedef struct _IKE_XCONF
 {
 	long		opts;		// enabled options
@@ -621,19 +636,13 @@ typedef struct _IKE_XCONF
 
 	in_addr		addr;		// network address
 	in_addr		mask;		// network mask
-	uint32_t	expi;		// address expires
 	in_addr		dhcp;		// dhcp servers
 
-	in_addr		dnss_list[ IPSEC_DNSS_MAX ];	// dns server list
-	uint32_t	dnss_count;						// dns server count
-
-	in_addr		nbns_list[ IPSEC_NBNS_MAX ];	// wins server list
-	uint32_t	nbns_count;						// wins server count
-
+	uint32_t	expi;		// address expires
 	uint16_t	dhgr;		// pfs dh group
 	uint16_t	svpw;		// save password
 
-	char		suffix[ CONF_STRLEN ];
+	IKE_NSCFG	nscfg;		// name service config
 
 }IKE_XCONF;
 

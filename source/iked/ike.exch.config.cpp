@@ -1500,15 +1500,15 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 		else
 		{
 			uint32_t index = 0;
-			uint32_t count = cfg->tunnel->xconf.dnss_count;
+			uint32_t count = cfg->tunnel->xconf.nscfg.dnss_count;
 
 			for( ; index < count; index++ )
 			{
 				cfg->attr_add_v( INTERNAL_IP4_DNS,
-					&cfg->tunnel->xconf.dnss_list[ index ], 4 );
+					&cfg->tunnel->xconf.nscfg.dnss_list[ index ], 4 );
 
 				char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-				text_addr( txtaddr, cfg->tunnel->xconf.dnss_list[ index ] );
+				text_addr( txtaddr, cfg->tunnel->xconf.nscfg.dnss_list[ index ] );
 
 				log.txt( LLOG_DEBUG,
 					"ii : - IP4 DNS Server = %s\n",
@@ -1529,15 +1529,15 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 		else
 		{
 			uint32_t index = 0;
-			uint32_t count = cfg->tunnel->xconf.nbns_count;
+			uint32_t count = cfg->tunnel->xconf.nscfg.nbns_count;
 
 			for( ; index < count; index++ )
 			{
 				cfg->attr_add_v( INTERNAL_IP4_NBNS,
-					&cfg->tunnel->xconf.nbns_list[ index ], 4 );
+					&cfg->tunnel->xconf.nscfg.nbns_list[ index ], 4 );
 
 				char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-				text_addr( txtaddr, cfg->tunnel->xconf.nbns_list[ index ] );
+				text_addr( txtaddr, cfg->tunnel->xconf.nscfg.nbns_list[ index ] );
 
 				log.txt( LLOG_DEBUG,
 					"ii : - IP4 WINS Server = %s\n",
@@ -1563,12 +1563,12 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 			else
 			{
 				cfg->attr_add_v( UNITY_DEF_DOMAIN,
-					&cfg->tunnel->xconf.suffix,
-					strlen( cfg->tunnel->xconf.suffix ) );
+					&cfg->tunnel->xconf.nscfg.suffix,
+					strlen( cfg->tunnel->xconf.nscfg.suffix ) );
 
 				log.txt( LLOG_DEBUG,
 					"ii : - DNS Suffix = %s\n",
-					cfg->tunnel->xconf.suffix );
+					cfg->tunnel->xconf.nscfg.suffix );
 			}
 		}
 
@@ -1771,12 +1771,12 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 			else
 			{
 				cfg->attr_add_v( CHKPT_DEF_DOMAIN,
-					&cfg->tunnel->xconf.suffix,
-					strlen( cfg->tunnel->xconf.suffix ) );
+					&cfg->tunnel->xconf.nscfg.suffix,
+					strlen( cfg->tunnel->xconf.nscfg.suffix ) );
 
 				log.txt( LLOG_DEBUG,
 					"ii : - DNS Suffix = %s\n",
-					cfg->tunnel->xconf.suffix );
+					cfg->tunnel->xconf.nscfg.suffix );
 			}
 		}
 	}
@@ -1900,7 +1900,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 
 				if( ( readmask & IPSEC_OPTS_NBNS ) && attr->vdata.size() )
 				{
-					if( cfg->tunnel->xconf.nbns_count < IPSEC_NBNS_MAX )
+					if( cfg->tunnel->xconf.nscfg.nbns_count < IPSEC_NBNS_MAX )
 					{
 						if( attr->vdata.size() != 4 )
 						{
@@ -1912,13 +1912,13 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 						}
 
 						memcpy(
-							&cfg->tunnel->xconf.nbns_list[ cfg->tunnel->xconf.nbns_count ],
+							&cfg->tunnel->xconf.nscfg.nbns_list[ cfg->tunnel->xconf.nscfg.nbns_count ],
 							attr->vdata.buff(), 4 );
 
 						char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-						text_addr( txtaddr, cfg->tunnel->xconf.nbns_list[ cfg->tunnel->xconf.nbns_count ] );
+						text_addr( txtaddr, cfg->tunnel->xconf.nscfg.nbns_list[ cfg->tunnel->xconf.nscfg.nbns_count ] );
 
-						cfg->tunnel->xconf.nbns_count++;
+						cfg->tunnel->xconf.nscfg.nbns_count++;
 
 						log.txt( LLOG_DEBUG,
 							"ii : - IP4 WINS Server = %s\n",
@@ -1937,7 +1937,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 
 				if( ( readmask & IPSEC_OPTS_DNSS ) && attr->vdata.size() )
 				{
-					if( cfg->tunnel->xconf.dnss_count < IPSEC_DNSS_MAX )
+					if( cfg->tunnel->xconf.nscfg.dnss_count < IPSEC_DNSS_MAX )
 					{
 						if( attr->vdata.size() != 4 )
 						{
@@ -1949,13 +1949,13 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 						}
 
 						memcpy(
-							&cfg->tunnel->xconf.dnss_list[ cfg->tunnel->xconf.dnss_count ],
+							&cfg->tunnel->xconf.nscfg.dnss_list[ cfg->tunnel->xconf.nscfg.dnss_count ],
 							attr->vdata.buff(), 4 );
 
 						char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-						text_addr( txtaddr, cfg->tunnel->xconf.dnss_list[ cfg->tunnel->xconf.dnss_count ] );
+						text_addr( txtaddr, cfg->tunnel->xconf.nscfg.dnss_list[ cfg->tunnel->xconf.nscfg.dnss_count ] );
 
-						cfg->tunnel->xconf.dnss_count++;
+						cfg->tunnel->xconf.nscfg.dnss_count++;
 
 						log.txt( LLOG_DEBUG,
 							"ii : - IP4 DNS Server = %s\n",
@@ -1993,14 +1993,14 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 							nlen = ( CONF_STRLEN - 1 );
 
 						memcpy(
-							cfg->tunnel->xconf.suffix,
+							cfg->tunnel->xconf.nscfg.suffix,
 							attr->vdata.buff(), nlen );
 
-						cfg->tunnel->xconf.suffix[ nlen ] = 0;
+						cfg->tunnel->xconf.nscfg.suffix[ nlen ] = 0;
 
 						log.txt( LLOG_DEBUG,
 							"ii : - DNS Suffix = %s\n",
-							cfg->tunnel->xconf.suffix );
+							cfg->tunnel->xconf.nscfg.suffix );
 					}
 					else
 						log.txt( LLOG_DEBUG, "ii : - DNS Suffix\n" );

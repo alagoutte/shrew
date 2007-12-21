@@ -602,28 +602,11 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					tunnel->xconf.opts &= ~IPSEC_OPTS_SPLITDNS;
 
 				//
-				// if we are using a virual adapter,
-				// perform additional configuration
+				// setup client parameters
 				//
 
-				if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
-				{
-					//
-					// setup adapter parameters
-					//
-
-					vnet_setup(	adapter, tunnel->xconf );
-
-					ikei->send_msg_status( STATUS_INFO, "virtual network device configured\n" );
-
-					//
-					// enable the adapter
-					//
-
-					vnet_set( adapter, true );
-
-					ikei->send_msg_status( STATUS_INFO, "virtual network device enabled\n" );
-				}
+				client_setup( adapter, tunnel );
+				ikei->send_msg_status( STATUS_INFO, "network device configured\n" );
 
 				//
 				// generate a policy list now
@@ -632,14 +615,14 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				policy_list_create( tunnel, true );
 
 				//
-				// generate dns proxy rules now
+				// add transparent dns proxy rules
 				//
 #ifdef OPT_DTP
 				if( tunnel->xconf.opts & IPSEC_OPTS_SPLITDNS )
 				{
 					//
 					// open connection to dns
-					// transparent proxy
+					// transparent proxy daemon
 					//
 
 					if( dtpi.attach( 3 ) == DTPI_OK )
@@ -648,7 +631,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						// set dns redirect target
 						//
 
-						dtpi.send_msg_server( tunnel->xconf.dnss_list );
+						dtpi.send_msg_server( tunnel->xconf.nscfg.dnss_list );
 
 						//
 						// set dns redirect domain suffixes
@@ -736,6 +719,12 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 		iked.lock_sdb.unlock();
 
 		//
+		// cleanup client settings
+		//
+
+		client_cleanup( adapter, tunnel );
+
+		//
 		// if we were using a virutal adapter,
 		// perform some addition cleanup
 		//
@@ -747,10 +736,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 			//
 
 			if( adapter != NULL )
-			{
-				vnet_set( adapter, false );
 				vnet_rel( adapter );
-			}
 		}
 
 		//

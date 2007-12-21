@@ -101,6 +101,7 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 
 	memset( &stats, 0, sizeof( stats ) );
 	memset( &xconf, 0, sizeof( xconf ) );
+	memset( &nscfg, 0, sizeof( nscfg ) );
 
 	//
 	// set the default xconf addr

@@ -467,7 +467,9 @@ typedef class _IKED
 	_IKED_XCONF_LOCAL	xconf_local;
 
 #ifdef OPT_LDAP
+
 	IKED_XAUTH_LDAP		xauth_ldap;
+
 #endif
 
 	// id name helper functions
@@ -500,8 +502,9 @@ typedef class _IKED
 	bool	vnet_init();
 	bool	vnet_get( VNET_ADAPTER ** adapter );
 	bool	vnet_rel( VNET_ADAPTER * adapter );
-	bool	vnet_set( VNET_ADAPTER * adapter, bool enable );
-	bool	vnet_setup(	VNET_ADAPTER * adapter, IKE_XCONF & xconf );
+
+	bool	client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel );
+	bool	client_cleanup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel );
 
 	void	text_addr( char * text, in_addr & addr );
 	void	text_mask( char * text, in_addr & addr );

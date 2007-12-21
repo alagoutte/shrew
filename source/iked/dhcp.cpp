@@ -458,11 +458,11 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 				while( len >= 4 )
 				{
 					len -= 4;
-					if( config.dnss_count <= IPSEC_DNSS_MAX )
+					if( config.nscfg.dnss_count <= IPSEC_DNSS_MAX )
 					{
-						packet.get(	&config.dnss_list[ config.dnss_count ], 4 );
-						text_addr( txtaddr, config.dnss_list[ config.dnss_count ] );
-						config.dnss_count++;
+						packet.get(	&config.nscfg.dnss_list[ config.nscfg.dnss_count ], 4 );
+						text_addr( txtaddr, config.nscfg.dnss_list[ config.nscfg.dnss_count ] );
+						config.nscfg.dnss_count++;
 						log.txt( LLOG_DEBUG, "ii : - IP4 DNS Server = %s\n", txtaddr );
 					}
 				}
@@ -473,11 +473,11 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 				while( len >= 4 )
 				{
 					len -= 4;
-					if( config.nbns_count <= IPSEC_NBNS_MAX )
+					if( config.nscfg.nbns_count <= IPSEC_NBNS_MAX )
 					{
-						packet.get( &config.nbns_list[ config.nbns_count ], 4 );
-						text_addr( txtaddr, config.nbns_list[ config.nbns_count ] );
-						config.nbns_count++;
+						packet.get( &config.nscfg.nbns_list[ config.nscfg.nbns_count ], 4 );
+						text_addr( txtaddr, config.nscfg.nbns_list[ config.nscfg.nbns_count ] );
+						config.nscfg.nbns_count++;
 						log.txt( LLOG_DEBUG, "ii : - IP4 WINS Server = %s\n", txtaddr );
 					}
 				}
@@ -491,9 +491,9 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 					tmp = 255;
 				if( len >= 1 )
 				{
-					packet.get( config.suffix, tmp );
-					config.suffix[ tmp ] = 0;
-					log.txt( LLOG_DEBUG, "ii : - DNS Suffix = %s\n", config.suffix );
+					packet.get( config.nscfg.suffix, tmp );
+					config.nscfg.suffix[ tmp ] = 0;
+					log.txt( LLOG_DEBUG, "ii : - DNS Suffix = %s\n", config.nscfg.suffix );
 				}
 				packet.get_null( len - tmp );
 				break;
@@ -536,17 +536,24 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 
 			if( tunnel->xconf.opts & IPSEC_OPTS_DNSS )
 			{
-				memcpy( tunnel->xconf.dnss_list, config.dnss_list, sizeof( config.dnss_list ) );
-				tunnel->xconf.dnss_count =  config.dnss_count;
+				memcpy( tunnel->xconf.nscfg.dnss_list,
+					config.nscfg.dnss_list,
+					sizeof( config.nscfg.dnss_list ) );
+
+				tunnel->xconf.nscfg.dnss_count =  config.nscfg.dnss_count;
 			}
 
 			if( tunnel->xconf.opts & IPSEC_OPTS_DOMAIN )
-				memcpy( tunnel->xconf.suffix, config.suffix, CONF_STRLEN );
+				memcpy( tunnel->xconf.nscfg.suffix,
+					config.nscfg.suffix, CONF_STRLEN );
 
 			if( tunnel->xconf.opts & IPSEC_OPTS_NBNS )
 			{
-				memcpy( tunnel->xconf.nbns_list, config.nbns_list, sizeof( config.nbns_list ) );
-				tunnel->xconf.nbns_count =  config.nbns_count;
+				memcpy( tunnel->xconf.nscfg.nbns_list,
+					config.nscfg.nbns_list,
+					sizeof( config.nscfg.nbns_list ) );
+
+				tunnel->xconf.nscfg.nbns_count =  config.nscfg.nbns_count;
 			}
 
 			tunnel->event_dhcp.retry = 0;

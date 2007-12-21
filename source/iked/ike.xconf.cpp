@@ -253,12 +253,16 @@ bool _IKED_XCONF_LOCAL::rslt( IDB_TUNNEL * tunnel )
 
 	if( tunnel->xconf.opts & IPSEC_OPTS_DNSS )
 	{
-		memcpy( tunnel->xconf.dnss_list, config.dnss_list, sizeof( config.dnss_list ) );
-		tunnel->xconf.dnss_count = config.dnss_count;
+		memcpy( tunnel->xconf.nscfg.dnss_list,
+			config.nscfg.dnss_list,
+			sizeof( config.nscfg.dnss_list ) );
+
+		tunnel->xconf.nscfg.dnss_count = config.nscfg.dnss_count;
 	}
 
 	if( tunnel->xconf.opts & IPSEC_OPTS_DOMAIN )
-		memcpy( tunnel->xconf.suffix, config.suffix, CONF_STRLEN );
+		memcpy( tunnel->xconf.nscfg.suffix,
+			config.nscfg.suffix, CONF_STRLEN );
 
 	if( tunnel->xconf.opts & IPSEC_OPTS_SPLITDNS )
 	{
@@ -270,8 +274,11 @@ bool _IKED_XCONF_LOCAL::rslt( IDB_TUNNEL * tunnel )
 
 	if( tunnel->xconf.opts & IPSEC_OPTS_NBNS )
 	{
-		memcpy( tunnel->xconf.nbns_list, config.nbns_list, sizeof( config.nbns_list ) );
-		tunnel->xconf.nbns_count = config.nbns_count;
+		memcpy( tunnel->xconf.nscfg.nbns_list,
+			config.nscfg.nbns_list,
+			sizeof( config.nscfg.nbns_list ) );
+
+		tunnel->xconf.nscfg.nbns_count = config.nscfg.nbns_count;
 	}
 
 	if( tunnel->xconf.opts & IPSEC_OPTS_PFS )

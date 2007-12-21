@@ -341,6 +341,10 @@ typedef class _IDB_TUNNEL : public IDB
 	IKE_XCONF	xconf;
 	IKEI_STATS	stats;
 
+#ifdef WIN32
+	IKE_NSCFG	nscfg;
+#endif
+
 	IKE_SADDR	saddr_l;
 	IKE_SADDR	saddr_r;
 
