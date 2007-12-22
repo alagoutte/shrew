@@ -639,6 +639,7 @@ typedef struct _IKE_XCONF
 	in_addr		dhcp;		// dhcp servers
 
 	uint32_t	expi;		// address expires
+	uint32_t	vmtu;		// adapter mtu
 	uint16_t	dhgr;		// pfs dh group
 	uint16_t	svpw;		// save password
 

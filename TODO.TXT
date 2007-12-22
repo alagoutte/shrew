@@ -184,11 +184,12 @@ X Add site connection support using the access manager system tray
 x Add support for multiple DNS/WINS server addresses
 X Add support for NAT-T draft 00 and 01 versions
 X Fix IM driver issues with Windows 2K and Virtualization Software
+X Add support for specifying the virtual network adapter MTU
 X Add DNS and WINS support for direct adapter mode
-. Fix Split DNS to work with an adapter specific DNS suffix
+. Fix Split DNS to work with an adapter specific default domain
 . Add support for x86/amd64 Windows Vista platforms
 . Add support for persistent IPSEC SAs
-. Add support for renegotiation of IKSAMP SAs in client mode
+. Add support for renegotiating IKSAMP SAs in client mode
 . Add support for storing key and cert data in the site config
 . Add user preference dialog for site manager
 . Add preference for client minimize to system tray
@@ -203,7 +204,6 @@ x Validate and document support for Fortigate gateways
 x Validate and document support for Zywall gateways
 x Validate and document support for Checkpoint gateways
 . Validate and document support for SonicWall gateways
-? Use undocumented MS adapter configuration methods
 ? Add support for client connect/disconnect script execution
 ? Add adaptive communications during connect ( Frag/NATT )
 ? Move to a purely primitive based tunnel confguration interface
