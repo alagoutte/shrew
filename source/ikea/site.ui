@@ -113,25 +113,6 @@
                     </widget>
                     <widget class="QLineEdit">
                         <property name="name">
-                            <cstring>lineEditPort</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>210</x>
-                                <y>40</y>
-                                <width>41</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>500</string>
-                        </property>
-                        <property name="alignment">
-                            <set>AlignRight</set>
-                        </property>
-                    </widget>
-                    <widget class="QLineEdit">
-                        <property name="name">
                             <cstring>lineEditHost</cstring>
                         </property>
                         <property name="geometry">
@@ -198,6 +179,25 @@
                             <string>Auto Configuration</string>
                         </property>
                     </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditPort</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>210</x>
+                                <y>40</y>
+                                <width>41</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>500</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignRight</set>
+                        </property>
+                    </widget>
                 </widget>
                 <widget class="QGroupBox">
                     <property name="name">
@@ -230,6 +230,66 @@
                             <string>Address Method</string>
                         </property>
                     </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditNetmask</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>120</x>
+                                <y>120</y>
+                                <width>131</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>0.0.0.0</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignHCenter</set>
+                        </property>
+                    </widget>
+                    <widget class="QLabel">
+                        <property name="name">
+                            <cstring>textLabelNetmask</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>70</x>
+                                <y>120</y>
+                                <width>40</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Netmask</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignVCenter|AlignRight</set>
+                        </property>
+                    </widget>
+                    <widget class="QLabel">
+                        <property name="name">
+                            <cstring>textLabelAddress</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>70</x>
+                                <y>90</y>
+                                <width>40</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Address</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignVCenter|AlignRight</set>
+                        </property>
+                    </widget>
                     <widget class="QCheckBox">
                         <property name="name">
                             <cstring>checkBoxAddressAuto</cstring>
@@ -251,34 +311,59 @@
                     </widget>
                     <widget class="QLabel">
                         <property name="name">
-                            <cstring>textLabelAddress</cstring>
+                            <cstring>textLabelMTU</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>70</y>
+                                <width>41</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>MTU</string>
+                        </property>
+                    </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditAddress</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>121</x>
+                                <y>90</y>
+                                <width>130</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>0.0.0.0</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignHCenter</set>
+                        </property>
+                    </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditMTU</cstring>
                         </property>
                         <property name="geometry">
                             <rect>
                                 <x>10</x>
                                 <y>90</y>
-                                <width>100</width>
+                                <width>41</width>
                                 <height>21</height>
                             </rect>
                         </property>
                         <property name="text">
-                            <string>Client Address</string>
+                            <string>1500</string>
                         </property>
-                    </widget>
-                    <widget class="QLabel">
-                        <property name="name">
-                            <cstring>textLabelNetmask</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>10</x>
-                                <y>120</y>
-                                <width>100</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>Client Netmask</string>
+                        <property name="alignment">
+                            <set>AlignRight</set>
                         </property>
                     </widget>
                     <widget class="QComboBox">
@@ -302,50 +387,6 @@
                                 <width>241</width>
                                 <height>21</height>
                             </rect>
-                        </property>
-                    </widget>
-                    <widget class="QLineEdit">
-                        <property name="name">
-                            <cstring>lineEditNetmask</cstring>
-                        </property>
-                        <property name="enabled">
-                            <bool>false</bool>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>120</x>
-                                <y>120</y>
-                                <width>131</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>0.0.0.0</string>
-                        </property>
-                        <property name="alignment">
-                            <set>AlignHCenter</set>
-                        </property>
-                    </widget>
-                    <widget class="QLineEdit">
-                        <property name="name">
-                            <cstring>lineEditAddress</cstring>
-                        </property>
-                        <property name="enabled">
-                            <bool>false</bool>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>121</x>
-                                <y>90</y>
-                                <width>130</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>0.0.0.0</string>
-                        </property>
-                        <property name="alignment">
-                            <set>AlignHCenter</set>
                         </property>
                     </widget>
                 </widget>

@@ -701,6 +701,17 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 			return false;
 		}
 
+		ifr.ifr_mtu = tunnel->xconf.vmtu;
+
+		if( ioctl( sock, SIOCSIFMTU, &ifr ) != 0 )
+		{
+			log.txt( LLOG_ERROR, "!! : failed to configure MTU for %s ( %s )\n",
+				adapter->name, strerror( errno ) );
+
+			close( sock );
+			return false;
+		}
+
 		log.txt( LLOG_INFO, "ii : configured adapter %s\n", adapter->name );
 
 		close( sock );

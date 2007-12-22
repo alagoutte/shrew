@@ -312,6 +312,12 @@ bool site::Load( CONFIG & config )
 
 	if( !comboBoxAddressMethod->currentItem() )
 	{
+		// virtual adapter mtu
+
+		numb = 0;
+		if( config.get_number( "network-mtu-size", &numb ) )
+			lineEditMTU->setText( QString::number( numb, 10 ) );
+
 		// virtual adapter address
 
 		numb = 0;
@@ -758,6 +764,11 @@ bool site::Save( CONFIG & config )
 		config.set_string( "client-iface",
 			"virtual",
 			strlen( "virtual" ) );
+
+		// adapter mtu
+
+		config.set_number( "network-mtu-size",
+			lineEditMTU->text().toLong() );
 
 		// adapter address
 

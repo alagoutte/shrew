@@ -644,6 +644,11 @@ void _IKEC::run()
 			}
 		}
 
+		// adapter mtu
+
+		xconf.vmtu = 1500;
+		if( config.get_number( "network-mtu-size", &numb ) )
+			xconf.vmtu = numb;
 	}
 
 	// enable wins options
