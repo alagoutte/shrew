@@ -506,6 +506,13 @@ typedef class _IKED
 	bool	client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel );
 	bool	client_cleanup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel );
 
+#ifdef OPT_DTP
+
+	bool	dnsproxy_setup( DTPI & dtpi, IDB_TUNNEL * tunnel );
+	void	dnsproxy_cleanup( DTPI & dtpi );
+
+#endif
+
 	void	text_addr( char * text, in_addr & addr );
 	void	text_mask( char * text, in_addr & addr );
 	void	text_addr( char * text, sockaddr * saddr, bool port );

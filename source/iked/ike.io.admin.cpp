@@ -61,7 +61,9 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	VNET_ADAPTER *	adapter = NULL;
 
 #ifdef OPT_DTP
+
 	DTPI dtpi;
+
 #endif
 
 	time_t stattick = 0;
@@ -615,54 +617,16 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				policy_list_create( tunnel, true );
 
 				//
-				// add transparent dns proxy rules
+				// setup dns transparent proxy
 				//
+
 #ifdef OPT_DTP
+
 				if( tunnel->xconf.opts & IPSEC_OPTS_SPLITDNS )
-				{
-					//
-					// open connection to dns
-					// transparent proxy daemon
-					//
+					dnsproxy_setup( dtpi, tunnel );
 
-					if( dtpi.attach( 3 ) == DTPI_OK )
-					{
-						//
-						// set dns redirect target
-						//
-
-						dtpi.send_msg_server( tunnel->xconf.nscfg.dnss_list );
-
-						//
-						// set dns redirect domain suffixes
-						//
-
-						long index = 0;
-						BDATA suffix;
-						while( tunnel->dlist.get( suffix, index++ ) )
-							dtpi.send_msg_domain( suffix.text(), suffix.size() - 1 );
-
-						//
-						// set dns redirect network subnets
-						//
-
-						index = 0;
-						IKE_PH2ID ph2id;
-						while( tunnel->idlist_incl.get( ph2id, index++ ) )
-						{
-							DTPI_SUBNET subnet;
-							subnet.addr = ph2id.addr1;
-
-							if( ph2id.type == ISAKMP_ID_IPV4_ADDR )
-								subnet.mask.s_addr = 0xffffffff;
-							else
-								subnet.mask = ph2id.addr2;
-
-							dtpi.send_msg_subnet( &subnet );
-						}
-					}
-				}
 #endif
+
 				//
 				// tunnel is enabled
 				//
@@ -851,10 +815,14 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	}
 
 	//
-	// close dns proxy interface
+	// cleanup dns transparent proxy
 	//
+
 #ifdef OPT_DTP
-	dtpi.detach();
+
+	if( tunnel->xconf.opts & IPSEC_OPTS_SPLITDNS )
+		dnsproxy_cleanup( dtpi );
+
 #endif
 
 	//
