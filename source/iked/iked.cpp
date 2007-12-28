@@ -47,6 +47,7 @@ _IKED::_IKED()
 	refcount = 0;
 	tunnelid = 2;
 	policyid = 1;
+	dnsgrpid = 0;
 	logflags = LOGFLAG_ECHO;
 
 	retry_count = 2;

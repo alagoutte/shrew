@@ -360,12 +360,7 @@ typedef class _IDB_TUNNEL : public IDB
 	long		natt_v;
 
 	uint32_t	dhcp_xid;
-
-#ifdef WIN32
 	SOCKET		dhcp_sock;
-#else
-	int			dhcp_sock;
-#endif
 
 	ITH_EVENT_TUNDHCP	event_dhcp;
 

@@ -102,6 +102,10 @@
 #include "libdtp.h"
 #endif
 
+#ifndef SOCKET
+#define SOCKET int
+#endif
+
 #ifndef INVALID_SOCKET
 #define INVALID_SOCKET -1
 #endif
@@ -399,6 +403,7 @@ typedef class _IKED
 	long	refcount;			// reference count
 	long	tunnelid;			// next tunnel id
 	short	policyid;			// next request id
+	long	dnsgrpid;			// next dns group id
 
 	long	retry_count;		// packet retry count
 	long	retry_delay;		// packet retry delay

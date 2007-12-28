@@ -61,9 +61,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	VNET_ADAPTER *	adapter = NULL;
 
 #ifdef OPT_DTP
-
 	DTPI dtpi;
-
 #endif
 
 	time_t stattick = 0;
@@ -596,14 +594,6 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				}
 
 				//
-				// disable split dns if the domain
-				// list has no elements
-				//
-
-				if( !tunnel->dlist.count() )
-					tunnel->xconf.opts &= ~IPSEC_OPTS_SPLITDNS;
-
-				//
 				// setup client parameters
 				//
 
@@ -621,10 +611,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				//
 
 #ifdef OPT_DTP
-
-				if( tunnel->xconf.opts & IPSEC_OPTS_SPLITDNS )
-					dnsproxy_setup( dtpi, tunnel );
-
+				dnsproxy_setup( dtpi, tunnel );
 #endif
 
 				//
@@ -819,10 +806,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	//
 
 #ifdef OPT_DTP
-
-	if( tunnel->xconf.opts & IPSEC_OPTS_SPLITDNS )
 		dnsproxy_cleanup( dtpi );
-
 #endif
 
 	//
