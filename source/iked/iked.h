@@ -80,6 +80,12 @@
 # endif
 # include "compat/winstring.h"
 # include "conf.parse.hpp"
+# ifndef SOCKET
+#  define SOCKET int
+# endif
+# ifndef INVALID_SOCKET
+#  define INVALID_SOCKET -1
+# endif
 #endif
 
 #ifdef OPT_LDAP
@@ -100,14 +106,6 @@
 
 #ifdef OPT_DTP
 #include "libdtp.h"
-#endif
-
-#ifndef SOCKET
-#define SOCKET int
-#endif
-
-#ifndef INVALID_SOCKET
-#define INVALID_SOCKET -1
 #endif
 
 //
