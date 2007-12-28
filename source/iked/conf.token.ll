@@ -111,7 +111,7 @@ if( yy_first_time )
 
 <SEC_ROOT>daemon		{ BEGIN SEC_DAEMON; return( token::DAEMON ); }
 <SEC_DAEMON>{bcb}		{ return( token::BCB ); }
-<SEC_DAEMON>socket		{ return( token::SOCKET ); }
+<SEC_DAEMON>socket		{ return( token::SOCK ); }
 <SEC_DAEMON>ike			{ return( token::IKE ); }
 <SEC_DAEMON>natt		{ return( token::NATT ); }
 <SEC_DAEMON>syslog		{ return( token::SYSLOG ); }

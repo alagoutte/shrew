@@ -712,6 +712,9 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 			return false;
 		}
 
+		printf( "XX : adapter MTU set to %i\n", tunnel->xconf.vmtu );
+
+
 		log.txt( LLOG_INFO, "ii : configured adapter %s\n", adapter->name );
 
 		close( sock );

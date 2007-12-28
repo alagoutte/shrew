@@ -92,7 +92,7 @@ IDB_PEER *	peer;
 %token		RFC		"rfc"
 
 %token		DAEMON		"deamon section"
-%token		SOCKET		"socket"
+%token		SOCK		"socket"
 %token		IKE		"ike"
 %token		NATT		"natt"
 %token		SYSLOG		"syslog"
@@ -256,7 +256,7 @@ daemon_lines
   |	daemon_lines daemon_line
   ;
 daemon_line
-  :	SOCKET IKE NUMBER
+  :	SOCK IKE NUMBER
 	{
 		IKE_SADDR saddr;
 		memset( &saddr, 0, sizeof( saddr ) );
@@ -268,7 +268,7 @@ daemon_line
 			error( @$, std::string( "daemon network configuration failed\n" ) );
 	}
 	EOS
-  |	SOCKET IKE ADDRESS NUMBER
+  |	SOCK IKE ADDRESS NUMBER
 	{
 		IKE_SADDR saddr;
 		memset( &saddr, 0, sizeof( saddr ) );
@@ -283,7 +283,7 @@ daemon_line
 		delete $3;
 	}
 	EOS
-  |	SOCKET NATT NUMBER
+  |	SOCK NATT NUMBER
 	{
 #ifdef OPT_NATT
 		IKE_SADDR saddr;
@@ -299,7 +299,7 @@ daemon_line
 #endif
 	}
 	EOS
-  |	SOCKET NATT ADDRESS NUMBER
+  |	SOCK NATT ADDRESS NUMBER
 	{
 #ifdef OPT_NATT
 		IKE_SADDR saddr;
