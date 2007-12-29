@@ -339,6 +339,10 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 							if( attr->basic )
 								log.txt( LLOG_INFO, "!! : warning, basic xauth password attribute type\n" );
 							break;
+
+						default:
+							log.txt( LLOG_INFO, "!! : warning, unhandled xauth attribute %i\n", attr->atype );
+							break;
 					}
 				}
 
@@ -357,43 +361,15 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					if( ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) != TSTATE_RECV_XAUTH )
 					{
 						//
-						// handle special case processing
+						// make sure we received a xauth type attribute
 						//
 
-						if( !ph1->chkpt_r )
+						if( !auth_type )
 						{
-							//
-							// standard xauth processing
-							//
+							log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
 
-							if( !auth_type )
-								log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
-
-							if( !( cfg->tunnel->state & TSTATE_RECV_XUSER ) )
-								log.txt( LLOG_ERROR, "!! : missing required xauth username attribute\n" );
-
-							if( !( cfg->tunnel->state & TSTATE_RECV_XPASS ) )
-								log.txt( LLOG_ERROR, "!! : missing required xauth password attribute\n" );
-
-							if( !auth_type || !( cfg->tunnel->state & TSTATE_RECV_XAUTH ) )
-							{
-								cfg->tunnel->close = TERM_BADMSG;
-								cfg->lstate |= LSTATE_DELETE;
-							}
-						}
-						else
-						{
-							//
-							// checkpoint xauth processing
-							//
-
-							if( !auth_type )
-							{
-								log.txt( LLOG_ERROR, "!! : missing required checkpoint xauth type attribute\n" );
-
-								cfg->tunnel->close = TERM_BADMSG;
-								cfg->lstate |= LSTATE_DELETE;
-							}
+							cfg->tunnel->close = TERM_BADMSG;
+							cfg->lstate |= LSTATE_DELETE;
 						}
 					}
 
@@ -780,6 +756,13 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				( cfg->tunnel->state & TSTATE_SENT_XAUTH ) != TSTATE_SENT_XAUTH )
 			{
 				//
+				// set attributes
+				//
+
+				cfg->mtype = ISAKMP_CFG_REPLY;
+				cfg->attr_reset();
+
+				//
 				// check for special case processing
 				//
 
@@ -789,41 +772,48 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					// standard xauth processing
 					//
 
-					cfg->mtype = ISAKMP_CFG_REPLY;
-
-					cfg->attr_reset();
-
 					cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
 
-					cfg->attr_add_v( XAUTH_USER_NAME,
-						cfg->tunnel->xauth.user.buff(),
-						cfg->tunnel->xauth.user.size() );
+					if(  ( cfg->tunnel->state & TSTATE_RECV_XUSER ) &&
+						!( cfg->tunnel->state & TSTATE_SENT_XUSER ) )
+					{
+						cfg->attr_add_v( XAUTH_USER_NAME,
+							cfg->tunnel->xauth.user.buff(),
+							cfg->tunnel->xauth.user.size() );
 
-					cfg->attr_add_v( XAUTH_USER_PASSWORD,
-						cfg->tunnel->xauth.pass.buff(),
-						cfg->tunnel->xauth.pass.size() );
+						cfg->tunnel->state |= TSTATE_SENT_XUSER;
 
-					cfg->tunnel->state |= TSTATE_SENT_XAUTH;
+						log.txt( LLOG_INFO,
+							"ii : added standard xauth username attribute\n" );
+					}
 
-					log.txt( LLOG_INFO,
-						"ii : using standard username and password attributes\n" );
+					if(  ( cfg->tunnel->state & TSTATE_RECV_XPASS ) &&
+						!( cfg->tunnel->state & TSTATE_SENT_XPASS ) )
+					{
+						cfg->attr_add_v( XAUTH_USER_PASSWORD,
+							cfg->tunnel->xauth.pass.buff(),
+							cfg->tunnel->xauth.pass.size() );
+
+						cfg->tunnel->state |= TSTATE_SENT_XPASS;
+
+						log.txt( LLOG_INFO,
+							"ii : added standard xauth password attribute\n" );
+					}
 
 					//
 					// flag for removal
 					//
 
-					if( !ph1->zwall_r )
-						cfg->lstate |= LSTATE_DELETE;
+					if( ( cfg->tunnel->state & TSTATE_SENT_XUSER ) &&
+						( cfg->tunnel->state & TSTATE_SENT_XPASS ) )
+						if( !ph1->zwall_r )
+							cfg->lstate |= LSTATE_DELETE;
 				}
 				else
 				{
 					//
 					// checkpoint xauth processing
 					//
-
-					cfg->mtype = ISAKMP_CFG_REPLY;
-
-					cfg->attr_reset();
 
 					cfg->attr_add_b( CHKPT_TYPE, XAUTH_TYPE_GENERIC );
 
@@ -837,7 +827,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 						cfg->tunnel->state |= TSTATE_SENT_XUSER;
 
 						log.txt( LLOG_INFO,
-							"ii : using checkpoint xauth username attribute\n" );
+							"ii : added checkpoint xauth username attribute\n" );
 					}
 
 					if(  ( cfg->tunnel->state & TSTATE_RECV_XPASS ) &&
@@ -850,7 +840,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 						cfg->tunnel->state |= TSTATE_SENT_XPASS;
 
 						log.txt( LLOG_INFO,
-							"ii : using checkpoint xauth password attribute\n" );
+							"ii : added checkpoint xauth password attribute\n" );
 					}
 				}
 

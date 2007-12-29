@@ -186,7 +186,7 @@ X Add support for NAT-T draft 00 and 01 versions
 X Fix IM driver issues with Windows 2K and Virtualization Software
 X Add support for specifying the virtual network adapter MTU
 X Add DNS and WINS support for direct adapter mode
-. Fix Split DNS to work with an adapter specific default domain
+X Fix Split DNS to work with an adapter specific default domain
 . Add support for x86/amd64 Windows Vista platforms
 . Add support for persistent IPSEC SAs
 . Add support for renegotiating IKSAMP SAs in client mode
