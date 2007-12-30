@@ -525,6 +525,7 @@ typedef class _IDB_PH1 : public IDB_XCH
 	bool	natt_l;		// local will support natt
 	bool	natt_r;		// remote will support natt
 	long	natt_v;		// version negotiated
+	uint8_t	natt_p;		// payload identifier
 
 	bool	dpd_l;		// local will support dead peer detect
 	bool	dpd_r;		// remote will support dead peer detect
@@ -538,8 +539,10 @@ typedef class _IDB_PH1 : public IDB_XCH
 	uint32_t	dpd_req;	// last dpd request sequence
 	uint32_t	dpd_res;	// last dpd response sequence
 
-	uint8_t	ctype_l;	// local certificate type
-	uint8_t	ctype_r;	// remote certificate type
+	uint8_t		ctype_l;	// local certificate type
+	uint8_t		ctype_r;	// remote certificate type
+
+	uint16_t	auth_id;	// selected authentication type
 
 	LIST	frags;
 

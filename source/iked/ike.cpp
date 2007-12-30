@@ -255,7 +255,7 @@ long _IKED::packet_ike_xmit( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	text_addr( txtaddr_r, &ph1->tunnel->saddr_r, true );
 
 	char * encap_mode = encap_ike;
-	if( ph1->tunnel->natt_v >= IPSEC_NATT_NONE )
+	if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
 		encap_mode = encap_nat;
 
 	//

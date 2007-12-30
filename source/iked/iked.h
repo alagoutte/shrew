@@ -636,7 +636,7 @@ typedef class _IKED
 	long	phase1_gen_hash_i( IDB_PH1 * ph1, BDATA & hash );
 	long	phase1_gen_hash_r( IDB_PH1 * ph1, BDATA & hash );
 	bool	phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * saddr_l );
-	long	phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet );
+	long	phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next );
 	long	phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend );
 	long	phase1_chk_hash( IDB_PH1 * ph1 );
 	long	phase1_chk_sign( IDB_PH1 * ph1 );

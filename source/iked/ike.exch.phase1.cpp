@@ -453,15 +453,16 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				}
 
 				//
-				// determine xauth negotiation
+				// obtain negotiated authentication type
 				//
 
 				IKE_PROPOSAL * proposal;
 				ph1->plist_l.get( &proposal, 0 );
+				ph1->auth_id = proposal->auth_id;
 
-				if( ( proposal->auth_id == XAUTH_AUTH_INIT_PSK ) ||
-					( proposal->auth_id == XAUTH_AUTH_INIT_RSA ) ||
-					( proposal->auth_id == HYBRID_AUTH_INIT_RSA ) )
+				if( ( ph1->auth_id == XAUTH_AUTH_INIT_PSK ) ||
+					( ph1->auth_id == XAUTH_AUTH_INIT_RSA ) ||
+					( ph1->auth_id == HYBRID_AUTH_INIT_RSA ) )
 					ph1->xauth_l = true;
 
 				// 
@@ -569,20 +570,15 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				packet.write( ph1->cookies, ISAKMP_PAYLOAD_SA, ph1->exchange, 0 );
 
 				//
-				// add sa payload
+				// add payloads
 				//
 
 				size_t beg = packet.size() + 4;
 				payload_add_sa( packet, ph1->plist_l, ISAKMP_PAYLOAD_VEND );
 				size_t end = packet.size();
-
 				ph1->hda.set( packet.buff() + beg, end - beg );
 
-				//
-				// add vendor payloads
-				//
-
-				phase1_add_vend( ph1, packet );
+				phase1_add_vend( ph1, packet, ISAKMP_PAYLOAD_NONE );
 
 				packet.done();
 
@@ -603,22 +599,6 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				!( ph1->xstate & XSTATE_SENT_KE ) )
 			{
 				//
-				// determine the nat discovery payload type
-				//
-
-				unsigned char last = ISAKMP_PAYLOAD_NONE;
-
-				if( ph1->natt_v != IPSEC_NATT_NONE )
-				{
-					phase1_gen_natd( ph1 );
-
-					if( ph1->natt_v == IPSEC_NATT_RFC )
-						last = ISAKMP_PAYLOAD_NAT_RFC_DISC;
-					else
-						last = ISAKMP_PAYLOAD_NAT_VXX_DISC;
-				}
-
-				//
 				// write packet header
 				//
 
@@ -626,11 +606,30 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				packet.write( ph1->cookies, ISAKMP_PAYLOAD_KEX, ph1->exchange, 0 );
 
 				//
-				// add key exchange and noonce payloads
+				// add payloads for authentication type
 				//
 
 				payload_add_kex( packet, ph1->xl, ISAKMP_PAYLOAD_NONCE );
-				payload_add_nonce( packet, ph1->nonce_l, last );
+
+				switch( ph1->auth_id )
+				{
+					case IKE_AUTH_PRESHARED_KEY:
+					case XAUTH_AUTH_INIT_PSK:
+					{
+						payload_add_nonce( packet, ph1->nonce_l, ph1->natt_p );
+						break;
+					}
+
+					case IKE_AUTH_SIG_RSA:
+					case XAUTH_AUTH_INIT_RSA:
+					case HYBRID_AUTH_INIT_RSA:
+					{
+						payload_add_nonce( packet, ph1->nonce_l, ISAKMP_PAYLOAD_CERT_REQ );
+						payload_add_creq( packet, ISAKMP_CERT_X509_SIG, ph1->natt_p );
+						ph1->xstate |= XSTATE_SENT_CR;
+						break;
+					}
+				}
 
 				//
 				// optionally add nat discovery hash payloads
@@ -639,7 +638,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				if( ph1->natt_v != IPSEC_NATT_NONE )
 				{
 					phase1_gen_natd( ph1 );
-					payload_add_natd( packet, ph1->natd_ld, last );
+					payload_add_natd( packet, ph1->natd_ld, ph1->natt_p );
 					payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
 				}
 
@@ -664,7 +663,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				!( ph1->xstate & XSTATE_SENT_ID ) )
 			{
 				//
-				// check and enable natt if ready
+				// perform nat traversal check
 				//
 
 				phase1_chk_natd( ph1 );
@@ -676,38 +675,26 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				phase1_gen_keys( ph1 );
 
 				//
-				// obtain our negotiated proposal
-				//
-
-				IKE_PROPOSAL * proposal;
-				ph1->plist_l.get( &proposal, 0 );
-
-				//
 				// write packet header
 				//
 
 				PACKET_IKE packet;
 				packet.write( ph1->cookies, ISAKMP_PAYLOAD_IDENT, ph1->exchange, ISAKMP_FLAG_ENCRYPT );
 
-				switch( proposal->auth_id )
+				//
+				// add payloads for authentication type
+				//
+
+				switch( ph1->auth_id )
 				{
 					case IKE_AUTH_PRESHARED_KEY:
 					case XAUTH_AUTH_INIT_PSK:
 					case HYBRID_AUTH_INIT_RSA:
 					{
-						//
-						// add the local id payload
-						//
-
 						size_t pld_beg = packet.size() + 4;
 						payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_HASH );
 						size_t pld_end = packet.size();
-
 						ph1->idi.set( packet.buff() + pld_beg, pld_end - pld_beg );
-
-						//
-						// calculate and add the hash payload
-						//
 
 						phase1_gen_hash_i( ph1, ph1->hash_l );
 						payload_add_hash( packet, ph1->hash_l, ISAKMP_PAYLOAD_NONE );
@@ -720,40 +707,21 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 					case IKE_AUTH_SIG_RSA:
 					case XAUTH_AUTH_INIT_RSA:
 					{
-						//
-						// add the local id payload
-						//
-
 						size_t pld_beg = packet.size() + 4;
 						payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_CERT );
 						size_t pld_end = packet.size();
-
 						ph1->idi.set( packet.buff() + pld_beg, pld_end - pld_beg );
 
-						//
-						// add the local certificate payload
-						//
-
 						payload_add_cert( packet, ISAKMP_CERT_X509_SIG, ph1->tunnel->peer->cert_l, ISAKMP_PAYLOAD_SIGNATURE );
-
-						//
-						// calculate the hash and rsa signature
-						//
 
 						BDATA sign;
 						phase1_gen_hash_i( ph1, ph1->hash_l );
 						prvkey_rsa_encrypt( ph1->tunnel->peer->key, ph1->hash_l, sign );
 
-						//
-						// add the signature and certificate request payloads
-						//
-
-						payload_add_sign( packet, sign, ISAKMP_PAYLOAD_CERT_REQ );
-						payload_add_creq( packet, ISAKMP_CERT_X509_SIG, ISAKMP_PAYLOAD_NONE );
+						payload_add_sign( packet, sign, ISAKMP_PAYLOAD_NONE );
 
 						ph1->xstate |= XSTATE_SENT_CT;
 						ph1->xstate |= XSTATE_SENT_SI;
-						ph1->xstate |= XSTATE_SENT_CR;
 
 						break;
 					}
@@ -792,16 +760,12 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				packet.write( ph1->cookies, ISAKMP_PAYLOAD_SA, ph1->exchange, 0 );
 
 				//
-				// add sa payload
+				// add payloads
 				//
 
 				payload_add_sa( packet, ph1->plist_l, ISAKMP_PAYLOAD_VEND );
 
-				//
-				// add vendor payloads
-				//
-
-				phase1_add_vend( ph1, packet );
+				phase1_add_vend( ph1, packet, ISAKMP_PAYLOAD_NONE );
 
 				packet.done();
 
@@ -822,15 +786,54 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				 ( ph1->xstate & XSTATE_RECV_NO ) &&
 				!( ph1->xstate & XSTATE_SENT_KE ) )
 			{
-				PACKET_IKE packet;
+				//
+				// write the packet header
+				//
 
+				PACKET_IKE packet;
 				packet.write( ph1->cookies, ISAKMP_PAYLOAD_KEX, ph1->exchange, 0 );
+
+				//
+				// add payloads for authentication type
+				//
+
 				payload_add_kex( packet, ph1->xl, ISAKMP_PAYLOAD_NONCE );
-				payload_add_nonce( packet, ph1->nonce_l, ISAKMP_PAYLOAD_NONE );
+
+				switch( ph1->auth_id )
+				{
+					case IKE_AUTH_PRESHARED_KEY:
+					case XAUTH_AUTH_INIT_PSK:
+					{
+						payload_add_nonce( packet, ph1->nonce_l, ph1->natt_p );
+						break;
+					}
+
+					case IKE_AUTH_SIG_RSA:
+					case XAUTH_AUTH_INIT_RSA:
+					case HYBRID_AUTH_INIT_RSA:
+					{
+						payload_add_nonce( packet, ph1->nonce_l, ISAKMP_PAYLOAD_CERT_REQ );
+						payload_add_creq( packet, ISAKMP_CERT_X509_SIG, ph1->natt_p );
+						ph1->xstate |= XSTATE_SENT_CR;
+						break;
+					}
+				}
+
+				//
+				// optionally add nat discovery hash payloads
+				//
+
+				if( ph1->natt_v != IPSEC_NATT_NONE )
+				{
+					phase1_gen_natd( ph1 );
+					payload_add_natd( packet, ph1->natd_ld, ph1->natt_p );
+					payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
+				}
+
 				packet.done();
 
 				//
-				// send responders packet
+				// send packet
 				//
 
 				packet_ike_send( ph1, ph1, packet, true );
@@ -853,19 +856,16 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				!( ph1->xstate & XSTATE_SENT_ID ) )
 			{
 				//
-				// check and enable natt if ready
+				// perform nat traversal check
 				//
 
 				phase1_chk_natd( ph1 );
 
 				//
-				// obtain our negotiated proposal
+				// build packet for authentication type
 				//
 
-				IKE_PROPOSAL * proposal;
-				ph1->plist_l.get( &proposal, 0 );
-
-				switch( proposal->auth_id )
+				switch( ph1->auth_id )
 				{
 					case IKE_AUTH_PRESHARED_KEY:
 					case XAUTH_AUTH_INIT_PSK:
@@ -873,23 +873,29 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						if( !( ph1->xstate & XSTATE_RECV_HA ) )
 							break;
 
-						PACKET_IKE packet;
+						//
+						// write packet header
+						//
 
+						PACKET_IKE packet;
 						packet.write( ph1->cookies, ISAKMP_PAYLOAD_IDENT, ph1->exchange, ISAKMP_FLAG_ENCRYPT );
+
+						//
+						// add payloads
+						//
 
 						size_t pld_beg = packet.size() + 4;
 						payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_HASH );
 						size_t pld_end = packet.size();
-
 						ph1->idr.set( packet.buff() + pld_beg, pld_end - pld_beg );
 
 						phase1_gen_hash_r( ph1, ph1->hash_l );
-
 						payload_add_hash( packet, ph1->hash_l, ISAKMP_PAYLOAD_NONE );
+
 						packet.done();
 
 						//
-						// send responder packet
+						// send packet
 						//
 
 						packet_ike_send( ph1, ph1, packet, true );
@@ -904,7 +910,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 					case XAUTH_AUTH_INIT_RSA:
 					case HYBRID_AUTH_INIT_RSA:
 					{
-						if( proposal->auth_id == XAUTH_AUTH_INIT_RSA )
+						if( ph1->auth_id == XAUTH_AUTH_INIT_RSA )
 						{
 							//
 							// mutual rsa modes we should see a signature
@@ -923,21 +929,23 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 								break;
 						}
 
-						PACKET_IKE packet;
+						//
+						// write packet header
+						//
 
+						PACKET_IKE packet;
 						packet.write( ph1->cookies, ISAKMP_PAYLOAD_IDENT, ph1->exchange, ISAKMP_FLAG_ENCRYPT );
+
+						//
+						// add payloads
+						//
 
 						size_t pld_beg = packet.size() + 4;
 						payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_CERT );
 						size_t pld_end = packet.size();
-
 						ph1->idr.set( packet.buff() + pld_beg, pld_end - pld_beg );
 
 						payload_add_cert( packet, ISAKMP_CERT_X509_SIG, ph1->tunnel->peer->cert_l, ISAKMP_PAYLOAD_SIGNATURE );
-
-						//
-						// compute and add our rsa signature
-						//
 
 						BDATA sign;
 						phase1_gen_hash_r( ph1, ph1->hash_l );
@@ -945,7 +953,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						payload_add_sign( packet, sign, ISAKMP_PAYLOAD_NONE );
 
 						//
-						// send responder packet
+						// send packet
 						//
 
 						packet_ike_send( ph1, ph1, packet, true );
@@ -987,37 +995,42 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				packet.write( ph1->cookies, ISAKMP_PAYLOAD_SA, ph1->exchange, 0 );
 
 				//
-				// add and store the sa payload
+				// add payloads for authentication type
 				//
 
 				size_t beg = packet.size() + 4;
 				payload_add_sa( packet, ph1->plist_l, ISAKMP_PAYLOAD_KEX );
 				size_t end = packet.size();
-
 				ph1->hda.set( packet.buff() + beg, end - beg );
 
-				//
-				// add the key echange and nonce payloads
-				//
-
 				payload_add_kex( packet, ph1->xl, ISAKMP_PAYLOAD_NONCE );
-				payload_add_nonce( packet, ph1->nonce_l, ISAKMP_PAYLOAD_IDENT );
 
-				//
-				// add and store the phase1 id payload
-				//
+				switch( ph1->auth_id )
+				{
+					case IKE_AUTH_PRESHARED_KEY:
+					case XAUTH_AUTH_INIT_PSK:
+					{
+						payload_add_nonce( packet, ph1->nonce_l, ISAKMP_PAYLOAD_IDENT );
+						break;
+					}
+
+					case IKE_AUTH_SIG_RSA:
+					case XAUTH_AUTH_INIT_RSA:
+					case HYBRID_AUTH_INIT_RSA:
+					{	
+						payload_add_nonce( packet, ph1->nonce_l, ISAKMP_PAYLOAD_CERT_REQ );
+						payload_add_creq( packet, ISAKMP_CERT_X509_SIG, ISAKMP_PAYLOAD_IDENT );
+						ph1->xstate |= XSTATE_SENT_CR;
+						break;
+					}
+				}
 
 				beg = packet.size() + 4;
 				payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_VEND );
 				end = packet.size();
-
 				ph1->idi.set( packet.buff() + beg, end - beg );
 
-				//
-				// add vendor payloads
-				//
-
-				phase1_add_vend( ph1, packet );
+				phase1_add_vend( ph1, packet, ISAKMP_PAYLOAD_NONE );
 
 				packet.done();
 
@@ -1042,49 +1055,32 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				 ( ph1->xstate & XSTATE_RECV_ID ) )
 			{
 				//
-				// check and enable natt if required
+				// perform nat traversal check
 				//
 
 				phase1_chk_natd( ph1 );
 
 				//
-				// obtain our negotiated proposal
+				// build packet for authentication type
 				//
 
-				IKE_PROPOSAL * proposal;
-				ph1->plist_l.get( &proposal, 0 );
-
-				switch( proposal->auth_id )
+				switch( ph1->auth_id )
 				{
 					case IKE_AUTH_PRESHARED_KEY:
 					case XAUTH_AUTH_INIT_PSK:
 					case HYBRID_AUTH_INIT_RSA:
 					{
-						if( ( ( ( proposal->auth_id == IKE_AUTH_PRESHARED_KEY ) ||
-								( proposal->auth_id == XAUTH_AUTH_INIT_PSK ) ) &&
+						if( ( ( ( ph1->auth_id == IKE_AUTH_PRESHARED_KEY ) ||
+								( ph1->auth_id == XAUTH_AUTH_INIT_PSK ) ) &&
 							  ( ph1->xstate & XSTATE_RECV_HA ) && !( ph1->xstate & XSTATE_SENT_HA ) ) ||
-							( ( proposal->auth_id == HYBRID_AUTH_INIT_RSA ) &&
+							( ( ph1->auth_id == HYBRID_AUTH_INIT_RSA ) &&
 							  ( ph1->xstate & XSTATE_RECV_SI ) && !( ph1->xstate & XSTATE_SENT_HA ) ) )
 						{
+							//
+							// calculate key material
+							//
+
 							phase1_gen_keys( ph1 );
-							phase1_gen_hash_i( ph1, ph1->hash_l );
-
-							//
-							// if both endpoints support natt and
-							// at least one address is translated
-							//
-
-							unsigned char last = ISAKMP_PAYLOAD_NONE;
-
-							if( ph1->natt_v != IPSEC_NATT_NONE )
-							{
-								phase1_gen_natd( ph1 );
-
-								if( ph1->natt_v == IPSEC_NATT_RFC )
-									last = ISAKMP_PAYLOAD_NAT_RFC_DISC;
-								else
-									last = ISAKMP_PAYLOAD_NAT_VXX_DISC;
-							}
 
 							//
 							// write packet header
@@ -1094,18 +1090,20 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							packet.write( ph1->cookies, ISAKMP_PAYLOAD_HASH, ph1->exchange, ISAKMP_FLAG_ENCRYPT );
 
 							//
-							// add the liveliness proof hash payload
+							// add payloads
 							//
 
-							payload_add_hash( packet, ph1->hash_l, last );
+							phase1_gen_hash_i( ph1, ph1->hash_l );
+							payload_add_hash( packet, ph1->hash_l, ph1->natt_p );
 
 							//
 							// optionally add nat discovery hash payloads
 							//
 
-							if( last != ISAKMP_PAYLOAD_NONE )
+							if( ph1->natt_v != IPSEC_NATT_NONE )
 							{
-								payload_add_natd( packet, ph1->natd_ld, last );
+								phase1_gen_natd( ph1 );
+								payload_add_natd( packet, ph1->natd_ld, ph1->natt_p );
 								payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
 							}
 
@@ -1132,23 +1130,6 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							phase1_gen_keys( ph1 );
 
 							//
-							// if both endpoints support natt and
-							// at least one address is translated
-							//
-
-							unsigned char last = ISAKMP_PAYLOAD_NONE;
-
-							if( ph1->natt_v != IPSEC_NATT_NONE )
-							{
-								phase1_gen_natd( ph1 );
-
-								if( ph1->natt_v == IPSEC_NATT_RFC )
-									last = ISAKMP_PAYLOAD_NAT_RFC_DISC;
-								else
-									last = ISAKMP_PAYLOAD_NAT_VXX_DISC;
-							}
-
-							//
 							// write packet header
 							//
 
@@ -1156,27 +1137,24 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							packet.write( ph1->cookies, ISAKMP_PAYLOAD_CERT, ph1->exchange, ISAKMP_FLAG_ENCRYPT );
 
 							//
-							// add our certificate payload
+							// add payloads
 							//
 
 							payload_add_cert( packet, ISAKMP_CERT_X509_SIG, ph1->tunnel->peer->cert_l, ISAKMP_PAYLOAD_SIGNATURE );
 
-							//
-							// compute and add our rsa signature
-							//
-
 							BDATA sign;
 							phase1_gen_hash_i( ph1, ph1->hash_l );
 							prvkey_rsa_encrypt( ph1->tunnel->peer->key, ph1->hash_l, sign );
-							payload_add_sign( packet, sign, last );
+							payload_add_sign( packet, sign, ph1->natt_p );
 
 							//
 							// optionally add nat discovery hash payloads
 							//
 
-							if( last != ISAKMP_PAYLOAD_NONE )
+							if( ph1->natt_v != IPSEC_NATT_NONE )
 							{
-								payload_add_natd( packet, ph1->natd_ld, last );
+								phase1_gen_natd( ph1 );
+								payload_add_natd( packet, ph1->natd_ld, ph1->natt_p );
 								payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
 							}
 
@@ -1215,21 +1193,10 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				!( ph1->xstate & XSTATE_SENT_SA ) )
 			{
 				//
-				// if both endpoints support natt and
-				// at least one address is translated
+				// generate our keys
 				//
 
-				unsigned char last = ISAKMP_PAYLOAD_NONE;
-
-				if( ph1->natt_v != IPSEC_NATT_NONE )
-				{
-					phase1_gen_natd( ph1 );
-
-					if( ph1->natt_v == IPSEC_NATT_RFC )
-						last = ISAKMP_PAYLOAD_NAT_RFC_DISC;
-					else
-						last = ISAKMP_PAYLOAD_NAT_VXX_DISC;
-				}
+				phase1_gen_keys( ph1 );
 
 				//
 				// write packet header
@@ -1239,7 +1206,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				packet.write( ph1->cookies, ISAKMP_PAYLOAD_SA, ph1->exchange, 0 );
 
 				//
-				// add the sa, key echange and nonce payloads
+				// add payloads
 				//
 
 				payload_add_sa( packet, ph1->plist_l, ISAKMP_PAYLOAD_KEX );
@@ -1247,37 +1214,19 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				payload_add_nonce( packet, ph1->nonce_l, ISAKMP_PAYLOAD_IDENT );
 
 				//
-				// generate our keys
+				// add payloads for authentication type
 				//
 
-				phase1_gen_keys( ph1 );
-
-				//
-				// obtain our negotiated proposal
-				//
-
-				IKE_PROPOSAL * proposal;
-				ph1->plist_l.get( &proposal, 0 );
-
-				switch( proposal->auth_id )
+				switch( ph1->auth_id )
 				{
 					case IKE_AUTH_PRESHARED_KEY:
 					case XAUTH_AUTH_INIT_PSK:
 					case HYBRID_AUTH_INIT_RSA:
 					{
-						//
-						// add and store the phase1 id payload
-						//
-
 						size_t pld_beg = packet.size() + 4;
 						payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_HASH );
 						size_t pld_end = packet.size();
-
 						ph1->idr.set( packet.buff() + pld_beg, pld_end - pld_beg );
-
-						//
-						// generate and add our hash payload
-						//
 
 						phase1_gen_hash_r( ph1, ph1->hash_l );
 						payload_add_hash( packet, ph1->hash_l, ISAKMP_PAYLOAD_VEND );
@@ -1290,26 +1239,13 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 					case IKE_AUTH_SIG_RSA:
 					case XAUTH_AUTH_INIT_RSA:
 					{
-						//
-						//
-						// add and store the phase1 id payload
-						//
-
 						size_t pld_beg = packet.size() + 4;
 						payload_add_ph1id( packet, ph1->ph1id_l, ISAKMP_PAYLOAD_CERT );
 						size_t pld_end = packet.size();
-
 						ph1->idr.set( packet.buff() + pld_beg, pld_end - pld_beg );
 
-						//
-						// add our cert payload
-						//
-
-						payload_add_cert( packet, ISAKMP_CERT_X509_SIG, ph1->tunnel->peer->cert_l, ISAKMP_PAYLOAD_SIGNATURE );
-
-						//
-						// generate and add our signature payload
-						//
+						payload_add_cert( packet, ISAKMP_CERT_X509_SIG, ph1->tunnel->peer->cert_l, ISAKMP_PAYLOAD_CERT_REQ );
+						payload_add_creq( packet, ISAKMP_CERT_X509_SIG, ISAKMP_PAYLOAD_SIGNATURE );
 
 						BDATA sign;
 						phase1_gen_hash_r( ph1, ph1->hash_l );
@@ -1317,17 +1253,25 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						payload_add_sign( packet, sign, ISAKMP_PAYLOAD_VEND );
 
 						ph1->xstate |= XSTATE_SENT_CT;
+						ph1->xstate |= XSTATE_SENT_CR;
 						ph1->xstate |= XSTATE_SENT_SI;
 
 						break;
 					}
 				}
 
+				phase1_add_vend( ph1, packet, ph1->natt_p );
+
 				//
-				// add vendor payloads
+				// optionally add nat discovery hash payloads
 				//
 
-				phase1_add_vend( ph1, packet );
+				if( ph1->natt_v != IPSEC_NATT_NONE )
+				{
+					phase1_gen_natd( ph1 );
+					payload_add_natd( packet, ph1->natd_ld, ph1->natt_p );
+					payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
+				}
 
 				//
 				// send packet
@@ -1369,19 +1313,12 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		 ( ph1->xstate & XSTATE_RECV_ID ) )
 	{
 		//
-		// obtain our negotiated proposal
-		//
-
-		IKE_PROPOSAL * proposal;
-		ph1->plist_l.get( &proposal, 0 );
-
-		//
 		// check the peers hash value
 		//
 
-		if( ( proposal->auth_id == IKE_AUTH_PRESHARED_KEY ) ||
-			( proposal->auth_id == XAUTH_AUTH_INIT_PSK ) ||
-			( proposal->auth_id == HYBRID_AUTH_INIT_RSA && !ph1->initiator ) )
+		if( ( ph1->auth_id == IKE_AUTH_PRESHARED_KEY ) ||
+			( ph1->auth_id == XAUTH_AUTH_INIT_PSK ) ||
+			( ph1->auth_id == HYBRID_AUTH_INIT_RSA && !ph1->initiator ) )
 		{
 			if( ph1->xstate & XSTATE_RECV_HA )
 			{
@@ -1411,9 +1348,9 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		// check the peers signature value
 		//
 
-		if( ( proposal->auth_id == IKE_AUTH_SIG_RSA ) ||
-			( proposal->auth_id == XAUTH_AUTH_INIT_RSA ) ||
-			( proposal->auth_id == HYBRID_AUTH_INIT_RSA && ph1->initiator ) )
+		if( ( ph1->auth_id == IKE_AUTH_SIG_RSA ) ||
+			( ph1->auth_id == XAUTH_AUTH_INIT_RSA ) ||
+			( ph1->auth_id == HYBRID_AUTH_INIT_RSA && ph1->initiator ) )
 		{
 			if( ph1->xstate & XSTATE_RECV_SI )
 			{
@@ -1976,7 +1913,7 @@ long _IKED::phase1_gen_hash_r( IDB_PH1 * sa, BDATA & hash )
 	return LIBIKE_OK;
 }
 
-long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
+long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 {
 	//
 	// optionally add xauth vendor id payload
@@ -2072,7 +2009,7 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 	uint32_t vers;
 	uint32_t feat;
 
-	if( !ph1->initiator )
+	if( ph1->tunnel->peer->contact != IPSEC_CONTACT_CLIENT )
 		prod = htonl( 1 );			// 01 == gateway
 	else
 		prod = htonl( 2 );			// 02 == client
@@ -2088,7 +2025,7 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet )
 	vend_chkpt2.add( 0, 4 );		// reserved
 	vend_chkpt2.add( &feat, 4 );	// features
 
-	payload_add_vend( packet, vend_chkpt2, ISAKMP_PAYLOAD_NONE );
+	payload_add_vend( packet, vend_chkpt2, next );
 	log.txt( LLOG_INFO, "ii : local is CHECKPOINT compatible\n" );
 
 	return LIBIKE_OK;
@@ -2159,7 +2096,10 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 			{
 				ph1->natt_r = true;
 				if( ph1->natt_v < IPSEC_NATT_V00 )
+				{
 					ph1->natt_v = IPSEC_NATT_V00;
+					ph1->natt_p = ISAKMP_PAYLOAD_NAT_VXX_DISC;
+				}
 				log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v00 )\n" );
 				return LIBIKE_OK;
 			}
@@ -2173,7 +2113,10 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 			{
 				ph1->natt_r = true;
 				if( ph1->natt_v < IPSEC_NATT_V01 )
+				{
 					ph1->natt_v = IPSEC_NATT_V01;
+					ph1->natt_p = ISAKMP_PAYLOAD_NAT_VXX_DISC;
+				}
 				log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v01 )\n" );
 				return LIBIKE_OK;
 			}
@@ -2195,7 +2138,10 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 			{
 				ph1->natt_r = true;
 				if( ph1->natt_v < IPSEC_NATT_V02 )
+				{
 					ph1->natt_v = IPSEC_NATT_V02;
+					ph1->natt_p = ISAKMP_PAYLOAD_NAT_VXX_DISC;
+				}
 				log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v02 )\n" );
 				return LIBIKE_OK;
 			}
@@ -2209,7 +2155,10 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 			{
 				ph1->natt_r = true;
 				if( ph1->natt_v < IPSEC_NATT_V03 )
+				{
 					ph1->natt_v = IPSEC_NATT_V03;
+					ph1->natt_p = ISAKMP_PAYLOAD_NAT_VXX_DISC;
+				}
 				log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v03 )\n" );
 				return LIBIKE_OK;
 			}
@@ -2223,6 +2172,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 			{
 				ph1->natt_r = true;
 				ph1->natt_v = IPSEC_NATT_RFC;
+				ph1->natt_p = ISAKMP_PAYLOAD_NAT_RFC_DISC;
 				log.txt( LLOG_INFO, "ii : peer supports nat-t ( rfc )\n" );
 				return LIBIKE_OK;
 			}
@@ -2480,6 +2430,8 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 
 		case IPSEC_NATT_ENABLE:
 		{
+			bool xlated = false;
+
 			//
 			// make sure remote peer negotiated natt
 			//
@@ -2496,8 +2448,6 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 
 			if( !( ph1->lstate & LSTATE_GENNATD ) )
 				phase1_gen_natd( ph1 );
-
-			bool xlated = false;
 
 			//
 			// compare the remote destination

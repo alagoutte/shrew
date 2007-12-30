@@ -188,6 +188,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	natt_r = false;
 
 	natt_v = 0;
+	natt_p = ISAKMP_PAYLOAD_NONE;
 
 	dpd_l = false;
 	dpd_r = false;
@@ -308,6 +309,8 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 
 	if( initiator )
 	{
+		auth_id = proposal->auth_id;
+
 		//
 		// determine xauth negotiation
 		//
