@@ -345,10 +345,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						case XAUTH_MESSAGE:
 						case CHKPT_MESSAGE:
 							if( !attr->basic )
-							{
 								message.add( attr->vdata );
-								message.add( 0, 1 );
-							}
 							break;
 
 						default:
@@ -362,7 +359,14 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				//
 
 				if( message.size() )
+				{
+					if( message.text()[ message.size() - 1 ] != '\n' )
+						message.add( '\n', 1 );
+
+					message.add( 0, 1 );
+
 					log.txt( LLOG_INFO, "ii : received xauth request - %s", message.text() );
+				}
 				else
 					log.txt( LLOG_INFO, "ii : received xauth request\n" );
 
@@ -443,10 +447,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 							case XAUTH_MESSAGE:
 							case CHKPT_MESSAGE:
 								if( !attr->basic )
-								{
 									message.add( attr->vdata );
-									message.add( 0, 1 );
-								}
 								break;
 						}
 					}
@@ -462,7 +463,14 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						//
 
 						if( message.size() )
+						{
+							if( message.text()[ message.size() - 1 ] != '\n' )
+								message.add( '\n', 1 );
+
+							message.add( 0, 1 );
+
 							log.txt( LLOG_INFO, "ii : received xauth result - %s", message.text() );
+						}
 						else
 							log.txt( LLOG_INFO, "ii : received xauth result\n" );
 
@@ -818,8 +826,9 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					// and ivs from xauth through modecfg
 					//
 
-					if( !ph1->zwall_r )
-						cfg->lstate |= LSTATE_DELETE;
+					if( ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
+						if( !ph1->zwall_r )
+							cfg->lstate |= LSTATE_DELETE;
 				}
 				else
 				{
