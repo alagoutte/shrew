@@ -2250,7 +2250,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 
 	log.bin(
 		LLOG_DEBUG,
-		LLOG_DECODE,
+		LLOG_DEBUG,
 		vend.buff(),
 		vend.size(),
 		"ii : unknown vendor id" );
