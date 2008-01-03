@@ -166,6 +166,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// read and process all payloads
 	//
 
+	cfg->hda.del();
+
 	while( payload != ISAKMP_PAYLOAD_NONE )
 	{
 		//
@@ -204,7 +206,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				size_t beg = packet.oset() - 4;
 				result = payload_get_cfglist( packet, cfg );
 				size_t end = packet.oset();
-				cfg->hda.set( packet.buff() + beg, end - beg );
+				cfg->hda.add( packet.buff() + beg, end - beg );
 
 				break;
 			}
