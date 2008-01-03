@@ -310,6 +310,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				// check for gateway xauth request
 				//
 
+				BDATA message;
+
 				long count = cfg->attr_count();
 				long index = 0;
 
@@ -340,6 +342,15 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 								log.txt( LLOG_INFO, "!! : warning, basic xauth password attribute type\n" );
 							break;
 
+						case XAUTH_MESSAGE:
+						case CHKPT_MESSAGE:
+							if( !attr->basic )
+							{
+								message.add( attr->vdata );
+								message.add( 0, 1 );
+							}
+							break;
+
 						default:
 							log.txt( LLOG_INFO, "!! : warning, unhandled xauth attribute %i\n", attr->atype );
 							break;
@@ -350,46 +361,46 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				// examine the xauth request
 				//
 
-				if( auth_type )
-				{
+				if( message.size() )
+					log.txt( LLOG_INFO, "ii : received xauth request - %s", message.text() );
+				else
 					log.txt( LLOG_INFO, "ii : received xauth request\n" );
 
+				//
+				// if this is the first request
+				//
+
+				if( ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) != TSTATE_RECV_XAUTH )
+				{
 					//
-					// if this is the first request
+					// make sure we received a xauth type attribute
 					//
 
-					if( ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) != TSTATE_RECV_XAUTH )
+					if( !auth_type )
 					{
-						//
-						// make sure we received a xauth type attribute
-						//
+						log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
 
-						if( !auth_type )
-						{
-							log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
-
-							cfg->tunnel->close = TERM_BADMSG;
-							cfg->lstate |= LSTATE_DELETE;
-						}
-					}
-
-					//
-					// if this is a duplicate request
-					//
-
-					if( ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
-					{
-						//
-						// looks like we already sent an
-						// xauth response. this means we
-						// failed to authenticate
-						//
-
-						log.txt( LLOG_ERROR, "!! : duplicate xauth request, authentication failed\n" );
-
-						cfg->tunnel->close = TERM_USER_AUTH;
+						cfg->tunnel->close = TERM_BADMSG;
 						cfg->lstate |= LSTATE_DELETE;
 					}
+				}
+
+				//
+				// if this is a duplicate request
+				//
+
+				if( ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
+				{
+					//
+					// looks like we already sent an
+					// xauth response. this means we
+					// failed to authenticate
+					//
+
+					log.txt( LLOG_ERROR, "!! : duplicate xauth request, authentication failed\n" );
+
+					cfg->tunnel->close = TERM_USER_AUTH;
+					cfg->lstate |= LSTATE_DELETE;
 				}
 
 				cfg->attr_reset();
@@ -429,10 +440,11 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 									status = attr->bdata;
 								break;
 
+							case XAUTH_MESSAGE:
 							case CHKPT_MESSAGE:
 								if( !attr->basic )
 								{
-									message.set( attr->vdata );
+									message.add( attr->vdata );
 									message.add( 0, 1 );
 								}
 								break;
@@ -449,10 +461,10 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						// check xauth result
 						//
 
-						if( !message.size() )
-							log.txt( LLOG_INFO, "ii : received xauth result\n" );
-						else
+						if( message.size() )
 							log.txt( LLOG_INFO, "ii : received xauth result - %s", message.text() );
+						else
+							log.txt( LLOG_INFO, "ii : received xauth result\n" );
 
 						if( status == 1 )
 						{
@@ -801,13 +813,13 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					}
 
 					//
-					// flag for removal
+					// remove this handle unless communicating
+					// with a zywall which uses the same msgid
+					// and ivs from xauth through modecfg
 					//
 
-					if( ( cfg->tunnel->state & TSTATE_SENT_XUSER ) &&
-						( cfg->tunnel->state & TSTATE_SENT_XPASS ) )
-						if( !ph1->zwall_r )
-							cfg->lstate |= LSTATE_DELETE;
+					if( !ph1->zwall_r )
+						cfg->lstate |= LSTATE_DELETE;
 				}
 				else
 				{
