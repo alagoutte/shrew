@@ -519,6 +519,9 @@ typedef class _IDB_PH1 : public IDB_XCH
 	bool	zwall_l;	// local is zywall compatible
 	bool	zwall_r;	// remote is zywall compatible
 
+	bool	swind_l;	// local is sidewinder compatible
+	bool	swind_r;	// remote is sidewinder compatible
+
 	bool	chkpt_l;	// local is checkpoint compatible
 	bool	chkpt_r;	// remote is checkpoint compatible
 

@@ -104,6 +104,9 @@ _IKED::_IKED()
 	unsigned char zwall[] = VEND_ZWALL;
 	vend_zwall.set( zwall, sizeof( zwall ) );
 
+	unsigned char swind[] = VEND_SWIND;
+	vend_swind.set( swind, sizeof( swind ) );
+
 	unsigned char chkpt[] = VEND_CHKPT;
 	vend_chkpt.set( chkpt, sizeof( chkpt ) );
 

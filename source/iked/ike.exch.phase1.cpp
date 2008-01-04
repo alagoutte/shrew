@@ -2002,6 +2002,13 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 	log.txt( LLOG_INFO, "ii : local is NETSCREEN compatible\n" );
 
 	//
+	// add sidewinder vendor payload
+	//
+
+	payload_add_vend( packet, vend_swind, ISAKMP_PAYLOAD_VEND );
+	log.txt( LLOG_INFO, "ii : local is SIDEWINDER compatible\n" );
+
+	//
 	// prepair and add checkpoint vendor id payload ( must be last )
 	//
 
@@ -2233,6 +2240,18 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 		{
 			ph1->zwall_r = true;
 			log.txt( LLOG_INFO, "ii : peer is ZYWALL compatible\n" );
+			return LIBIKE_OK;
+		}
+
+	//
+	// check for sidewinder vendor id
+	//
+
+	if( vend.size() == vend_swind.size() )
+		if( !memcmp( vend.buff(), vend_swind.buff(), vend_swind.size() ) )
+		{
+			ph1->swind_r = true;
+			log.txt( LLOG_INFO, "ii : peer is SIDEWINDER compatible\n" );
 			return LIBIKE_OK;
 		}
 

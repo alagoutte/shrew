@@ -829,7 +829,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					//
 
 					if( ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
-						if( !ph1->zwall_r )
+						if( !ph1->zwall_r &&
+							!ph1->swind_r )
 							cfg->lstate |= LSTATE_DELETE;
 				}
 				else
