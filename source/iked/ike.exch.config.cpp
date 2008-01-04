@@ -824,13 +824,13 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 					//
 					// remove this handle unless communicating
-					// with a zywall which uses the same msgid
-					// and ivs from xauth through modecfg
+					// with a zywall or sidewinder which use
+					// the same msgid and iv from xauth through
+					// modecfg
 					//
 
 					if( ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
-						if( !ph1->zwall_r &&
-							!ph1->swind_r )
+						if( !ph1->zwall_r && !ph1->swind_r )
 							cfg->lstate |= LSTATE_DELETE;
 				}
 				else
@@ -893,6 +893,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				//
 
 				cfg->mtype = ISAKMP_CFG_ACK;
+				cfg->attr_reset();
 
 				//
 				// send config packet
