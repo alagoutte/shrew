@@ -948,11 +948,10 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				log.txt( LLOG_INFO, "ii : building config attribute list\n" );
 
 				cfg->mtype = ISAKMP_CFG_REQUEST;
+				cfg->attr_reset();
 
 				if( ph1->chkpt_l && ph1->chkpt_r )
 					iked.rand_bytes( &cfg->ident, sizeof( cfg->ident ) );
-
-				cfg->attr_reset();
 
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.rqst,
@@ -1024,7 +1023,6 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				log.txt( LLOG_INFO, "ii : building config attribute list\n" );
 
 				cfg->mtype = ISAKMP_CFG_ACK;
-
 				cfg->attr_reset();
 
 				config_xconf_set( cfg,

@@ -1252,9 +1252,9 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 					sainfo.sa.encrypt = SADB_EALG_3DESCBC;
 					break;
 
-//				case ISAKMP_ESP_CAST:
-//					sainfo.sa.encrypt = SADB_X_EALG_CAST128CBC;
-//					break;
+				case ISAKMP_ESP_CAST:
+					sainfo.sa.encrypt = SADB_X_EALG_CAST128CBC;
+					break;
 
 				case ISAKMP_ESP_BLOWFISH:
 					sainfo.sa.encrypt = SADB_X_EALG_BLOWFISHCBC;

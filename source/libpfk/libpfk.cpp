@@ -1280,8 +1280,8 @@ const char * _PFKI::name( long type, long value )
 				case SADB_EALG_3DESCBC:
 					return encrtype_03;
 
-//				case SADB_X_EALG_CAST128CBC:
-//					return encrtype_06;
+				case SADB_X_EALG_CAST128CBC:
+					return encrtype_06;
 
 				case SADB_X_EALG_BLOWFISHCBC:
 					return encrtype_07;

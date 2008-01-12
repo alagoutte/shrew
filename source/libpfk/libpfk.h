@@ -102,7 +102,11 @@
 #define PFKEY_BUFFSIZE			128 * 1024
 
 #ifndef SADB_X_EALG_AESCBC
-# define SADB_X_EALG_AESCBC 12
+# define SADB_X_EALG_AESCBC		12
+#endif
+
+#ifndef SADB_X_EALG_CAST128CBC
+# define SADB_X_EALG_CAST128CBC	6
 #endif
 
 #ifndef __FreeBSD__
