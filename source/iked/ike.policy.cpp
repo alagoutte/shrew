@@ -404,8 +404,6 @@ bool _IKED::policy_dhcp_remove( IDB_TUNNEL * tunnel )
 	return policy_remove( tunnel, IPSEC_POLICY_IPSEC, src, dst, false );
 }
 
-#define ROUTE_RETRIES 3
-
 bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route )
 {
 	char txtid_src[ LIBIKE_MAX_TEXTP2ID ];
@@ -505,20 +503,12 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 					addr,
 					mask );
 
-				for( int attempt = 0; attempt < ROUTE_RETRIES; attempt++ )
-				{
-					routed = iproute.add(
-								tunnel->xconf.addr,
-								true,
-								addr,
-								mask,
-								tunnel->xconf.addr );
-
-					if( routed )
-						break;
-
-					Sleep( 1000 );
-				}
+				routed = iproute.add(
+							tunnel->xconf.addr,
+							true,
+							addr,
+							mask,
+							tunnel->xconf.addr );
 
 				break;
 			}
@@ -531,20 +521,12 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 				in_addr	cur_mask;
 				in_addr	cur_next;
 
-				for( int attempt = 0; attempt < ROUTE_RETRIES; attempt++ )
-				{
-					routed = iproute.best(
-								cur_iaddr,
-								cur_local,
-								cur_addr,
-								cur_mask,
-								cur_next );
-
-					if( routed )
-						break;
-
-					Sleep( 1000 );
-				}
+				routed = iproute.best(
+							cur_iaddr,
+							cur_local,
+							cur_addr,
+							cur_mask,
+							cur_next );
 
 				if( routed )
 				{
@@ -554,20 +536,12 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 					if( id2.type == ISAKMP_ID_IPV4_ADDR )
 						mask.s_addr = 0xffffffff;
 
-					for( int attempt = 0; attempt < ROUTE_RETRIES; attempt++ )
-					{
-						routed = iproute.add(
-									cur_iaddr,
-									cur_local,
-									addr,
-									mask,
-									cur_next );
-
-						if( routed )
-							break;
-
-						Sleep( 1000 );
-					}
+					routed = iproute.add(
+								cur_iaddr,
+								cur_local,
+								addr,
+								mask,
+								cur_next );
 				}
 
 				break;

@@ -187,9 +187,10 @@ X Fix IM driver issues with Windows 2K and Virtualization Software
 X Add support for specifying the virtual network adapter MTU
 X Add DNS and WINS support for direct adapter mode
 X Fix Split DNS to work with an adapter specific default domain
-. Add support for x86/amd64 Windows Vista platforms
+x Add support for x86/amd64 Windows Vista platforms
 . Add support for persistent IPSEC SAs
 . Add support for renegotiating IKSAMP SAs in client mode
+. Improve DPD timeout algorithm
 . Add support for storing key and cert data in the site config
 . Add user preference dialog for site manager
 . Add preference for client minimize to system tray
@@ -198,6 +199,7 @@ X Fix Split DNS to work with an adapter specific default domain
 . Fix static buffer usage for temporary string data
 . Add timestamps for non-syslog log output
 . Import new logo and improved icon sets
+. Fix MS dnscache problems the right way
 x Validate and document support for Cisco ASA gateways
 x Validate and document support for Juniper SSG gateways
 x Validate and document support for Fortigate gateways

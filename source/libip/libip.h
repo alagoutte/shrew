@@ -550,12 +550,14 @@ typedef class DLX _IPROUTE
 {
 	private:
 
-	int seq;
+	int				seq;
+	unsigned long	osver_maj;
+	unsigned long	osver_min;
 
 	public:
 
-	bool iface_2_addr( in_addr & iface, unsigned long & index );
-	bool addr_2_iface( unsigned long & index, in_addr & iface );
+	bool	iface_2_addr( in_addr & iface, unsigned long & index );
+	bool	addr_2_iface( unsigned long & index, in_addr & iface );
 
 	public:
 
