@@ -240,8 +240,6 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 		id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
 		policy_create( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
-
-		tunnel->force_all = true;
 	}
 
 	//
@@ -735,8 +733,8 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		{
 			text_ph2id( txtid_dst, &id2 );
 
-			log.txt( LLOG_INFO,
-				"ii : failed to remove %s policy route for %s\n",
+			log.txt( LLOG_ERROR,
+				"!! : failed to remove %s policy route for %s\n",
 				pfki.name( NAME_SPTYPE, type ),
 				txtid_dst );
 		}

@@ -258,6 +258,9 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 	// read packet header
 	//
 
+	log.txt( LLOG_DEBUG,
+		"ii : parsing ike packet header\n" );
+
 	IKE_COOKIES	cookies;
 	uint8_t		payload;
 	uint8_t		exchange;
@@ -269,10 +272,16 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		exchange,
 		flags );
 
+	char txtaddr_src[ LIBIKE_MAX_TEXTADDR ];
+	text_addr( txtaddr_src, &saddr_src, false );
+
 	//
 	// attempt to locate a known sa
 	// sa for this packet
 	//
+
+	log.txt( LLOG_DEBUG,
+		"ii : attempting to locate phase1 sa for packet\n" );
 
 	IDB_PH1 * ph1 = NULL;
 
@@ -294,10 +303,9 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		if( !null_cookie )
 		{
 			log.txt( LLOG_INFO,
-				"XX : ike packet from %s ignored\n"
-				"XX : unknown phase1 sa for peer\n"
+				"XX : ike packet from %s ignored, unknown phase1 sa for peer\n"
 				"XX : %08x%08x:%08x%08x\n",
-				inet_ntoa( saddr_src.saddr4.sin_addr ),
+				txtaddr_src,
 				htonl( *( long * ) &cookies.i[ 0 ] ),
 				htonl( *( long * ) &cookies.i[ 4 ] ),
 				htonl( *( long * ) &cookies.r[ 0 ] ),
@@ -310,6 +318,10 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		// attempt to locate a tunnel
 		// definition for this peer
 		//
+
+		log.txt( LLOG_DEBUG,
+			"ii : attempting to locate tunnel for peer %s\n",
+			txtaddr_src );
 
 		IDB_TUNNEL * tunnel = NULL;
 
@@ -325,9 +337,8 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 			if( !get_peer( true, &peer, &saddr_src ) )
 			{
 				log.txt( LLOG_INFO,
-					"XX : ike packet from %s ignored\n"
-					"XX : no matching definition for peer\n",
-					inet_ntoa( saddr_src.saddr4.sin_addr ) );
+					"XX : ike packet from %s ignored, no matching definition for peer\n",
+					txtaddr_src );
 
 				return LIBIKE_OK;
 			}
@@ -336,12 +347,10 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 				( peer->contact != IPSEC_CONTACT_BOTH ) )
 			{
 				log.txt( LLOG_INFO,
-					"XX : ike packet from %s ignored\n"
-					"XX : contact is denied for peer\n",
-					inet_ntoa( saddr_src.saddr4.sin_addr ) );
+					"XX : ike packet from %s ignored, contact is denied for peer\n",
+					txtaddr_src );
 
 				peer->dec( true );
-
 				return LIBIKE_OK;
 			}
 
@@ -350,12 +359,10 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 			if( tunnel == NULL )
 			{
 				log.txt( LLOG_INFO,
-					"XX : ike packet from %s ignored\n"
-					"XX : unable to create tunnel object\n",
-					inet_ntoa( saddr_src.saddr4.sin_addr ) );
+					"XX : ike packet from %s ignored, unable to create tunnel object\n",
+					txtaddr_src );
 
 				peer->dec( true );
-
 				return LIBIKE_MEMORY;
 			}
 
@@ -371,12 +378,10 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		if( exchange != tunnel->peer->exchange )
 		{
 			log.txt( LLOG_INFO,
-				"XX : ike packet from %s ignored\n"
-				"XX : exchange type mismatch for peer\n",
-				inet_ntoa( saddr_src.saddr4.sin_addr ) );
+				"XX : ike packet from %s ignored, exchange type mismatch for peer\n",
+				txtaddr_src );
 
 			tunnel->dec( true );
-
 			return LIBIKE_OK;
 		}
 
@@ -386,12 +391,10 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		if( msgid )
 		{
 			log.txt( LLOG_INFO,
-				"XX : ike packet from %s ignored\n"
-				"XX : invalid message id for exchange type\n",
-				inet_ntoa( saddr_src.saddr4.sin_addr ) );
+				"XX : ike packet from %s ignored, invalid message id for exchange type\n",
+				txtaddr_src );
 
 			tunnel->dec( true );
-
 			return LIBIKE_OK;
 		}
 
@@ -401,17 +404,18 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		// new sa
 		//
 
-		ph1 = new IDB_PH1( tunnel, false, &cookies );
+		log.txt( LLOG_DEBUG,
+			"ii : creating new phase1 handle for peer %s\n",
+			txtaddr_src );
 
+		ph1 = new IDB_PH1( tunnel, false, &cookies );
 		if( ph1 == NULL )
 		{
 			log.txt( LLOG_INFO,
-				"XX : ike packet from %s ignored\n"
-				"XX : unable to create ph1 object\n",
-				inet_ntoa( saddr_src.saddr4.sin_addr ) );
+				"XX : ike packet from %s ignored, unable to create phase1 handle\n",
+				txtaddr_src );
 
 			tunnel->dec( true );
-
 			return LIBIKE_MEMORY;
 		}
 
@@ -444,7 +448,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		if( !ph1->frag_l )
 		{
 			log.txt( LLOG_ERROR, "!! : fragmented packet received but local support is disabled\n" );
-
+			ph1->dec( true );
 			return LIBIKE_FAILED;
 		}
 
@@ -456,8 +460,8 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		long result = payload_get_frag( packet, ph1, complete );
 		if( result != LIBIKE_OK )
 		{
+			log.txt( LLOG_ERROR, "!! : unable to process ike fragment payload\n" );
 			ph1->dec( true );
-
 			return result;
 		}
 
@@ -471,9 +475,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		if( !complete )
 		{
 			log.txt( LLOG_INFO, "ii : ike fragment received, waiting on complete packet\n" );
-
 			ph1->dec( true );
-
 			return LIBIKE_OK;
 		}
 
@@ -505,9 +507,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 		case ISAKMP_EXCH_IDENT_PROTECT:
 		case ISAKMP_EXCH_AGGRESSIVE:
-
 			result = process_phase1_recv( ph1, packet, payload );
-
 			break;
 
 		//
@@ -515,9 +515,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		//
 
 		case ISAKMP_EXCH_QUICK:
-
 			result = process_phase2_recv( ph1, packet, payload );
-
 			break;
 
 		//
@@ -525,9 +523,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		//
 
 		case ISAKMP_EXCH_INFORMATIONAL:
-
 			result = process_inform_recv( ph1, packet, payload );
-
 			break;
 
 		//
@@ -535,9 +531,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		//
 
 		case ISAKMP_EXCH_CONFIG:
-
 			result = process_config_recv( ph1, packet, payload );
-
 			break;
 
 		//
@@ -552,13 +546,11 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 				exchange );
 
 			result = LIBIKE_OK;
-
 			break;
 		}
 	}
 
 	ph1->dec( true );
-
 	return result;
 }
 
