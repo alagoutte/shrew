@@ -318,11 +318,11 @@ void _IDB_TUNNEL::end( bool lock )
 	if( lock )
 		iked.lock_sdb.lock();
 
-	iked.log.txt( LLOG_INFO, "DB : removing all tunnel refrences\n" );
-
 	//
 	// check for config object refrences
 	//
+
+	iked.log.txt( LLOG_INFO, "DB : removing all config references to tunnel object\n" );
 
 	long count = iked.list_config.get_count();
 	long index = 0;
@@ -353,6 +353,8 @@ void _IDB_TUNNEL::end( bool lock )
 	// check for phase2 object refrences
 	//
 
+	iked.log.txt( LLOG_INFO, "DB : removing all phase2 references to tunnel object\n" );
+
 	count = iked.list_phase2.get_count();
 	index = 0;
 
@@ -380,6 +382,8 @@ void _IDB_TUNNEL::end( bool lock )
 	//
 	// check for phase1 object refrences
 	//
+
+	iked.log.txt( LLOG_INFO, "DB : removing all phase1 references to tunnel object\n" );
 
 	count = iked.list_phase1.get_count();
 	index = 0;

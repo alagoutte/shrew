@@ -966,8 +966,7 @@ bool _IDB_PH1::dec( bool lock )
 			// 
 
 			IDB_PH2 * ph2 = ( IDB_PH2 * ) iked.list_phase2.get_item( index );
-			if( ( ph2->tunnel == tunnel ) &&
-				( ph2->lstate & LSTATE_PENDING ) )
+			if( ( ph2->tunnel == tunnel ) && ( ph2->lstate & LSTATE_PENDING ) )
 			{
 				ph2->inc( false );
 				ph2->lstate |= LSTATE_DELETE;
