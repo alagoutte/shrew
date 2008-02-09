@@ -420,8 +420,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				// gateway xauth server result
 				//
 
-				if(  ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) &&
-					!( cfg->tunnel->state & TSTATE_RECV_XRSLT ) )
+				if( !( cfg->tunnel->state & TSTATE_RECV_XRSLT ) )
 				{
 					//
 					// we should have an xauth status

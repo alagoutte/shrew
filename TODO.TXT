@@ -188,8 +188,8 @@ X Add support for specifying the virtual network adapter MTU
 X Add DNS and WINS support for direct adapter mode
 X Fix Split DNS to work with an adapter specific default domain
 X Add support for Windows x86/amd64 Vista platforms
+X Add support for renegotiating IKSAMP SAs in client mode
 . Add support for persistent IPSEC SAs
-. Add support for renegotiating IKSAMP SAs in client mode
 . Improve DPD timeout algorithm
 . Fix route management for tunnels that force all traffic
 . Add support for storing key and cert data in the site config

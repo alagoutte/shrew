@@ -272,6 +272,19 @@ bool _IDB_TUNNEL::dec( bool lock )
 	}
 
 	//
+	// cleaup tunnels that respond to clients
+	//
+
+	if( peer->contact != IPSEC_CONTACT_CLIENT )
+	{
+		if( peer->plcy_mode != POLICY_MODE_DISABLE )
+			iked.policy_list_remove( this, false );
+
+		if( xconf.opts & IPSEC_OPTS_ADDR )
+			peer->xconf_source->pool4_rel( xconf.addr );
+	}
+
+	//
 	// remove from our list
 	//
 

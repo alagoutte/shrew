@@ -343,17 +343,6 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 				return LIBIKE_OK;
 			}
 
-			if( ( peer->contact != IPSEC_CONTACT_RESP ) &&
-				( peer->contact != IPSEC_CONTACT_BOTH ) )
-			{
-				log.txt( LLOG_INFO,
-					"XX : ike packet from %s ignored, contact is denied for peer\n",
-					txtaddr_src );
-
-				peer->dec( true );
-				return LIBIKE_OK;
-			}
-
 			tunnel = new IDB_TUNNEL( peer, &saddr_dst, &saddr_src );
 
 			if( tunnel == NULL )
@@ -370,15 +359,26 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 			peer->dec( true );
 		}
 
-		// verify that the exchange type
-		// is correct and that we allow
-		// contact from this peer
+		//
+		// verify that the exchange type is correct
+		// and that we allow contact from this peer
 		//
 		
 		if( exchange != tunnel->peer->exchange )
 		{
 			log.txt( LLOG_INFO,
 				"XX : ike packet from %s ignored, exchange type mismatch for peer\n",
+				txtaddr_src );
+
+			tunnel->dec( true );
+			return LIBIKE_OK;
+		}
+
+		if( ( tunnel->peer->contact != IPSEC_CONTACT_RESP ) &&
+			( tunnel->peer->contact != IPSEC_CONTACT_BOTH ) )
+		{
+			log.txt( LLOG_INFO,
+				"XX : ike packet from %s ignored, contact is denied for peer\n",
 				txtaddr_src );
 
 			tunnel->dec( true );
@@ -399,9 +399,8 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		}
 
 		//
-		// looks like a valid initial
-		// contact attempt. allocate a
-		// new sa
+		// looks like a valid initial contact attempt.
+		// allocate a new sa
 		//
 
 		log.txt( LLOG_DEBUG,

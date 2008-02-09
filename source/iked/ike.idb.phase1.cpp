@@ -141,6 +141,45 @@ bool _ITH_EVENT_PH1NATT::func()
 	return true;
 }
 
+bool _ITH_EVENT_PH1SOFT::func()
+{
+	iked.log.txt( LLOG_INFO,
+		"ii : phase1 sa is expiring\n"
+		"ii : %04x%04x:%04x%04x\n",
+		htonl( *( long * ) &ph1->cookies.i[ 0 ] ),
+		htonl( *( long * ) &ph1->cookies.i[ 4 ] ),
+		htonl( *( long * ) &ph1->cookies.r[ 0 ] ),
+		htonl( *( long * ) &ph1->cookies.r[ 4 ] ) );
+
+	//
+	// if the tunnel peer definition states
+	// that we are to act as a client, replace
+	// this phase1 sa and add it to our list
+	//
+
+	if( ph1->tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
+	{
+		ph1->tunnel->state &= ~TSTATE_SENT_XAUTH;
+		ph1->tunnel->state &= ~TSTATE_RECV_XAUTH;
+		ph1->tunnel->state &= ~TSTATE_SENT_XRSLT;
+		ph1->tunnel->state &= ~TSTATE_RECV_XRSLT;
+
+		ph1->tunnel->state &= ~TSTATE_RECV_CONFIG;
+		ph1->tunnel->state &= ~TSTATE_SENT_CONFIG;
+		ph1->tunnel->state &= ~TSTATE_RECV_ACK;
+		ph1->tunnel->state &= ~TSTATE_SENT_ACK;
+
+		IDB_PH1 * addph1 = new IDB_PH1( ph1->tunnel, true, NULL );
+		addph1->add( false );
+		iked.process_phase1_send( addph1 );
+		addph1->dec( false );
+	}
+
+	ph1->dec( true );
+
+	return false;
+}
+
 bool _ITH_EVENT_PH1HARD::func()
 {
 	iked.log.txt( LLOG_INFO,
@@ -151,8 +190,8 @@ bool _ITH_EVENT_PH1HARD::func()
 		htonl( *( long * ) &ph1->cookies.r[ 0 ] ),
 		htonl( *( long * ) &ph1->cookies.r[ 4 ] ) );
 
-	if( ph1->tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
-		ph1->tunnel->close = TERM_EXPIRE;
+//	if( ph1->tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
+//		ph1->tunnel->close = TERM_EXPIRE;
 
 	ph1->lstate |= ( LSTATE_EXPIRE | LSTATE_NOTIFY | LSTATE_DELETE );
 	ph1->dec( true );
@@ -339,6 +378,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 
 	event_dpd.ph1 = this;
 	event_natt.ph1 = this;
+	event_soft.ph1 = this;
 	event_hard.ph1 = this;
 
 	//
@@ -888,6 +928,14 @@ bool _IDB_PH1::dec( bool lock )
 				refcount );
 		}
 
+		if( iked.ith_timer.del( &event_soft ) )
+		{
+			refcount--;
+			iked.log.txt( LLOG_DEBUG,
+				"DB : phase1 soft event canceled ( ref count = %i )\n",
+				refcount );
+		}
+
 		if( iked.ith_timer.del( &event_hard ) )
 		{
 			refcount--;
@@ -927,30 +975,11 @@ bool _IDB_PH1::dec( bool lock )
 		iked.inform_new_delete( this, NULL );
 
 	//
-	// terminate client thread if relevant
-	//
-
-	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
-		if( !tunnel->close )
-			tunnel->close = TERM_PEER_DEAD;
-
-	//
-	// cleaup after client based tunnels
-	//
-
-	if( !initiator )
-	{
-		if( tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
-			iked.policy_list_remove( tunnel, false );
-
-		if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
-			tunnel->peer->xconf_source->pool4_rel( tunnel->xconf.addr );
-	}
-
-	//
 	// if this sa never reached maturity,
 	// locate any pending phase2 handles
 	// for this tunnel and delete them
+	//
+	// FIXME : This should be timer driven
 	//
 
 	if( !( lstate & LSTATE_MATURE ) )
@@ -1027,6 +1056,9 @@ bool _IDB_PH1::resend( long attempt, long count )
 	{
 		iked.log.txt( LLOG_INFO,
 				"ii : phase1 packet resend limit exceeded\n" );
+
+		if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
+			tunnel->close = TERM_NEG_FAILED;
 
 		lstate |= ( LSTATE_DELETE );
 

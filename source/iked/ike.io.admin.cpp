@@ -139,10 +139,19 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 					IKE_SADDR saddr_l;
 
-					find_addr_l(
-						peer->saddr,
-						saddr_l,
-						500 );
+					if( !find_addr_l(
+							peer->saddr,
+							saddr_l,
+							500 ) )
+					{
+						log.txt( LLOG_ERROR, "!! : no route to host\n" );
+
+						delete tunnel;
+
+						ikei->send_msg_result( IKEI_FAILED );
+
+						break;
+					}
 
 					//
 					// create new tunnel
@@ -484,9 +493,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						// a new phase1 sa and add it to our list
 						//
 
-						if( ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) ||
-							( tunnel->peer->contact == IPSEC_CONTACT_INIT ) ||
-							( tunnel->peer->contact == IPSEC_CONTACT_BOTH ) )
+						if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
 						{
 							IDB_PH1 * ph1 = new IDB_PH1( tunnel, true, NULL );
 							ph1->add( true );
@@ -714,6 +721,13 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 			//
 			case TERM_SOCKET:
 				ikei->send_msg_status( STATUS_FAIL, "network unavailable\n" );
+				break;
+
+			//
+			// phase1 sa expired
+			//
+			case TERM_NEG_FAILED:
+				ikei->send_msg_status( STATUS_FAIL, "negotiation failed\n" );
 				break;
 
 			//

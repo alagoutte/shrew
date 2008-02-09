@@ -481,13 +481,23 @@ typedef class _ITH_EVENT_PH1NATT : public ITH_EVENT
 
 }ITH_EVENT_PH1NATT;
 
+typedef class _ITH_EVENT_PH1SOFT : public ITH_EVENT
+{
+	public:
+
+	IDB_PH1 *	ph1;
+
+	bool	func();
+
+}ITH_EVENT_PH1SOFT;
+
 typedef class _ITH_EVENT_PH1HARD : public ITH_EVENT
 {
 	public:
 
 	IDB_PH1 *	ph1;
 
-bool	func();
+	bool	func();
 
 }ITH_EVENT_PH1HARD;
 
@@ -569,6 +579,7 @@ typedef class _IDB_PH1 : public IDB_XCH
 
 	ITH_EVENT_PH1DPD	event_dpd;
 	ITH_EVENT_PH1NATT	event_natt;
+	ITH_EVENT_PH1SOFT	event_soft;
 	ITH_EVENT_PH1HARD	event_hard;
 
 	_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * set_cookies );

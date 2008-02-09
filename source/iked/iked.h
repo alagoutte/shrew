@@ -263,31 +263,30 @@ YY_DECL;
 #define LSTATE_CHKHASH			0x000000008		// hash verified
 #define LSTATE_CHKIDS			0x000000010		// identity verified
 #define LSTATE_GENNATD			0x000000020		// natt discovery generated
-#define LSTATE_CHKNATD			0x000000040		// natt discovery verified
-#define LSTATE_HASNATP			0x000000080		// natt ports floated
-#define LSTATE_HASKEYS			0x000000100		// keys generated
-#define LSTATE_CLAIMLT			0x000000200		// claim reponder lifetime
-#define LSTATE_MATURE			0x000000400		// mature and usable
-#define LSTATE_EXPIRE			0x000000800		// lifetime expired
-#define LSTATE_NOTIFY			0x000001000		// skip peer notify
-#define LSTATE_DELETE			0x000002000		// ready for delete
-#define LSTATE_FLUSHED			0x000004000		// pfkey flushed
+#define LSTATE_HASKEYS			0x000000080		// keys generated
+#define LSTATE_CLAIMLT			0x000000100		// claim reponder lifetime
+#define LSTATE_MATURE			0x000000200		// mature and usable
+#define LSTATE_EXPIRE			0x000000400		// lifetime expired
+#define LSTATE_NOTIFY			0x000000800		// skip peer notify
+#define LSTATE_DELETE			0x000001000		// ready for delete
+#define LSTATE_FLUSHED			0x000002000		// pfkey flushed
 
-#define TSTATE_INITIALIZED		0x00000001
-#define TSTATE_RECV_XUSER		0x00000002
-#define TSTATE_SENT_XUSER		0x00000004
-#define TSTATE_RECV_XPASS		0x00000008
-#define TSTATE_SENT_XPASS		0x00000010
+#define LSTATE_NATT_FLOAT		0x000000001
+#define TSTATE_INITIALIZED		0x000000002
+#define TSTATE_RECV_XUSER		0x000000004
+#define TSTATE_SENT_XUSER		0x000000008
+#define TSTATE_RECV_XPASS		0x000000010
+#define TSTATE_SENT_XPASS		0x000000020
 #define TSTATE_RECV_XAUTH		( TSTATE_RECV_XUSER | TSTATE_RECV_XPASS )
 #define TSTATE_SENT_XAUTH		( TSTATE_SENT_XUSER | TSTATE_SENT_XPASS )
-#define TSTATE_RECV_XRSLT		0x00000020
-#define TSTATE_SENT_XRSLT		0x00000040
-#define TSTATE_RECV_CONFIG		0x00000080
-#define TSTATE_SENT_CONFIG		0x00000100
-#define TSTATE_RECV_ACK			0x00000200
-#define TSTATE_SENT_ACK			0x00000400
-#define TSTATE_VNET_ENABLE		0x00000800
-#define TSTATE_DELETE			0x00001000
+#define TSTATE_RECV_XRSLT		0x000000040
+#define TSTATE_SENT_XRSLT		0x000000080
+#define TSTATE_RECV_CONFIG		0x000000100
+#define TSTATE_SENT_CONFIG		0x000000200
+#define TSTATE_RECV_ACK			0x000000400
+#define TSTATE_SENT_ACK			0x000000800
+#define TSTATE_VNET_ENABLE		0x000001000
+#define TSTATE_DELETE			0x000002000
 
 #define DSTATE_ACTIVE			0
 #define DSTATE_TERMINATE		1
@@ -297,14 +296,15 @@ YY_DECL;
 
 #define TERM_CLIENT				1
 #define TERM_SOCKET				2
-#define TERM_EXPIRE				3
-#define TERM_BADMSG				4
-#define TERM_USER_AUTH			5
-#define TERM_PEER_AUTH			6
-#define TERM_USER_CLOSE			7
-#define TERM_PEER_CLOSE			8
-#define TERM_PEER_DHCP			9
-#define TERM_PEER_DEAD			10
+#define TERM_NEG_FAILED			3
+#define TERM_EXPIRE				4
+#define TERM_BADMSG				5
+#define TERM_USER_AUTH			6
+#define TERM_PEER_AUTH			7
+#define TERM_USER_CLOSE			8
+#define TERM_PEER_CLOSE			9
+#define TERM_PEER_DHCP			10
+#define TERM_PEER_DEAD			11
 
 #define FILE_OK					0
 #define FILE_PATH				1
@@ -371,6 +371,7 @@ typedef class _IKED
 
 	friend class _ITH_EVENT_PH1DPD;
 	friend class _ITH_EVENT_PH1NATT;
+	friend class _ITH_EVENT_PH1SOFT;
 	friend class _ITH_EVENT_PH1HARD;
 
 	friend class _ITH_EVENT_PH2SOFT;

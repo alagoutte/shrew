@@ -1456,11 +1456,24 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		ph1->plist_l.get( &proposal, 0 );
 
 		//
-		// add pahse1 dead event
+		// add pahse1 soft expire event
 		//
 
 		ph1->inc( true );
-		ph1->event_hard.delay = proposal->life_sec * 1000;
+		ph1->event_soft.delay = proposal->life_sec;
+		ph1->event_soft.delay *= PFKEY_SOFT_LIFETIME_RATE;
+		ph1->event_soft.delay /= 100;
+		ph1->event_soft.delay *= 1000;
+
+		ith_timer.add( &ph1->event_soft );
+
+		//
+		// add pahse1 hard expire event
+		//
+
+		ph1->inc( true );
+		ph1->event_hard.delay = proposal->life_sec;
+		ph1->event_hard.delay *= 1000;
 
 		ith_timer.add( &ph1->event_hard );
 
@@ -2436,6 +2449,13 @@ long _IKED::phase1_gen_natd( IDB_PH1 * ph1 )
 bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 {
 	//
+	// if we are rekeying, skip this
+	//
+
+	if( ph1->tunnel->lstate & LSTATE_NATT_FLOAT )
+		return true;
+
+	//
 	// verify that both support natt
 	//
 
@@ -2557,7 +2577,7 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 	// switch to natt ports if required
 	//
 
-	ph1->lstate |= LSTATE_CHKNATD;
+	ph1->tunnel->lstate |= LSTATE_NATT_FLOAT;
 
 	if( ph1->tunnel->natt_v >= IPSEC_NATT_V02 )
 	{
@@ -2629,7 +2649,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 			}
 		}
 
-		if( ph1->lstate & LSTATE_HASNATP )
+		if( ph1->tunnel->lstate & LSTATE_NATT_FLOAT )
 		{
 			log.txt( LLOG_ERROR,
 				"!! : remote port should only float once per session\n" );
@@ -2670,7 +2690,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 
 #endif
 
-		ph1->lstate |= LSTATE_HASNATP;
+		ph1->tunnel->lstate |= LSTATE_NATT_FLOAT;
 	}
 
 	return true;
