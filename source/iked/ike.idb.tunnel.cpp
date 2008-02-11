@@ -42,6 +42,26 @@
 #include "iked.h"
 
 //
+// IDB subclass list section
+//
+
+LIST list_tunnel;
+extern LIST list_phase1;
+extern LIST list_phase2;
+extern LIST list_config;
+
+char * _IDB_TUNNEL::name()
+{
+	static char * xname = "tunnel";
+	return xname;
+}
+
+LIST * _IDB_TUNNEL::list()
+{
+	return &list_tunnel;
+}
+
+//
 // tunnel event functions
 //
 
@@ -54,7 +74,7 @@ bool _ITH_EVENT_TUNDHCP::func()
 
 	if( tunnel->close || ( retry > 8 ) )
 	{
-		tunnel->close = TERM_PEER_DHCP;
+		tunnel->close = XCH_FAILED_DHCPCONFIG;
 		tunnel->dec( true );
 
 		return false;
@@ -81,23 +101,31 @@ bool _ITH_EVENT_TUNDHCP::func()
 
 _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r )
 {
-	refcount = 0;
-	state = 0;
-	close = 0;
+	//
+	// tunnels are removed immediately
+	// when the refcount reaches zero
+	//
+
+	setflags( IDB_FLAG_DEAD & IDB_FLAG_NOEND );
+
+	tstate = 0;
+	lstate = 0;
+	close = XCH_NORMAL;
+
 	natt_v = IPSEC_NATT_NONE;
-
 	dhcp_sock = INVALID_SOCKET;
-
 	force_all = false;
 
 	//
 	// initialize the tunnel id
 	//
 
-	refid = iked.tunnelid++;
-	peer = set_peer;
+	tunnelid = iked.tunnelid++;
 	saddr_l = *set_saddr_l;
 	saddr_r = *set_saddr_r;
+
+	peer = set_peer;
+	peer->inc( true );
 
 	memset( &stats, 0, sizeof( stats ) );
 	memset( &xconf, 0, sizeof( xconf ) );
@@ -119,10 +147,56 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 	event_dhcp.lease = 0;
 	event_dhcp.renew = 0;
 	event_dhcp.retry = 0;
+
+	//
+	// setup our filter
+	//
+
+#ifdef WIN32
+
+	iked.filter_tunnel_add( this, false );
+
+#endif
 }
 
 _IDB_TUNNEL::~_IDB_TUNNEL()
 {
+	//
+	// cleaup tunnels that respond to clients
+	//
+
+	if( peer->contact != IPSEC_CONTACT_CLIENT )
+	{
+		if( peer->plcy_mode != POLICY_MODE_DISABLE )
+			iked.policy_list_remove( this, false );
+
+		if( xconf.opts & IPSEC_OPTS_ADDR )
+			peer->xconf_source->pool4_rel( xconf.addr );
+	}
+
+	//
+	// log deletion
+	//
+
+	iked.log.txt( LLOG_DEBUG,
+		"DB : tunnel deleted ( obj count = %i )\n",
+		list_tunnel.get_count() );
+
+	//
+	// dereference our peer
+	//
+
+	peer->dec( false );
+
+	//
+	// cleanup our filter
+	//
+
+#ifdef WIN32
+
+	iked.filter_tunnel_del( this );
+
+#endif
 }
 
 bool _IKED::get_tunnel( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, IKE_SADDR * saddr, bool port )
@@ -145,7 +219,7 @@ bool _IKED::get_tunnel( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, IKE_SA
 		//
 
 		if( tunnelid != NULL )
-			if( tmp_tunnel->refid != *tunnelid )
+			if( tmp_tunnel->tunnelid != *tunnelid )
 				continue;
 
 		//
@@ -182,21 +256,8 @@ bool _IKED::get_tunnel( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, IKE_SA
 	return false;
 }
 
-bool _IDB_TUNNEL::add( bool lock )
+void _IDB_TUNNEL::beg()
 {
-	if( lock )
-		iked.lock_sdb.lock();
-
-	inc( false );
-	peer->inc( false );
-
-	bool result = iked.list_tunnel.add_item( this );
-
-	iked.log.txt( LLOG_DEBUG, "DB : tunnel added\n" );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
 	//
 	// setup our filter
 	//
@@ -206,138 +267,29 @@ bool _IDB_TUNNEL::add( bool lock )
 	iked.filter_tunnel_add( this, false );
 
 #endif
-
-	return result;
 }
 
-bool _IDB_TUNNEL::inc( bool lock )
+void _IDB_TUNNEL::end()
 {
-	if( lock )
-		iked.lock_sdb.lock();
-
-	refcount++;
-
-	iked.log.txt( LLOG_LOUD,
-		"DB : tunnel ref increment ( ref count = %i, tunnel count = %i )\n",
-		refcount,
-		iked.list_tunnel.get_count() );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
-	return true;
-}
-
-bool _IDB_TUNNEL::dec( bool lock )
-{
-	if( lock )
-		iked.lock_sdb.lock();
-
 	//
-	// if we are closing the tunnel,
-	// attempt to remove any events
-	// that may be scheduled
+	// remove scheduled events
 	//
 
-	if( close )
+	if( iked.ith_timer.del( &event_dhcp ) )
 	{
-		if( iked.ith_timer.del( &event_dhcp ) )
-		{
-			refcount--;
-			iked.log.txt( LLOG_DEBUG,
-				"DB : tunnel dhcp event canceled ( ref count = %i )\n",
-				refcount );
-		}
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : tunnel dhcp event canceled ( ref count = %i )\n",
+			idb_refcount );
 	}
-
-	assert( refcount > 0 );
-
-	refcount--;
-
-	//
-	// check for deletion
-	//
-
-	if( refcount )
-	{
-		iked.log.txt( LLOG_LOUD,
-			"DB : tunnel ref decrement ( ref count = %i, tunnel count = %i )\n",
-			refcount,
-			iked.list_tunnel.get_count() );
-
-		if( lock )
-			iked.lock_sdb.unlock();
-
-		return false;
-	}
-
-	//
-	// cleaup tunnels that respond to clients
-	//
-
-	if( peer->contact != IPSEC_CONTACT_CLIENT )
-	{
-		if( peer->plcy_mode != POLICY_MODE_DISABLE )
-			iked.policy_list_remove( this, false );
-
-		if( xconf.opts & IPSEC_OPTS_ADDR )
-			peer->xconf_source->pool4_rel( xconf.addr );
-	}
-
-	//
-	// remove from our list
-	//
-
-	iked.list_tunnel.del_item( this );
-
-	//
-	// log deletion
-	//
-
-	iked.log.txt( LLOG_DEBUG,
-		"DB : tunnel deleted ( tunnel count = %i )\n",
-		iked.list_tunnel.get_count() );
-
-	//
-	// dereference our peer
-	//
-
-	peer->dec( false );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
-	//
-	// cleanup our filter
-	//
-
-#ifdef WIN32
-
-	iked.filter_tunnel_del( this );
-
-#endif
-
-	//
-	// free
-	//
-
-	delete this;
-
-	return true;
-}
-
-void _IDB_TUNNEL::end( bool lock )
-{
-	if( lock )
-		iked.lock_sdb.lock();
 
 	//
 	// check for config object refrences
 	//
 
-	iked.log.txt( LLOG_INFO, "DB : removing all config references to tunnel object\n" );
+	iked.log.txt( LLOG_INFO, "DB : removing tunnel config references\n" );
 
-	long count = iked.list_config.get_count();
+	long count = list_config.get_count();
 	long index = 0;
 
 	for( ; index < count; index++ )
@@ -347,12 +299,13 @@ void _IDB_TUNNEL::end( bool lock )
 		// and attempt to match tunnel ids
 		//
 
-		IDB_CFG * cfg = ( IDB_CFG * ) iked.list_config.get_item( index );
+		IDB_CFG * cfg = ( IDB_CFG * ) list_config.get_item( index );
 
 		if( cfg->tunnel == this )
 		{
 			cfg->inc( false );
-			cfg->lstate |= LSTATE_DELETE;
+
+			cfg->status( XCH_STATUS_DEAD, XCH_FAILED_USERREQ, 0 );
 
 			if( cfg->dec( false ) )
 			{
@@ -366,9 +319,9 @@ void _IDB_TUNNEL::end( bool lock )
 	// check for phase2 object refrences
 	//
 
-	iked.log.txt( LLOG_INFO, "DB : removing all phase2 references to tunnel object\n" );
+	iked.log.txt( LLOG_INFO, "DB : removing tunnel phase2 references\n" );
 
-	count = iked.list_phase2.get_count();
+	count = list_phase2.get_count();
 	index = 0;
 
 	for( ; index < count; index++ )
@@ -378,11 +331,12 @@ void _IDB_TUNNEL::end( bool lock )
 		// and attempt to match tunnel ids
 		//
 
-		IDB_PH2 * ph2 = ( IDB_PH2 * ) iked.list_phase2.get_item( index );
+		IDB_PH2 * ph2 = ( IDB_PH2 * ) list_phase2.get_item( index );
 		if( ph2->tunnel == this )
 		{
 			ph2->inc( false );
-			ph2->lstate |= LSTATE_DELETE;
+
+			ph2->status( XCH_STATUS_DEAD, XCH_FAILED_USERREQ, 0 );
 
 			if( ph2->dec( false ) )
 			{
@@ -396,9 +350,9 @@ void _IDB_TUNNEL::end( bool lock )
 	// check for phase1 object refrences
 	//
 
-	iked.log.txt( LLOG_INFO, "DB : removing all phase1 references to tunnel object\n" );
+	iked.log.txt( LLOG_INFO, "DB : removing tunnel phase1 references\n" );
 
-	count = iked.list_phase1.get_count();
+	count = list_phase1.get_count();
 	index = 0;
 
 	for( ; index < count; index++ )
@@ -408,11 +362,12 @@ void _IDB_TUNNEL::end( bool lock )
 		// and attempt to match tunnel ids
 		//
 
-		IDB_PH1 * ph1 = ( IDB_PH1 * ) iked.list_phase1.get_item( index );
+		IDB_PH1 * ph1 = ( IDB_PH1 * ) list_phase1.get_item( index );
 		if( ph1->tunnel == this )
 		{
 			ph1->inc( false );
-			ph1->lstate |= LSTATE_DELETE;
+
+			ph1->status( XCH_STATUS_DEAD, XCH_FAILED_USERREQ, 0 );
 
 			if( ph1->dec( false ) )
 			{
@@ -421,7 +376,4 @@ void _IDB_TUNNEL::end( bool lock )
 			}
 		}
 	}
-
-	if( lock )
-		iked.lock_sdb.unlock();
 }

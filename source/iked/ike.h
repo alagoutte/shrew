@@ -654,8 +654,8 @@ typedef struct _IKE_NOTIFY
 	uint8_t		proto;
 	uint16_t	code;
 
-	IKE_SPI			spi;
-	BDATA			data;
+	IKE_SPI		spi;
+	BDATA		data;
 
 }IKE_NOTIFY;
 

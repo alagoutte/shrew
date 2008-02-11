@@ -41,6 +41,24 @@
 
 #include "iked.h"
 
+//
+// IDB subclass list section
+//
+
+LIST list_peer;
+extern LIST list_tunnel;
+
+char * _IDB_PEER::name()
+{
+	static char * xname = "peer";
+	return xname;
+}
+
+LIST * _IDB_PEER::list()
+{
+	return &list_peer;
+}
+
 _IDB_PEER::_IDB_PEER( IKE_PEER * set_peer )
 {
 	key = NULL;
@@ -60,6 +78,43 @@ _IDB_PEER::~_IDB_PEER()
 	IDB_NETMAP * netmap;
 	while( netmap_get( &netmap, 0 ) )
 		netmap_del( netmap );
+
+	//
+	// log deletion
+	//
+
+	iked.log.txt( LLOG_DEBUG,
+		"DB : peer deleted ( obj count = %i )\n",
+		list_peer.get_count() );
+}
+
+void _IDB_PEER::beg()
+{
+}
+
+void _IDB_PEER::end()
+{
+	iked.log.txt( LLOG_INFO, "DB : removing all peer tunnel refrences\n" );
+
+	//
+	// check for tunnel object refrences
+	//
+
+	long count = list_tunnel.get_count();
+	long index = 0;
+
+	for( ; index < count; index++ )
+	{
+		//
+		// get the next tunnel in our list
+		// and attempt to match peer ids
+		//
+
+		IDB_TUNNEL * tunnel = ( IDB_TUNNEL * ) list_tunnel.get_item( index );
+
+		if( tunnel->peer == this )
+			tunnel->end();
+	}
 }
 
 bool _IKED::get_peer( bool lock, IDB_PEER ** peer, IKE_SADDR * saddr )
@@ -111,117 +166,6 @@ bool _IKED::get_peer( bool lock, IDB_PEER ** peer, IKE_SADDR * saddr )
 
 	return false;
 }
-
-bool _IDB_PEER::add( bool lock )
-{
-	if( lock )
-		iked.lock_sdb.lock();
-
-	inc( false );
-
-	bool result = iked.list_peer.add_item( this );
-
-	iked.log.txt( LLOG_DEBUG, "DB : peer added\n" );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-	
-	return result;
-}
-
-bool _IDB_PEER::inc( bool lock )
-{
-	if( lock )
-		iked.lock_sdb.lock();
-
-	refcount++;
-
-	iked.log.txt( LLOG_LOUD,
-		"DB : peer ref increment ( ref count = %i, peer count = %i )\n",
-		refcount,
-		iked.list_peer.get_count() );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
-	return true;
-}
-
-bool _IDB_PEER::dec( bool lock )
-{
-	if( lock )
-		iked.lock_sdb.lock();
-
-	assert( refcount > 0 );
-
-	refcount--;
-
-	if( refcount || !( lstate & LSTATE_DELETE ) )
-	{
-		iked.log.txt( LLOG_LOUD,
-			"DB : peer ref decrement ( ref count = %i, peer count = %i )\n",
-			refcount,
-			iked.list_peer.get_count() );
-
-		if( lock )
-			iked.lock_sdb.unlock();
-
-		return false;
-	}
-
-	//
-	// remove from our list
-	//
-
-	iked.list_peer.del_item( this );
-
-	//
-	// log deletion
-	//
-
-	iked.log.txt( LLOG_DEBUG,
-		"DB : peer deleted ( peer count = %i )\n",
-		iked.list_peer.get_count() );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
-	delete this;
-
-	return true;
-}
-
-void _IDB_PEER::end( bool lock )
-{
-	if( lock )
-		iked.lock_sdb.lock();
-
-	iked.log.txt( LLOG_INFO, "DB : removing all peer refrences\n" );
-
-	//
-	// check for tunnel object refrences
-	//
-
-	long count = iked.list_tunnel.get_count();
-	long index = 0;
-
-	for( ; index < count; index++ )
-	{
-		//
-		// get the next tunnel in our list
-		// and attempt to match peer ids
-		//
-
-		IDB_TUNNEL * tunnel = ( IDB_TUNNEL * ) iked.list_tunnel.get_item( index );
-
-		if( tunnel->peer == this )
-			tunnel->end( false );
-	}
-
-	if( lock )
-		iked.lock_sdb.unlock();
-}
-
 
 bool _IDB_PEER::netmap_add( IKE_ILIST * ilist, long	mode, BDATA * group )
 {

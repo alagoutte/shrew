@@ -191,12 +191,19 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					if( !ikei->recv_msg_proposal( &proposal ) )
 						break;
 
+					//
+					// fortigate hack
+					//
+
+//					if( ( proposal.auth_id == XAUTH_AUTH_INIT_PSK ) &&
+//						( peer->xconf_mode == CONFIG_MODE_DHCP ) )
+//						proposal.auth_id = IKE_AUTH_PRESHARED_KEY;
+
 					if( !peer->prop_list.add( &proposal, true ) )
 					{
 						log.txt( LLOG_ERROR, "!! : unable to add peer proposal\n" );
-
-						tunnel->close = TERM_CLIENT;
 						ikei->send_msg_result( IKEI_FAILED );
+						tunnel->close = XCH_FAILED_CLIENT;
 
 						break;
 					}
@@ -347,7 +354,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 								case FILE_PATH:
 									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text );
 									ikei->send_msg_result( IKEI_FAILED );
-									tunnel->close = TERM_CLIENT;
+									tunnel->close = XCH_FAILED_CLIENT;
 									break;
 
 								case FILE_FAIL:
@@ -379,7 +386,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 								case FILE_PATH:
 									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text );
 									ikei->send_msg_result( IKEI_FAILED );
-									tunnel->close = TERM_CLIENT;
+									tunnel->close = XCH_FAILED_CLIENT;
 									break;
 
 								case FILE_FAIL:
@@ -411,7 +418,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 								case FILE_PATH:
 									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text );
 									ikei->send_msg_result( IKEI_FAILED );
-									tunnel->close = TERM_CLIENT;
+									tunnel->close = XCH_FAILED_CLIENT;
 									break;
 
 								case FILE_FAIL:
@@ -519,7 +526,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 								if( !vnet_get( &adapter ) )
 								{
 									log.txt( LLOG_ERROR, "ii : unable to create vnet adapter ...\n" );
-									tunnel->close = TERM_CLIENT;
+									tunnel->close = XCH_FAILED_CLIENT;
 
 									enable = false;
 								}
@@ -544,7 +551,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					{
 						log.txt( LLOG_INFO, "<A : peer tunnel disable message\n" );
 
-						tunnel->close = TERM_USER_CLOSE;
+						tunnel->close = XCH_FAILED_USERREQ;
 
 						ikei->send_msg_enable( false );
 					}
@@ -569,8 +576,8 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 			//
 
 			if( !( tunnel->close ) &&
-				 ( tunnel->state & TSTATE_RECV_CONFIG ) &&
-				!( tunnel->state & TSTATE_VNET_ENABLE ) )
+				 ( tunnel->tstate & TSTATE_RECV_CONFIG ) &&
+				!( tunnel->tstate & TSTATE_VNET_ENABLE ) )
 			{
 				//
 				// if there is a banner, show it now
@@ -590,7 +597,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				{
 					log.txt( LLOG_ERROR, "!! : invalid private address\n" );
 					ikei->send_msg_status( STATUS_FAIL, "invalid private address or netmask\n" );
-					tunnel->close = TERM_CLIENT;
+					tunnel->close = XCH_FAILED_CLIENT;
 					break;
 				}
 
@@ -627,7 +634,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 				ikei->send_msg_status( STATUS_ENABLED, "tunnel enabled\n" );
 
-				tunnel->state |= TSTATE_VNET_ENABLE;
+				tunnel->tstate |= TSTATE_VNET_ENABLE;
 			}
 
 			//
@@ -636,7 +643,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 			//
 
 			if( !( tunnel->close ) &&
-			     ( tunnel->state & TSTATE_VNET_ENABLE ) )
+			     ( tunnel->tstate & TSTATE_VNET_ENABLE ) )
 			{
 				if( stattick < time( NULL ) )
 				{
@@ -698,12 +705,6 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 		}
 
 		//
-		// mark all tunnel refrences for deletion
-		//
-
-		tunnel->end( true );
-
-		//
 		// report reason for closing the tunnel
 		//
 
@@ -713,77 +714,79 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 			// client specific reason with
 			// a notification already sent
 			//
-			case TERM_CLIENT:
+			case XCH_FAILED_CLIENT:
 				break;
 
 			//
 			// network communication error
 			//
-			case TERM_SOCKET:
+			case XCH_FAILED_NETWORK:
 				ikei->send_msg_status( STATUS_FAIL, "network unavailable\n" );
 				break;
 
 			//
-			// phase1 sa expired
+			// network timeout occurred
 			//
-			case TERM_NEG_FAILED:
-				ikei->send_msg_status( STATUS_FAIL, "negotiation failed\n" );
+			case XCH_FAILED_TIMEOUT:
+				ikei->send_msg_status( STATUS_FAIL, "negotiation timout occurred\n" );
 				break;
 
 			//
-			// phase1 sa expired
+			// terminated by user
 			//
-			case TERM_EXPIRE:
-				ikei->send_msg_status( STATUS_WARN, "session has expired\n" );
+			case XCH_FAILED_USERREQ:
+				ikei->send_msg_status( STATUS_WARN, "session terminated by user\n" );
 				break;
 
 			//
 			// an invalid message was received
 			//
-			case TERM_BADMSG:
-				ikei->send_msg_status( STATUS_FAIL, "invalid message from peer\n" );
+			case XCH_FAILED_MSG_FORMAT:
+			case XCH_FAILED_MSG_CRYPTO:
+			case XCH_FAILED_MSG_AUTH:
+				ikei->send_msg_status( STATUS_FAIL, "invalid message from gateway\n" );
 				break;
 
 			//
 			// user authentication error
 			//
-			case TERM_USER_AUTH:
+			case XCH_FAILED_USER_AUTH:
 				ikei->send_msg_status( STATUS_FAIL, "user authentication error\n" );
 				break;
 
 			//
 			// peer authentication error
 			//
-			case TERM_PEER_AUTH:
-				ikei->send_msg_status( STATUS_FAIL, "peer authentication error\n" );
-				break;
-
-			//
-			// terminated by peer
-			//
-			case TERM_PEER_CLOSE:
-				ikei->send_msg_status( STATUS_FAIL, "session terminated by gateway\n" );
-				break;
-
-			//
-			// terminated by user
-			//
-			case TERM_USER_CLOSE:
-				ikei->send_msg_status( STATUS_WARN, "session terminated by user\n" );
+			case XCH_FAILED_PEER_AUTH:
+				ikei->send_msg_status( STATUS_FAIL, "gateway authentication error\n" );
 				break;
 
 			//
 			// peer unresponsive
 			//
-			case TERM_PEER_DEAD:
-				ikei->send_msg_status( STATUS_FAIL, "gateway not responding\n" );
+			case XCH_FAILED_PEER_DEAD:
+				ikei->send_msg_status( STATUS_FAIL, "gateway is not responding\n" );
+				break;
+
+			//
+			// terminated by peer
+			//
+			case XCH_FAILED_PEER_DELETE:
+				ikei->send_msg_status( STATUS_FAIL, "session terminated by gateway\n" );
 				break;
 
 			//
 			// dhcp unresponsive
 			//
-			case TERM_PEER_DHCP:
-				ikei->send_msg_status( STATUS_FAIL, "no response from dhcp server\n" );
+			case XCH_FAILED_IKECONFIG:
+				ikei->send_msg_status( STATUS_FAIL, "no config response from gateway\n" );
+				break;
+
+			//
+			// dhcp unresponsive
+			//
+			case XCH_FAILED_DHCPCONFIG:
+				ikei->send_msg_status( STATUS_FAIL, "no dhcp response from gateway\n" );
 				break;
 
 			//
@@ -804,15 +807,13 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 		// destroy the tunnel object
 		//
 
-		tunnel->lstate |= LSTATE_DELETE;
-		tunnel->dec( true );
+		tunnel->dec( true, true );
 
 		//
 		// cleanup
 		//
 
-		peer->lstate |= LSTATE_DELETE;
-		peer->dec( true );
+		peer->dec( true, true );
 	}
 
 	//

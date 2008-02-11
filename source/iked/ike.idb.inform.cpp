@@ -41,6 +41,27 @@
 
 #include "iked.h"
 
+//
+// IDB subclass list section
+//
+
+LIST list_inform;
+
+char * _IDB_INF::name()
+{
+	static char * xname = "informational";
+	return xname;
+}
+
+LIST * _IDB_INF::list()
+{
+	return &list_inform;
+}
+
+//
+// class functions
+//
+
 _IDB_INF::_IDB_INF()
 {
 }
@@ -49,50 +70,10 @@ _IDB_INF::~_IDB_INF()
 {
 }
 
-bool _IDB_INF::add( bool lock )
+void _IDB_INF::beg()
 {
-	//
-	// no-op. should never get here
-	//
-
-	assert( 0 );
-
-	return false;
 }
 
-bool _IDB_INF::inc( bool lock )
+void _IDB_INF::end()
 {
-	//
-	// no-op. should never get here
-	//
-
-	assert( 0 );
-
-	return false;
-}
-
-bool _IDB_INF::dec( bool lock )
-{
-	//
-	// no-op. should never get here
-	//
-
-	assert( 0 );
-
-	return false;
-}
-
-//
-// inform specific re-send check
-//
-
-bool _IDB_INF::resend( long attempt, long count )
-{
-	//
-	// no-op. should never get here
-	//
-
-	assert( 0 );
-
-	return false;
 }

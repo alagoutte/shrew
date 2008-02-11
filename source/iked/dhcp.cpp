@@ -211,7 +211,7 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 	// DHCP over IPsec discover packet
 	//
 
-	if( !( tunnel->state & TSTATE_RECV_CONFIG ) )
+	if( !( tunnel->tstate & TSTATE_RECV_CONFIG ) )
 	{
 		//
 		// create dhcp discover packet
@@ -265,7 +265,7 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 	// DHCP over IPsec request packet
 	//
 
-	if( tunnel->state & TSTATE_RECV_CONFIG )
+	if( tunnel->tstate & TSTATE_RECV_CONFIG )
 	{
 		//
 		// create dhcp request packet
@@ -520,7 +520,7 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 
 	if( type == DHCP_MSG_OFFER )
 	{
-		if( !( tunnel->state & TSTATE_RECV_CONFIG ) )
+		if( !( tunnel->tstate & TSTATE_RECV_CONFIG ) )
 		{
 			//
 			// accept supported options
@@ -558,7 +558,7 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 
 			tunnel->event_dhcp.retry = 0;
 
-			tunnel->state |= TSTATE_RECV_CONFIG;
+			tunnel->tstate |= TSTATE_RECV_CONFIG;
 		}
 	}
 
@@ -568,7 +568,7 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 
 	if( type == DHCP_MSG_ACK )
 	{
-		if( tunnel->state & TSTATE_RECV_CONFIG )
+		if( tunnel->tstate & TSTATE_RECV_CONFIG )
 		{
 			//
 			// setup lease times
@@ -578,7 +578,7 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			tunnel->event_dhcp.renew = time( NULL );
 			tunnel->event_dhcp.renew += tunnel->event_dhcp.lease / 2;
 
-			tunnel->state |= TSTATE_RECV_ACK;
+			tunnel->tstate |= TSTATE_RECV_ACK;
 		}
 	}
 

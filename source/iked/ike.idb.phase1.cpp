@@ -42,6 +42,24 @@
 #include "iked.h"
 
 //
+// IDB subclass list section
+//
+
+LIST list_phase1;
+extern LIST list_phase2;
+
+char * _IDB_PH1::name()
+{
+	static char * xname = "phase1";
+	return xname;
+}
+
+LIST * _IDB_PH1::list()
+{
+	return &list_phase1;
+}
+
+//
 // phase1 event functions
 //
 
@@ -59,10 +77,7 @@ bool _ITH_EVENT_PH1DPD::func()
 				htonl( *( long * ) &ph1->cookies.r[ 0 ] ),
 				htonl( *( long * ) &ph1->cookies.r[ 4 ] ) );
 
-		if( ph1->tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
-			ph1->tunnel->close = TERM_PEER_DEAD;
-
-		ph1->lstate |= ( LSTATE_EXPIRE | LSTATE_NOTIFY | LSTATE_DELETE );
+		ph1->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_DEAD, 0 );
 		ph1->dec( true );
 
 		return false;
@@ -159,15 +174,21 @@ bool _ITH_EVENT_PH1SOFT::func()
 
 	if( ph1->tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
 	{
-		ph1->tunnel->state &= ~TSTATE_SENT_XAUTH;
-		ph1->tunnel->state &= ~TSTATE_RECV_XAUTH;
-		ph1->tunnel->state &= ~TSTATE_SENT_XRSLT;
-		ph1->tunnel->state &= ~TSTATE_RECV_XRSLT;
+		if( ph1->xauth_l )
+		{
+			ph1->tunnel->tstate &= ~TSTATE_SENT_XAUTH;
+			ph1->tunnel->tstate &= ~TSTATE_RECV_XAUTH;
+			ph1->tunnel->tstate &= ~TSTATE_SENT_XRSLT;
+			ph1->tunnel->tstate &= ~TSTATE_RECV_XRSLT;
+		}
 
-		ph1->tunnel->state &= ~TSTATE_RECV_CONFIG;
-		ph1->tunnel->state &= ~TSTATE_SENT_CONFIG;
-		ph1->tunnel->state &= ~TSTATE_RECV_ACK;
-		ph1->tunnel->state &= ~TSTATE_SENT_ACK;
+		if( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
+		{
+			ph1->tunnel->tstate &= ~TSTATE_RECV_CONFIG;
+			ph1->tunnel->tstate &= ~TSTATE_SENT_CONFIG;
+			ph1->tunnel->tstate &= ~TSTATE_RECV_ACK;
+			ph1->tunnel->tstate &= ~TSTATE_SENT_ACK;
+		}
 
 		IDB_PH1 * addph1 = new IDB_PH1( ph1->tunnel, true, NULL );
 		addph1->add( false );
@@ -175,6 +196,7 @@ bool _ITH_EVENT_PH1SOFT::func()
 		addph1->dec( false );
 	}
 
+	ph1->status( XCH_STATUS_EXPIRING, XCH_NORMAL, 0 );
 	ph1->dec( true );
 
 	return false;
@@ -190,10 +212,7 @@ bool _ITH_EVENT_PH1HARD::func()
 		htonl( *( long * ) &ph1->cookies.r[ 0 ] ),
 		htonl( *( long * ) &ph1->cookies.r[ 4 ] ) );
 
-//	if( ph1->tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
-//		ph1->tunnel->close = TERM_EXPIRE;
-
-	ph1->lstate |= ( LSTATE_EXPIRE | LSTATE_NOTIFY | LSTATE_DELETE );
+	ph1->status( XCH_STATUS_DEAD, XCH_FAILED_EXPIRED, 0 );
 	ph1->dec( true );
 
 	return false;
@@ -253,6 +272,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	//
 
 	tunnel = set_tunnel;
+	tunnel->inc( true );
 
 	//
 	// initialize initiator value
@@ -413,6 +433,80 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 _IDB_PH1::~_IDB_PH1()
 {
 	clean();
+
+	//
+	// send a delete message if required
+	//
+
+	if( ( lstate & LSTATE_HASKEYS ) &&
+		( xch_errorcode != XCH_FAILED_EXPIRED ) &&
+		( xch_errorcode != XCH_FAILED_PEER_DELETE ) )
+		iked.inform_new_delete( this, NULL );
+
+	//
+	// if this sa never reached maturity,
+	// locate any pending phase2 handles
+	// for this tunnel and delete them
+	//
+	// FIXME : This should be timer driven
+	//
+
+	if( !( lstate & LSTATE_HASKEYS ) )
+	{
+		long count = list_phase2.get_count();
+		long index = 0;
+
+		for( ; index < count; index++ )
+		{
+			//
+			// get the next phase2 in our list
+			// and attempt to match tunnel ids
+			// 
+
+			IDB_PH2 * ph2 = ( IDB_PH2 * ) list_phase2.get_item( index );
+			if( ( ph2->tunnel == tunnel ) && ( ph2->status() == XCH_STATUS_PENDING ) )
+			{
+				ph2->inc( false );
+
+				ph2->status( XCH_STATUS_DEAD, XCH_FAILED_PENDING, 0 );
+
+				if( ph2->dec( false ) )
+				{
+					index--;
+					count--;
+				}
+			}
+		}
+	}
+
+	//
+	// log deletion
+	//
+
+	if( xch_errorcode != XCH_FAILED_EXPIRED )
+		iked.log.txt( LLOG_INFO,
+			"DB : phase1 deleted before expire time ( obj count = %i )\n",
+			list_phase1.get_count() );
+	else
+		iked.log.txt( LLOG_INFO,
+			"DB : phase1 deleted after expire time ( obj count = %i )\n",
+			list_phase1.get_count() );
+
+	//
+	// if this is a client tunnel and there
+	// was an error negotiating phase1, set
+	// a close error message
+	//
+
+	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
+		if( xch_errorcode != XCH_FAILED_EXPIRED )
+			tunnel->close = xch_errorcode;
+
+	//
+	// derefrence our tunnel
+	//
+
+	tunnel->dec( false );
 }
 
 //
@@ -712,7 +806,7 @@ bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 	return true;
 }
 
-bool _IKED::get_phase1( bool lock, IDB_PH1 ** ph1, IDB_TUNNEL * tunnel, long lstate, long nolstate, IKE_COOKIES * cookies )
+bool _IKED::get_phase1( bool lock, IDB_PH1 ** ph1, IDB_TUNNEL * tunnel, XCH_STATUS min, XCH_STATUS max, IKE_COOKIES * cookies )
 {
 	if( ph1 != NULL )
 		*ph1 = NULL;
@@ -737,19 +831,19 @@ bool _IKED::get_phase1( bool lock, IDB_PH1 ** ph1, IDB_TUNNEL * tunnel, long lst
 		IDB_PH1 * tmp_ph1 = ( IDB_PH1 * ) list_phase1.get_item( index );
 
 		//
-		// match sa mature state
+		// match sa minimum status level
 		//
 
-		if( lstate )
-			if( !( tmp_ph1->lstate & lstate ) )
+		if( min != XCH_STATUS_ANY )
+			if( tmp_ph1->status() < min )
 				continue;
 
 		//
-		// match sa not state flags
+		// match sa maximum status level
 		//
 
-		if( nolstate )
-			if( tmp_ph1->lstate & nolstate )
+		if( max != XCH_STATUS_ANY )
+			if( tmp_ph1->status() > max )
 				continue;
 
 		//
@@ -855,220 +949,53 @@ bool _IKED::get_phase1( bool lock, IDB_PH1 ** ph1, IDB_TUNNEL * tunnel, long lst
 	return false;
 }
 
-bool _IDB_PH1::add( bool lock )
+void _IDB_PH1::beg()
 {
-	if( lock )
-		iked.lock_sdb.lock();
-
-	inc( false );
-	tunnel->inc( false );
-
-	bool result = iked.list_phase1.add_item( this );
-
-	iked.log.txt( LLOG_DEBUG, "DB : phase1 added\n" );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
-	return result;
 }
 
-bool _IDB_PH1::inc( bool lock )
+void _IDB_PH1::end()
 {
-	if( lock )
-		iked.lock_sdb.lock();
+	//
+	// remove scheduled events
+	//
 
-	refcount++;
+	if( iked.ith_timer.del( &event_resend ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase1 resend event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
 
-	iked.log.txt( LLOG_LOUD,
-		"DB : phase1 ref increment ( ref count = %i, phase1 count = %i )\n",
-		refcount,
-		iked.list_phase1.get_count() );
+	if( iked.ith_timer.del( &event_dpd ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase1 dpd event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
 
-	if( lock )
-		iked.lock_sdb.unlock();
+	if( iked.ith_timer.del( &event_natt ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase1 natt event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
 
-	return true;
+	if( iked.ith_timer.del( &event_soft ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase1 soft event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
+
+	if( iked.ith_timer.del( &event_hard ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase1 hard event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
 }
-
-bool _IDB_PH1::dec( bool lock )
-{
-	if( lock )
-		iked.lock_sdb.lock();
-
-	//
-	// if we are marked for deletion,
-	// attempt to remove any events
-	// that may be scheduled
-	//
-
-	if( lstate & LSTATE_DELETE )
-	{
-		if( iked.ith_timer.del( &event_resend ) )
-		{
-			refcount--;
-			iked.log.txt( LLOG_DEBUG,
-				"DB : phase1 resend event canceled ( ref count = %i )\n",
-				refcount );
-		}
-
-		if( iked.ith_timer.del( &event_dpd ) )
-		{
-			refcount--;
-			iked.log.txt( LLOG_DEBUG,
-				"DB : phase1 dpd event canceled ( ref count = %i )\n",
-				refcount );
-		}
-
-		if( iked.ith_timer.del( &event_natt ) )
-		{
-			refcount--;
-			iked.log.txt( LLOG_DEBUG,
-				"DB : phase1 natt event canceled ( ref count = %i )\n",
-				refcount );
-		}
-
-		if( iked.ith_timer.del( &event_soft ) )
-		{
-			refcount--;
-			iked.log.txt( LLOG_DEBUG,
-				"DB : phase1 soft event canceled ( ref count = %i )\n",
-				refcount );
-		}
-
-		if( iked.ith_timer.del( &event_hard ) )
-		{
-			refcount--;
-			iked.log.txt( LLOG_DEBUG,
-				"DB : phase1 hard event canceled ( ref count = %i )\n",
-				refcount );
-		}
-	}
-
-	assert( refcount > 0 );
-
-	refcount--;
-
-	//
-	// check for deletion
-	//
-
-	if( refcount || !( lstate & LSTATE_DELETE ) )
-	{
-		iked.log.txt( LLOG_LOUD,
-			"DB : phase1 ref decrement ( ref count = %i, phase1 count = %i )\n",
-			refcount,
-			iked.list_phase1.get_count() );
-
-		if( lock )
-			iked.lock_sdb.unlock();
-
-		return false;
-	}
-
-	//
-	// send a delete message if required
-	//
-
-	if(  ( lstate & LSTATE_MATURE ) && 
-		!( lstate & LSTATE_NOTIFY ) )
-		iked.inform_new_delete( this, NULL );
-
-	//
-	// if this sa never reached maturity,
-	// locate any pending phase2 handles
-	// for this tunnel and delete them
-	//
-	// FIXME : This should be timer driven
-	//
-
-	if( !( lstate & LSTATE_MATURE ) )
-	{
-		long count = iked.list_phase2.get_count();
-		long index = 0;
-
-		for( ; index < count; index++ )
-		{
-			//
-			// get the next phase2 in our list
-			// and attempt to match tunnel ids
-			// 
-
-			IDB_PH2 * ph2 = ( IDB_PH2 * ) iked.list_phase2.get_item( index );
-			if( ( ph2->tunnel == tunnel ) && ( ph2->lstate & LSTATE_PENDING ) )
-			{
-				ph2->inc( false );
-				ph2->lstate |= LSTATE_DELETE;
-
-				if( ph2->dec( false ) )
-				{
-					index--;
-					count--;
-				}
-			}
-		}
-	}
-
-	//
-	// remove from our list
-	//
-
-	iked.list_phase1.del_item( this );
-
-	//
-	// log deletion
-	//
-
-	if( !( lstate & LSTATE_EXPIRE ) )
-		iked.log.txt( LLOG_INFO,
-			"DB : phase1 deleted before expire time ( phase1 count = %i )\n",
-			iked.list_phase1.get_count() );
-	else
-		iked.log.txt( LLOG_INFO,
-			"DB : phase1 deleted after expire time ( phase1 count = %i )\n",
-			iked.list_phase1.get_count() );
-
-	//
-	// derefrence our tunnel
-	//
-
-	tunnel->dec( false );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
-	//
-	// free
-	//
-
-	delete this;
-
-	return true;
-}
-
-//
-// phase1 specific re-send check
-//
-
-bool _IDB_PH1::resend( long attempt, long count )
-{
-	if( attempt >= iked.retry_count )
-	{
-		iked.log.txt( LLOG_INFO,
-				"ii : phase1 packet resend limit exceeded\n" );
-
-		if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
-			tunnel->close = TERM_NEG_FAILED;
-
-		lstate |= ( LSTATE_DELETE );
-
-		return false;
-	}
-
-	iked.log.txt( LLOG_INFO,
-		"ii : resending %i phase1 exchange packet(s)\n",
-		count );
-
-	return true;
-}
-

@@ -285,7 +285,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 	IDB_PH1 * ph1 = NULL;
 
-	if( !get_phase1( true, &ph1, NULL, 0, 0, &cookies ) )
+	if( !get_phase1( true, &ph1, NULL, XCH_STATUS_ANY, XCH_STATUS_ANY, &cookies ) )
 	{
 		//
 		// if we are acting as a responder

@@ -58,13 +58,13 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// whith a mature or dead sa
 	//
 
-	if( ph1->lstate & LSTATE_DELETE )
+	if( ph1->status() == XCH_STATUS_DEAD )
 	{
 		log.txt( LLOG_ERROR, "!! : phase1 packet ignored ( sa marked for death )\n" );
 		return LIBIKE_OK;
 	}
 
-	if( ph1->lstate & LSTATE_MATURE )
+	if( ph1->status() >= XCH_STATUS_MATURE )
 	{
 		log.txt( LLOG_ERROR, "!! : phase1 packet ignored ( sa already mature )\n" );
 		return LIBIKE_OK;
@@ -508,18 +508,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 		if( result != LIBIKE_OK )
 		{
-			//
-			// potentialy notify our peer
-			//
-
-			if( packet.notify && ph1->tunnel->peer->notify )
-				inform_new_notify( ph1, NULL, packet.notify );
-
-			//
-			// flag sa for removal
-			//
-
-			ph1->lstate |= LSTATE_DELETE;
+			ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, packet.notify );
 
 			return result;
 		}
@@ -536,7 +525,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// packets that may be necessary
 	//
 
-	if( !( ph1->lstate & LSTATE_DELETE ) )
+	if( ph1->status() <= XCH_STATUS_DEAD )
 		process_phase1_send( ph1 );
 
 	return LIBIKE_OK;
@@ -1308,9 +1297,9 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 	// peers hash or signature
 	//
 
-	if( !( ph1->lstate & LSTATE_MATURE ) &&
-		 ( ph1->lstate & LSTATE_HASKEYS ) &&
-		 ( ph1->xstate & XSTATE_RECV_ID ) )
+	if( ( ph1->status() < XCH_STATUS_MATURE ) &&
+		( ph1->lstate & LSTATE_HASKEYS ) &&
+		( ph1->xstate & XSTATE_RECV_ID ) )
 	{
 		//
 		// check the peers hash value
@@ -1324,22 +1313,13 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			{
 				if( phase1_chk_hash( ph1 ) == LIBIKE_OK )
 				{
+					ph1->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
 					ph1->clean();
-					ph1->lstate |= LSTATE_MATURE;
 				}
 				else
 				{
-					ph1->lstate |= LSTATE_DELETE;
-
-					if( ph1->tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
-						ph1->tunnel->close = TERM_PEER_AUTH;
-
-					//
-					// potentialy notify the peer
-					//
-
-					if( ph1->tunnel->peer->notify )
-						inform_new_notify( ph1, NULL, ISAKMP_N_AUTHENTICATION_FAILED );
+					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_AUTH, ISAKMP_N_AUTHENTICATION_FAILED );
+					ph1->clean();
 				}
 			}
 		}
@@ -1356,22 +1336,13 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			{
 				if( phase1_chk_sign( ph1 ) == LIBIKE_OK )
 				{
+					ph1->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
 					ph1->clean();
-					ph1->lstate |= LSTATE_MATURE;
 				}
 				else
 				{
-					ph1->lstate |= LSTATE_DELETE;
-
-					if( ph1->tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
-						ph1->tunnel->close = TERM_PEER_AUTH;
-
-					//
-					// potentialy notify the peer
-					//
-
-					if( ph1->tunnel->peer->notify )
-						inform_new_notify( ph1, NULL, ISAKMP_N_AUTHENTICATION_FAILED );
+					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_AUTH, ISAKMP_N_AUTHENTICATION_FAILED );
+					ph1->clean();
 				}
 			}
 		}
@@ -1383,7 +1354,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 	// may need to do a few things
 	//
 
-	if( ph1->lstate & LSTATE_MATURE )
+	if( ph1->status() == XCH_STATUS_MATURE )
 	{
 		//
 		// potentialy send our inital
@@ -1391,7 +1362,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		// send our modecfg request
 		//
 
-		if( !( ph1->tunnel->state & TSTATE_INITIALIZED ) )
+		if( !( ph1->tunnel->tstate & TSTATE_INITIALIZED ) )
 		{
 			inform_new_notify( ph1, NULL, ISAKMP_N_INITIAL_CONTACT );
 
@@ -1399,7 +1370,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			// flag ph1->tunnel as initialized
 			//
 
-			ph1->tunnel->state |= TSTATE_INITIALIZED;
+			ph1->tunnel->tstate |= TSTATE_INITIALIZED;
 		}
 
 		//
@@ -1521,8 +1492,8 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				true,
 				&ph2,
 				ph1->tunnel,
-				LSTATE_PENDING,
-				0,
+				XCH_STATUS_PENDING,
+				XCH_STATUS_PENDING,
 				NULL,
 				NULL,
 				NULL,
@@ -1538,8 +1509,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			// remove pending flag
 			//
 
-			ph2->lstate &= ~LSTATE_PENDING;
-
+			ph2->status( XCH_STATUS_LARVAL, XCH_NORMAL, 0 );
 			ph2->dec( true );
 		}
 	}

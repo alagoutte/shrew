@@ -257,19 +257,13 @@ YY_DECL;
 #define XSTATE_RECV_LP			0x000100000
 #define XSTATE_SENT_LP			0x000200000
 
-#define LSTATE_PENDING			0x000000001		// pending phase1 negotiation
-#define LSTATE_HASSPI			0x000000002		// pfkey spi obtained
-#define LSTATE_CHKPROP			0x000000004		// proposal verified
-#define LSTATE_CHKHASH			0x000000008		// hash verified
-#define LSTATE_CHKIDS			0x000000010		// identity verified
-#define LSTATE_GENNATD			0x000000020		// natt discovery generated
-#define LSTATE_HASKEYS			0x000000080		// keys generated
-#define LSTATE_CLAIMLT			0x000000100		// claim reponder lifetime
-#define LSTATE_MATURE			0x000000200		// mature and usable
-#define LSTATE_EXPIRE			0x000000400		// lifetime expired
-#define LSTATE_NOTIFY			0x000000800		// skip peer notify
-#define LSTATE_DELETE			0x000001000		// ready for delete
-#define LSTATE_FLUSHED			0x000002000		// pfkey flushed
+#define LSTATE_HASSPI			0x000000001		// pfkey spi obtained
+#define LSTATE_CHKPROP			0x000000002		// proposal verified
+#define LSTATE_CHKHASH			0x000000004		// hash verified
+#define LSTATE_CHKIDS			0x000000008		// identity verified
+#define LSTATE_GENNATD			0x000000010		// natt discovery generated
+#define LSTATE_HASKEYS			0x000000020		// keys generated
+#define LSTATE_CLAIMLT			0x000000040		// claim reponder lifetime
 
 #define LSTATE_NATT_FLOAT		0x000000001
 #define TSTATE_INITIALIZED		0x000000002
@@ -286,25 +280,12 @@ YY_DECL;
 #define TSTATE_RECV_ACK			0x000000400
 #define TSTATE_SENT_ACK			0x000000800
 #define TSTATE_VNET_ENABLE		0x000001000
-#define TSTATE_DELETE			0x000002000
 
 #define DSTATE_ACTIVE			0
 #define DSTATE_TERMINATE		1
 #define DSTATE_INACTIVE			2
 
 #define RLEVEL_DAEMON			2
-
-#define TERM_CLIENT				1
-#define TERM_SOCKET				2
-#define TERM_NEG_FAILED			3
-#define TERM_EXPIRE				4
-#define TERM_BADMSG				5
-#define TERM_USER_AUTH			6
-#define TERM_PEER_AUTH			7
-#define TERM_USER_CLOSE			8
-#define TERM_PEER_CLOSE			9
-#define TERM_PEER_DHCP			10
-#define TERM_PEER_DEAD			11
 
 #define FILE_OK					0
 #define FILE_PATH				1
@@ -356,6 +337,7 @@ typedef class _IKED
 	friend class _ITH_NWORK;
 	friend class _ITH_PFKEY;
 
+	friend class _IDB;
 	friend class _IDB_PEER;
 	friend class _IDB_POLICY;
 	friend class _IDB_TUNNEL;
@@ -423,12 +405,6 @@ typedef class _IKED
 
 	LIST	list_socket;		// socket list
 	LIST	list_netgrp;		// net groups list
-	LIST	list_peer;			// ipsec peer list
-	LIST	list_tunnel;		// ipsec tunnel list
-	LIST	list_policy;		// ipsec policy list
-	LIST	list_phase1;		// phase 1 exchanges
-	LIST	list_phase2;		// phase 2 exchanges
-	LIST	list_config;		// config exchanges
 
 	long	sock_ike_open;
 	long	sock_natt_open;
@@ -465,7 +441,6 @@ typedef class _IKED
 
 	ITH_LOCK	lock_sdb;
 	ITH_LOCK	lock_net;
-	ITH_LOCK	lock_ipq;
 
 	// xauth and xconf classes
 
@@ -572,8 +547,8 @@ typedef class _IKED
 	bool	get_peer( bool lock, IDB_PEER ** peer, IKE_SADDR * saddr );
 	bool	get_policy( bool lock, IDB_POLICY ** policy, long dir, u_int16_t type, u_int32_t * plcyid, IKE_SADDR * src, IKE_SADDR * dst, IKE_PH2ID * ids, IKE_PH2ID * idd );
 	bool	get_tunnel( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, IKE_SADDR * saddr, bool port );
-	bool	get_phase1( bool lock, IDB_PH1 ** ph1, IDB_TUNNEL * tunnel, long state, long nostate, IKE_COOKIES * cookies );
-	bool	get_phase2( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, long state, long nostate, u_int32_t * seqid, uint32_t * msgid, IKE_SPI * spi_l, IKE_SPI * spi_r );
+	bool	get_phase1( bool lock, IDB_PH1 ** ph1, IDB_TUNNEL * tunnel, XCH_STATUS min, XCH_STATUS max, IKE_COOKIES * cookies );
+	bool	get_phase2( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, XCH_STATUS min, XCH_STATUS max, u_int32_t * seqid, uint32_t * msgid, IKE_SPI * spi_l, IKE_SPI * spi_r );
 	bool	get_config( bool lock, IDB_CFG ** cfg, IDB_TUNNEL * tunnel, unsigned long msgid );
 
 	// ike packet handler functions

@@ -42,16 +42,32 @@
 #include "iked.h"
 
 //
+// IDB subclass list section
+//
+
+LIST list_phase2;
+
+char * _IDB_PH2::name()
+{
+	static char * xname = "phase2";
+	return xname;
+}
+
+LIST * _IDB_PH2::list()
+{
+	return &list_phase2;
+}
+
+//
 // phase2 event functions
 //
 
 bool _ITH_EVENT_PH2SOFT::func()
 {
 	iked.log.txt( LLOG_INFO,
-			"ii : phase2 sa has expired, death in %i seconds\n",
-			diff );
+			"ii : phase2 sa will expire in %i seconds\n", diff );
 
-	ph2->lstate |= ( LSTATE_EXPIRE | LSTATE_NOTIFY );
+	ph2->status( XCH_STATUS_EXPIRING, XCH_NORMAL, 0 );
 	ph2->dec( true );
 
 	return false;
@@ -62,7 +78,7 @@ bool _ITH_EVENT_PH2HARD::func()
 	iked.log.txt( LLOG_INFO,
 			"ii : phase2 sa is dead\n" );
 
-	ph2->lstate |= LSTATE_DELETE;
+	ph2->status( XCH_STATUS_DEAD, XCH_FAILED_EXPIRED, 0 );
 	ph2->dec( true );
 
 	return false;
@@ -85,6 +101,7 @@ _IDB_PH2::_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, uint32_t set_ms
 	//
 
 	tunnel = set_tunnel;
+	tunnel->inc( true );
 
 	//
 	// initialize sa
@@ -139,6 +156,62 @@ _IDB_PH2::_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, uint32_t set_ms
 _IDB_PH2::~_IDB_PH2()
 {
 	clean();
+
+	//
+	// send a delete message if required
+	//
+
+	if( ( lstate & LSTATE_HASKEYS ) &&
+		( xch_errorcode != XCH_FAILED_EXPIRED ) &&
+		( xch_errorcode != XCH_FAILED_PEER_DELETE ) )
+	{
+		IDB_PH1 * ph1;
+		if( iked.get_phase1( false, &ph1, tunnel, XCH_STATUS_MATURE, XCH_STATUS_DEAD, NULL ) )
+		{
+			iked.inform_new_delete( ph1, this );
+			ph1->dec( false );
+		}
+	}
+
+	//
+	// log deletion
+	//
+
+	if( xch_errorcode != XCH_FAILED_EXPIRED )
+	{
+		iked.log.txt( LLOG_INFO,
+			"DB : phase2 deleted before expire time ( obj count = %i )\n",
+			list_phase2.get_count() );
+	}
+	else
+	{
+		iked.log.txt( LLOG_INFO,
+			"DB : phase2 deleted after expire time ( obj count = %i )\n",
+			list_phase2.get_count() );
+	}
+
+	//
+	// inform pfkey interface
+	//
+
+	if( ( xch_errorcode != XCH_FAILED_FLUSHED ) &&
+		( lstate & LSTATE_HASSPI ) )
+		iked.pfkey_send_delete( this );
+
+	//
+	// update tunnel stats
+	//
+
+	if( lstate & LSTATE_HASKEYS )
+		tunnel->stats.sa_dead++;
+	else
+		tunnel->stats.sa_fail++;
+
+	//
+	// dereference our tunnel
+	//
+
+	tunnel->dec( false );
 }
 
 bool _IDB_PH2::setup_dhgrp()
@@ -182,7 +255,7 @@ void _IDB_PH2::clean()
 	resend_clear();
 }
 
-bool _IKED::get_phase2( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, long lstate, long nolstate, u_int32_t * seqid, uint32_t * msgid, IKE_SPI * spi_l, IKE_SPI * spi_r )
+bool _IKED::get_phase2( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, XCH_STATUS min, XCH_STATUS max, u_int32_t * seqid, uint32_t * msgid, IKE_SPI * spi_l, IKE_SPI * spi_r )
 {
 	if( ph2 != NULL )
 		*ph2 = NULL;
@@ -207,19 +280,19 @@ bool _IKED::get_phase2( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, long lst
 		IDB_PH2 * tmp_ph2 = ( IDB_PH2 * ) list_phase2.get_item( index );
 
 		//
-		// match sa state flags
+		// match sa minimum status level
 		//
 
-		if( lstate )
-			if( !( tmp_ph2->lstate & lstate ) )
+		if( min != XCH_STATUS_ANY )
+			if( tmp_ph2->status() < min )
 				continue;
 
 		//
-		// match sa not state flags
+		// match sa maximum status level
 		//
 
-		if( nolstate )
-			if( tmp_ph2->lstate & nolstate )
+		if( max != XCH_STATUS_ANY )
+			if( tmp_ph2->status() > max )
 				continue;
 
 		//
@@ -311,191 +384,37 @@ bool _IKED::get_phase2( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, long lst
 	return false;
 }
 
-bool _IDB_PH2::add( bool lock )
+void _IDB_PH2::beg()
 {
-	if( lock )
-		iked.lock_sdb.lock();
-
-	inc( false );
-	tunnel->inc( false );
-
-	bool result = iked.list_phase2.add_item( this );
-
-	iked.log.txt( LLOG_DEBUG, "DB : phase2 added\n" );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-	
-	return result;
 }
 
-bool _IDB_PH2::inc( bool lock )
+void _IDB_PH2::end()
 {
-	if( lock )
-		iked.lock_sdb.lock();
-
-	refcount++;
-
-	iked.log.txt( LLOG_LOUD,
-		"DB : phase2 ref increment ( ref count = %i, phase2 count = %i )\n",
-		refcount,
-		iked.list_phase2.get_count() );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
-	return true;
-}
-
-bool _IDB_PH2::dec( bool lock )
-{
-	if( lock )
-		iked.lock_sdb.lock();
-
 	//
-	// if we are marked for deletion,
-	// attempt to remove any events
-	// that may be scheduled
+	// remove scheduled events
 	//
 
-	if( lstate & LSTATE_DELETE )
+	if( iked.ith_timer.del( &event_resend ) )
 	{
-		if( iked.ith_timer.del( &event_resend ) )
-		{
-			refcount--;
-			iked.log.txt( LLOG_DEBUG,
-				"DB : phase2 resend event canceled ( ref count = %i )\n",
-				refcount );
-		}
-
-		if( iked.ith_timer.del( &event_soft ) )
-		{
-			refcount--;
-			iked.log.txt( LLOG_DEBUG,
-				"DB : phase2 soft event canceled ( ref count = %i )\n",
-				refcount );
-		}
-
-		if( iked.ith_timer.del( &event_hard ) )
-		{
-			refcount--;
-			iked.log.txt( LLOG_DEBUG,
-				"DB : phase2 hard event canceled ( ref count = %i )\n",
-				refcount );
-		}
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase2 resend event canceled ( ref count = %i )\n",
+			idb_refcount );
 	}
 
-	assert( refcount > 0 );
-
-	refcount--;
-
-	//
-	// check for deletion
-	//
-
-	if( refcount || !( lstate & LSTATE_DELETE ) )
+	if( iked.ith_timer.del( &event_soft ) )
 	{
-		iked.log.txt( LLOG_LOUD,
-			"DB : phase2 ref decrement ( ref count = %i, phase2 count = %i )\n",
-			refcount,
-			iked.list_phase2.get_count() );
-
-		if( lock )
-			iked.lock_sdb.unlock();
-
-		return false;
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase2 soft event canceled ( ref count = %i )\n",
+			idb_refcount );
 	}
 
-	//
-	// send a delete message if required
-	//
-
-	if(  ( lstate & LSTATE_MATURE ) && 
-		!( lstate & LSTATE_NOTIFY ) )
+	if( iked.ith_timer.del( &event_hard ) )
 	{
-		IDB_PH1 * ph1;
-		if( iked.get_phase1( false, &ph1, tunnel, LSTATE_MATURE, 0, NULL ) )
-		{
-			iked.inform_new_delete( ph1, this );
-			ph1->dec( false );
-		}
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase2 hard event canceled ( ref count = %i )\n",
+			idb_refcount );
 	}
-
-	//
-	// remove from our list
-	//
-
-	iked.list_phase2.del_item( this );
-
-	//
-	// log deletion
-	//
-
-	if( !( lstate & LSTATE_EXPIRE ) )
-	{
-		iked.log.txt( LLOG_INFO,
-			"DB : phase2 deleted before expire time ( phase2 count = %i )\n",
-			iked.list_phase2.get_count() );
-
-		if( lstate & LSTATE_MATURE )
-		{
-			// dont send pfkey delete messages
-			// when responding to a flush request
-
-			if( !( lstate & LSTATE_FLUSHED ) )
-				iked.pfkey_send_delete( this );
-
-			tunnel->stats.sa_dead++;
-		}
-		else
-			tunnel->stats.sa_fail++;
-	}
-	else
-	{
-		iked.log.txt( LLOG_INFO,
-			"DB : phase2 deleted after expire time ( phase2 count = %i )\n",
-			iked.list_phase2.get_count() );
-
-		tunnel->stats.sa_dead++;
-	}
-
-	//
-	// dereference our tunnel
-	//
-
-	tunnel->dec( false );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
-	//
-	// free
-	//
-
-	delete this;
-
-	return true;
-}
-
-//
-// phase2 specific re-send check
-//
-
-bool _IDB_PH2::resend( long attempt, long count )
-{
-	if( attempt >= iked.retry_count )
-	{
-		iked.log.txt( LLOG_INFO,
-				"ii : phase2 packet resend limit exceeded\n" );
-
-		lstate |= ( LSTATE_DELETE );
-
-		return false;
-	}
-
-	iked.log.txt( LLOG_INFO,
-		"ii : resending %i phase2 exchange packet(s)\n",
-		count );
-
-	return true;
 }

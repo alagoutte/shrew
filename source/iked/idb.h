@@ -48,6 +48,7 @@
 
 //
 // forward delare some class types
+//
 
 typedef class _IKED_XAUTH IKED_XAUTH;
 typedef class _IKED_XCONF IKED_XCONF;
@@ -57,6 +58,37 @@ typedef class _IDB_XCH IDB_XCH;
 typedef class _IDB_PH1 IDB_PH1;
 typedef class _IDB_PH2 IDB_PH2;
 typedef class _IDB_CFG IDB_CFG;
+
+enum XCH_STATUS
+{
+	XCH_STATUS_ANY,
+	XCH_STATUS_PENDING,
+	XCH_STATUS_LARVAL,
+	XCH_STATUS_MATURE,
+	XCH_STATUS_EXPIRING,
+	XCH_STATUS_DEAD
+};
+
+enum XCH_ERRORCODE
+{
+	XCH_NORMAL,
+	XCH_FAILED_CLIENT,
+	XCH_FAILED_NETWORK,
+	XCH_FAILED_TIMEOUT,
+	XCH_FAILED_PENDING,
+	XCH_FAILED_EXPIRED,
+	XCH_FAILED_FLUSHED,
+	XCH_FAILED_USERREQ,
+	XCH_FAILED_MSG_FORMAT,
+	XCH_FAILED_MSG_CRYPTO,
+	XCH_FAILED_MSG_AUTH,
+	XCH_FAILED_USER_AUTH,
+	XCH_FAILED_PEER_AUTH,
+	XCH_FAILED_PEER_DEAD,
+	XCH_FAILED_PEER_DELETE,
+	XCH_FAILED_IKECONFIG,
+	XCH_FAILED_DHCPCONFIG
+};
 
 //
 // XXX : these need to move back
@@ -248,28 +280,48 @@ typedef class _IKE_DLIST
 // IKE internal database types
 //
 
+#define IDB_FLAG_DEAD		1
+#define IDB_FLAG_ENDED		2
+#define IDB_FLAG_NOEND		4
+
 typedef class _IDB
 {
-	public:
+	protected:
 
-	long		refid;
-	long		refcount;
-	long		lstate;
-	uint32_t	msgid;
+	long		idb_flags;
+	long		idb_refcount;
 
-	_IDB()
+	inline long chkflags( long flags )
 	{
-		refid = 0;
-		refcount = 0;
-
-		lstate = 0;
-
-		msgid = 0;
+		return ( idb_flags & flags );
+	}
+	
+	inline long setflags( long flags )
+	{
+		return idb_flags |= flags;
 	}
 
-	virtual bool add( bool lock ) = 0;
-	virtual bool inc( bool lock ) = 0;
-	virtual bool dec( bool lock ) = 0;
+	inline long clrflags( long flags )
+	{
+		return idb_flags &= ~flags;
+	}
+
+	virtual void beg() = 0;
+	virtual void end() = 0;
+
+	public:
+
+	_IDB();
+	virtual ~_IDB();
+
+	// implemented by sub classes
+
+	virtual char *	name() = 0;
+	virtual LIST *	list() = 0;
+
+	bool add( bool lock );
+	bool inc( bool lock );
+	bool dec( bool lock, bool setdel = false );
 
 }IDB;
 
@@ -287,6 +339,9 @@ typedef class _IDB_PEER : public IKE_PEER, public IDB
 	
 	LIST	netmaps;
 
+	virtual void	beg();
+	virtual void	end();
+
 	public:
 
 	BDATA		fpass;
@@ -303,13 +358,11 @@ typedef class _IDB_PEER : public IKE_PEER, public IDB
 
 	IKE_PLIST		prop_list;
 
+	virtual	char *	name();
+	virtual LIST *	list();
+
 	_IDB_PEER( IKE_PEER * set_peer );
 	virtual ~_IDB_PEER();
-
-	virtual bool add( bool lock );
-	virtual bool inc( bool lock );
-	virtual bool dec( bool lock );
-	virtual void end( bool lock );
 
 	bool netmap_add( IKE_ILIST * ilist, long	mode, BDATA * group );
 	bool netmap_del( IDB_NETMAP * netmap );
@@ -341,6 +394,8 @@ typedef class _IDB_TUNNEL : public IDB
 	IKE_XCONF	xconf;
 	IKEI_STATS	stats;
 
+	XCH_ERRORCODE	close;
+
 #ifdef WIN32
 	IKE_NSCFG	nscfg;
 #endif
@@ -355,8 +410,9 @@ typedef class _IDB_TUNNEL : public IDB
 
 	BDATA		banner;
 
-	long		state;
-	long		close;
+	long		tunnelid;
+	long		tstate;
+	long		lstate;
 	long		natt_v;
 
 	uint32_t	dhcp_xid;
@@ -364,13 +420,14 @@ typedef class _IDB_TUNNEL : public IDB
 
 	ITH_EVENT_TUNDHCP	event_dhcp;
 
+	virtual	char *	name();
+	virtual LIST *	list();
+
+	virtual void	beg();
+	virtual void	end();
+
 	_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r );
 	virtual ~_IDB_TUNNEL();
-
-	virtual bool add( bool lock );
-	virtual bool inc( bool lock );
-	virtual bool dec( bool lock );
-	virtual void end( bool lock );
 
 }IDB_TUNNEL;
 
@@ -380,11 +437,14 @@ typedef class _IDB_POLICY : public PFKI_SPINFO, public IDB
 
 	bool	route;
 
-	_IDB_POLICY( PFKI_SPINFO * spinfo );
+	virtual	char *	name();
+	virtual LIST *	list();
 
-	virtual bool add( bool lock );
-	virtual bool inc( bool lock );
-	virtual bool dec( bool lock );
+	virtual void	beg();
+	virtual void	end();
+
+	_IDB_POLICY( PFKI_SPINFO * spinfo );
+	virtual ~_IDB_POLICY();
 
 }IDB_POLICY;
 
@@ -410,15 +470,22 @@ typedef class _ITH_EVENT_RESEND : public ITH_EVENT, IPQUEUE
 // generic exchange handle class
 //
 
-typedef class _IDB_XCH : public IDB
+typedef class _IDB_XCH : public _IDB
 {
 	public:
 
 	IDB_TUNNEL *	tunnel;
 
+	ITH_LOCK		lock;
+	XCH_STATUS		xch_status;
+	XCH_ERRORCODE	xch_errorcode;
+	uint16_t		xch_notifycode;
+
 	bool			initiator;
 	unsigned char	exchange;
 
+	uint32_t	msgid;
+	long		lstate;
 	long		xstate;
 
 	DH *		dh;
@@ -447,13 +514,12 @@ typedef class _IDB_XCH : public IDB
 	_IDB_XCH();
 	virtual ~_IDB_XCH();
 
+	XCH_STATUS	status();
+	XCH_STATUS	status( XCH_STATUS status, XCH_ERRORCODE errorcode, uint16_t notifycode );
+
 	bool	resend_queue( PACKET_IP & packet );
 	bool	resend_sched();
 	void	resend_clear() ;
-
-	// implemented by sub classes
-
-	bool virtual	resend( long attempt, long count ) = 0;
 
 }IDB_XCH;
 
@@ -507,6 +573,9 @@ typedef class _ITH_EVENT_PH1HARD : public ITH_EVENT
 
 typedef class _IDB_PH1 : public IDB_XCH
 {
+	virtual void	beg();
+	virtual void	end();
+
 	public:
 
 	const EVP_CIPHER *	evp_cipher;
@@ -582,12 +651,15 @@ typedef class _IDB_PH1 : public IDB_XCH
 	ITH_EVENT_PH1SOFT	event_soft;
 	ITH_EVENT_PH1HARD	event_hard;
 
+	// sub class functions
+
+	virtual	char *	name();
+	virtual LIST *	list();
+
+	// class functions
+
 	_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * set_cookies );
 	virtual ~_IDB_PH1();
-
-	virtual bool add( bool lock );
-	virtual bool inc( bool lock );
-	virtual bool dec( bool lock );
 
 	bool	setup_dhgrp( IKE_PROPOSAL * proposal );
 	bool	setup_xform( IKE_PROPOSAL * proposal );
@@ -596,10 +668,6 @@ typedef class _IDB_PH1 : public IDB_XCH
 
 	bool	frag_add( unsigned char * data, unsigned long size, long index, bool last );
 	bool	frag_get( PACKET_IKE & packet );
-
-	// implemented by sub classes
-
-	bool virtual	resend( long attempt, long count );
 
 }IDB_PH1;
 
@@ -650,21 +718,23 @@ typedef class _IDB_PH2 : public IDB_XCH
 	ITH_EVENT_PH2SOFT	event_soft;
 	ITH_EVENT_PH2HARD	event_hard;
 
+	// sub class functions
+
+	virtual	char *	name();
+	virtual LIST *	list();
+
+	virtual void	beg();
+	virtual void	end();
+
+	// class functions
+
 	_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, uint32_t set_msgid, uint32_t set_seqid_in );
 	virtual ~_IDB_PH2();
-
-	virtual bool add( bool lock );
-	virtual bool inc( bool lock );
-	virtual bool dec( bool lock );
 
 	bool	setup_dhgrp();
 	bool	setup_xform();
 
 	void	clean();
-
-	// implemented by sub classes
-
-	bool virtual	resend( long attempt, long count );
 
 }IDB_PH2;
 
@@ -680,12 +750,18 @@ typedef class _IDB_CFG : public IDB_XCH
 
 	public:
 
+	// sub class functions
+
+	virtual	char *	name();
+	virtual LIST *	list();
+
+	virtual void	beg();
+	virtual void	end();
+
+	// class functions
+
 	_IDB_CFG( IDB_TUNNEL * tunnel, bool set_initiator, unsigned long set_msgid );
 	virtual ~_IDB_CFG();
-
-	virtual bool add( bool lock );
-	virtual bool inc( bool lock );
-	virtual bool dec( bool lock );
 
 	BDATA		hash;
 
@@ -703,10 +779,6 @@ typedef class _IDB_CFG : public IDB_XCH
 	bool	setup();
 	void	clean();
 
-	// implemented by sub classes
-
-	bool virtual	resend( long attempt, long count );
-
 }IDB_CFG;
 
 //
@@ -717,16 +789,18 @@ typedef class _IDB_INF : public IDB_XCH
 {
 	public:
 
+	// sub class functions
+
+	virtual	char *	name();
+	virtual LIST *	list();
+
+	virtual void	beg();
+	virtual void	end();
+
+	// class functions
+
 	_IDB_INF();
 	virtual ~_IDB_INF();
-
-	virtual bool add( bool lock );
-	virtual bool inc( bool lock );
-	virtual bool dec( bool lock );
-
-	// implemented by sub classes
-
-	bool virtual	resend( long attempt, long count );
 
 }IDB_INF;
 

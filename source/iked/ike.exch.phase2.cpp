@@ -63,7 +63,16 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	uint32_t msgid;
 	packet.get_msgid( msgid );
 
-	get_phase2( true, &ph2, ph1->tunnel, 0, 0, NULL, &msgid, NULL, NULL );
+	get_phase2(
+		true,
+		&ph2,
+		ph1->tunnel,
+		XCH_STATUS_ANY,
+		XCH_STATUS_ANY,
+		NULL,
+		&msgid,
+		NULL,
+		NULL );
 
 	if( ph2 == NULL )
 	{
@@ -88,15 +97,15 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// whith a mature or dead sa
 	//
 
-	if( ( ph1->lstate & LSTATE_DELETE ) ||
-	    ( ph2->lstate & LSTATE_DELETE ) )
+	if( ( ph1->status() == XCH_STATUS_DEAD ) ||
+	    ( ph2->status() == XCH_STATUS_DEAD ) )
 	{
 		log.txt( LLOG_ERROR, "!! : phase2 packet ignored ( sa marked for death )\n" );
 		ph2->dec( true );
 		return LIBIKE_OK;
 	}
 
-	if( ph2->lstate & LSTATE_MATURE )
+	if( ph2->status() >= XCH_STATUS_MATURE )
 	{
 		log.txt( LLOG_ERROR, "!! : phase2 packet ignored ( sa already mature )\n" );
 		ph2->dec( true );
@@ -484,18 +493,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 		if( result != LIBIKE_OK )
 		{
-			//
-			// potentialy notify our peer
-			//
-
-			if( packet.notify && ph2->tunnel->peer->notify )
-				inform_new_notify( ph1, NULL, packet.notify );
-
-			//
-			// flag sa for removal
-			//
-
-			ph2->lstate |= LSTATE_DELETE;
+			ph2->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, packet.notify );
 			ph2->dec( true );
 
 			return result;
@@ -522,10 +520,10 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			// check responders quick mode hash
 			//
 
-			if(  ( ph2->xstate & XSTATE_RECV_HA ) &&
-				 ( ph2->xstate & XSTATE_RECV_SA ) &&
-				 ( ph2->xstate & XSTATE_RECV_NO ) &&
-				!( ph2->lstate & LSTATE_MATURE ) )
+			if( ( ph2->status() < XCH_STATUS_MATURE ) &&
+				( ph2->xstate & XSTATE_RECV_HA ) &&
+				( ph2->xstate & XSTATE_RECV_SA ) &&
+				( ph2->xstate & XSTATE_RECV_NO ) )
 			{
 				result = phase2_chk_hash_r( ph1, ph2 );
 
@@ -605,8 +603,8 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			// check initiators liveliness proof hash
 			//
 
-			if(  ( ph2->xstate & XSTATE_RECV_LP ) &&
-				!( ph2->lstate & LSTATE_MATURE ) )
+			if( ( ph2->status() < XCH_STATUS_MATURE ) &&
+				( ph2->xstate & XSTATE_RECV_LP ) )
 			{
 				result = phase2_chk_hash_p( ph1, ph2 );
 
@@ -639,9 +637,8 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						txtaddr_l,
 						txtaddr_r );
 
+					ph2->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
 					ph2->clean();
-
-					ph2->lstate |= LSTATE_MATURE;
 				}
 			}
 		}
@@ -655,18 +652,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( result != LIBIKE_OK )
 	{
-		//
-		// potentialy notify our peer
-		//
-
-		if( ph2->tunnel->peer->notify )
-			inform_new_notify( ph1, ph2, packet.notify );
-
-		//
-		// flag sa for removal
-		//
-
-		ph2->lstate |= LSTATE_DELETE;
+		ph2->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, packet.notify );
 		ph2->dec( true );
 
 		return result;
@@ -677,9 +663,9 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// packets that may be necessary
 	//
 
-	if(  ( ph2->lstate & LSTATE_HASSPI ) &&
-		!( ph2->lstate & LSTATE_MATURE ) &&
-		!( ph2->lstate & LSTATE_DELETE ) )
+	if( ( ph2->lstate & LSTATE_HASSPI ) &&
+		( ph1->status() != XCH_STATUS_DEAD ) &&
+		( ph2->status() < XCH_STATUS_MATURE ) )
 		process_phase2_send( ph1, ph2 );
 
 	//
@@ -822,7 +808,8 @@ long _IKED::process_phase2_send( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 			//
 
 			ph2->xstate |= XSTATE_SENT_LP;
-			ph2->lstate |= LSTATE_MATURE;
+
+			ph2->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
 		}
 	}
 

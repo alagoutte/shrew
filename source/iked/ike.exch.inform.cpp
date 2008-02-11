@@ -62,7 +62,7 @@ long _IKED::process_inform_send( IDB_PH1 * ph1, IDB_XCH * inform )
 	//
 
 	unsigned char flags = 0;
-	if( ph1->lstate & LSTATE_MATURE )
+	if( ph1->status() >= XCH_STATUS_MATURE )
 		flags |= ISAKMP_FLAG_ENCRYPT;
 
 	//
@@ -526,8 +526,10 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 	// of a mature phase1 sa
 	//
 
-	if( secure && !( ph1->lstate & LSTATE_MATURE ) )
-		return LIBIKE_FAILED;
+	if( secure )
+		if( ( ph1->status() <= XCH_STATUS_MATURE ) ||
+			( ph1->status() >= XCH_STATUS_EXPIRING ) )
+			return LIBIKE_FAILED;
 
 	//
 	// process the notify message
@@ -610,7 +612,7 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 					unsigned short	ltype;
 
 					IDB_PH2 * ph2_notify;
-					if( get_phase2( true, &ph2_notify, ph1->tunnel, 0, LSTATE_DELETE, NULL, NULL, NULL, &notify->spi ) )
+					if( get_phase2( true, &ph2_notify, ph1->tunnel, XCH_STATUS_ANY, XCH_STATUS_DEAD, NULL, NULL, NULL, &notify->spi ) )
 					{
 						//
 						// create a temp packet for parsing
@@ -739,8 +741,10 @@ long _IKED::inform_chk_delete( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 	// of a mature phase1 sa
 	//
 
-	if( secure && !( ph1->lstate & LSTATE_MATURE ) )
-		return LIBIKE_FAILED;
+	if( secure )
+		if( ( ph1->status() <= XCH_STATUS_MATURE ) ||
+			( ph1->status() >= XCH_STATUS_EXPIRING ) )
+			return LIBIKE_FAILED;
 
 	//
 	// process the delete message
@@ -759,15 +763,11 @@ long _IKED::inform_chk_delete( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 			//
 
 			IDB_PH1 * ph1_delete;
-			if( get_phase1( true, &ph1_delete, ph1->tunnel, LSTATE_MATURE, LSTATE_DELETE, &notify->spi.cookies ) )
+			if( get_phase1( true, &ph1_delete, ph1->tunnel, XCH_STATUS_MATURE, XCH_STATUS_DEAD, &notify->spi.cookies ) )
 			{
 				log.txt( LLOG_INFO, "ii : cleanup, marked phase1 %s for removal\n", txtspi );
 
-				if( ph1->tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
-					if( !ph1->tunnel->close )
-						ph1->tunnel->close = TERM_PEER_CLOSE;
-
-				ph1_delete->lstate |= ( LSTATE_DELETE | LSTATE_NOTIFY );
+				ph1_delete->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_DELETE, 0 );
 				ph1_delete->dec( true );
 			}
 
@@ -785,11 +785,11 @@ long _IKED::inform_chk_delete( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 			//
 
 			IDB_PH2 * ph2_delete;
-			if( get_phase2( true, &ph2_delete, ph1->tunnel, LSTATE_MATURE, LSTATE_DELETE, NULL, NULL, NULL, &notify->spi ) )
+			if( get_phase2( true, &ph2_delete, ph1->tunnel, XCH_STATUS_MATURE, XCH_STATUS_DEAD, NULL, NULL, NULL, &notify->spi ) )
 			{
 				log.txt( LLOG_INFO, "DB : cleanup, marked phase2 %s for removal\n", txtspi );
 
-				ph2_delete->lstate |= ( LSTATE_DELETE | LSTATE_NOTIFY );
+				ph2_delete->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_DELETE, 0 );
 				ph2_delete->dec( true );
 			}
 

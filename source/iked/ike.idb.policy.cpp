@@ -41,6 +41,23 @@
 
 #include "iked.h"
 
+//
+// IDB subclass list section
+//
+
+LIST list_policy;
+
+char * _IDB_POLICY::name()
+{
+	static char * xname = "policy";
+	return xname;
+}
+
+LIST * _IDB_POLICY::list()
+{
+	return &list_policy;
+}
+
 _IDB_POLICY::_IDB_POLICY( PFKI_SPINFO * spinfo )
 {
 	memset( &paddr_src, 0, sizeof( paddr_src ) );
@@ -56,6 +73,17 @@ _IDB_POLICY::_IDB_POLICY( PFKI_SPINFO * spinfo )
 		PFKI_SPINFO * tmp_spinfo = this;
 		memcpy( tmp_spinfo, spinfo, sizeof( PFKI_SPINFO ) );
 	}
+}
+
+_IDB_POLICY::~_IDB_POLICY()
+{
+	//
+	// log deletion
+	//
+
+	iked.log.txt( LLOG_DEBUG,
+		"DB : policy deleted ( obj count = %i )\n",
+		list_policy.get_count() );
 }
 
 bool _IKED::get_policy( bool lock, IDB_POLICY ** policy, long dir, u_int16_t type, u_int32_t * plcyid, IKE_SADDR * src, IKE_SADDR * dst, IKE_PH2ID * ids, IKE_PH2ID * idd )
@@ -170,88 +198,11 @@ bool _IKED::get_policy( bool lock, IDB_POLICY ** policy, long dir, u_int16_t typ
 	return false;
 }
 
-bool _IDB_POLICY::add( bool lock )
+void _IDB_POLICY::beg()
 {
-	if( lock )
-		iked.lock_sdb.lock();
-
-	inc( false );
-
-	bool result = iked.list_policy.add_item( this );
-
-	iked.log.txt( LLOG_DEBUG, "DB : policy added\n" );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-	
-	return result;
-
 }
 
-bool _IDB_POLICY::inc( bool lock )
+void _IDB_POLICY::end()
 {
-	if( lock )
-		iked.lock_sdb.lock();
-
-	refcount++;
-
-	iked.log.txt( LLOG_LOUD,
-		"DB : policy ref increment ( ref count = %i, policy count = %i )\n",
-		refcount,
-		iked.list_policy.get_count() );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
-	return true;
-}
-
-bool _IDB_POLICY::dec( bool lock )
-{
-	if( lock )
-		iked.lock_sdb.lock();
-
-	assert( refcount > 0 );
-
-	refcount--;
-
-	if( refcount || !( lstate & LSTATE_DELETE ) )
-	{
-		iked.log.txt( LLOG_LOUD,
-			"DB : policy ref decrement ( ref count = %i, policy count = %i )\n",
-			refcount,
-			iked.list_policy.get_count() );
-
-		if( lock )
-			iked.lock_sdb.unlock();
-
-		return false;
-	}
-
-
-	//
-	// remove the sa from our list
-	//
-
-	iked.list_policy.del_item( this );
-
-	//
-	// log deletion
-	//
-
-	iked.log.txt( LLOG_DEBUG,
-		"DB : policy deleted ( policy count = %i )\n",
-		iked.list_policy.get_count() );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
-	//
-	// free
-	//
-
-	delete this;
-
-	return true;
 }
 

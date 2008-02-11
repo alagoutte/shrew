@@ -87,8 +87,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// whith a sa marked for delete
 	//
 
-	if( ( ph1->lstate & LSTATE_DELETE ) ||
-	    ( cfg->lstate & LSTATE_DELETE ) )
+	if( ( ph1->status() == XCH_STATUS_DEAD ) ||
+	    ( cfg->status() == XCH_STATUS_DEAD ) )
 	{
 		log.txt( LLOG_ERROR, "!! : config packet ignored ( sa marked for death )\n" );
 		cfg->dec( true );
@@ -100,7 +100,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// whith an imature phase1 sa
 	//
 
-	if( !( ph1->lstate & LSTATE_MATURE ) )
+	if( ph1->status() < XCH_STATUS_MATURE )
 	{
 		log.txt( LLOG_ERROR, "!! : config packet ignored ( sa not mature )\n" );
 		cfg->dec( true );
@@ -244,7 +244,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			// flag sa for removal
 			//
 
-			cfg->lstate |= LSTATE_DELETE;
+			cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
 			cfg->dec( true );
 
 			return result;
@@ -267,17 +267,10 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		if( !ph1->zwall_r )
 		{
 			//
-			// potentialy notify our peer
+			// update status and release
 			//
 
-			if( cfg->tunnel->peer->notify )
-				inform_new_notify( ph1, NULL, ISAKMP_N_INVALID_HASH_INFORMATION );
-
-			//
-			// flag sa for removal
-			//
-
-			cfg->lstate |= LSTATE_DELETE;
+			cfg->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_AUTH, 0 );
 			cfg->dec( true );
 
 			return LIBIKE_FAILED;
@@ -332,14 +325,14 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 						case XAUTH_USER_NAME:
 						case CHKPT_USER_NAME:
-							cfg->tunnel->state |= TSTATE_RECV_XUSER;
+							cfg->tunnel->tstate |= TSTATE_RECV_XUSER;
 							if( attr->basic )
 								log.txt( LLOG_INFO, "!! : warning, basic xauth username attribute type\n" );
 							break;
 
 						case XAUTH_USER_PASSWORD:
 						case CHKPT_USER_PASSWORD:
-							cfg->tunnel->state |= TSTATE_RECV_XPASS;
+							cfg->tunnel->tstate |= TSTATE_RECV_XPASS;
 							if( attr->basic )
 								log.txt( LLOG_INFO, "!! : warning, basic xauth password attribute type\n" );
 							break;
@@ -376,7 +369,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				// if this is the first request
 				//
 
-				if( ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) != TSTATE_RECV_XAUTH )
+				if( ( cfg->tunnel->tstate & TSTATE_RECV_XAUTH ) != TSTATE_RECV_XAUTH )
 				{
 					//
 					// make sure we received a xauth type attribute
@@ -386,8 +379,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					{
 						log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
 
-						cfg->tunnel->close = TERM_BADMSG;
-						cfg->lstate |= LSTATE_DELETE;
+						cfg->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
+						ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
 					}
 				}
 
@@ -395,7 +388,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				// if this is a duplicate request
 				//
 
-				if( ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
+				if( ( cfg->tunnel->tstate & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
 				{
 					//
 					// looks like we already sent an
@@ -405,8 +398,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 					log.txt( LLOG_ERROR, "!! : duplicate xauth request, authentication failed\n" );
 
-					cfg->tunnel->close = TERM_USER_AUTH;
-					cfg->lstate |= LSTATE_DELETE;
+					cfg->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
+					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
 				}
 
 				cfg->attr_reset();
@@ -420,7 +413,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				// gateway xauth server result
 				//
 
-				if( !( cfg->tunnel->state & TSTATE_RECV_XRSLT ) )
+				if( !( cfg->tunnel->tstate & TSTATE_RECV_XRSLT ) )
 				{
 					//
 					// we should have an xauth status
@@ -487,12 +480,10 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 								"!! : user %s authentication failed\n",
 								cfg->tunnel->xauth.user.text() );
 
-							cfg->tunnel->close = TERM_USER_AUTH;
-
-							cfg->lstate |= LSTATE_DELETE;
+							cfg->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
 						}
 
-						cfg->tunnel->state |= TSTATE_RECV_XRSLT;
+						cfg->tunnel->tstate |= TSTATE_RECV_XRSLT;
 
 						break;
 					}
@@ -510,9 +501,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						log.txt( LLOG_ERROR,
 							"!! : no xauth status received and config mode is not push\n" );
 
-						cfg->tunnel->close = TERM_BADMSG;
-
-						cfg->lstate |= LSTATE_DELETE;
+							cfg->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
 
 						break;
 					}
@@ -524,7 +513,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
 				{
-					if( !( cfg->tunnel->state & TSTATE_RECV_CONFIG ) )
+					if( !( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) )
 					{
 						//
 						// get xconf attributes
@@ -544,7 +533,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						// update state and flag for removal
 						//
 
-						cfg->tunnel->state |= TSTATE_RECV_CONFIG;
+						cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
 					}
 
 					break;
@@ -561,8 +550,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
 				{
-					if(  ( cfg->tunnel->state & TSTATE_SENT_CONFIG ) &&
-						!( cfg->tunnel->state & TSTATE_RECV_CONFIG ) )
+					if(  ( cfg->tunnel->tstate & TSTATE_SENT_CONFIG ) &&
+						!( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) )
 					{
 						//
 						// get xconf attributes
@@ -582,9 +571,9 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						// update state and flag for removal
 						//
 
-						cfg->tunnel->state |= TSTATE_RECV_CONFIG;
+						cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
 
-						cfg->lstate |= LSTATE_DELETE;
+						cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
 					}
 				}
 
@@ -608,7 +597,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
 				{
-					if( !( cfg->tunnel->state & TSTATE_RECV_CONFIG ) )
+					if( !( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) )
 					{
 						//
 						// get xconf attributes
@@ -624,7 +613,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 						cfg->attr_reset();
 
-						cfg->tunnel->state |= TSTATE_RECV_CONFIG;
+						cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
 					}
 				}
 
@@ -637,8 +626,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				// client xauth response
 				//
 
-				if(  ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) &&
-					!( cfg->tunnel->state & TSTATE_RECV_XRSLT ) )
+				if(  ( cfg->tunnel->tstate & TSTATE_SENT_XAUTH ) &&
+					!( cfg->tunnel->tstate & TSTATE_RECV_XRSLT ) )
 				{
 					log.txt( LLOG_INFO, "ii : received xauth response\n" );
 
@@ -672,7 +661,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					if( !cfg->tunnel->xauth.pass.size() )
 						log.txt( LLOG_ERROR, "!! : missing required password attribute\n" );
 
-					cfg->tunnel->state |= TSTATE_RECV_XAUTH;
+					cfg->tunnel->tstate |= TSTATE_RECV_XAUTH;
 				}
 
 				break;
@@ -684,11 +673,11 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				// client xauth acknowledge
 				//
 
-				if( !( cfg->tunnel->state & TSTATE_RECV_XRSLT ) )
+				if( !( cfg->tunnel->tstate & TSTATE_RECV_XRSLT ) )
 				{
 					log.txt( LLOG_INFO, "ii : received xauth ack\n" );
 
-					cfg->tunnel->state |= TSTATE_RECV_XRSLT;
+					cfg->tunnel->tstate |= TSTATE_RECV_XRSLT;
 
 					//
 					// if the config mode is not push, we
@@ -696,7 +685,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 					//
 
 					if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_PUSH )
-						cfg->lstate |= LSTATE_DELETE;
+						cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
 
 					break;
 				}
@@ -707,7 +696,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
 				{
-					if( !( cfg->tunnel->state & TSTATE_RECV_CONFIG ) )
+					if( !( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) )
 					{
 						//
 						// get xconf attributes
@@ -725,7 +714,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 						cfg->attr_reset();
 
-						cfg->tunnel->state |= TSTATE_RECV_CONFIG;
+						cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
 					}
 
 					break;
@@ -742,8 +731,8 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// packets that may be necessary
 	//
 
-	if( !( cfg->lstate & LSTATE_MATURE ) &&
-		!( cfg->lstate & LSTATE_DELETE ) )
+	if( ( ph1->status() != XCH_STATUS_DEAD ) &&
+		( cfg->status() != XCH_STATUS_DEAD ) )
 		process_config_send( ph1, cfg );
 
 	//
@@ -773,8 +762,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			// client xauth response
 			//
 
-			if( ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) &&
-				( cfg->tunnel->state & TSTATE_SENT_XAUTH ) != TSTATE_SENT_XAUTH )
+			if( ( cfg->tunnel->tstate & TSTATE_RECV_XAUTH ) &&
+				( cfg->tunnel->tstate & TSTATE_SENT_XAUTH ) != TSTATE_SENT_XAUTH )
 			{
 				//
 				// set attributes
@@ -795,27 +784,27 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 					cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
 
-					if(  ( cfg->tunnel->state & TSTATE_RECV_XUSER ) &&
-						!( cfg->tunnel->state & TSTATE_SENT_XUSER ) )
+					if(  ( cfg->tunnel->tstate & TSTATE_RECV_XUSER ) &&
+						!( cfg->tunnel->tstate & TSTATE_SENT_XUSER ) )
 					{
 						cfg->attr_add_v( XAUTH_USER_NAME,
 							cfg->tunnel->xauth.user.buff(),
 							cfg->tunnel->xauth.user.size() );
 
-						cfg->tunnel->state |= TSTATE_SENT_XUSER;
+						cfg->tunnel->tstate |= TSTATE_SENT_XUSER;
 
 						log.txt( LLOG_INFO,
 							"ii : added standard xauth username attribute\n" );
 					}
 
-					if(  ( cfg->tunnel->state & TSTATE_RECV_XPASS ) &&
-						!( cfg->tunnel->state & TSTATE_SENT_XPASS ) )
+					if(  ( cfg->tunnel->tstate & TSTATE_RECV_XPASS ) &&
+						!( cfg->tunnel->tstate & TSTATE_SENT_XPASS ) )
 					{
 						cfg->attr_add_v( XAUTH_USER_PASSWORD,
 							cfg->tunnel->xauth.pass.buff(),
 							cfg->tunnel->xauth.pass.size() );
 
-						cfg->tunnel->state |= TSTATE_SENT_XPASS;
+						cfg->tunnel->tstate |= TSTATE_SENT_XPASS;
 
 						log.txt( LLOG_INFO,
 							"ii : added standard xauth password attribute\n" );
@@ -828,9 +817,9 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					// modecfg
 					//
 
-					if( ( cfg->tunnel->state & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
+					if( ( cfg->tunnel->tstate & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
 						if( !ph1->zwall_r && !ph1->swind_r )
-							cfg->lstate |= LSTATE_DELETE;
+							cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
 				}
 				else
 				{
@@ -840,27 +829,27 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 					cfg->attr_add_b( CHKPT_TYPE, XAUTH_TYPE_GENERIC );
 
-					if(  ( cfg->tunnel->state & TSTATE_RECV_XUSER ) &&
-						!( cfg->tunnel->state & TSTATE_SENT_XUSER ) )
+					if(  ( cfg->tunnel->tstate & TSTATE_RECV_XUSER ) &&
+						!( cfg->tunnel->tstate & TSTATE_SENT_XUSER ) )
 					{
 						cfg->attr_add_v( CHKPT_USER_NAME,
 							cfg->tunnel->xauth.user.buff(),
 							cfg->tunnel->xauth.user.size() );
 
-						cfg->tunnel->state |= TSTATE_SENT_XUSER;
+						cfg->tunnel->tstate |= TSTATE_SENT_XUSER;
 
 						log.txt( LLOG_INFO,
 							"ii : added checkpoint xauth username attribute\n" );
 					}
 
-					if(  ( cfg->tunnel->state & TSTATE_RECV_XPASS ) &&
-						!( cfg->tunnel->state & TSTATE_SENT_XPASS ) )
+					if(  ( cfg->tunnel->tstate & TSTATE_RECV_XPASS ) &&
+						!( cfg->tunnel->tstate & TSTATE_SENT_XPASS ) )
 					{
 						cfg->attr_add_v( CHKPT_USER_PASSWORD,
 							cfg->tunnel->xauth.pass.buff(),
 							cfg->tunnel->xauth.pass.size() );
 
-						cfg->tunnel->state |= TSTATE_SENT_XPASS;
+						cfg->tunnel->tstate |= TSTATE_SENT_XPASS;
 
 						log.txt( LLOG_INFO,
 							"ii : added checkpoint xauth password attribute\n" );
@@ -884,8 +873,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			// client xauth acknowledge
 			//
 
-			if(  ( cfg->tunnel->state & TSTATE_RECV_XRSLT ) &&
-				!( cfg->tunnel->state & TSTATE_SENT_XRSLT ) )
+			if(  ( cfg->tunnel->tstate & TSTATE_RECV_XRSLT ) &&
+				!( cfg->tunnel->tstate & TSTATE_SENT_XRSLT ) )
 			{
 				//
 				// reset ack attributes
@@ -906,7 +895,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// update state and flag for removal
 				//
 
-				cfg->tunnel->state |= TSTATE_SENT_XRSLT;
+				cfg->tunnel->tstate |= TSTATE_SENT_XRSLT;
 
 				//
 				// if the config mode is not pull, we
@@ -914,7 +903,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				//
 
 				if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_PULL )
-					cfg->lstate |= LSTATE_DELETE;
+					cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
 			}
 		}
 		else
@@ -925,10 +914,10 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 			log.txt( LLOG_INFO, "ii : xauth is not required\n" );
 
-			cfg->tunnel->state |= TSTATE_RECV_XAUTH;
-			cfg->tunnel->state |= TSTATE_SENT_XAUTH;
-			cfg->tunnel->state |= TSTATE_RECV_XRSLT;
-			cfg->tunnel->state |= TSTATE_SENT_XRSLT;
+			cfg->tunnel->tstate |= TSTATE_RECV_XAUTH;
+			cfg->tunnel->tstate |= TSTATE_SENT_XAUTH;
+			cfg->tunnel->tstate |= TSTATE_RECV_XRSLT;
+			cfg->tunnel->tstate |= TSTATE_SENT_XRSLT;
 		}
 
 		//
@@ -937,8 +926,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
 		{
-			if(  ( cfg->tunnel->state & TSTATE_SENT_XRSLT ) &&
-				!( cfg->tunnel->state & TSTATE_SENT_CONFIG ) )
+			if(  ( cfg->tunnel->tstate & TSTATE_SENT_XRSLT ) &&
+				!( cfg->tunnel->tstate & TSTATE_SENT_CONFIG ) )
 			{
 				//
 				// set attributes
@@ -990,7 +979,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					// flag as sent
 					//
 
-					cfg->tunnel->state |= TSTATE_SENT_CONFIG;
+					cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
 				}
 				else
 				{
@@ -1000,8 +989,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 					log.txt( LLOG_INFO, "ii : config is not required\n" );
 
-					cfg->tunnel->state |= TSTATE_SENT_CONFIG;
-					cfg->tunnel->state |= TSTATE_RECV_CONFIG;
+					cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
+					cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
 				}
 			}
 		}
@@ -1012,8 +1001,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
 		{
-			if(  ( cfg->tunnel->state & TSTATE_RECV_CONFIG ) &&
-				!( cfg->tunnel->state & TSTATE_SENT_CONFIG ) )
+			if(  ( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) &&
+				!( cfg->tunnel->tstate & TSTATE_SENT_CONFIG ) )
 			{
 				//
 				// set attributes
@@ -1048,9 +1037,9 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// flag as sent
 				//
 
-				cfg->tunnel->state |= TSTATE_SENT_CONFIG;
+				cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
 
-				cfg->lstate |= LSTATE_DELETE;
+				cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
 			}
 		}
 
@@ -1064,7 +1053,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			// begin after xauth
 			//
 
-			if( cfg->tunnel->state & TSTATE_RECV_XRSLT )
+			if( cfg->tunnel->tstate & TSTATE_RECV_XRSLT )
 			{
 				//
 				// begin our DHCP over IPsec processing
@@ -1072,7 +1061,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 				socket_dhcp_create( ph1->tunnel );
 
-				cfg->lstate |= LSTATE_DELETE;
+				cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
 			}
 		}
 
@@ -1084,8 +1073,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 			log.txt( LLOG_INFO, "ii : config method is manual\n" );
 
-			cfg->tunnel->state |= TSTATE_SENT_CONFIG;
-			cfg->tunnel->state |= TSTATE_RECV_CONFIG;
+			cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
+			cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
 		}
 	}
 	else
@@ -1100,7 +1089,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			// gateway xauth request
 			//
 
-			if( !( cfg->tunnel->state & TSTATE_SENT_XAUTH ) )
+			if( !( cfg->tunnel->tstate & TSTATE_SENT_XAUTH ) )
 			{
 				//
 				// set request attributes
@@ -1132,7 +1121,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// flag as sent
 				//
 
-				cfg->tunnel->state |= TSTATE_SENT_XAUTH;
+				cfg->tunnel->tstate |= TSTATE_SENT_XAUTH;
 
 				log.txt( LLOG_INFO, "ii : sent xauth request\n" );
 			}
@@ -1141,8 +1130,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 			// gateway xauth result
 			//
 
-			if(  ( cfg->tunnel->state & TSTATE_RECV_XAUTH ) &&
-				!( cfg->tunnel->state & TSTATE_SENT_XRSLT ) )
+			if(  ( cfg->tunnel->tstate & TSTATE_RECV_XAUTH ) &&
+				!( cfg->tunnel->tstate & TSTATE_SENT_XRSLT ) )
 			{
 				bool allow = false;
 				if( cfg->tunnel->xauth.user.size() &&
@@ -1234,14 +1223,14 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// flag as sent and release
 				//
 
-				cfg->tunnel->state |= TSTATE_SENT_XRSLT;
+				cfg->tunnel->tstate |= TSTATE_SENT_XRSLT;
 
 				log.txt( LLOG_INFO, "ii : sent xauth result\n" );
 
 				if( !allow )
 				{
-					cfg->lstate |= LSTATE_DELETE;
-					ph1->lstate |= LSTATE_DELETE;
+					cfg->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
+					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
 				}
 			}
 		}
@@ -1253,10 +1242,10 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 			log.txt( LLOG_INFO, "ii : xauth is not required\n" );
 
-			cfg->tunnel->state |= TSTATE_RECV_XAUTH;
-			cfg->tunnel->state |= TSTATE_SENT_XAUTH;
-			cfg->tunnel->state |= TSTATE_RECV_XRSLT;
-			cfg->tunnel->state |= TSTATE_SENT_XRSLT;
+			cfg->tunnel->tstate |= TSTATE_RECV_XAUTH;
+			cfg->tunnel->tstate |= TSTATE_SENT_XAUTH;
+			cfg->tunnel->tstate |= TSTATE_RECV_XRSLT;
+			cfg->tunnel->tstate |= TSTATE_SENT_XRSLT;
 		}
 
 		//
@@ -1265,8 +1254,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
 		{
-			if(  ( cfg->tunnel->state & TSTATE_RECV_CONFIG ) &&
-				!( cfg->tunnel->state & TSTATE_SENT_CONFIG ) )
+			if(  ( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) &&
+				!( cfg->tunnel->tstate & TSTATE_SENT_CONFIG ) )
 			{
 				//
 				// obtain the client xconf config
@@ -1314,9 +1303,9 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// flag as sent
 				//
 
-				cfg->tunnel->state |= TSTATE_SENT_CONFIG;
+				cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
 
-				cfg->lstate |= LSTATE_DELETE;
+				cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
 			}
 		}
 
@@ -1326,8 +1315,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
 		{
-			if(  ( cfg->tunnel->state & TSTATE_RECV_XRSLT ) &&
-				!( cfg->tunnel->state & TSTATE_SENT_CONFIG ) )
+			if(  ( cfg->tunnel->tstate & TSTATE_RECV_XRSLT ) &&
+				!( cfg->tunnel->tstate & TSTATE_SENT_CONFIG ) )
 			{
 				//
 				// in push mode the client doesnt
@@ -1394,7 +1383,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// flag as sent
 				//
 
-				cfg->tunnel->state |= TSTATE_SENT_CONFIG;
+				cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
 			}
 		}
 	}
@@ -1405,11 +1394,11 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 	// handle is flagged for deletion
 	//
 
-	if( ( cfg->tunnel->state & TSTATE_RECV_XRSLT ) &&
-		( cfg->tunnel->state & TSTATE_SENT_XRSLT ) &&
-		( cfg->tunnel->state & TSTATE_SENT_CONFIG ) &&
-		( cfg->tunnel->state & TSTATE_RECV_CONFIG ) )
-		cfg->lstate |= LSTATE_DELETE;
+	if( ( cfg->tunnel->tstate & TSTATE_RECV_XRSLT ) &&
+		( cfg->tunnel->tstate & TSTATE_SENT_XRSLT ) &&
+		( cfg->tunnel->tstate & TSTATE_SENT_CONFIG ) &&
+		( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) )
+		cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
 
 	return LIBIKE_OK;
 }

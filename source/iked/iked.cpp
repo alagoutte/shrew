@@ -60,7 +60,6 @@ _IKED::_IKED()
 
 	lock_sdb.setname( "sdb" );
 	lock_net.setname( "net" );
-	lock_ipq.setname( "ipq" );
 
 	unsigned char xauth[] = VEND_XAUTH;
 	vend_xauth.set( xauth, sizeof( xauth ) );
@@ -135,7 +134,7 @@ _IKED::~_IKED()
 	//
 	// cleaup our policy list
 	//
-
+/*
 	IDB_POLICY * policy;
 	while( true )
 	{
@@ -146,6 +145,7 @@ _IKED::~_IKED()
 		 list_policy.del_item( policy );
 		 delete policy;
 	}
+*/
 }
 
 bool _IKED::rand_bytes( void * buff, long size )
@@ -366,7 +366,7 @@ long _IKED::halt()
 	//
 	// remove all peers
 	//
-
+/*
 	lock_sdb.lock();
 
 	long count = iked.list_peer.get_count();
@@ -391,7 +391,7 @@ long _IKED::halt()
 
 	while( list_peer.get_count() )
 		Sleep( 1000 );
-
+*/
 	state = DSTATE_TERMINATE;
 
 	return LIBIKE_OK;

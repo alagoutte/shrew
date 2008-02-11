@@ -41,19 +41,21 @@
 
 #include "iked.h"
 
+LIST list_config;
+
 //
-// transaction configuration class
+// config exchange class
 //
 
 _IDB_CFG::_IDB_CFG( IDB_TUNNEL * set_tunnel, bool set_initiator, unsigned long set_msgid )
 {
-	refcount = 0;
-
 	msgid = 0;
 	mtype = 0;
 	ident = 0;
 
 	tunnel = set_tunnel;
+	tunnel->inc( true );
+
 	initiator = set_initiator;
 
 	if( set_msgid )
@@ -68,6 +70,50 @@ _IDB_CFG::_IDB_CFG( IDB_TUNNEL * set_tunnel, bool set_initiator, unsigned long s
 _IDB_CFG::~_IDB_CFG()
 {
 	clean();
+
+	//
+	// log deletion
+	//
+
+	iked.log.txt( LLOG_DEBUG,
+		"DB : config deleted ( obj count %i )\n",
+		list_config.get_count() );
+
+	//
+	// dereference our tunnel
+	//
+
+	tunnel->dec( false );
+}
+
+char * _IDB_CFG::name()
+{
+	static char * xname = "config";
+	return xname;
+}
+
+LIST * _IDB_CFG::list()
+{
+	return &list_config;
+}
+
+void _IDB_CFG::beg()
+{
+}
+
+void _IDB_CFG::end()
+{
+	//
+	// remove scheduled events
+	//
+
+	if( iked.ith_timer.del( &event_resend ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : config resend event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
 }
 
 bool _IDB_CFG::attr_add_b( unsigned short atype, unsigned short bdata )
@@ -203,135 +249,4 @@ bool _IKED::get_config( bool lock, IDB_CFG ** cfg, IDB_TUNNEL * tunnel, unsigned
 		lock_sdb.unlock();
 
 	return false;
-}
-
-bool _IDB_CFG::add( bool lock )
-{
-	if( lock )
-		iked.lock_sdb.lock();
-
-	inc( false );
-	tunnel->inc( false );
-
-	bool result = iked.list_config.add_item( this );
-
-	iked.log.txt( LLOG_DEBUG, "DB : config added\n" );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-	
-	return result;
-
-}
-
-bool _IDB_CFG::inc( bool lock )
-{
-	if( lock )
-		iked.lock_sdb.lock();
-
-	refcount++;
-
-	iked.log.txt( LLOG_LOUD,
-		"DB : config ref increment ( ref count = %i, config count = %i )\n",
-		refcount,
-		iked.list_config.get_count() );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
-	return true;
-}
-
-bool _IDB_CFG::dec( bool lock )
-{
-	if( lock )
-		iked.lock_sdb.lock();
-
-	//
-	// if we are marked for deletion,
-	// attempt to remove any events
-	// that may be scheduled
-	//
-
-	if( lstate & LSTATE_DELETE )
-	{
-		if( iked.ith_timer.del( &event_resend ) )
-		{
-			refcount--;
-			iked.log.txt( LLOG_DEBUG,
-				"DB : config resend event canceled ( ref count = %i )\n",
-				refcount );
-		}
-	}
-
-	assert( refcount > 0 );
-
-	refcount--;
-
-	if( refcount || !( lstate & LSTATE_DELETE ) )
-	{
-		iked.log.txt( LLOG_LOUD,
-			"DB : config ref decrement ( ref count = %i, config count = %i )\n",
-			refcount,
-			iked.list_config.get_count() );
-
-		if( lock )
-			iked.lock_sdb.unlock();
-
-		return false;
-	}
-
-	//
-	// remove from our list
-	//
-
-	iked.list_config.del_item( this );
-
-	//
-	// log deletion
-	//
-
-	iked.log.txt( LLOG_DEBUG,
-		"DB : config deleted ( config count %i )\n",
-		iked.list_config.get_count() );
-
-	//
-	// dereference our tunnel
-	//
-
-	tunnel->dec( false );
-
-	if( lock )
-		iked.lock_sdb.unlock();
-
-	//
-	// free
-	//
-
-	delete this;
-
-	return true;
-}
-
-//
-// config specific re-send check
-//
-
-bool _IDB_CFG::resend( long attempt, long count )
-{
-	if( attempt >= iked.retry_count )
-	{
-		iked.log.txt( LLOG_INFO,
-				"ii : config packet resend limit exceeded\n" );
-
-		lstate |= ( LSTATE_DELETE );
-
-		return false;
-	}
-
-	iked.log.txt( LLOG_INFO,
-		"ii : resending %i config exchange packet(s)\n",
-		count );
-
-	return true;
 }

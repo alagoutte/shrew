@@ -760,7 +760,7 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 	//
 
 	IDB_PH2 * ph2;
-	if( !get_phase2( true, &ph2, NULL, 0, 0, &msg.hdr->sadb_msg_seq, NULL, NULL, NULL ) )
+	if( !get_phase2( true, &ph2, NULL, XCH_STATUS_ANY, XCH_STATUS_ANY, &msg.hdr->sadb_msg_seq, NULL, NULL, NULL ) )
 	{
 		log.txt( LLOG_ERROR,
 			"!! : unable to locate phase2 for getspi update ( msg seq = %u )\n",
@@ -844,13 +844,13 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 		//
 
 		IDB_PH1 * ph1;
-		if( !get_phase1( true, &ph1, ph2->tunnel, 0, 0, NULL ) )
+		if( !get_phase1( true, &ph1, ph2->tunnel, XCH_STATUS_MATURE, XCH_STATUS_DEAD, NULL ) )
 		{
 			//
 			// mark phase2 as pending
 			//
 
-			ph2->lstate |= LSTATE_PENDING;
+			ph2->status( XCH_STATUS_PENDING, XCH_NORMAL, 0 );
 
 			//
 			// initiate a new phase1
@@ -867,7 +867,6 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 			if( !ph1->add( true ) )
 			{
 				delete ph1;
-
 				ph2->dec( true );
 				return LIBIKE_FAILED;
 			}
@@ -875,7 +874,7 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 			process_phase1_send( ph1 );
 		}
 
-		if( ph1->lstate & LSTATE_MATURE )
+		if( ph1->status() >= XCH_STATUS_MATURE )
 			process_phase2_send( ph1, ph2 );
 
 		ph1->dec( true );
@@ -892,6 +891,7 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 
 long _IKED::pfkey_recv_flush( PFKI_MSG & msg )
 {
+/*
 	lock_sdb.lock();
 
 	long count = iked.list_phase2.get_count();
@@ -902,7 +902,8 @@ long _IKED::pfkey_recv_flush( PFKI_MSG & msg )
 		IDB_PH2 * ph2 = ( IDB_PH2 * ) iked.list_phase2.get_item( index );
 
 		ph2->inc( false );
-		ph2->lstate |= ( LSTATE_DELETE | LSTATE_FLUSHED );
+
+		ph2->status( XCH_STATUS_DEAD, XCH_FAILED_FLUSHED, 0 );
 
 		if( ph2->dec( false ) )
 		{
@@ -912,7 +913,7 @@ long _IKED::pfkey_recv_flush( PFKI_MSG & msg )
 	}
 
 	lock_sdb.unlock();
-
+*/
 	return LIBIKE_OK;
 }
 
@@ -964,14 +965,14 @@ long _IKED::pfkey_recv_spdel( PFKI_MSG & msg )
 	// attempt to remove sp
 	//
 
-	policy->lstate = LSTATE_DELETE;
-	policy->dec( true );
+	policy->dec( true, true );
 
 	return LIBIKE_OK;
 }
 
 long _IKED::pfkey_recv_spflush( PFKI_MSG & msg )
 {
+/*
 	lock_sdb.lock();
 
 	long count = iked.list_policy.get_count();
@@ -982,6 +983,7 @@ long _IKED::pfkey_recv_spflush( PFKI_MSG & msg )
 		IDB_POLICY * policy = ( IDB_POLICY * ) iked.list_policy.get_item( index );
 
 		policy->inc( false );
+
 		policy->lstate |= LSTATE_DELETE;
 
 		if( policy->dec( false ) )
@@ -992,7 +994,7 @@ long _IKED::pfkey_recv_spflush( PFKI_MSG & msg )
 	}
 
 	lock_sdb.unlock();
-
+*/
 	return LIBIKE_OK;
 }
 
