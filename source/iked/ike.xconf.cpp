@@ -268,8 +268,8 @@ bool _IKED_XCONF_LOCAL::rslt( IDB_TUNNEL * tunnel )
 	{
 		BDATA suffix;
 		long index = 0;
-		while( dlist.get( suffix, index++ ) )
-			tunnel->dlist.add( suffix );
+		while( domains.get( suffix, index++ ) )
+			tunnel->domains.add( suffix );
 	}
 
 	if( tunnel->xconf.opts & IPSEC_OPTS_NBNS )

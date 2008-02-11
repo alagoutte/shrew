@@ -64,28 +64,13 @@ _IDB_PEER::_IDB_PEER( IKE_PEER * set_peer )
 	key = NULL;
 
 	if( set_peer != NULL )
-	{
-		IKE_PEER * tmp_peer = this;
-		memcpy( tmp_peer, set_peer, sizeof( IKE_PEER ) );
-	}
+		*static_cast<IKE_PEER*>( this ) = *set_peer;
 }
 
 _IDB_PEER::~_IDB_PEER()
 {
 	if( key != NULL )
 		EVP_PKEY_free( key );
-
-	IDB_NETMAP * netmap;
-	while( netmap_get( &netmap, 0 ) )
-		netmap_del( netmap );
-
-	//
-	// log deletion
-	//
-
-	iked.log.txt( LLOG_DEBUG,
-		"DB : peer deleted ( obj count = %i )\n",
-		list_peer.get_count() );
 }
 
 void _IDB_PEER::beg()
@@ -165,36 +150,4 @@ bool _IKED::get_peer( bool lock, IDB_PEER ** peer, IKE_SADDR * saddr )
 		lock_sdb.unlock();
 
 	return false;
-}
-
-bool _IDB_PEER::netmap_add( IKE_ILIST * ilist, long	mode, BDATA * group )
-{
-	IDB_NETMAP * netmap = new IDB_NETMAP;
-	if( netmap == NULL )
-		return false;
-
-	if( group != NULL )
-		netmap->group.set( *group );
-
-	netmap->ilist = ilist;
-	netmap->mode = mode;
-
-	return netmaps.add_item( netmap );
-}
-
-bool _IDB_PEER::netmap_del( IDB_NETMAP * netmap )
-{
-	if( netmaps.del_item( netmap ) )
-	{
-		delete netmap;
-		return true;
-	}
-
-	return false;
-}
-
-bool _IDB_PEER::netmap_get( IDB_NETMAP ** netmap, long index )
-{
-	*netmap = ( IDB_NETMAP * ) netmaps.get_item( index );
-	return ( *netmap != NULL );
 }

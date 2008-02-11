@@ -457,7 +457,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				ph2->hda.add( packet.buff() + beg, end - beg );
 
 				if( result == LIBIKE_OK )
-					ph2->nlist.add( notify );
+					ph2->notifications.add( notify );
 
 				break;
 			}
@@ -1307,12 +1307,12 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 		// notifications
 		//
 
-		if( ph2->nlist.count() )
+		if( ph2->notifications.count() )
 		{
 			IKE_NOTIFY notify;
 
 			long nindex = 0;
-			while( ph2->nlist.get( notify, nindex++ ) )
+			while( ph2->notifications.get( notify, nindex++ ) )
 				inform_chk_notify( ph1, &notify, true );
 		}
 

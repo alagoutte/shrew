@@ -199,7 +199,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 //						( peer->xconf_mode == CONFIG_MODE_DHCP ) )
 //						proposal.auth_id = IKE_AUTH_PRESHARED_KEY;
 
-					if( !peer->prop_list.add( &proposal, true ) )
+					if( !peer->proposals.add( &proposal, true ) )
 					{
 						log.txt( LLOG_ERROR, "!! : unable to add peer proposal\n" );
 						ikei->send_msg_result( IKEI_FAILED );
@@ -466,9 +466,9 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : split dns \'%s\' message\n", text );
 
-							BDATA suffix;
-							suffix.set( text, size + 1 );
-							tunnel->dlist.add( suffix );
+							BDATA domain;
+							domain.set( text, size + 1 );
+							tunnel->domains.add( domain );
 
 							ikei->send_msg_result( IKEI_OK );
 

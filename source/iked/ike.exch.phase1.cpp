@@ -396,7 +396,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				IKE_NOTIFY notify;
 				result = payload_get_notify( packet, &notify );
 				if( result == LIBIKE_OK )
-					ph1->nlist.add( notify );
+					ph1->notifications.add( notify );
 
 				break;
 			}

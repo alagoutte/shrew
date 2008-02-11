@@ -132,9 +132,9 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 
 		long index = 0;
 
-		IDB_NETMAP * netmap;
+		IDB_ENTRY_NETMAP * netmap;
 
-		while( tunnel->peer->netmap_get( &netmap, index++ ) )
+		while( tunnel->peer->netmaps.get( &netmap, index++ ) )
 		{
 			//
 			// perform group checking if appropriate
@@ -146,7 +146,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 				{
 					log.txt( LLOG_ERROR,
 						"!! : - cannot validate netgroup %s before xauth\n",
-						netmap->ilist->name.text() );
+						netmap->idlist->name.text() );
 
 					continue;
 				}
@@ -156,7 +156,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 				{
 					log.txt( LLOG_ERROR,
 						"!! : - cannot validate netgroup %s without xauth\n",
-						netmap->ilist->name.text() );
+						netmap->idlist->name.text() );
 
 					continue;
 				}
@@ -187,13 +187,13 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 
 			log.txt( LLOG_INFO,
 				"ii : - adding policy ids for netgroup %s\n",
-				netmap->ilist->name.text() );
+				netmap->idlist->name.text() );
 
 			long index2 = 0;
 
 			IKE_PH2ID ph2id;
 
-			while( netmap->ilist->get( ph2id, index2++ ) )
+			while( netmap->idlist->get( ph2id, index2++ ) )
 			{
 				if( netmap->mode == UNITY_SPLIT_INCLUDE )
 					tunnel->idlist_incl.add( ph2id );

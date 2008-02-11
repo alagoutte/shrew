@@ -77,13 +77,6 @@ _IDB_POLICY::_IDB_POLICY( PFKI_SPINFO * spinfo )
 
 _IDB_POLICY::~_IDB_POLICY()
 {
-	//
-	// log deletion
-	//
-
-	iked.log.txt( LLOG_DEBUG,
-		"DB : policy deleted ( obj count = %i )\n",
-		list_policy.get_count() );
 }
 
 bool _IKED::get_policy( bool lock, IDB_POLICY ** policy, long dir, u_int16_t type, u_int32_t * plcyid, IKE_SADDR * src, IKE_SADDR * dst, IKE_PH2ID * ids, IKE_PH2ID * idd )

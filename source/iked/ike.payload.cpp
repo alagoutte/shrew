@@ -223,7 +223,7 @@ long _IKED::payload_get_attr( PACKET_IKE & packet, IKE_ATTR & attrib )
 	return LIBIKE_OK;
 }
 
-long _IKED::payload_add_sa( PACKET_IKE & packet, IKE_PLIST & plist, uint8_t next )
+long _IKED::payload_add_sa( PACKET_IKE & packet, IDB_LIST_PROPOSAL & plist, uint8_t next )
 {
 	//
 	// write security association payload
@@ -316,7 +316,7 @@ long _IKED::payload_add_sa( PACKET_IKE & packet, IKE_PLIST & plist, uint8_t next
 	return LIBIKE_OK;
 }
 
-long _IKED::payload_get_sa( PACKET_IKE & packet, IKE_PLIST & plist )
+long _IKED::payload_get_sa( PACKET_IKE & packet, IDB_LIST_PROPOSAL & plist )
 {
 	log.txt( LLOG_DEBUG, "<< : security association payload\n" );
 

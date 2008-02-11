@@ -196,6 +196,34 @@ bool _LIST::del_item( void * del_item )
 	return true;
 }
 
+void * _LIST::del_item( long index )
+{
+	// sanity check for valid index
+	
+	if( ( index >= item_count ) ||
+		( index < 0 ) )
+		return NULL;
+
+	// store the item for return
+
+	void * item = item_list[ index ];
+
+	// copy the trailing pointers in our list
+	// to fill the empty slot
+	
+	int trailing_pointers = item_count - index - 1;
+	if( trailing_pointers )
+		memcpy( &item_list[ index ], &item_list[ index + 1 ], trailing_pointers * sizeof( void * ) );
+		
+	// null previously last used pointer in
+	// list and decrement count
+	
+	item_list[ item_count - 1 ] = 0;
+	item_count--;
+	
+	return item;
+}
+
 void * _LIST::get_item( long index )
 {
 	// sanity check for valid index

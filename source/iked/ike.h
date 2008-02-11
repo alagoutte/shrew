@@ -681,4 +681,82 @@ typedef struct _IKE_UNITY_NET
 
 #pragma pack()
 
+//
+// XXX : these need to move back
+//       into iked.h
+//
+
+#pragma pack( 1 )
+
+typedef struct _IKE_HEADER
+{
+	IKE_COOKIES	cookies;
+
+	uint8_t		payload;	// initial payload
+	uint8_t		version;	// isakmp version
+	uint8_t		exchange;	// exchange type
+	uint8_t		flags;		// flags
+	uint32_t	msgid;		// message id
+	uint32_t	length;		// message length
+
+}IKE_HEADER;
+
+typedef struct _IKE_PAYLOAD
+{
+	uint8_t		next;		// next payload
+	uint8_t		reserved;	// reserved
+	uint16_t	length;		// payload size
+
+}IKE_PAYLOAD;
+
+#pragma pack()
+
+typedef struct _PLD_DATA
+{
+	size_t	oset;
+	size_t	size;
+
+}PLD_DATA;
+
+typedef class _PACKET_IKE : public _PACKET
+{
+	protected:
+
+	PLD_DATA	pld_stack[ 8 ];
+	long		pld_depth;
+
+	IKE_HEADER	header;
+
+	public:
+
+	unsigned char	notify;
+
+	_PACKET_IKE();
+	~_PACKET_IKE();
+
+	void	reset();
+
+	void	set_msgid( uint32_t msgid );
+	void	get_msgid( uint32_t & msgid );
+
+	bool	add_payload( bool encap, uint8_t next );
+	bool	get_payload( bool encap, uint8_t & next );
+	void	end_payload( bool decap, bool write = true );
+
+	size_t	get_payload_left();
+
+	bool	write( IKE_COOKIES & cookies,
+					uint8_t payload,
+					uint8_t exchange,
+					uint8_t flags );
+
+	bool	read( IKE_COOKIES & cookies,
+					uint8_t & payload,
+					uint8_t & exchange,
+					uint8_t & flags );
+
+	bool	done();
+
+}PACKET_IKE;
+
 #endif

@@ -71,6 +71,7 @@ typedef class DLX _LIST
 	virtual bool	ins_item( void * ins_item, long index );
 	virtual bool	add_item( void * add_item );
 	virtual bool	del_item( void * del_item );
+	virtual void *	del_item( long index );
 	virtual void *	get_item( long index );
 	virtual long	get_count();
 

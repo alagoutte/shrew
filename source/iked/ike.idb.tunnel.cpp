@@ -175,14 +175,6 @@ _IDB_TUNNEL::~_IDB_TUNNEL()
 	}
 
 	//
-	// log deletion
-	//
-
-	iked.log.txt( LLOG_DEBUG,
-		"DB : tunnel deleted ( obj count = %i )\n",
-		list_tunnel.get_count() );
-
-	//
 	// dereference our peer
 	//
 

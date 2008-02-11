@@ -48,7 +48,7 @@ long _IKED::process_inform_send( IDB_PH1 * ph1, IDB_XCH * inform )
 	//
 
 	assert( ph1 != NULL );
-	assert( inform->nlist.count() != 0 );
+	assert( inform->notifications.count() != 0 );
 
 	//
 	// create notification packet
@@ -70,7 +70,7 @@ long _IKED::process_inform_send( IDB_PH1 * ph1, IDB_XCH * inform )
 	//
 
 	IKE_NOTIFY notify;
-	inform->nlist.get( notify, 0 );
+	inform->notifications.get( notify, 0 );
 
 	unsigned char next;
 	if( flags & ISAKMP_FLAG_ENCRYPT )
@@ -110,7 +110,7 @@ long _IKED::process_inform_send( IDB_PH1 * ph1, IDB_XCH * inform )
 		// get next notification
 		//
 
-		if( !inform->nlist.get( notify, nindex++ ) )
+		if( !inform->notifications.get( notify, nindex++ ) )
 			break;
 
 		//
@@ -118,10 +118,10 @@ long _IKED::process_inform_send( IDB_PH1 * ph1, IDB_XCH * inform )
 		//
 
 		next = ISAKMP_PAYLOAD_NONE;
-		if( inform->nlist.count() > nindex )
+		if( inform->notifications.count() > nindex )
 		{
 			IKE_NOTIFY next_notify;
-			inform->nlist.get( next_notify, nindex );
+			inform->notifications.get( next_notify, nindex );
 
 			next = next_notify.type;
 		}
@@ -298,7 +298,7 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				inform.hda.set( packet.buff() + beg, end - beg );
 
 				if( result == LIBIKE_OK )
-					inform.nlist.add( notify );
+					inform.notifications.add( notify );
 
 				break;
 			}
@@ -316,7 +316,7 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				inform.hda.set( packet.buff() + beg, end - beg );
 
 				if( result == LIBIKE_OK )
-					inform.nlist.add( notify );
+					inform.notifications.add( notify );
 
 				break;
 			}
@@ -371,12 +371,12 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// check all notification payloads
 	//
 
-	if( inform.nlist.count() )
+	if( inform.notifications.count() )
 	{
 		IKE_NOTIFY notify;
 
 		long nindex = 0;
-		while( inform.nlist.get( notify, nindex++ ) )
+		while( inform.notifications.get( notify, nindex++ ) )
 		{
 			switch( notify.type )
 			{
@@ -866,7 +866,7 @@ long _IKED::inform_new_notify( IDB_PH1 * ph1, IDB_PH2 * ph2, unsigned short code
 		// add notification data
 		//
 
-		inform.nlist.add( notify );
+		inform.notifications.add( notify );
 	}
 	else
 	{
@@ -899,7 +899,7 @@ long _IKED::inform_new_notify( IDB_PH1 * ph1, IDB_PH2 * ph2, unsigned short code
 		// add notification data
 		//
 
-		inform.nlist.add( notify );
+		inform.notifications.add( notify );
 	}
 
 	return process_inform_send( ph1, &inform );
@@ -966,7 +966,7 @@ long _IKED::inform_new_delete( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 		// add notification data
 		//
 
-		inform.nlist.add( notify );
+		inform.notifications.add( notify );
 	}
 	else
 	{
@@ -1019,7 +1019,7 @@ long _IKED::inform_new_delete( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 			// add notification data
 			//
 
-			inform.nlist.add( notify );
+			inform.notifications.add( notify );
 		}
 	}
 

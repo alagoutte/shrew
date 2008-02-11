@@ -41,6 +41,14 @@
 
 #include "libip.h"
 
+_BDATA &_BDATA::operator =( _BDATA & bdata )
+{
+	del();
+	set( bdata );
+
+	return *this;
+}
+
 _BDATA::_BDATA()
 {
 	data_buff = NULL;
@@ -49,11 +57,16 @@ _BDATA::_BDATA()
 	data_oset = 0;
 }
 
+_BDATA::_BDATA( _BDATA & bdata )
+{
+	_BDATA();
+	*this = bdata;
+}
+
 _BDATA::~_BDATA()
 {
 	del( true );
 }
-
 
 size_t _BDATA::grow( size_t new_real )
 {

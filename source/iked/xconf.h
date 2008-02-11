@@ -59,9 +59,9 @@ typedef class _IKED_XCONF
 	long		pool4_total;
 	ITH_LOCK	pool4_lock;
 
-	IKE_XCONF	config;
-	IKE_DLIST	dlist;
-	BDATA		banner;
+	IKE_XCONF		config;
+	IDB_LIST_DOMAIN	domains;
+	BDATA			banner;
 
 	virtual ~_IKED_XCONF();
 

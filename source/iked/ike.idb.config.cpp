@@ -71,18 +71,6 @@ _IDB_CFG::~_IDB_CFG()
 {
 	clean();
 
-	//
-	// log deletion
-	//
-
-	iked.log.txt( LLOG_DEBUG,
-		"DB : config deleted ( obj count %i )\n",
-		list_config.get_count() );
-
-	//
-	// dereference our tunnel
-	//
-
 	tunnel->dec( false );
 }
 

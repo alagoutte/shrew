@@ -117,11 +117,12 @@ _IKED::_IKED()
 
 _IKED::~_IKED()
 {
+/*
 	//
 	// cleaup our netgroup list
 	//
 
-	IKE_ILIST * ilist;
+	IDB_LIST_PH2ID * idlist;
 	while( true )
 	{
 		 ilist = ( IKE_ILIST * ) list_netgrp.get_item( 0 );
@@ -134,7 +135,7 @@ _IKED::~_IKED()
 	//
 	// cleaup our policy list
 	//
-/*
+
 	IDB_POLICY * policy;
 	while( true )
 	{

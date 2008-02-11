@@ -85,10 +85,6 @@ bool _ITH_EVENT_RESEND::func()
 	return true;
 }
 
-_ITH_EVENT_RESEND::~_ITH_EVENT_RESEND()
-{
-}
-
 //
 // generic exchange handle class
 //

@@ -573,7 +573,7 @@ static int verify_cb( int ok, X509_STORE_CTX * store_ctx )
 	return ok;
 }
 
-bool _IKED::cert_verify( IKE_CLIST & certs, BDATA & ca, BDATA & cert )
+bool _IKED::cert_verify( IDB_LIST_CERT & certs, BDATA & ca, BDATA & cert )
 {
 	//
 	// create certificate storage

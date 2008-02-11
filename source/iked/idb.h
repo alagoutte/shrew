@@ -46,18 +46,226 @@
 #include "libpfk.h"
 #include "crypto.h"
 
-//
-// forward delare some class types
+//==============================================================================
+// standard IDB list classes
+//==============================================================================
+
+typedef class _IDB_ENTRY
+{
+	public:
+
+	_IDB_ENTRY();
+	virtual ~_IDB_ENTRY();
+
+}IDB_ENTRY;
+
+typedef class _IDB_LIST : private LIST
+{
+	public:
+
+	_IDB_LIST();
+	virtual ~_IDB_LIST();
+
+	long		count();
+	void		clean();
+
+	bool		add_entry( IDB_ENTRY * entry );
+	bool		del_entry( IDB_ENTRY * entry );
+	IDB_ENTRY * del_entry( int index );
+	IDB_ENTRY * get_entry( int index );
+
+}IDB_LIST;
+
+//==============================================================================
+// reference counted IDB classes
+//==============================================================================
+
+#define IDB_FLAG_DEAD		1
+#define IDB_FLAG_ENDED		2
+#define IDB_FLAG_NOEND		4
+
+typedef class _IDB_RC_ENTRY : public IDB_ENTRY
+{
+	protected:
+
+	long		idb_flags;
+	long		idb_refcount;
+
+	inline long chkflags( long flags )
+	{
+		return ( idb_flags & flags );
+	}
+
+	inline long setflags( long flags )
+	{
+		return idb_flags |= flags;
+	}
+
+	inline long clrflags( long flags )
+	{
+		return idb_flags &= ~flags;
+	}
+
+	virtual void beg() = 0;
+	virtual void end() = 0;
+
+	public:
+
+	_IDB_RC_ENTRY();
+	virtual ~_IDB_RC_ENTRY();
+
+	virtual char *	name() = 0;
+	virtual LIST *	list() = 0;
+
+	bool add( bool lock );
+	bool inc( bool lock );
+	bool dec( bool lock, bool setdel = false );
+
+}IDB_RC_ENTRY;
+
+typedef class _IDB_RC_LIST : public IDB_LIST
+{
+	public:
+
+	_IDB_RC_LIST();
+	virtual ~_IDB_RC_LIST();
+
+}IDB_RC_LIST;
+
+//==============================================================================
+// standard IDB derived classes
+//==============================================================================
+
+//==============================================================================
+// basic data list
 //
 
-typedef class _IKED_XAUTH IKED_XAUTH;
-typedef class _IKED_XCONF IKED_XCONF;
+typedef class _IDB_ENTRY_BDATA : public IDB_ENTRY, public BDATA
+{
+}IDB_ENTRY_BDATA;
 
-typedef class _IDB_TUNNEL IDB_TUNNEL;
-typedef class _IDB_XCH IDB_XCH;
-typedef class _IDB_PH1 IDB_PH1;
-typedef class _IDB_PH2 IDB_PH2;
-typedef class _IDB_CFG IDB_CFG;
+typedef class _IDB_LIST_BDATA : public IDB_LIST
+{
+	public:
+
+	BDATA name;
+
+	bool	add( BDATA & cert );
+	bool	get( BDATA & cert, long index );
+
+}IDB_LIST_BDATA;
+
+//==============================================================================
+// ike proposal list
+//
+
+typedef class _IDB_ENTRY_PROPOSAL : public IDB_ENTRY, public IKE_PROPOSAL
+{
+	public:
+
+	bool	pnext;
+
+}IDB_ENTRY_PROPOSAL;
+
+typedef class _IDB_LIST_PROPOSAL : public IDB_LIST
+{
+	public:
+
+	bool	add( IKE_PROPOSAL * proposal, bool pnext );
+	bool	get( IKE_PROPOSAL ** proposal, long pindex, uint8_t proto = 0 );
+
+	bool	nextb( long & bindex, long & pindex, long & pcount );
+	bool	nextp( IKE_PROPOSAL ** proposal, long & pindex, long & tindex, long & tcount );
+	bool	nextt( IKE_PROPOSAL ** proposal, long & tindex );
+
+}IDB_LIST_PROPOSAL;
+
+//==============================================================================
+// ike notification list
+//
+
+typedef class _IDB_ENTRY_NOTIFY : public IDB_ENTRY, public IKE_NOTIFY
+{
+}IDB_ENTRY_NOTIFY;
+
+typedef class _IDB_LIST_NOTIFY : public IDB_LIST
+{
+	public:
+
+	bool	add( IKE_NOTIFY & notify );
+	bool	get( IKE_NOTIFY & notify, long index );
+
+}IDB_LIST_NOTIFY;
+
+//==============================================================================
+// certificate list
+//
+
+typedef IDB_ENTRY_BDATA IDB_ENTRY_CERT;
+
+typedef class _IDB_LIST_CERT : public IDB_LIST_BDATA
+{
+	public:
+
+	BDATA name;
+
+}IDB_LIST_CERT;
+
+//==============================================================================
+// phase2 ID list
+//
+
+typedef class _IDB_ENTRY_PH2ID : public IDB_ENTRY, public IKE_PH2ID
+{
+}IDB_ENTRY_PH2ID;
+
+typedef class _IDB_LIST_PH2ID : public IDB_LIST
+{
+	public:
+
+	BDATA name;
+
+	bool	add( IKE_PH2ID & ph2id );
+	bool	get( IKE_PH2ID & ph2id, long index );
+
+}IDB_LIST_PH2ID;
+
+//==============================================================================
+// network map list ( list of phase2 IDs )
+//
+
+typedef class _IDB_ENTRY_NETMAP : public IDB_ENTRY
+{
+	public:
+
+	IDB_LIST_PH2ID *	idlist;
+	long				mode;
+	BDATA				group;
+
+}IDB_ENTRY_NETMAP;
+
+typedef class _IDB_LIST_NETMAP : public IDB_LIST
+{
+	public:
+
+	BDATA name;
+
+	bool	add( IDB_LIST_PH2ID * idlist, long mode, BDATA * group );
+	bool	del( IDB_ENTRY_NETMAP * netmap );
+	bool	get( IDB_ENTRY_NETMAP ** netmap, long index );
+
+}IDB_LIST_NETMAP;
+
+//==============================================================================
+// domain name list
+//
+
+typedef IDB_ENTRY_BDATA IDB_ENTRY_DOMAIN;
+typedef IDB_LIST_BDATA IDB_LIST_DOMAIN ;
+
+//==============================================================================
+// reference counted IDB derived classes
+//==============================================================================
 
 enum XCH_STATUS
 {
@@ -90,285 +298,18 @@ enum XCH_ERRORCODE
 	XCH_FAILED_DHCPCONFIG
 };
 
+typedef class _IKED_XAUTH IKED_XAUTH;
+typedef class _IKED_XCONF IKED_XCONF;
+
+typedef class _IDB_TUNNEL IDB_TUNNEL;
+typedef class _IDB_XCH IDB_XCH;
+typedef class _IDB_PH1 IDB_PH1;
+typedef class _IDB_PH2 IDB_PH2;
+typedef class _IDB_CFG IDB_CFG;
+
+//==============================================================================
+// tunnel event classes
 //
-// XXX : these need to move back
-//       into iked.h
-//
-
-#pragma pack( 1 )
-
-typedef struct _IKE_HEADER
-{
-	IKE_COOKIES	cookies;
-
-	uint8_t		payload;	// initial payload
-	uint8_t		version;	// isakmp version
-	uint8_t		exchange;	// exchange type
-	uint8_t		flags;		// flags
-	uint32_t	msgid;		// message id
-	uint32_t	length;		// message length
-
-}IKE_HEADER;
-
-typedef struct _IKE_PAYLOAD
-{
-	uint8_t		next;		// next payload
-	uint8_t		reserved;	// reserved
-	uint16_t	length;		// payload size
-
-}IKE_PAYLOAD;
-
-#pragma pack()
-
-typedef struct _PLD_DATA
-{
-	size_t	oset;
-	size_t	size;
-
-}PLD_DATA;
-
-typedef class _PACKET_IKE : public _PACKET
-{
-	protected:
-
-	PLD_DATA	pld_stack[ 8 ];
-	long		pld_depth;
-
-	IKE_HEADER	header;
-
-	public:
-
-	unsigned char	notify;
-
-	_PACKET_IKE();
-	~_PACKET_IKE();
-
-	void	reset();
-
-	void	set_msgid( uint32_t msgid );
-	void	get_msgid( uint32_t & msgid );
-
-	bool	add_payload( bool encap, uint8_t next );
-	bool	get_payload( bool encap, uint8_t & next );
-	void	end_payload( bool decap, bool write = true );
-
-	size_t	get_payload_left();
-
-	bool	write( IKE_COOKIES & cookies,
-					uint8_t payload,
-					uint8_t exchange,
-					uint8_t flags );
-
-	bool	read( IKE_COOKIES & cookies,
-					uint8_t & payload,
-					uint8_t & exchange,
-					uint8_t & flags );
-
-	bool	done();
-
-}PACKET_IKE;
-
-//
-// IKE list classes
-//
-
-typedef struct _IKE_PENTRY
-{
-	bool			pnext;
-	IKE_PROPOSAL	proposal;
-
-}IKE_PENTRY;
-
-typedef class _IKE_PLIST
-{
-	private:
-
-	LIST	prop_list;
-
-	public:
-
-	_IKE_PLIST();
-	~_IKE_PLIST();
-
-	long	count();
-	void	clean();
-
-	bool	add( IKE_PROPOSAL * proposal, bool pnext );
-	bool	get( IKE_PROPOSAL ** proposal, long pindex, uint8_t proto = 0 );
-
-	bool	nextb( long & bindex, long & pindex, long & pcount );
-	bool	nextp( IKE_PROPOSAL ** proposal, long & pindex, long & tindex, long & tcount );
-	bool	nextt( IKE_PROPOSAL ** proposal, long & tindex );
-
-}IKE_PLIST;
-
-typedef class _IKE_CLIST
-{
-	private:
-
-	LIST	list_certs;
-
-	public:
-
-	BDATA name;
-
-	_IKE_CLIST();
-	~_IKE_CLIST();
-
-	long	count();
-
-	bool	add( BDATA & cert );
-	bool	get( BDATA & cert, long index );
-
-}IKE_CLIST;
-
-typedef class _IKE_ILIST
-{
-	private:
-
-	LIST	list_ph2id;
-
-	public:
-
-	BDATA name;
-
-	_IKE_ILIST();
-	~_IKE_ILIST();
-
-	long	count();
-
-	bool	add( IKE_PH2ID & ph2id );
-	bool	get( IKE_PH2ID & ph2id, long index );
-
-}IKE_ILIST;
-
-typedef class _IKE_NLIST
-{
-	private:
-	
-	LIST	list_notify;
-
-	public:
-
-	~_IKE_NLIST();
-
-	long	count();
-
-	bool	add( IKE_NOTIFY & notify );
-	bool	get( IKE_NOTIFY & notify, long index );
-
-}IKE_NLIST;
-
-typedef class _IKE_DLIST
-{
-	private:
-	
-	LIST	list_suffix;
-
-	public:
-
-	~_IKE_DLIST();
-
-	long	count();
-
-	bool	add( BDATA & suffix );
-	bool	get( BDATA & suffix, long index );
-
-}IKE_DLIST;
-
-//
-// IKE internal database types
-//
-
-#define IDB_FLAG_DEAD		1
-#define IDB_FLAG_ENDED		2
-#define IDB_FLAG_NOEND		4
-
-typedef class _IDB
-{
-	protected:
-
-	long		idb_flags;
-	long		idb_refcount;
-
-	inline long chkflags( long flags )
-	{
-		return ( idb_flags & flags );
-	}
-	
-	inline long setflags( long flags )
-	{
-		return idb_flags |= flags;
-	}
-
-	inline long clrflags( long flags )
-	{
-		return idb_flags &= ~flags;
-	}
-
-	virtual void beg() = 0;
-	virtual void end() = 0;
-
-	public:
-
-	_IDB();
-	virtual ~_IDB();
-
-	// implemented by sub classes
-
-	virtual char *	name() = 0;
-	virtual LIST *	list() = 0;
-
-	bool add( bool lock );
-	bool inc( bool lock );
-	bool dec( bool lock, bool setdel = false );
-
-}IDB;
-
-typedef struct _IDB_NETMAP
-{
-	IKE_ILIST *	ilist;
-	long		mode;
-	BDATA		group;
-
-}IDB_NETMAP;
-
-typedef class _IDB_PEER : public IKE_PEER, public IDB
-{
-	private:
-	
-	LIST	netmaps;
-
-	virtual void	beg();
-	virtual void	end();
-
-	public:
-
-	BDATA		fpass;
-	BDATA		cert_l;
-	BDATA		cert_r;
-	BDATA		psk;
-	BDATA		iddata_l;
-	BDATA		iddata_r;
-	EVP_PKEY *	key;
-
-	BDATA			xauth_group;
-	IKED_XAUTH *	xauth_source;
-	IKED_XCONF *	xconf_source;
-
-	IKE_PLIST		prop_list;
-
-	virtual	char *	name();
-	virtual LIST *	list();
-
-	_IDB_PEER( IKE_PEER * set_peer );
-	virtual ~_IDB_PEER();
-
-	bool netmap_add( IKE_ILIST * ilist, long	mode, BDATA * group );
-	bool netmap_del( IDB_NETMAP * netmap );
-	bool netmap_get( IDB_NETMAP ** netmap, long index );
-
-}IDB_PEER;
 
 typedef class _ITH_EVENT_TUNDHCP : public ITH_EVENT
 {
@@ -384,75 +325,11 @@ typedef class _ITH_EVENT_TUNDHCP : public ITH_EVENT
 
 }ITH_EVENT_TUNDHCP;
 
-typedef class _IDB_TUNNEL : public IDB
-{
-	public:
-
-	IDB_PEER *	peer;
-
-	IKE_XAUTH	xauth;
-	IKE_XCONF	xconf;
-	IKEI_STATS	stats;
-
-	XCH_ERRORCODE	close;
-
-#ifdef WIN32
-	IKE_NSCFG	nscfg;
-#endif
-
-	IKE_SADDR	saddr_l;
-	IKE_SADDR	saddr_r;
-
-	bool		force_all;
-	IKE_ILIST	idlist_incl;
-	IKE_ILIST	idlist_excl;
-	IKE_DLIST	dlist;
-
-	BDATA		banner;
-
-	long		tunnelid;
-	long		tstate;
-	long		lstate;
-	long		natt_v;
-
-	uint32_t	dhcp_xid;
-	SOCKET		dhcp_sock;
-
-	ITH_EVENT_TUNDHCP	event_dhcp;
-
-	virtual	char *	name();
-	virtual LIST *	list();
-
-	virtual void	beg();
-	virtual void	end();
-
-	_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r );
-	virtual ~_IDB_TUNNEL();
-
-}IDB_TUNNEL;
-
-typedef class _IDB_POLICY : public PFKI_SPINFO, public IDB
-{
-	public:
-
-	bool	route;
-
-	virtual	char *	name();
-	virtual LIST *	list();
-
-	virtual void	beg();
-	virtual void	end();
-
-	_IDB_POLICY( PFKI_SPINFO * spinfo );
-	virtual ~_IDB_POLICY();
-
-}IDB_POLICY;
-
-//
-// generic event class
+//==============================================================================
+// exchange event classes
 //
 
-typedef class _ITH_EVENT_RESEND : public ITH_EVENT, IPQUEUE
+typedef class _ITH_EVENT_RESEND : public ITH_EVENT, public IPQUEUE
 {
 	public:
 
@@ -460,70 +337,11 @@ typedef class _ITH_EVENT_RESEND : public ITH_EVENT, IPQUEUE
 	IPQUEUE		ipqueue;
 	long		attempt;
 
-	virtual ~_ITH_EVENT_RESEND();
-
 	bool	func();
 
 }ITH_EVENT_RESEND;
 
-//
-// generic exchange handle class
-//
-
-typedef class _IDB_XCH : public _IDB
-{
-	public:
-
-	IDB_TUNNEL *	tunnel;
-
-	ITH_LOCK		lock;
-	XCH_STATUS		xch_status;
-	XCH_ERRORCODE	xch_errorcode;
-	uint16_t		xch_notifycode;
-
-	bool			initiator;
-	unsigned char	exchange;
-
-	uint32_t	msgid;
-	long		lstate;
-	long		xstate;
-
-	DH *		dh;
-	long		dh_size;
-
-	BDATA		nonce_l;
-	BDATA		nonce_r;
-
-	BDATA		xl;
-	BDATA		xr;
-
-	IKE_PLIST	plist_l;
-	IKE_PLIST	plist_r;
-
-	long		hash_size;
-	BDATA		hash_l;
-	BDATA		hash_r;
-
-	BDATA		hda;		// hash data accumulator
-	BDATA		iv;
-
-	ITH_EVENT_RESEND	event_resend;
-
-	IKE_NLIST	nlist;
-
-	_IDB_XCH();
-	virtual ~_IDB_XCH();
-
-	XCH_STATUS	status();
-	XCH_STATUS	status( XCH_STATUS status, XCH_ERRORCODE errorcode, uint16_t notifycode );
-
-	bool	resend_queue( PACKET_IP & packet );
-	bool	resend_sched();
-	void	resend_clear() ;
-
-}IDB_XCH;
-
-//
+//==============================================================================
 // phase1 event classes
 //
 
@@ -567,8 +385,195 @@ typedef class _ITH_EVENT_PH1HARD : public ITH_EVENT
 
 }ITH_EVENT_PH1HARD;
 
+//==============================================================================
+// phase2 event classes
 //
-// phase1 handle class
+
+typedef class _ITH_EVENT_PH2SOFT : public ITH_EVENT
+{
+	public:
+
+	IDB_PH2 *	ph2;
+	long		diff;
+
+	bool	func();
+
+}ITH_EVENT_PH2SOFT;
+
+typedef class _ITH_EVENT_PH2HARD : public ITH_EVENT
+{
+	public:
+
+	IDB_PH2 *	ph2;
+
+	bool	func();
+
+}ITH_EVENT_PH2HARD;
+
+//==============================================================================
+// ike internal data classes
+//
+
+typedef class _IDB_PEER : public IDB_RC_ENTRY, public IKE_PEER
+{
+	private:
+
+	virtual void	beg();
+	virtual void	end();
+
+	public:
+
+	BDATA		fpass;
+	BDATA		cert_l;
+	BDATA		cert_r;
+	BDATA		psk;
+	BDATA		iddata_l;
+	BDATA		iddata_r;
+	EVP_PKEY *	key;
+
+	BDATA			xauth_group;
+	IKED_XAUTH *	xauth_source;
+	IKED_XCONF *	xconf_source;
+
+	IDB_LIST_PROPOSAL	proposals;
+	IDB_LIST_NETMAP		netmaps;
+
+	virtual	char *	name();
+	virtual LIST *	list();
+
+	_IDB_PEER( IKE_PEER * set_peer );
+	virtual ~_IDB_PEER();
+
+}IDB_PEER;
+
+typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
+{
+	public:
+
+	long		tunnelid;
+	long		tstate;
+	long		lstate;
+
+	IDB_PEER *	peer;
+
+	IKE_SADDR	saddr_l;
+	IKE_SADDR	saddr_r;
+	long		natt_v;
+
+	IKE_XAUTH		xauth;
+	IKE_XCONF		xconf;
+	IDB_LIST_DOMAIN	domains;
+	BDATA			banner;
+	IKEI_STATS		stats;
+	XCH_ERRORCODE	close;
+
+#ifdef WIN32
+	IKE_NSCFG		nscfg;
+#endif
+
+	bool			force_all;
+	IDB_LIST_PH2ID	idlist_incl;
+	IDB_LIST_PH2ID	idlist_excl;
+
+	//
+	// FIXME : move DHCP state into config handle
+	//
+
+	uint32_t	dhcp_xid;
+	SOCKET		dhcp_sock;
+
+	ITH_EVENT_TUNDHCP	event_dhcp;
+
+	virtual	char *	name();
+	virtual LIST *	list();
+
+	virtual void	beg();
+	virtual void	end();
+
+	_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r );
+	virtual ~_IDB_TUNNEL();
+
+}IDB_TUNNEL;
+
+typedef class _IDB_POLICY : public IDB_RC_ENTRY, public PFKI_SPINFO
+{
+	public:
+
+	bool	route;
+
+	virtual	char *	name();
+	virtual LIST *	list();
+
+	virtual void	beg();
+	virtual void	end();
+
+	_IDB_POLICY( PFKI_SPINFO * spinfo );
+	virtual ~_IDB_POLICY();
+
+}IDB_POLICY;
+
+//==============================================================================
+// ike generic exchange handle class
+//
+
+typedef class _IDB_XCH : public IDB_RC_ENTRY
+{
+	public:
+
+	IDB_TUNNEL *	tunnel;
+
+	ITH_LOCK		lock;
+	XCH_STATUS		xch_status;
+	XCH_ERRORCODE	xch_errorcode;
+	uint16_t		xch_notifycode;
+
+	bool			initiator;
+	unsigned char	exchange;
+
+	uint32_t	msgid;
+	long		lstate;
+	long		xstate;
+
+	DH *		dh;
+	long		dh_size;
+
+	BDATA		nonce_l;
+	BDATA		nonce_r;
+
+	BDATA		xl;
+	BDATA		xr;
+
+	long		hash_size;
+	BDATA		hash_l;
+	BDATA		hash_r;
+
+	BDATA		hda;		// hash data accumulator
+	BDATA		iv;
+
+	//
+	// FIXME : only use lists in classes that need them
+	//
+
+	IDB_LIST_PROPOSAL	plist_l;
+	IDB_LIST_PROPOSAL	plist_r;
+	IDB_LIST_NOTIFY		notifications;
+
+	ITH_EVENT_RESEND	event_resend;
+
+	_IDB_XCH();
+	virtual ~_IDB_XCH();
+
+	XCH_STATUS	status();
+	XCH_STATUS	status( XCH_STATUS status, XCH_ERRORCODE errorcode, uint16_t notifycode );
+
+	bool	resend_queue( PACKET_IP & packet );
+	bool	resend_sched();
+	void	resend_clear() ;
+
+}IDB_XCH;
+
+//==============================================================================
+// ike phase1 exchange handle class
 //
 
 typedef class _IDB_PH1 : public IDB_XCH
@@ -585,6 +590,10 @@ typedef class _IDB_PH1 : public IDB_XCH
 
 	IKE_PH1ID	ph1id_l;
 	IKE_PH1ID	ph1id_r;
+
+	//
+	// FIXME : vendor capabilities should be a bitmask
+	//
 
 	bool	xauth_l;	// local will support xauth
 	bool	xauth_r;	// remote will support xauth
@@ -618,6 +627,10 @@ typedef class _IDB_PH1 : public IDB_XCH
 	bool	natted_l;	// local address is natted
 	bool	natted_r;	// remote address is natted
 
+	//
+	// FIXME : dpd sequences should be in tunnel
+	//
+
 	uint32_t	dpd_req;	// last dpd request sequence
 	uint32_t	dpd_res;	// last dpd response sequence
 
@@ -638,8 +651,8 @@ typedef class _IDB_PH1 : public IDB_XCH
 	BDATA	natd_rs;
 	BDATA	natd_rd;
 
-	IKE_CLIST	certs_r;
-	BDATA		sign_r;
+	IDB_LIST_CERT	certs_r;
+	BDATA			sign_r;
 
 	BDATA	skeyid;
 	BDATA	skeyid_d;
@@ -666,38 +679,17 @@ typedef class _IDB_PH1 : public IDB_XCH
 
 	void	clean();
 
+	//
+	// FIXME : fragments should be IDB list
+	//
+
 	bool	frag_add( unsigned char * data, unsigned long size, long index, bool last );
 	bool	frag_get( PACKET_IKE & packet );
 
 }IDB_PH1;
 
-//
-// phase2 event classes
-//
-
-typedef class _ITH_EVENT_PH2SOFT : public ITH_EVENT
-{
-	public:
-
-	IDB_PH2 *	ph2;
-	long		diff;
-
-	bool	func();
-
-}ITH_EVENT_PH2SOFT;
-
-typedef class _ITH_EVENT_PH2HARD : public ITH_EVENT
-{
-	public:
-
-	IDB_PH2 *	ph2;
-
-	bool	func();
-
-}ITH_EVENT_PH2HARD;
-
-//
-// phase2 handle class
+//==============================================================================
+// ike phase2 exchange handle class
 //
 
 typedef class _IDB_PH2 : public IDB_XCH
@@ -738,8 +730,8 @@ typedef class _IDB_PH2 : public IDB_XCH
 
 }IDB_PH2;
 
-//
-// config handle class
+//==============================================================================
+// ike configuraion exchange handle class
 //
 
 typedef class _IDB_CFG : public IDB_XCH
@@ -768,6 +760,10 @@ typedef class _IDB_CFG : public IDB_XCH
 	uint8_t		mtype;
 	uint16_t	ident;
 
+	//
+	// FIXME : attributes should be IDB list
+	//
+
 	IKE_ATTR *	attr_get( long index );
 	bool		attr_has( unsigned short atype );
 	bool		attr_add_b( unsigned short atype, unsigned short adata );
@@ -781,8 +777,8 @@ typedef class _IDB_CFG : public IDB_XCH
 
 }IDB_CFG;
 
-//
-// informational handle class
+//==============================================================================
+// ike informational exchange handle class
 //
 
 typedef class _IDB_INF : public IDB_XCH

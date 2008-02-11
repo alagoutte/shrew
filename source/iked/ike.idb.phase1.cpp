@@ -360,7 +360,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	//
 
 	IKE_PROPOSAL * proposal;
-	tunnel->peer->prop_list.get( &proposal, 0, ISAKMP_PROTO_ISAKMP );
+	tunnel->peer->proposals.get( &proposal, 0, ISAKMP_PROTO_ISAKMP );
 
 	//
 	// if we are the initiator, preset
@@ -484,13 +484,9 @@ _IDB_PH1::~_IDB_PH1()
 	//
 
 	if( xch_errorcode != XCH_FAILED_EXPIRED )
-		iked.log.txt( LLOG_INFO,
-			"DB : phase1 deleted before expire time ( obj count = %i )\n",
-			list_phase1.get_count() );
+		iked.log.txt( LLOG_INFO, "ii : phase1 removal before expire time\n" );
 	else
-		iked.log.txt( LLOG_INFO,
-			"DB : phase1 deleted after expire time ( obj count = %i )\n",
-			list_phase1.get_count() );
+		iked.log.txt( LLOG_INFO, "ii : phase1 removal after expire time\n" );
 
 	//
 	// if this is a client tunnel and there

@@ -87,7 +87,7 @@ long _IKED::phase1_gen_prop( IDB_PH1 * ph1 )
 	//
 
 	IKE_PROPOSAL * peerprop;
-	if( !ph1->tunnel->peer->prop_list.get( &peerprop, 0, ISAKMP_PROTO_ISAKMP ) )
+	if( !ph1->tunnel->peer->proposals.get( &peerprop, 0, ISAKMP_PROTO_ISAKMP ) )
 		return LIBIKE_FAILED;
 
 	//
@@ -658,7 +658,7 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 				//
 
 				IKE_PROPOSAL * peerprop;
-				if( !ph2->tunnel->peer->prop_list.get( &peerprop, 0, ISAKMP_PROTO_IPSEC_AH ) )
+				if( !ph2->tunnel->peer->proposals.get( &peerprop, 0, ISAKMP_PROTO_IPSEC_AH ) )
 					break;
 
 				//
@@ -752,7 +752,7 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 				//
 
 				IKE_PROPOSAL * peerprop;
-				if( !ph2->tunnel->peer->prop_list.get( &peerprop, 0, ISAKMP_PROTO_IPSEC_ESP ) )
+				if( !ph2->tunnel->peer->proposals.get( &peerprop, 0, ISAKMP_PROTO_IPSEC_ESP ) )
 					break;
 
 				//
@@ -942,7 +942,7 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 				//
 
 				IKE_PROPOSAL * peerprop;
-				if( !ph2->tunnel->peer->prop_list.get( &peerprop, 0, ISAKMP_PROTO_IPCOMP ) )
+				if( !ph2->tunnel->peer->proposals.get( &peerprop, 0, ISAKMP_PROTO_IPCOMP ) )
 					break;
 
 				//
@@ -1009,8 +1009,8 @@ long _IKED::phase2_sel_prop( IDB_PH2 * ph2 )
 	// bundle to a local proposal bundle
 	//
 
-	IKE_PLIST plist_l;
-	IKE_PLIST plist_r;
+	IDB_LIST_PROPOSAL plist_l;
+	IDB_LIST_PROPOSAL plist_r;
 
 	//
 	// step through our local bundles

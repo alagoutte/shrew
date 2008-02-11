@@ -41,60 +41,60 @@
 
 #include "iked.h"
 
+//==============================================================================
+// certificate list
 //
-// PROPOSAL LIST
-//
 
-_IKE_PLIST::_IKE_PLIST()
+bool _IDB_LIST_BDATA::add( BDATA & cert )
 {
-}
-
-_IKE_PLIST::~_IKE_PLIST()
-{
-	clean();
-}
-
-long _IKE_PLIST::count()
-{
-	return prop_list.get_count();
-}
-
-void _IKE_PLIST::clean()
-{
-	while( prop_list.get_count() )
-	{
-		IKE_PENTRY * pentry = ( IKE_PENTRY * ) prop_list.get_item( 0 );
-		prop_list.del_item( pentry );
-		delete pentry;
-	}
-}
-
-bool _IKE_PLIST::add( IKE_PROPOSAL * proposal, bool pnext )
-{
-	IKE_PENTRY * pentry = new IKE_PENTRY;
-	if( pentry == NULL )
+	IDB_ENTRY_BDATA * bentry = new IDB_ENTRY_BDATA;
+	if( bentry == NULL )
 		return false;
 
-	pentry->pnext = pnext;
+	*static_cast<BDATA*>( bentry ) = cert;
 
-	memcpy( &pentry->proposal, proposal, sizeof( IKE_PROPOSAL ) );
+	return add_entry( bentry );
+}
 
-	prop_list.add_item( pentry );
+bool _IDB_LIST_BDATA::get( BDATA & cert, long index )
+{
+	IDB_ENTRY_BDATA * bentry = static_cast<IDB_ENTRY_BDATA*>( get_entry( index ) );
+	if( bentry == NULL )
+		return false;
+
+	cert = *static_cast<BDATA*>( bentry );
 
 	return true;
 }
 
-bool _IKE_PLIST::get( IKE_PROPOSAL ** proposal, long pindex, uint8_t proto )
+//==============================================================================
+// IKE proposal list
+//
+
+bool _IDB_LIST_PROPOSAL::add( IKE_PROPOSAL * proposal, bool pnext )
 {
-	while( pindex < prop_list.get_count() )
+	IDB_ENTRY_PROPOSAL * pentry = new IDB_ENTRY_PROPOSAL;
+	if( pentry == NULL )
+		return false;
+
+	pentry->pnext = pnext;
+	*static_cast<IKE_PROPOSAL*>( pentry ) = *proposal;
+	add_entry( pentry );
+
+	return true;
+}
+
+bool _IDB_LIST_PROPOSAL::get( IKE_PROPOSAL ** proposal, long pindex, uint8_t proto )
+{
+	while( pindex < count() )
 	{
-		IKE_PENTRY * pentry = ( IKE_PENTRY * ) prop_list.get_item( pindex );
+		IDB_ENTRY_PROPOSAL * pentry = static_cast<IDB_ENTRY_PROPOSAL*>( get_entry( pindex ) );
 		if( pentry == NULL )
 			return false;
 
-		if( !proto || ( proto == pentry->proposal.proto ) )
+		if( !proto || ( proto == pentry->proto ) )
 		{
-			*proposal = &pentry->proposal;
+			*proposal = static_cast<IKE_PROPOSAL*>( pentry );
 			return true;
 		}
 
@@ -104,20 +104,20 @@ bool _IKE_PLIST::get( IKE_PROPOSAL ** proposal, long pindex, uint8_t proto )
 	return false;
 }
 
-bool _IKE_PLIST::nextb( long & bindex, long & pindex, long & pcount )
+bool _IDB_LIST_PROPOSAL::nextb( long & bindex, long & pindex, long & pcount )
 {
 	if( bindex == -1 )
 		return false;
 
-	while( bindex < prop_list.get_count() )
+	while( bindex < count() )
 	{
-		IKE_PENTRY * pentry = ( IKE_PENTRY * ) prop_list.get_item( bindex );
+		IDB_ENTRY_PROPOSAL * pentry = static_cast<IDB_ENTRY_PROPOSAL*>( get_entry( bindex ) );
 		if( pentry == NULL )
 			return false;
 
 		if( pentry->pnext )
 		{
-			long pnumb = pentry->proposal.pnumb;
+			long pnumb = pentry->pnumb;
 
 			pindex = bindex;
 			pcount = 1;
@@ -125,7 +125,7 @@ bool _IKE_PLIST::nextb( long & bindex, long & pindex, long & pcount )
 
 			while( 1 )
 			{
-				pentry = ( IKE_PENTRY * ) prop_list.get_item( bindex );
+				pentry = static_cast<IDB_ENTRY_PROPOSAL*>( get_entry( bindex ) );
 				if( pentry == NULL )
 				{
 					bindex = -1;
@@ -134,7 +134,7 @@ bool _IKE_PLIST::nextb( long & bindex, long & pindex, long & pcount )
 
 				if( pentry->pnext )
 				{
-					if( pnumb != pentry->proposal.pnumb )
+					if( pnumb != pentry->pnumb )
 						break;
 
 					pcount++;
@@ -152,20 +152,20 @@ bool _IKE_PLIST::nextb( long & bindex, long & pindex, long & pcount )
 	return false;
 }
 
-bool _IKE_PLIST::nextp( IKE_PROPOSAL ** proposal, long & pindex, long & tindex, long & tcount )
+bool _IDB_LIST_PROPOSAL::nextp( IKE_PROPOSAL ** proposal, long & pindex, long & tindex, long & tcount )
 {
 	if( pindex == -1 )
 		return false;
 
-	while( pindex < prop_list.get_count() )
+	while( pindex < count() )
 	{
-		IKE_PENTRY * pentry = ( IKE_PENTRY * ) prop_list.get_item( pindex );
+		IDB_ENTRY_PROPOSAL * pentry = static_cast<IDB_ENTRY_PROPOSAL*>( get_entry( pindex ) );
 		if( pentry == NULL )
 			return false;
 
 		if( pentry->pnext )
 		{
-			*proposal = &pentry->proposal;
+			*proposal = static_cast<IKE_PROPOSAL*>( pentry );
 
 			tindex = pindex;
 			tcount = 1;
@@ -173,7 +173,7 @@ bool _IKE_PLIST::nextp( IKE_PROPOSAL ** proposal, long & pindex, long & tindex, 
 
 			while( 1 )
 			{
-				pentry = ( IKE_PENTRY * ) prop_list.get_item( pindex );
+				pentry = static_cast<IDB_ENTRY_PROPOSAL*>( get_entry( pindex ) );
 				if( pentry == NULL )
 				{
 					pindex = -1;
@@ -196,20 +196,22 @@ bool _IKE_PLIST::nextp( IKE_PROPOSAL ** proposal, long & pindex, long & tindex, 
 	return false;
 }
 
-bool _IKE_PLIST::nextt( IKE_PROPOSAL ** proposal, long & tindex )
+bool _IDB_LIST_PROPOSAL::nextt( IKE_PROPOSAL ** proposal, long & tindex )
 {
 	if( tindex == -1 )
 		return false;
 
-	IKE_PENTRY * pentry = ( IKE_PENTRY * ) prop_list.get_item( tindex++ );
+	IDB_ENTRY_PROPOSAL * pentry = static_cast<IDB_ENTRY_PROPOSAL*>( get_entry( tindex++ ) );
 	if( pentry == NULL )
 		return false;
 
-	*proposal = &pentry->proposal;
+	*proposal = static_cast<IKE_PROPOSAL*>( pentry );
 
-	pentry = ( IKE_PENTRY * ) prop_list.get_item( tindex );
+	pentry = static_cast<IDB_ENTRY_PROPOSAL*>( get_entry( tindex ) );
 	if( pentry == NULL )
+	{
 		tindex = -1;
+	}
 	else
 	{
 		if( pentry->pnext )
@@ -219,202 +221,89 @@ bool _IKE_PLIST::nextt( IKE_PROPOSAL ** proposal, long & tindex )
 	return true;
 }
 
+//==============================================================================
+// IKE notification list
 //
-// CERTIFICATE LIST
-//
 
-_IKE_CLIST::_IKE_CLIST()
+bool _IDB_LIST_NOTIFY::add( IKE_NOTIFY & notify )
 {
-}
-
-_IKE_CLIST::~_IKE_CLIST()
-{
-	while( true )
-	{
-		BDATA * tmp_cert = ( BDATA * ) list_certs.get_item( 0 );
-		if( tmp_cert == NULL )
-			break;
-
-		list_certs.del_item( tmp_cert );
-		delete tmp_cert;
-	}
-}
-
-long _IKE_CLIST::count()
-{
-	return list_certs.get_count();
-}
-
-bool _IKE_CLIST::add( BDATA & cert )
-{
-	BDATA * tmp_cert = new BDATA;
-	if( tmp_cert == NULL )
+	IDB_ENTRY_NOTIFY * nentry = new IDB_ENTRY_NOTIFY;
+	if( nentry == NULL )
 		return false;
 
-	tmp_cert->add( cert );
+	nentry->type	= notify.type;
+	nentry->code	= notify.code;
+	nentry->doi		= notify.doi;
+	nentry->proto	= notify.proto;
+	nentry->spi		= notify.spi;
+	nentry->data	= notify.data;
 
-	list_certs.add_item( tmp_cert );
+	return add_entry( nentry );
+}
+
+bool _IDB_LIST_NOTIFY::get( IKE_NOTIFY & notify, long index )
+{
+	IDB_ENTRY_NOTIFY * nentry = static_cast<IDB_ENTRY_NOTIFY*>( get_entry( index ) );
+	if( nentry == NULL )
+		return false;
+
+	notify.type		= nentry->type;
+	notify.code		= nentry->code;
+	notify.doi		= nentry->doi;
+	notify.proto	= nentry->proto;
+	notify.spi		= nentry->spi;
+	notify.data		= nentry->data;
 
 	return true;
 }
 
-bool _IKE_CLIST::get( BDATA & cert, long index )
-{
-	BDATA * tmp_cert = ( BDATA * ) list_certs.get_item( index );
-	if( tmp_cert == NULL )
-		return false;
-
-	cert.size( 0 );
-	cert.add( *tmp_cert );
-
-	return true;
-}
-
-//
-// IPV4ID LIST
+//==============================================================================
+// phase2 ID list
 //
 
-_IKE_ILIST::_IKE_ILIST()
+bool _IDB_LIST_PH2ID::add( IKE_PH2ID & ph2id )
 {
-}
-
-_IKE_ILIST::~_IKE_ILIST()
-{
-	while( true )
-	{
-		IKE_PH2ID * tmp_ph2id = ( IKE_PH2ID * ) list_ph2id.get_item( 0 );
-		if( tmp_ph2id == NULL )
-			break;
-
-		list_ph2id.del_item( tmp_ph2id );
-		delete tmp_ph2id;
-	}
-}
-
-long _IKE_ILIST::count()
-{
-	return list_ph2id.get_count();
-}
-
-bool _IKE_ILIST::add( IKE_PH2ID & ph2id )
-{
-	IKE_PH2ID * tmp_ph2id = new IKE_PH2ID;
-	if( tmp_ph2id == NULL )
+	IDB_ENTRY_PH2ID * ientry = new IDB_ENTRY_PH2ID;
+	if( ientry == NULL )
 		return false;
 
-	memcpy( tmp_ph2id, &ph2id, sizeof( ph2id ) );
+	*static_cast<IKE_PH2ID*>( ientry ) = ph2id;
 
-	list_ph2id.add_item( tmp_ph2id );
+	return add_entry( ientry );
+}
+
+bool _IDB_LIST_PH2ID::get( IKE_PH2ID & ph2id, long index )
+{
+	IDB_ENTRY_PH2ID * ientry = static_cast<IDB_ENTRY_PH2ID*>( get_entry( index ) );
+	if( ientry == NULL )
+		return false;
+
+	ph2id = *static_cast<IKE_PH2ID*>( ientry );
 
 	return true;
 }
 
-bool _IKE_ILIST::get( IKE_PH2ID & ph2id, long index )
-{
-	IKE_PH2ID * tmp_ph2id = ( IKE_PH2ID * ) list_ph2id.get_item( index );
-	if( tmp_ph2id == NULL )
-		return false;
-
-	memcpy( &ph2id, tmp_ph2id, sizeof( ph2id ) );
-
-	return true;
-}
-
-//
-// NOTIFICATION LIST
+//==============================================================================
+// network map list ( list of phase2 ID lists )
 //
 
-_IKE_NLIST::~_IKE_NLIST()
+bool _IDB_LIST_NETMAP::add( IDB_LIST_PH2ID * idlist, long mode, BDATA * group )
 {
-	while( list_notify.get_count() )
-	{
-		IKE_NOTIFY * tmp_notify = ( IKE_NOTIFY * ) list_notify.get_item( 0 );
-		list_notify.del_item( tmp_notify );
-		delete tmp_notify;
-	}
-}
-
-long _IKE_NLIST::count()
-{
-	return list_notify.get_count();
-}
-
-bool _IKE_NLIST::add( IKE_NOTIFY & notify )
-{
-	IKE_NOTIFY * tmp_notify = new IKE_NOTIFY;
-	if( tmp_notify == NULL )
+	IDB_ENTRY_NETMAP * nentry = new IDB_ENTRY_NETMAP;
+	if( nentry == NULL )
 		return false;
 
-	tmp_notify->type	= notify.type;
-	tmp_notify->code	= notify.code;
-	tmp_notify->doi		= notify.doi;
-	tmp_notify->proto	= notify.proto;
-	tmp_notify->spi		= notify.spi;
+	if( group != NULL )
+		nentry->group = *group;
 
-	tmp_notify->data.set( notify.data );
+	nentry->idlist = idlist;
+	nentry->mode = mode;
 
-	list_notify.add_item( tmp_notify );
-
-	return true;
+	return add_entry( nentry );
 }
 
-bool _IKE_NLIST::get( IKE_NOTIFY & notify, long index )
+bool _IDB_LIST_NETMAP::get( IDB_ENTRY_NETMAP ** nentry, long index )
 {
-	IKE_NOTIFY * tmp_notify = ( IKE_NOTIFY * ) list_notify.get_item( index );
-	if( tmp_notify == NULL )
-		return false;
-
-	notify.type		= tmp_notify->type;
-	notify.code		= tmp_notify->code;
-	notify.doi		= tmp_notify->doi;
-	notify.proto	= tmp_notify->proto;
-	notify.spi		= tmp_notify->spi;
-
-	notify.data.set( tmp_notify->data );
-
-	return true;
+	*nentry = static_cast<IDB_ENTRY_NETMAP*>( get_entry( index ) );
+	return ( *nentry != NULL );
 }
-
-//
-// DOMAIN SUFFIX LIST
-//
-
-_IKE_DLIST::~_IKE_DLIST()
-{
-	while( list_suffix.get_count() )
-	{
-		BDATA * tmp_suffix = ( BDATA * ) list_suffix.get_item( 0 );
-		list_suffix.del_item( tmp_suffix );
-		delete tmp_suffix;
-	}
-}
-
-long _IKE_DLIST::count()
-{
-	return list_suffix.get_count();
-}
-
-bool _IKE_DLIST::add( BDATA & suffix )
-{
-	BDATA * tmp_suffix = new BDATA;
-	if( tmp_suffix == NULL )
-		return false;
-
-	tmp_suffix->set( suffix );
-
-	list_suffix.add_item( tmp_suffix );
-
-	return true;
-}
-
-bool _IKE_DLIST::get( BDATA & suffix, long index )
-{
-	BDATA * tmp_suffix = ( BDATA * ) list_suffix.get_item( index );
-	if( tmp_suffix == NULL )
-		return false;
-
-	suffix.set( *tmp_suffix );
-
-	return true;
-}
-

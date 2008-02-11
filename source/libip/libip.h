@@ -361,8 +361,11 @@ typedef class DLX _BDATA
 
 	public:
 
+	_BDATA&	operator =( _BDATA & bdata );
+
 	_BDATA();
-	~_BDATA();
+	_BDATA( _BDATA & bdata );
+	virtual ~_BDATA();
 
 	size_t			oset( size_t new_oset = ~0 );
 	size_t			size( size_t new_size = ~0 );

@@ -337,7 +337,7 @@ typedef class _IKED
 	friend class _ITH_NWORK;
 	friend class _ITH_PFKEY;
 
-	friend class _IDB;
+	friend class _IDB_RC_ENTRY;
 	friend class _IDB_PEER;
 	friend class _IDB_POLICY;
 	friend class _IDB_TUNNEL;
@@ -525,7 +525,7 @@ typedef class _IKED
 	bool	cert_subj( BDATA & cert, BDATA & subj );
 	bool	asn1_text( BDATA & asn1, BDATA & text );
 	bool	text_asn1( BDATA & text, BDATA & asn1 );
-	bool	cert_verify( IKE_CLIST & certs, BDATA & ca, BDATA & cert );
+	bool	cert_verify( IDB_LIST_CERT & certs, BDATA & ca, BDATA & cert );
 
 	long	prvkey_rsa_load( EVP_PKEY ** evp_pkey, char * file, BDATA & pass );
 	bool	prvkey_rsa_load_pem( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass );
@@ -664,8 +664,8 @@ typedef class _IKED
 	long	payload_add_attr( PACKET_IKE & packet, IKE_ATTR & attrib  );
 	long	payload_get_attr( PACKET_IKE & packet, IKE_ATTR & attrib );
 
-	long	payload_add_sa( PACKET_IKE & packet, IKE_PLIST & plist, uint8_t next );
-	long	payload_get_sa( PACKET_IKE & packet, IKE_PLIST & plist );
+	long	payload_add_sa( PACKET_IKE & packet, IDB_LIST_PROPOSAL & plist, uint8_t next );
+	long	payload_get_sa( PACKET_IKE & packet, IDB_LIST_PROPOSAL & plist );
 
 	long	payload_add_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal, uint8_t next );
 	long	payload_get_xform( PACKET_IKE & packet, IKE_PROPOSAL * proposal );

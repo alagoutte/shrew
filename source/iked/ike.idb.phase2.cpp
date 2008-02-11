@@ -178,17 +178,9 @@ _IDB_PH2::~_IDB_PH2()
 	//
 
 	if( xch_errorcode != XCH_FAILED_EXPIRED )
-	{
-		iked.log.txt( LLOG_INFO,
-			"DB : phase2 deleted before expire time ( obj count = %i )\n",
-			list_phase2.get_count() );
-	}
+		iked.log.txt( LLOG_INFO, "ii : phase2 removal before expire time\n" );
 	else
-	{
-		iked.log.txt( LLOG_INFO,
-			"DB : phase2 deleted after expire time ( obj count = %i )\n",
-			list_phase2.get_count() );
-	}
+		iked.log.txt( LLOG_INFO, "ii : phase2 removal after expire time\n" );
 
 	//
 	// inform pfkey interface

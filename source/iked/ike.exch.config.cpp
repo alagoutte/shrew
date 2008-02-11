@@ -1582,22 +1582,22 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 			}
 			else
 			{
-				BDATA suffix;
+				BDATA domain;
 
 				long index = 0;
 
-				while( cfg->tunnel->dlist.get( suffix, index++ ) )
+				while( cfg->tunnel->domains.get( domain, index++ ) )
 				{
 					log.txt( LLOG_DEBUG,
 						"ii : - Split DNS Domain = %s\n",
-						suffix.text() );
+						domain.text() );
 
 					if( index > 1 )
-						suffix.ins( ',', 1 );
+						domain.ins( ',', 1 );
 
 					cfg->attr_add_v( UNITY_SPLIT_DOMAIN,
-						suffix.buff(),
-						suffix.size() );
+						domain.buff(),
+						domain.size() );
 				}
 			}
 		}
@@ -2030,8 +2030,8 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 
 							size_t tmplen = strlen( ( char * ) dnsstr ) + 1;
 
-							BDATA suffix;
-							suffix.set( dnsstr, tmplen );
+							BDATA domain;
+							domain.set( dnsstr, tmplen );
 
 							log.txt( LLOG_DEBUG,
 								"ii : - Split Domain = %s\n",
@@ -2041,7 +2041,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 							dnsstr += tmplen;
 
 							if( readmask & IPSEC_OPTS_SPLITDNS )
-								cfg->tunnel->dlist.add( suffix );
+								cfg->tunnel->domains.add( domain );
 						}
 					}
 					else
