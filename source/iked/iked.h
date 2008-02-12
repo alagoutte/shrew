@@ -418,7 +418,7 @@ typedef class _IKED
 	ITH_LOCK	lock_net;
 	ITH_LOCK	lock_idb;
 
-	IDB_LIST_PH2ID		idb_list_netgrp;
+	IDB_LIST		idb_list_netgrp;
 	IDB_LIST_PEER		idb_list_peer;
 	IDB_LIST_TUNNEL		idb_list_tunnel;
 	IDB_LIST_POLICY		idb_list_policy;

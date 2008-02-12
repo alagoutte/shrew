@@ -100,6 +100,7 @@ _IDB_XCH::_IDB_XCH()
 	initiator = false;
 	exchange = 0;
 
+	lstate = 0;
 	xstate = 0;
 
 	dh = NULL;

@@ -71,9 +71,9 @@ typedef class _IKED IKED;
 
 #include "iked.h"
 
-IKE_PROPOSAL	proposal;
-IKE_ILIST *	ilist;
-IDB_PEER *	peer;
+IDB_PEER *		peer;
+IKE_PROPOSAL		proposal;
+IDB_LIST_PH2ID *	idlist;
 
 %}
 
@@ -394,12 +394,12 @@ daemon_line
 netgroup_section
   :	NETGROUP LABEL
 	{
-		ilist = new IKE_ILIST;
-		if( ilist == NULL )
+		idlist = new IDB_LIST_PH2ID;
+		if( idlist == NULL )
 			error( @$, std::string( "unable to allocate idlist for netgroup" ) + $2->text() );
 
-		ilist->name.set( *$2 );
-		iked.list_netgrp.add_item( ilist );
+		idlist->name.set( *$2 );
+		iked.idb_list_netgrp.add_entry( idlist );
 		delete $2;
 	}
 	BCB netgroup_lines ECB
@@ -429,7 +429,7 @@ netgroup_line
 
 		ph2id.addr2.s_addr = htonl( ph2id.addr2.s_addr );
 
-		ilist->add( ph2id );
+		idlist->add( ph2id );
 		delete $1;
 	}
 	EOS
@@ -635,7 +635,7 @@ xconf_local_dns_servers
   |	xconf_local_dns_servers xconf_local_dns_server
   ;
 xconf_local_dns_server
-  :	QUOTED
+  :	ADDRESS
 	{
 		int count = iked.xconf_local.config.nscfg.dnss_count;
 		if( count <= IPSEC_DNSS_MAX )
@@ -653,7 +653,7 @@ xconf_local_nbn_servers
   |	xconf_local_nbn_servers xconf_local_nbn_server
   ;
 xconf_local_nbn_server
-  :	QUOTED
+  :	ADDRESS
 	{
 		int count = iked.xconf_local.config.nscfg.nbns_count;
 		if( count <= IPSEC_NBNS_MAX )
@@ -673,7 +673,7 @@ xconf_local_dns_names
 xconf_local_dns_name
   :	QUOTED
 	{
-		iked.xconf_local.dlist.add( *$1 );
+		iked.xconf_local.domains.add( *$1 );
 		delete $1;
 	}
   ;
@@ -1169,7 +1169,7 @@ peer_line
 	}
 	BCB proposal_lines_isakmp ECB
 	{
-		peer->prop_list.add( &proposal, true );
+		peer->proposals.add( &proposal, true );
 	}
   |	PROPOSAL AH
 	{
@@ -1178,7 +1178,7 @@ peer_line
 	}
 	BCB proposal_lines_ah ECB
 	{
-		peer->prop_list.add( &proposal, true );
+		peer->proposals.add( &proposal, true );
 	}
   |	PROPOSAL ESP
 	{
@@ -1187,7 +1187,7 @@ peer_line
 	}
 	BCB proposal_lines_esp ECB
 	{
-		peer->prop_list.add( &proposal, true );
+		peer->proposals.add( &proposal, true );
 	}
   |	PROPOSAL IPCOMP
 	{
@@ -1196,7 +1196,7 @@ peer_line
 	}
 	BCB proposal_lines_ipcomp ECB
 	{
-		peer->prop_list.add( &proposal, true );
+		peer->proposals.add( &proposal, true );
 	}
   ;
 
@@ -1210,18 +1210,18 @@ plcy_list_line
 		long index = 0;
 		while( true )
 		{
-			ilist = ( IKE_ILIST * ) iked.list_netgrp.get_item( index++ );
-			if( ilist == NULL )
+			idlist = static_cast<IDB_LIST_PH2ID*>( iked.idb_list_netgrp.get_entry( index++ ) );
+			if( idlist == NULL )
 				break;
 
-			if( !strcmp( $2->text(), ilist->name.text() ) )
+			if( !strcmp( $2->text(), idlist->name.text() ) )
 				break; 
 		}
 
-		if( ilist == NULL )
+		if( idlist == NULL )
 			error( @$, std::string( "unknown netgroup " ) + $2->text() );
 
-		peer->netmap_add( ilist, UNITY_SPLIT_INCLUDE, NULL );
+		peer->netmaps.add( idlist, UNITY_SPLIT_INCLUDE, NULL );
 
 		delete $2;
 	}
@@ -1231,18 +1231,18 @@ plcy_list_line
 		long index = 0;
 		while( true )
 		{
-			ilist = ( IKE_ILIST * ) iked.list_netgrp.get_item( index++ );
-			if( ilist == NULL )
+			idlist = static_cast<IDB_LIST_PH2ID*>( iked.idb_list_netgrp.get_entry( index++ ) );
+			if( idlist == NULL )
 				break;
 
-			if( !strcmp( $2->text(), ilist->name.text() ) )
+			if( !strcmp( $2->text(), idlist->name.text() ) )
 				break; 
 		}
 
-		if( ilist == NULL )
+		if( idlist == NULL )
 			error( @$, std::string( "unknown netgroup " ) + $2->text() );
 
-		peer->netmap_add( ilist, UNITY_SPLIT_INCLUDE, $3 );
+		peer->netmaps.add( idlist, UNITY_SPLIT_INCLUDE, $3 );
 
 		delete $2;
 		delete $3;
@@ -1253,18 +1253,18 @@ plcy_list_line
 		long index = 0;
 		while( true )
 		{
-			ilist = ( IKE_ILIST * ) iked.list_netgrp.get_item( index++ );
-			if( ilist == NULL )
+			idlist = static_cast<IDB_LIST_PH2ID*>( iked.idb_list_netgrp.get_entry( index++ ) );
+			if( idlist == NULL )
 				break;
 
-			if( !strcmp( $2->text(), ilist->name.text() ) )
+			if( !strcmp( $2->text(), idlist->name.text() ) )
 				break; 
 		}
 
-		if( ilist == NULL )
+		if( idlist == NULL )
 			error( @$, std::string( "unknown netgroup " ) + $2->text() );
 
-		peer->netmap_add( ilist, UNITY_SPLIT_EXCLUDE, NULL );
+		peer->netmaps.add( idlist, UNITY_SPLIT_EXCLUDE, NULL );
 
 		delete $2;
 	}
@@ -1274,18 +1274,18 @@ plcy_list_line
 		long index = 0;
 		while( true )
 		{
-			ilist = ( IKE_ILIST * ) iked.list_netgrp.get_item( index++ );
-			if( ilist == NULL )
+			idlist = static_cast<IDB_LIST_PH2ID*>( iked.idb_list_netgrp.get_entry( index++ ) );
+			if( idlist == NULL )
 				break;
 
-			if( !strcmp( $2->text(), ilist->name.text() ) )
+			if( !strcmp( $2->text(), idlist->name.text() ) )
 				break; 
 		}
 
-		if( ilist == NULL )
+		if( idlist == NULL )
 			error( @$, std::string( "unknown netgroup " ) + $2->text() );
 
-		peer->netmap_add( ilist, UNITY_SPLIT_EXCLUDE, $3 );
+		peer->netmaps.add( idlist, UNITY_SPLIT_EXCLUDE, $3 );
 
 		delete $2;
 		delete $3;

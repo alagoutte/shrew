@@ -13,6 +13,7 @@ include_directories(
 	${IKE_SOURCE_DIR}/source
 	${IKE_SOURCE_DIR}/source/iked
 	${IKE_SOURCE_DIR}/source/libike
+	${IKE_SOURCE_DIR}/source/libidb
 	${IKE_SOURCE_DIR}/source/libith
 	${IKE_SOURCE_DIR}/source/libip
 	${IKE_SOURCE_DIR}/source/liblog
@@ -21,6 +22,7 @@ include_directories(
 
 link_directories(
 	${IKE_SOURCE_DIR}/source/libike
+	${IKE_SOURCE_DIR}/source/libidb
 	${IKE_SOURCE_DIR}/source/libith
 	${IKE_SOURCE_DIR}/source/libip
 	${IKE_SOURCE_DIR}/source/liblog
@@ -66,6 +68,7 @@ add_executable(
 target_link_libraries(
 	iked
 	ike
+	idb
 	ith
 	ip
 	log

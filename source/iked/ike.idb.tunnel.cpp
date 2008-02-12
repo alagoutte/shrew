@@ -152,7 +152,9 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 	// when the refcount reaches zero
 	//
 
-	setflags( IDB_FLAG_DEAD & IDB_FLAG_NOEND );
+	setflags( IDB_FLAG_DEAD | IDB_FLAG_NOEND );
+
+	idb_flags |= IDB_FLAG_DEAD;
 
 	tstate = 0;
 	lstate = 0;

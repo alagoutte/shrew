@@ -129,7 +129,7 @@ typedef class _IDB_ENTRY_PH2ID : public IDB_ENTRY, public IKE_PH2ID
 {
 }IDB_ENTRY_PH2ID;
 
-typedef class _IDB_LIST_PH2ID : public IDB_LIST
+typedef class _IDB_LIST_PH2ID : public IDB_LIST, public IDB_ENTRY
 {
 	public:
 

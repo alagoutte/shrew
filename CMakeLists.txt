@@ -26,6 +26,7 @@ subdirs(
 	source/iked
 	source/libike
 	source/libip
+	source/libidb
 	source/libith
 	source/liblog
 	source/libpfk )
