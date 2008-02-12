@@ -58,7 +58,6 @@ _IKED::_IKED()
 
 	rand_bytes( &ident, 2 );
 
-	lock_sdb.setname( "sdb" );
 	lock_net.setname( "net" );
 
 	unsigned char xauth[] = VEND_XAUTH;
@@ -117,36 +116,10 @@ _IKED::_IKED()
 
 _IKED::~_IKED()
 {
-/*
-	//
-	// cleaup our netgroup list
-	//
+	// cleanup our object lists
 
-	IDB_LIST_PH2ID * idlist;
-	while( true )
-	{
-		 ilist = ( IKE_ILIST * ) list_netgrp.get_item( 0 );
-		 if( ilist == NULL )
-			 break;
-		 list_netgrp.del_item( ilist );
-		 delete ilist;
-	}
-
-	//
-	// cleaup our policy list
-	//
-
-	IDB_POLICY * policy;
-	while( true )
-	{
-		 policy = ( IDB_POLICY * ) list_policy.get_item( 0 );
-		 if( policy == NULL )
-			 break;
-
-		 list_policy.del_item( policy );
-		 delete policy;
-	}
-*/
+	idb_list_policy.clean();
+	idb_list_netgrp.clean();
 }
 
 bool _IKED::rand_bytes( void * buff, long size )
@@ -365,34 +338,15 @@ long _IKED::halt()
 		"ii : halt signal received, shutting down\n" );
 
 	//
-	// remove all peers
+	// cleanup our peer object and
+	// wait for them to be removed
 	//
-/*
-	lock_sdb.lock();
 
-	long count = iked.list_peer.get_count();
-	long index = 0;
+	idb_list_peer.clean();
 
-	for( ; index < count; index++ )
-	{
-		IDB_PEER * peer = ( IDB_PEER * ) iked.list_peer.get_item( index );
-
-		peer->end( false );
-		peer->inc( false );
-		peer->lstate |= LSTATE_DELETE;
-
-		if( peer->dec( false ) )
-		{
-			index--;
-			count--;
-		}
-	}	
-
-	lock_sdb.unlock();
-
-	while( list_peer.get_count() )
+	while( idb_list_peer.count() )
 		Sleep( 1000 );
-*/
+
 	state = DSTATE_TERMINATE;
 
 	return LIBIKE_OK;

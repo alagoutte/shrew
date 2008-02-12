@@ -45,17 +45,15 @@
 // IDB subclass list section
 //
 
-LIST list_inform;
-
 char * _IDB_INF::name()
 {
 	static char * xname = "informational";
 	return xname;
 }
 
-LIST * _IDB_INF::list()
+IDB_RC_LIST * _IDB_INF::list()
 {
-	return &list_inform;
+	return NULL;
 }
 
 //

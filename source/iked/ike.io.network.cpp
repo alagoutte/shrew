@@ -285,7 +285,13 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 	IDB_PH1 * ph1 = NULL;
 
-	if( !get_phase1( true, &ph1, NULL, XCH_STATUS_ANY, XCH_STATUS_ANY, &cookies ) )
+	if( !idb_list_ph1.find(
+			true,
+			&ph1,
+			NULL,
+			XCH_STATUS_ANY,
+			XCH_STATUS_ANY,
+			&cookies ) )
 	{
 		//
 		// if we are acting as a responder
@@ -325,7 +331,12 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 		IDB_TUNNEL * tunnel = NULL;
 
-		if( !get_tunnel( true, &tunnel, NULL, &saddr_src, true ) )
+		if( !idb_list_tunnel.find(
+				true,
+				&tunnel,
+				NULL,
+				&saddr_src,
+				true ) )
 		{
 			//
 			// attempt to locate a peer
@@ -334,7 +345,10 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 			IDB_PEER * peer;
 
-			if( !get_peer( true, &peer, &saddr_src ) )
+			if( !idb_list_peer.find(
+					true,
+					&peer,
+					&saddr_src ) )
 			{
 				log.txt( LLOG_INFO,
 					"XX : ike packet from %s ignored, no matching definition for peer\n",

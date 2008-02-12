@@ -612,7 +612,17 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 					unsigned short	ltype;
 
 					IDB_PH2 * ph2_notify;
-					if( get_phase2( true, &ph2_notify, ph1->tunnel, XCH_STATUS_ANY, XCH_STATUS_DEAD, NULL, NULL, NULL, &notify->spi ) )
+
+					if( idb_list_ph2.find(
+							true,
+							&ph2_notify,
+							ph1->tunnel,
+							XCH_STATUS_ANY,
+							XCH_STATUS_DEAD,
+							NULL,
+							NULL,
+							NULL,
+							&notify->spi ) )
 					{
 						//
 						// create a temp packet for parsing
@@ -763,9 +773,17 @@ long _IKED::inform_chk_delete( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 			//
 
 			IDB_PH1 * ph1_delete;
-			if( get_phase1( true, &ph1_delete, ph1->tunnel, XCH_STATUS_MATURE, XCH_STATUS_DEAD, &notify->spi.cookies ) )
+			if( idb_list_ph1.find(
+					true,
+					&ph1_delete,
+					ph1->tunnel,
+					XCH_STATUS_MATURE,
+					XCH_STATUS_DEAD,
+					&notify->spi.cookies ) )
 			{
-				log.txt( LLOG_INFO, "ii : cleanup, marked phase1 %s for removal\n", txtspi );
+				log.txt( LLOG_INFO,
+					"ii : cleanup, marked phase1 %s for removal\n",
+					txtspi );
 
 				ph1_delete->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_DELETE, 0 );
 				ph1_delete->dec( true );
@@ -785,9 +803,20 @@ long _IKED::inform_chk_delete( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 			//
 
 			IDB_PH2 * ph2_delete;
-			if( get_phase2( true, &ph2_delete, ph1->tunnel, XCH_STATUS_MATURE, XCH_STATUS_DEAD, NULL, NULL, NULL, &notify->spi ) )
+			if( idb_list_ph2.find(
+					true,
+					&ph2_delete,
+					ph1->tunnel,
+					XCH_STATUS_MATURE,
+					XCH_STATUS_DEAD,
+					NULL,
+					NULL, 
+					NULL,
+					&notify->spi ) )
 			{
-				log.txt( LLOG_INFO, "DB : cleanup, marked phase2 %s for removal\n", txtspi );
+				log.txt( LLOG_INFO,
+					"DB : cleanup, marked phase2 %s for removal\n",
+					txtspi );
 
 				ph2_delete->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_DELETE, 0 );
 				ph2_delete->dec( true );

@@ -673,7 +673,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 		// ( caller must hold the sdb lock )
 		//
 
-		iked.lock_sdb.lock();
+		lock_idb.lock();
 
 		if( tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
 			iked.policy_list_remove( tunnel, true );
@@ -681,7 +681,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 		if( tunnel->peer->xconf_mode == CONFIG_MODE_DHCP )
 			iked.socket_dhcp_remove( tunnel );
 
-		iked.lock_sdb.unlock();
+		lock_idb.unlock();
 
 		//
 		// cleanup client settings

@@ -41,29 +41,9 @@
 
 #include "iked.h"
 
-//
-// IDB subclass list section
-//
-
-LIST list_tunnel;
-extern LIST list_phase1;
-extern LIST list_phase2;
-extern LIST list_config;
-
-char * _IDB_TUNNEL::name()
-{
-	static char * xname = "tunnel";
-	return xname;
-}
-
-LIST * _IDB_TUNNEL::list()
-{
-	return &list_tunnel;
-}
-
-//
-// tunnel event functions
-//
+//==============================================================================
+// tunnel events
+//==============================================================================
 
 bool _ITH_EVENT_TUNDHCP::func()
 {
@@ -95,9 +75,75 @@ bool _ITH_EVENT_TUNDHCP::func()
 	return true;
 }
 
-//
-// tunnel configuration class
-//
+//==============================================================================
+// tunnel list
+//==============================================================================
+
+IDB_TUNNEL * _IDB_LIST_TUNNEL::get( int index )
+{
+	return static_cast<IDB_TUNNEL*>( get_entry( index ) );
+}
+
+bool _IDB_LIST_TUNNEL::find( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, IKE_SADDR * saddr, bool port )
+{
+	if( tunnel != NULL )
+		*tunnel = NULL;
+
+	if( lock )
+		iked.lock_idb.lock();
+
+	long tunnel_count = count();
+	long tunnel_index = 0;
+
+	for( ; tunnel_index < tunnel_count; tunnel_index++ )
+	{
+		IDB_TUNNEL * tmp_tunnel = get( tunnel_index );
+
+		//
+		// match the tunnel id
+		//
+
+		if( tunnelid != NULL )
+			if( tmp_tunnel->tunnelid != *tunnelid )
+				continue;
+
+		//
+		// match the peer address
+		//
+
+		if( saddr != NULL )
+			if( !cmp_sockaddr( tmp_tunnel->saddr_r.saddr, saddr->saddr, port ) )
+				continue;
+
+		iked.log.txt( LLOG_DEBUG, "DB : tunnel found\n" );
+
+		//
+		// increase our refrence count
+		//
+
+		if( tunnel != NULL )
+		{
+			tmp_tunnel->inc( false );
+			*tunnel = tmp_tunnel;
+		}
+
+		if( lock )
+			iked.lock_idb.unlock();
+
+		return true;
+	}
+
+	iked.log.txt( LLOG_DEBUG, "DB : tunnel not found\n" );
+
+	if( lock )
+		iked.lock_idb.unlock();
+
+	return false;
+}
+
+//==============================================================================
+// tunnel list entry
+//==============================================================================
 
 _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r )
 {
@@ -191,61 +237,19 @@ _IDB_TUNNEL::~_IDB_TUNNEL()
 #endif
 }
 
-bool _IKED::get_tunnel( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, IKE_SADDR * saddr, bool port )
+//------------------------------------------------------------------------------
+// abstract functions from parent class
+//
+
+char * _IDB_TUNNEL::name()
 {
-	if( tunnel != NULL )
-		*tunnel = NULL;
+	static char * xname = "tunnel";
+	return xname;
+}
 
-	if( lock )
-		lock_sdb.lock();
-
-	long count = list_tunnel.get_count();
-	long index = 0;
-
-	for( ; index < count; index++ )
-	{
-		IDB_TUNNEL * tmp_tunnel = ( IDB_TUNNEL * ) list_tunnel.get_item( index );
-
-		//
-		// match the tunnel id
-		//
-
-		if( tunnelid != NULL )
-			if( tmp_tunnel->tunnelid != *tunnelid )
-				continue;
-
-		//
-		// match the peer address
-		//
-
-		if( saddr != NULL )
-			if( !cmp_sockaddr( tmp_tunnel->saddr_r.saddr, saddr->saddr, port ) )
-				continue;
-
-		log.txt( LLOG_DEBUG, "DB : tunnel found\n" );
-
-		//
-		// increase our refrence count
-		//
-
-		if( tunnel != NULL )
-		{
-			tmp_tunnel->inc( false );
-			*tunnel = tmp_tunnel;
-		}
-
-		if( lock )
-			lock_sdb.unlock();
-
-		return true;
-	}
-
-	log.txt( LLOG_DEBUG, "DB : tunnel not found\n" );
-
-	if( lock )
-		lock_sdb.unlock();
-
-	return false;
+IDB_RC_LIST * _IDB_TUNNEL::list()
+{
+	return &iked.idb_list_tunnel;
 }
 
 void _IDB_TUNNEL::beg()
@@ -281,17 +285,17 @@ void _IDB_TUNNEL::end()
 
 	iked.log.txt( LLOG_INFO, "DB : removing tunnel config references\n" );
 
-	long count = list_config.get_count();
-	long index = 0;
+	long cfg_count = iked.idb_list_cfg.count();
+	long cfg_index = 0;
 
-	for( ; index < count; index++ )
+	for( ; cfg_index < cfg_count; cfg_index++ )
 	{
 		//
 		// get the next config in our list
 		// and attempt to match tunnel ids
 		//
 
-		IDB_CFG * cfg = ( IDB_CFG * ) list_config.get_item( index );
+		IDB_CFG * cfg = iked.idb_list_cfg.get( cfg_index );
 
 		if( cfg->tunnel == this )
 		{
@@ -301,8 +305,8 @@ void _IDB_TUNNEL::end()
 
 			if( cfg->dec( false ) )
 			{
-				index--;
-				count--;
+				cfg_index--;
+				cfg_count--;
 			}
 		}
 	}
@@ -313,17 +317,17 @@ void _IDB_TUNNEL::end()
 
 	iked.log.txt( LLOG_INFO, "DB : removing tunnel phase2 references\n" );
 
-	count = list_phase2.get_count();
-	index = 0;
+	long ph2_count = iked.idb_list_ph2.count();
+	long ph2_index = 0;
 
-	for( ; index < count; index++ )
+	for( ; ph2_index < ph2_count; ph2_index++ )
 	{
 		//
 		// get the next phase2 in our list
 		// and attempt to match tunnel ids
 		//
 
-		IDB_PH2 * ph2 = ( IDB_PH2 * ) list_phase2.get_item( index );
+		IDB_PH2 * ph2 = iked.idb_list_ph2.get( ph2_index );
 		if( ph2->tunnel == this )
 		{
 			ph2->inc( false );
@@ -332,8 +336,8 @@ void _IDB_TUNNEL::end()
 
 			if( ph2->dec( false ) )
 			{
-				index--;
-				count--;
+				ph2_index--;
+				ph2_count--;
 			}
 		}
 	}
@@ -344,17 +348,17 @@ void _IDB_TUNNEL::end()
 
 	iked.log.txt( LLOG_INFO, "DB : removing tunnel phase1 references\n" );
 
-	count = list_phase1.get_count();
-	index = 0;
+	long ph1_count = iked.idb_list_ph1.count();
+	long ph1_index = 0;
 
-	for( ; index < count; index++ )
+	for( ; ph1_index < ph1_count; ph1_index++ )
 	{
 		//
 		// get the next phase1 in our list
 		// and attempt to match tunnel ids
 		//
 
-		IDB_PH1 * ph1 = ( IDB_PH1 * ) list_phase1.get_item( index );
+		IDB_PH1 * ph1 = iked.idb_list_ph1.get( ph1_index );
 		if( ph1->tunnel == this )
 		{
 			ph1->inc( false );
@@ -363,8 +367,8 @@ void _IDB_TUNNEL::end()
 
 			if( ph1->dec( false ) )
 			{
-				index--;
-				count--;
+				ph1_index--;
+				ph1_count--;
 			}
 		}
 	}

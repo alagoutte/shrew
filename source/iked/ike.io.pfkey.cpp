@@ -483,16 +483,16 @@ long _IKED::pfkey_recv_acquire( PFKI_MSG & msg )
 
 	IDB_POLICY * policy_out;
 
-	if( !get_policy(
-		true,
-		&policy_out,
-		IPSEC_DIR_OUTBOUND,
-		spinfo.sp.type,
-		&spinfo.sp.id,
-		NULL,
-		NULL,
-		NULL,
-		NULL ) )
+	if( !idb_list_policy.find(
+			true,
+			&policy_out,
+			IPSEC_DIR_OUTBOUND,
+			spinfo.sp.type,
+			&spinfo.sp.id,
+			NULL,
+			NULL,
+			NULL,
+			NULL ) )
 	{
 		log.txt( LLOG_ERROR, "!! : unable to locate outbound policy for acquire\n" );
 
@@ -514,16 +514,16 @@ long _IKED::pfkey_recv_acquire( PFKI_MSG & msg )
 
 	IDB_POLICY * policy_in;
 
-	if( !get_policy(
-		true,
-		&policy_in,
-		IPSEC_DIR_INBOUND,
-		spinfo.sp.type,
-		NULL,
-		&dst,
-		&src,
-		&idd,
-		&ids ) )
+	if( !idb_list_policy.find(
+			true,
+			&policy_in,
+			IPSEC_DIR_INBOUND,
+			spinfo.sp.type,
+			NULL,
+			&dst,
+			&src,
+			&idd,
+			&ids ) )
 	{
 		log.txt( LLOG_ERROR, "!! : unable to locate inbound policy for acquire\n" );
 
@@ -538,7 +538,12 @@ long _IKED::pfkey_recv_acquire( PFKI_MSG & msg )
 	//
 
 	IDB_TUNNEL * tunnel;
-	if( !get_tunnel( true, &tunnel, NULL, &dst, false ) )
+	if( !idb_list_tunnel.find(
+			true,
+			&tunnel,
+			NULL,
+			&dst,
+			false ) )
 	{
 		//
 		// attempt to locate an existing
@@ -546,7 +551,10 @@ long _IKED::pfkey_recv_acquire( PFKI_MSG & msg )
 		//
 		
 		IDB_PEER * peer;
-		if( !get_peer( true, &peer, &dst ) )
+		if( !idb_list_peer.find(
+				true,
+				&peer,
+				&dst ) )
 		{
 			log.txt( LLOG_ERROR, "!! : unable to locate peer config for policy\n" );
 
@@ -760,7 +768,16 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 	//
 
 	IDB_PH2 * ph2;
-	if( !get_phase2( true, &ph2, NULL, XCH_STATUS_ANY, XCH_STATUS_ANY, &msg.hdr->sadb_msg_seq, NULL, NULL, NULL ) )
+	if( !idb_list_ph2.find(
+			true,
+			&ph2,
+			NULL,
+			XCH_STATUS_ANY,
+			XCH_STATUS_ANY,
+			&msg.hdr->sadb_msg_seq,
+			NULL,
+			NULL,
+			NULL ) )
 	{
 		log.txt( LLOG_ERROR,
 			"!! : unable to locate phase2 for getspi update ( msg seq = %u )\n",
@@ -844,7 +861,13 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 		//
 
 		IDB_PH1 * ph1;
-		if( !get_phase1( true, &ph1, ph2->tunnel, XCH_STATUS_MATURE, XCH_STATUS_DEAD, NULL ) )
+		if( !idb_list_ph1.find(
+				true,
+				&ph1,
+				ph2->tunnel,
+				XCH_STATUS_MATURE,
+				XCH_STATUS_DEAD,
+				NULL ) )
 		{
 			//
 			// mark phase2 as pending
@@ -891,29 +914,8 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 
 long _IKED::pfkey_recv_flush( PFKI_MSG & msg )
 {
-/*
-	lock_sdb.lock();
+	idb_list_ph2.flush();
 
-	long count = iked.list_phase2.get_count();
-	long index = 0;
-
-	for( ; index < count; index++ )
-	{
-		IDB_PH2 * ph2 = ( IDB_PH2 * ) iked.list_phase2.get_item( index );
-
-		ph2->inc( false );
-
-		ph2->status( XCH_STATUS_DEAD, XCH_FAILED_FLUSHED, 0 );
-
-		if( ph2->dec( false ) )
-		{
-			index--;
-			count--;
-		}
-	}
-
-	lock_sdb.unlock();
-*/
 	return LIBIKE_OK;
 }
 
@@ -943,7 +945,7 @@ long _IKED::pfkey_recv_spdel( PFKI_MSG & msg )
 	//
 
 	IDB_POLICY * policy;
-	if( !get_policy(
+	if( !idb_list_policy.find(
 			true,
 			&policy,
 			spinfo.sp.dir,
@@ -972,29 +974,8 @@ long _IKED::pfkey_recv_spdel( PFKI_MSG & msg )
 
 long _IKED::pfkey_recv_spflush( PFKI_MSG & msg )
 {
-/*
-	lock_sdb.lock();
+	idb_list_policy.flush();
 
-	long count = iked.list_policy.get_count();
-	long index = 0;
-
-	for( ; index < count; index++ )
-	{
-		IDB_POLICY * policy = ( IDB_POLICY * ) iked.list_policy.get_item( index );
-
-		policy->inc( false );
-
-		policy->lstate |= LSTATE_DELETE;
-
-		if( policy->dec( false ) )
-		{
-			index--;
-			count--;
-		}
-	}
-
-	lock_sdb.unlock();
-*/
 	return LIBIKE_OK;
 }
 

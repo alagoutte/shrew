@@ -63,7 +63,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	uint32_t msgid;
 	packet.get_msgid( msgid );
 
-	get_phase2(
+	idb_list_ph2.find(
 		true,
 		&ph2,
 		ph1->tunnel,
@@ -1277,7 +1277,7 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 
 		IDB_POLICY * policy_out;
 
-		if( !get_policy(
+		if( !idb_list_policy.find(
 				true,
 				&policy_out,
 				IPSEC_DIR_OUTBOUND,
@@ -1343,7 +1343,7 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 		// locate inbound ipsec policy
 		//
 
-		if( !get_policy(
+		if( !idb_list_policy.find(
 				true,
 				&policy_in,
 				IPSEC_DIR_INBOUND,
@@ -1371,7 +1371,7 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 		// locate outbound ipsec policy
 		//
 
-		if( !get_policy(
+		if( !idb_list_policy.find(
 				true,
 				&policy_out,
 				IPSEC_DIR_OUTBOUND,

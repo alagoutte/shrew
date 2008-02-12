@@ -307,3 +307,18 @@ bool _IDB_LIST_NETMAP::get( IDB_ENTRY_NETMAP ** nentry, long index )
 	*nentry = static_cast<IDB_ENTRY_NETMAP*>( get_entry( index ) );
 	return ( *nentry != NULL );
 }
+
+//==============================================================================
+// generic iked reference counted list
+//
+
+ITH_LOCK * _IDB_LIST_IKED::rc_lock()
+{
+	return &iked.lock_idb;
+}
+
+LOG * _IDB_LIST_IKED::rc_log()
+{
+	return &iked.log;
+}
+

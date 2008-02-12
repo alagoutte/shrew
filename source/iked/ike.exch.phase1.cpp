@@ -1488,7 +1488,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 		IDB_PH2 * ph2;
 
-		while( get_phase2(
+		while( idb_list_ph2.find(
 				true,
 				&ph2,
 				ph1->tunnel,

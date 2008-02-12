@@ -41,11 +41,82 @@
 
 #include "iked.h"
 
-LIST list_config;
+//==============================================================================
+// ike configuration exchange handle list
+//==============================================================================
 
-//
-// config exchange class
-//
+IDB_CFG * _IDB_LIST_CFG::get( int index )
+{
+	return static_cast<IDB_CFG*>( get_entry( index ) );
+}
+
+bool _IDB_LIST_CFG::find( bool lock, IDB_CFG ** cfg, IDB_TUNNEL * tunnel, unsigned long msgid )
+{
+	if( cfg != NULL )
+		*cfg = NULL;
+
+	if( lock )
+		iked.lock_idb.lock();
+
+	//
+	// step through our list of configs
+	// and see if they match the msgid
+	//
+
+	long index = 0;
+
+	for( ; index < count(); index++ )
+	{
+		//
+		// get the next config in our list
+		//
+
+		IDB_CFG * tmp_cfg = get( index );
+
+		//
+		// match the tunnel id
+		//
+
+		if( tmp_cfg->tunnel != tunnel )
+			continue;
+
+		//
+		// match the msgid
+		//
+
+		if( tmp_cfg->msgid != msgid )
+			continue;
+
+		iked.log.txt( LLOG_DEBUG, "DB : config found\n" );
+
+		//
+		// increase our refrence count
+		//
+
+		if( cfg != NULL )
+		{
+			tmp_cfg->inc( false );
+			*cfg = tmp_cfg;
+		}
+
+		if( lock )
+			iked.lock_idb.unlock();
+
+		return true;
+	}
+
+	iked.log.txt( LLOG_DEBUG, "DB : config not found\n" );
+
+	if( lock )
+		iked.lock_idb.unlock();
+
+	return false;
+}
+
+
+//==============================================================================
+// ike configuration exchange handle list entry
+//==============================================================================
 
 _IDB_CFG::_IDB_CFG( IDB_TUNNEL * set_tunnel, bool set_initiator, unsigned long set_msgid )
 {
@@ -74,15 +145,19 @@ _IDB_CFG::~_IDB_CFG()
 	tunnel->dec( false );
 }
 
+//------------------------------------------------------------------------------
+// abstract functions from parent class
+//
+
 char * _IDB_CFG::name()
 {
 	static char * xname = "config";
 	return xname;
 }
 
-LIST * _IDB_CFG::list()
+IDB_RC_LIST * _IDB_CFG::list()
 {
-	return &list_config;
+	return &iked.idb_list_cfg;
 }
 
 void _IDB_CFG::beg()
@@ -103,6 +178,10 @@ void _IDB_CFG::end()
 			idb_refcount );
 	}
 }
+
+//------------------------------------------------------------------------------
+// additional functions
+//
 
 bool _IDB_CFG::attr_add_b( unsigned short atype, unsigned short bdata )
 {
@@ -175,66 +254,3 @@ void _IDB_CFG::clean()
 	attr_reset();
 }
 
-bool _IKED::get_config( bool lock, IDB_CFG ** cfg, IDB_TUNNEL * tunnel, unsigned long msgid )
-{
-	if( cfg != NULL )
-		*cfg = NULL;
-
-	if( lock )
-		lock_sdb.lock();
-
-	//
-	// step through our list of configs
-	// and see if they match the msgid
-	//
-
-	long count = list_config.get_count();
-	long index = 0;
-
-	for( ; index < count; index++ )
-	{
-		//
-		// get the next config in our list
-		//
-
-		IDB_CFG * tmp_cfg = ( IDB_CFG * ) list_config.get_item( index );
-
-		//
-		// match the tunnel id
-		//
-
-		if( tmp_cfg->tunnel != tunnel )
-			continue;
-
-		//
-		// match the msgid
-		//
-
-		if( tmp_cfg->msgid != msgid )
-			continue;
-
-		log.txt( LLOG_DEBUG, "DB : config found\n" );
-
-		//
-		// increase our refrence count
-		//
-
-		if( cfg != NULL )
-		{
-			tmp_cfg->inc( false );
-			*cfg = tmp_cfg;
-		}
-
-		if( lock )
-			lock_sdb.unlock();
-
-		return true;
-	}
-
-	log.txt( LLOG_DEBUG, "DB : config not found\n" );
-
-	if( lock )
-		lock_sdb.unlock();
-
-	return false;
-}

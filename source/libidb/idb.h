@@ -39,125 +39,105 @@
  *
  */
 
-#include "iked.h"
+#ifndef _IDB_H_
+#define _IDB_H_
+
+#include "export.h"
+#include "libip.h"
+#include "liblog.h"
+#include "libith.h"
 
 //==============================================================================
-// ike peer list
+// standard IDB list classes
 //==============================================================================
 
-IDB_PEER * _IDB_LIST_PEER::get( int index )
+typedef class DLX _IDB_ENTRY
 {
-	return static_cast<IDB_PEER*>( get_entry( index ) );
-}
+	public:
 
-bool _IDB_LIST_PEER::find( bool lock, IDB_PEER ** peer, IKE_SADDR * saddr )
+	_IDB_ENTRY();
+	virtual ~_IDB_ENTRY();
+
+}IDB_ENTRY;
+
+typedef class DLX _IDB_LIST : public LIST
 {
-	if( peer != NULL )
-		*peer = NULL;
+	public:
 
-	if( lock )
-		iked.lock_idb.lock();
+	_IDB_LIST();
+	virtual ~_IDB_LIST();
 
-	long peer_count = count();
-	long peer_index = 0;
+	long			count();
+	virtual	void	clean();
 
-	for( ; peer_index < peer_count; peer_index++ )
+	bool		add_entry( IDB_ENTRY * entry );
+	bool		del_entry( IDB_ENTRY * entry );
+	IDB_ENTRY * del_entry( int index );
+	IDB_ENTRY * get_entry( int index );
+
+}IDB_LIST;
+
+//==============================================================================
+// reference counted IDB classes
+//==============================================================================
+
+class _IDB_RC_LIST;
+
+#define IDB_FLAG_DEAD		1
+#define IDB_FLAG_ENDED		2
+#define IDB_FLAG_NOEND		4
+
+typedef class DLX _IDB_RC_ENTRY : public IDB_ENTRY
+{
+	protected:
+
+	long		idb_flags;
+	long		idb_refcount;
+
+	inline long chkflags( long flags )
 	{
-		IDB_PEER * tmp_peer = get( peer_index );
-
-		//
-		// match the peer address
-		//
-
-		if( saddr != NULL )
-			if( has_sockaddr( &tmp_peer->saddr.saddr ) )
-				if( !cmp_sockaddr( tmp_peer->saddr.saddr, saddr->saddr, false ) )
-					continue;
-
-		iked.log.txt( LLOG_DEBUG, "DB : peer found\n" );
-
-		//
-		// increase our refrence count
-		//
-
-		if( peer != NULL )
-		{
-			tmp_peer->inc( false );
-			*peer = tmp_peer;
-		}
-
-		if( lock )
-			iked.lock_idb.unlock();
-
-		return true;
+		return ( idb_flags & flags );
 	}
 
-	iked.log.txt( LLOG_DEBUG, "DB : peer not found\n" );
-
-	if( lock )
-		iked.lock_idb.unlock();
-
-	return false;
-}
-
-//==============================================================================
-// ike peer list entry
-//==============================================================================
-
-_IDB_PEER::_IDB_PEER( IKE_PEER * set_peer )
-{
-	key = NULL;
-
-	if( set_peer != NULL )
-		*static_cast<IKE_PEER*>( this ) = *set_peer;
-}
-
-_IDB_PEER::~_IDB_PEER()
-{
-	if( key != NULL )
-		EVP_PKEY_free( key );
-}
-
-//------------------------------------------------------------------------------
-// abstract functions from parent class
-//
-
-char * _IDB_PEER::name()
-{
-	static char * xname = "peer";
-	return xname;
-}
-
-IDB_RC_LIST * _IDB_PEER::list()
-{
-	return &iked.idb_list_peer;
-}
-
-void _IDB_PEER::beg()
-{
-}
-
-void _IDB_PEER::end()
-{
-	iked.log.txt( LLOG_INFO, "DB : removing all peer tunnel refrences\n" );
-
-	//
-	// check for tunnel object refrences
-	//
-
-	long tunnel_count = iked.idb_list_tunnel.count();
-	long tunnel_index = 0;
-
-	for( ; tunnel_index < tunnel_count; tunnel_index++ )
+	inline long setflags( long flags )
 	{
-		//
-		// get the next tunnel in our list
-		// and attempt to match peer ids
-		//
-
-		IDB_TUNNEL * tunnel = iked.idb_list_tunnel.get( tunnel_index );
-
-		if( tunnel->peer == this )
-			tunnel->end();
+		return idb_flags |= flags;
 	}
-}
+
+	inline long clrflags( long flags )
+	{
+		return idb_flags &= ~flags;
+	}
+
+	virtual void beg() = 0;
+	virtual void end() = 0;
+
+	public:
+
+	_IDB_RC_ENTRY();
+	virtual ~_IDB_RC_ENTRY();
+
+	virtual char *			name() = 0;
+	virtual _IDB_RC_LIST *	list() = 0;
+
+	bool add( bool lock );
+	bool inc( bool lock );
+	bool dec( bool lock, bool setdel = false );
+
+}IDB_RC_ENTRY;
+
+typedef class DLX _IDB_RC_LIST : public IDB_LIST
+{
+	public:
+
+	_IDB_RC_LIST();
+	virtual ~_IDB_RC_LIST();
+
+	virtual	void	clean();
+
+	virtual ITH_LOCK	* rc_lock() = 0;
+	virtual LOG			* rc_log() = 0;
+
+}IDB_RC_LIST;
+
+#endif

@@ -41,27 +41,9 @@
 
 #include "iked.h"
 
-//
-// IDB subclass list section
-//
-
-LIST list_phase1;
-extern LIST list_phase2;
-
-char * _IDB_PH1::name()
-{
-	static char * xname = "phase1";
-	return xname;
-}
-
-LIST * _IDB_PH1::list()
-{
-	return &list_phase1;
-}
-
-//
-// phase1 event functions
-//
+//==============================================================================
+// ike phase1 exchange events
+//==============================================================================
 
 bool _ITH_EVENT_PH1DPD::func()
 {
@@ -199,6 +181,11 @@ bool _ITH_EVENT_PH1SOFT::func()
 	ph1->status( XCH_STATUS_EXPIRING, XCH_NORMAL, 0 );
 	ph1->dec( true );
 
+	//
+	// FIXME : dpd and natt events should stop for
+	//         this sa after the new sa negotiates
+	//
+
 	return false;
 }
 
@@ -218,9 +205,161 @@ bool _ITH_EVENT_PH1HARD::func()
 	return false;
 }
 
-//
-// phase1 security association class
-//
+//==============================================================================
+// ike phase1 exchange handle list
+//==============================================================================
+
+IDB_PH1 * _IDB_LIST_PH1::get( int index )
+{
+	return static_cast<IDB_PH1*>( get_entry( index ) );
+}
+
+bool _IDB_LIST_PH1::find( bool lock, IDB_PH1 ** ph1, IDB_TUNNEL * tunnel, XCH_STATUS min, XCH_STATUS max, IKE_COOKIES * cookies )
+{
+	if( ph1 != NULL )
+		*ph1 = NULL;
+
+	if( lock )
+		iked.lock_idb.lock();
+
+	//
+	// step through our list of sa's
+	// and locate a match
+	//
+
+	long ph1_count = count();
+	long ph1_index = 0;
+
+	for( ; ph1_index < ph1_count; ph1_index++ )
+	{
+		//
+		// get the next sa in our list
+		//
+
+		IDB_PH1 * tmp_ph1 = get( ph1_index );
+
+		//
+		// match sa minimum status level
+		//
+
+		if( min != XCH_STATUS_ANY )
+			if( tmp_ph1->status() < min )
+				continue;
+
+		//
+		// match sa maximum status level
+		//
+
+		if( max != XCH_STATUS_ANY )
+			if( tmp_ph1->status() > max )
+				continue;
+
+		//
+		// match the tunnel id
+		//
+
+		if( tunnel != NULL )
+			if( tmp_ph1->tunnel != tunnel )
+				continue;
+
+		//
+		// match the cookies
+		//
+
+		if( cookies != NULL )
+		{
+			//
+			// next match the initiator cookie
+			//
+
+			if( memcmp( tmp_ph1->cookies.i, cookies->i, ISAKMP_COOKIE_SIZE ) )
+			{
+				//
+				// the initiator cookie should
+				// always match if we are to
+				// return a known sa
+				//
+
+				continue;
+			}
+
+			//
+			// next match the responder cookie
+			//
+
+			if( memcmp( tmp_ph1->cookies.r, cookies->r, ISAKMP_COOKIE_SIZE ) )
+			{
+				//
+				// responder cookie did not match,
+				// if we are the intiator for this
+				// sa, the responder cookie is null
+				// and we are waiting on an sa
+				// payload, it should match
+				//
+
+				if( tmp_ph1->initiator )
+				{
+					//
+					// check to see if we solicited
+					// a response from this host
+					//
+
+					if( !( tmp_ph1->xstate & XSTATE_SENT_SA ) ||
+						 ( tmp_ph1->xstate & XSTATE_RECV_SA ) )
+						 continue;
+
+					//
+					// check the responder cookie
+					// for a null value
+					//
+
+					for( long x = 0; x < ISAKMP_COOKIE_SIZE; x++ )
+						if( tmp_ph1->cookies.r[ x ] )
+							continue;
+
+					//
+					// store the responders cookie in
+					// our existing sa
+					//
+
+					memcpy( tmp_ph1->cookies.r, cookies->r, ISAKMP_COOKIE_SIZE );
+				}
+			}
+		}
+
+		//
+		// looks like we found a match
+		//
+
+		iked.log.txt( LLOG_DEBUG, "DB : phase1 found\n" );
+
+		//
+		// increase our refrence count
+		//
+
+		if( ph1 != NULL )
+		{
+			tmp_ph1->inc( false );
+			*ph1 = tmp_ph1;
+		}
+
+		if( lock )
+			iked.lock_idb.unlock();
+
+		return true;
+	}
+
+	iked.log.txt( LLOG_DEBUG, "DB : phase1 not found\n" );
+
+	if( lock )
+		iked.lock_idb.unlock();
+
+	return false;
+}
+
+//==============================================================================
+// ike phase1 exchange handle list entry
+//==============================================================================
 
 _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * set_cookies )
 {
@@ -363,9 +502,8 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	tunnel->peer->proposals.get( &proposal, 0, ISAKMP_PROTO_ISAKMP );
 
 	//
-	// if we are the initiator, preset
-	// our isakmp proposal to the first
-	// entry in our peer proposal list
+	// if we are the initiator, obtain
+	// the authentication type
 	//
 
 	if( initiator )
@@ -383,10 +521,9 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	}
 
 	//
-	// aggressive mode must include a
-	// key exchange payload in the
-	// first packet. make sure we setup
-	// the dhgroup in advance
+	// aggressive mode must include a kex
+	// payload in the first packet. make
+	// sure we setup the dhgroup in advance
 	//
 
 	if( tunnel->peer->exchange == ISAKMP_EXCH_AGGRESSIVE )
@@ -453,17 +590,21 @@ _IDB_PH1::~_IDB_PH1()
 
 	if( !( lstate & LSTATE_HASKEYS ) )
 	{
-		long count = list_phase2.get_count();
-		long index = 0;
+		//
+		// FIXME : Use find here
+		//
 
-		for( ; index < count; index++ )
+		long ph2_count = iked.idb_list_ph2.count();
+		long ph2_index = 0;
+
+		for( ; ph2_index < ph2_count; ph2_index++ )
 		{
 			//
 			// get the next phase2 in our list
 			// and attempt to match tunnel ids
 			// 
 
-			IDB_PH2 * ph2 = ( IDB_PH2 * ) list_phase2.get_item( index );
+			IDB_PH2 * ph2 = iked.idb_list_ph2.get( ph2_index );
 			if( ( ph2->tunnel == tunnel ) && ( ph2->status() == XCH_STATUS_PENDING ) )
 			{
 				ph2->inc( false );
@@ -472,8 +613,8 @@ _IDB_PH1::~_IDB_PH1()
 
 				if( ph2->dec( false ) )
 				{
-					index--;
-					count--;
+					ph2_index--;
+					ph2_count--;
 				}
 			}
 		}
@@ -505,8 +646,74 @@ _IDB_PH1::~_IDB_PH1()
 	tunnel->dec( false );
 }
 
+//------------------------------------------------------------------------------
+// abstract functions from parent class
 //
-//
+
+char * _IDB_PH1::name()
+{
+	static char * xname = "phase1";
+	return xname;
+}
+
+IDB_RC_LIST * _IDB_PH1::list()
+{
+	return &iked.idb_list_ph1;
+}
+
+void _IDB_PH1::beg()
+{
+}
+
+void _IDB_PH1::end()
+{
+	//
+	// remove scheduled events
+	//
+
+	if( iked.ith_timer.del( &event_resend ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase1 resend event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
+
+	if( iked.ith_timer.del( &event_dpd ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase1 dpd event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
+
+	if( iked.ith_timer.del( &event_natt ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase1 natt event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
+
+	if( iked.ith_timer.del( &event_soft ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase1 soft event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
+
+	if( iked.ith_timer.del( &event_hard ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase1 hard event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
+}
+
+//------------------------------------------------------------------------------
+// additional functions
 //
 
 bool _IDB_PH1::setup_dhgrp( IKE_PROPOSAL * proposal )
@@ -802,196 +1009,3 @@ bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 	return true;
 }
 
-bool _IKED::get_phase1( bool lock, IDB_PH1 ** ph1, IDB_TUNNEL * tunnel, XCH_STATUS min, XCH_STATUS max, IKE_COOKIES * cookies )
-{
-	if( ph1 != NULL )
-		*ph1 = NULL;
-
-	if( lock )
-		lock_sdb.lock();
-
-	//
-	// step through our list of sa's
-	// and locate a match
-	//
-
-	long count = list_phase1.get_count();
-	long index = 0;
-
-	for( ; index < count; index++ )
-	{
-		//
-		// get the next sa in our list
-		//
-
-		IDB_PH1 * tmp_ph1 = ( IDB_PH1 * ) list_phase1.get_item( index );
-
-		//
-		// match sa minimum status level
-		//
-
-		if( min != XCH_STATUS_ANY )
-			if( tmp_ph1->status() < min )
-				continue;
-
-		//
-		// match sa maximum status level
-		//
-
-		if( max != XCH_STATUS_ANY )
-			if( tmp_ph1->status() > max )
-				continue;
-
-		//
-		// match the tunnel id
-		//
-
-		if( tunnel != NULL )
-			if( tmp_ph1->tunnel != tunnel )
-				continue;
-
-		//
-		// match the cookies
-		//
-
-		if( cookies != NULL )
-		{
-			//
-			// next match the initiator cookie
-			//
-
-			if( memcmp( tmp_ph1->cookies.i, cookies->i, ISAKMP_COOKIE_SIZE ) )
-			{
-				//
-				// the initiator cookie should
-				// always match if we are to
-				// return a known sa
-				//
-
-				continue;
-			}
-
-			//
-			// next match the responder cookie
-			//
-
-			if( memcmp( tmp_ph1->cookies.r, cookies->r, ISAKMP_COOKIE_SIZE ) )
-			{
-				//
-				// responder cookie did not match,
-				// if we are the intiator for this
-				// sa, the responder cookie is null
-				// and we are waiting on an sa
-				// payload, it should match
-				//
-
-				if( tmp_ph1->initiator )
-				{
-					//
-					// check to see if we solicited
-					// a response from this host
-					//
-
-					if( !( tmp_ph1->xstate & XSTATE_SENT_SA ) ||
-						 ( tmp_ph1->xstate & XSTATE_RECV_SA ) )
-						 continue;
-
-					//
-					// check the responder cookie
-					// for a null value
-					//
-
-					for( long x = 0; x < ISAKMP_COOKIE_SIZE; x++ )
-						if( tmp_ph1->cookies.r[ x ] )
-							continue;
-
-					//
-					// store the responders cookie in
-					// our existing sa
-					//
-
-					memcpy( tmp_ph1->cookies.r, cookies->r, ISAKMP_COOKIE_SIZE );
-				}
-			}
-		}
-
-		//
-		// looks like we found a match
-		//
-
-		log.txt( LLOG_DEBUG, "DB : phase1 found\n" );
-
-		//
-		// increase our refrence count
-		//
-
-		if( ph1 != NULL )
-		{
-			tmp_ph1->inc( false );
-			*ph1 = tmp_ph1;
-		}
-
-		if( lock )
-			lock_sdb.unlock();
-
-		return true;
-	}
-
-	log.txt( LLOG_DEBUG, "DB : phase1 not found\n" );
-
-	if( lock )
-		lock_sdb.unlock();
-
-	return false;
-}
-
-void _IDB_PH1::beg()
-{
-}
-
-void _IDB_PH1::end()
-{
-	//
-	// remove scheduled events
-	//
-
-	if( iked.ith_timer.del( &event_resend ) )
-	{
-		idb_refcount--;
-		iked.log.txt( LLOG_DEBUG,
-			"DB : phase1 resend event canceled ( ref count = %i )\n",
-			idb_refcount );
-	}
-
-	if( iked.ith_timer.del( &event_dpd ) )
-	{
-		idb_refcount--;
-		iked.log.txt( LLOG_DEBUG,
-			"DB : phase1 dpd event canceled ( ref count = %i )\n",
-			idb_refcount );
-	}
-
-	if( iked.ith_timer.del( &event_natt ) )
-	{
-		idb_refcount--;
-		iked.log.txt( LLOG_DEBUG,
-			"DB : phase1 natt event canceled ( ref count = %i )\n",
-			idb_refcount );
-	}
-
-	if( iked.ith_timer.del( &event_soft ) )
-	{
-		idb_refcount--;
-		iked.log.txt( LLOG_DEBUG,
-			"DB : phase1 soft event canceled ( ref count = %i )\n",
-			idb_refcount );
-	}
-
-	if( iked.ith_timer.del( &event_hard ) )
-	{
-		idb_refcount--;
-		iked.log.txt( LLOG_DEBUG,
-			"DB : phase1 hard event canceled ( ref count = %i )\n",
-			idb_refcount );
-	}
-}

@@ -588,7 +588,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		dst = &tunnel->saddr_l;
 	}
 
-	if( get_policy(
+	if( idb_list_policy.find(
 			false,
 			&policy,
 			IPSEC_DIR_INBOUND,
@@ -627,7 +627,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		dst = &tunnel->saddr_r;
 	}
 
-	if( get_policy(
+	if( idb_list_policy.find(
 			false,
 			&policy,
 			IPSEC_DIR_OUTBOUND,

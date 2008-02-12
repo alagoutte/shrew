@@ -39,98 +39,8 @@
  *
  */
 
-#ifndef _IDB_H_
-#define _IDB_H_
-
-#include "libip.h"
-#include "libpfk.h"
-#include "crypto.h"
-
-//==============================================================================
-// standard IDB list classes
-//==============================================================================
-
-typedef class _IDB_ENTRY
-{
-	public:
-
-	_IDB_ENTRY();
-	virtual ~_IDB_ENTRY();
-
-}IDB_ENTRY;
-
-typedef class _IDB_LIST : private LIST
-{
-	public:
-
-	_IDB_LIST();
-	virtual ~_IDB_LIST();
-
-	long		count();
-	void		clean();
-
-	bool		add_entry( IDB_ENTRY * entry );
-	bool		del_entry( IDB_ENTRY * entry );
-	IDB_ENTRY * del_entry( int index );
-	IDB_ENTRY * get_entry( int index );
-
-}IDB_LIST;
-
-//==============================================================================
-// reference counted IDB classes
-//==============================================================================
-
-#define IDB_FLAG_DEAD		1
-#define IDB_FLAG_ENDED		2
-#define IDB_FLAG_NOEND		4
-
-typedef class _IDB_RC_ENTRY : public IDB_ENTRY
-{
-	protected:
-
-	long		idb_flags;
-	long		idb_refcount;
-
-	inline long chkflags( long flags )
-	{
-		return ( idb_flags & flags );
-	}
-
-	inline long setflags( long flags )
-	{
-		return idb_flags |= flags;
-	}
-
-	inline long clrflags( long flags )
-	{
-		return idb_flags &= ~flags;
-	}
-
-	virtual void beg() = 0;
-	virtual void end() = 0;
-
-	public:
-
-	_IDB_RC_ENTRY();
-	virtual ~_IDB_RC_ENTRY();
-
-	virtual char *	name() = 0;
-	virtual LIST *	list() = 0;
-
-	bool add( bool lock );
-	bool inc( bool lock );
-	bool dec( bool lock, bool setdel = false );
-
-}IDB_RC_ENTRY;
-
-typedef class _IDB_RC_LIST : public IDB_LIST
-{
-	public:
-
-	_IDB_RC_LIST();
-	virtual ~_IDB_RC_LIST();
-
-}IDB_RC_LIST;
+#ifndef _IKE_IDB_H_
+#define _IKE_IDB_H_
 
 //==============================================================================
 // standard IDB derived classes
@@ -414,6 +324,15 @@ typedef class _ITH_EVENT_PH2HARD : public ITH_EVENT
 // ike internal data classes
 //
 
+typedef class _IDB_LIST_IKED : public IDB_RC_LIST
+{
+	protected:
+
+	virtual ITH_LOCK	* rc_lock();
+	virtual LOG			* rc_log();
+
+}IDB_LIST_IKED;
+
 typedef class _IDB_PEER : public IDB_RC_ENTRY, public IKE_PEER
 {
 	private:
@@ -438,13 +357,26 @@ typedef class _IDB_PEER : public IDB_RC_ENTRY, public IKE_PEER
 	IDB_LIST_PROPOSAL	proposals;
 	IDB_LIST_NETMAP		netmaps;
 
-	virtual	char *	name();
-	virtual LIST *	list();
+	virtual	char *			name();
+	virtual IDB_RC_LIST *	list();
 
 	_IDB_PEER( IKE_PEER * set_peer );
 	virtual ~_IDB_PEER();
 
 }IDB_PEER;
+
+typedef class _IDB_LIST_PEER : public IDB_LIST_IKED
+{
+	public:
+
+	IDB_PEER * get( int index );
+
+	bool find(
+			bool lock,
+			IDB_PEER ** peer,
+			IKE_SADDR * saddr );
+
+}IDB_LIST_PEER;
 
 typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 {
@@ -484,8 +416,8 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 
 	ITH_EVENT_TUNDHCP	event_dhcp;
 
-	virtual	char *	name();
-	virtual LIST *	list();
+	virtual	char *			name();
+	virtual IDB_RC_LIST *	list();
 
 	virtual void	beg();
 	virtual void	end();
@@ -495,14 +427,29 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 
 }IDB_TUNNEL;
 
+typedef class _IDB_LIST_TUNNEL : public IDB_LIST_IKED
+{
+	public:
+
+	IDB_TUNNEL * get( int index );
+
+	bool find(
+			bool lock,
+			IDB_TUNNEL ** tunnel,
+			long * tunnelid,
+			IKE_SADDR * saddr,
+			bool port );
+
+}IDB_LIST_TUNNEL;
+
 typedef class _IDB_POLICY : public IDB_RC_ENTRY, public PFKI_SPINFO
 {
 	public:
 
 	bool	route;
 
-	virtual	char *	name();
-	virtual LIST *	list();
+	virtual	char *			name();
+	virtual IDB_RC_LIST *	list();
 
 	virtual void	beg();
 	virtual void	end();
@@ -511,6 +458,27 @@ typedef class _IDB_POLICY : public IDB_RC_ENTRY, public PFKI_SPINFO
 	virtual ~_IDB_POLICY();
 
 }IDB_POLICY;
+
+typedef class _IDB_LIST_POLICY : public IDB_LIST_IKED
+{
+	public:
+
+	IDB_POLICY * get( int index );
+
+	bool find(
+			bool lock,
+			IDB_POLICY ** policy,
+			long dir,
+			u_int16_t type,
+			u_int32_t * plcyid,
+			IKE_SADDR * src,
+			IKE_SADDR * dst,
+			IKE_PH2ID * ids,
+			IKE_PH2ID * idd );
+
+	void	flush();
+
+}IDB_LIST_POLICY;
 
 //==============================================================================
 // ike generic exchange handle class
@@ -666,8 +634,8 @@ typedef class _IDB_PH1 : public IDB_XCH
 
 	// sub class functions
 
-	virtual	char *	name();
-	virtual LIST *	list();
+	virtual	char *			name();
+	virtual IDB_RC_LIST *	list();
 
 	// class functions
 
@@ -687,6 +655,22 @@ typedef class _IDB_PH1 : public IDB_XCH
 	bool	frag_get( PACKET_IKE & packet );
 
 }IDB_PH1;
+
+typedef class _IDB_LIST_PH1 : public IDB_LIST_IKED
+{
+	public:
+
+	IDB_PH1 * get( int index );
+
+	bool find(
+			bool lock,
+			IDB_PH1 ** ph1,
+			IDB_TUNNEL * tunnel,
+			XCH_STATUS min,
+			XCH_STATUS max,
+			IKE_COOKIES * cookies );
+	
+}IDB_LIST_PH1;
 
 //==============================================================================
 // ike phase2 exchange handle class
@@ -712,8 +696,8 @@ typedef class _IDB_PH2 : public IDB_XCH
 
 	// sub class functions
 
-	virtual	char *	name();
-	virtual LIST *	list();
+	virtual	char *			name();
+	virtual IDB_RC_LIST *	list();
 
 	virtual void	beg();
 	virtual void	end();
@@ -730,6 +714,27 @@ typedef class _IDB_PH2 : public IDB_XCH
 
 }IDB_PH2;
 
+typedef class _IDB_LIST_PH2 : public IDB_LIST_IKED
+{
+	public:
+
+	IDB_PH2	* get( int index );
+
+	bool find(
+			bool lock,
+			IDB_PH2 ** ph2,
+			IDB_TUNNEL * tunnel,
+			XCH_STATUS min,
+			XCH_STATUS max,
+			u_int32_t * seqid,
+			uint32_t * msgid,
+			IKE_SPI * spi_l,
+			IKE_SPI * spi_r );
+
+	void	flush();
+
+}IDB_LIST_PH2;
+
 //==============================================================================
 // ike configuraion exchange handle class
 //
@@ -744,8 +749,8 @@ typedef class _IDB_CFG : public IDB_XCH
 
 	// sub class functions
 
-	virtual	char *	name();
-	virtual LIST *	list();
+	virtual	char *			name();
+	virtual IDB_RC_LIST *	list();
 
 	virtual void	beg();
 	virtual void	end();
@@ -777,6 +782,20 @@ typedef class _IDB_CFG : public IDB_XCH
 
 }IDB_CFG;
 
+typedef class _IDB_LIST_CFG : public IDB_LIST_IKED
+{
+	public:
+
+	IDB_CFG * get( int index );
+
+	bool find(
+			bool lock,
+			IDB_CFG ** cfg,
+			IDB_TUNNEL * tunnel,
+			unsigned long msgid );
+
+}IDB_LIST_CFG;
+
 //==============================================================================
 // ike informational exchange handle class
 //
@@ -787,8 +806,8 @@ typedef class _IDB_INF : public IDB_XCH
 
 	// sub class functions
 
-	virtual	char *	name();
-	virtual LIST *	list();
+	virtual	char *			name();
+	virtual IDB_RC_LIST *	list();
 
 	virtual void	beg();
 	virtual void	end();
@@ -800,4 +819,6 @@ typedef class _IDB_INF : public IDB_XCH
 
 }IDB_INF;
 
-#endif
+typedef IDB_LIST_IKED IDB_LIST_INF;
+
+#endif /// _IKE_IDB_H_

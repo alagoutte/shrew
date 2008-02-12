@@ -63,7 +63,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	uint32_t msgid;
 	packet.get_msgid( msgid );
 
-	get_config( true, &cfg, ph1->tunnel, msgid );
+	idb_list_cfg.find( true, &cfg, ph1->tunnel, msgid );
 
 	if( cfg == NULL )
 	{

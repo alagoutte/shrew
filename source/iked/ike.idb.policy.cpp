@@ -41,67 +41,38 @@
 
 #include "iked.h"
 
-//
-// IDB subclass list section
-//
+//==============================================================================
+// policy list
+//==============================================================================
 
-LIST list_policy;
-
-char * _IDB_POLICY::name()
+IDB_POLICY * _IDB_LIST_POLICY::get( int index )
 {
-	static char * xname = "policy";
-	return xname;
+	return static_cast<IDB_POLICY*>( get_entry( index ) );
 }
 
-LIST * _IDB_POLICY::list()
-{
-	return &list_policy;
-}
-
-_IDB_POLICY::_IDB_POLICY( PFKI_SPINFO * spinfo )
-{
-	memset( &paddr_src, 0, sizeof( paddr_src ) );
-	memset( &paddr_dst, 0, sizeof( paddr_dst ) );
-
-	memset( &sp, 0, sizeof( sp ) );
-	memset( xforms, 0, sizeof( xforms ) );
-
-	route = false;
-
-	if( spinfo != NULL )
-	{
-		PFKI_SPINFO * tmp_spinfo = this;
-		memcpy( tmp_spinfo, spinfo, sizeof( PFKI_SPINFO ) );
-	}
-}
-
-_IDB_POLICY::~_IDB_POLICY()
-{
-}
-
-bool _IKED::get_policy( bool lock, IDB_POLICY ** policy, long dir, u_int16_t type, u_int32_t * plcyid, IKE_SADDR * src, IKE_SADDR * dst, IKE_PH2ID * ids, IKE_PH2ID * idd )
+bool _IDB_LIST_POLICY::find( bool lock, IDB_POLICY ** policy, long dir, u_int16_t type, u_int32_t * plcyid, IKE_SADDR * src, IKE_SADDR * dst, IKE_PH2ID * ids, IKE_PH2ID * idd )
 {
 	if( policy != NULL )
 		*policy = NULL;
 
 	if( lock )
-		lock_sdb.lock();
+		iked.lock_idb.lock();
 
 	//
 	// step through our list of policys
 	// and see if they match the msgid
 	//
 
-	long count = list_policy.get_count();
-	long index = 0;
+	long policy_count = count();
+	long policy_index = 0;
 
-	for( ; index < count; index++ )
+	for( ; policy_index < policy_count; policy_index++ )
 	{
 		//
 		// get the next policy in our list
 		//
 
-		IDB_POLICY * tmp_policy = ( IDB_POLICY * ) list_policy.get_item( index );
+		IDB_POLICY * tmp_policy = get( policy_index );
 
 		//
 		// compare policy direction
@@ -133,7 +104,7 @@ bool _IKED::get_policy( bool lock, IDB_POLICY ** policy, long dir, u_int16_t typ
 		IKE_SADDR pdst;
 
 		if( ( src != NULL ) || ( dst != NULL ) )
-			policy_get_addrs( tmp_policy, psrc, pdst );
+			iked.policy_get_addrs( tmp_policy, psrc, pdst );
 
 		if( src != NULL )
 			if( !cmp_ikeaddr( psrc, *src, false ) )
@@ -150,22 +121,22 @@ bool _IKED::get_policy( bool lock, IDB_POLICY ** policy, long dir, u_int16_t typ
 		if( ids != NULL )
 		{
 			IKE_PH2ID ph2id;
-			paddr_ph2id( tmp_policy->paddr_src, ph2id );
+			iked.paddr_ph2id( tmp_policy->paddr_src, ph2id );
 
-			if( !cmp_ph2id( ph2id, *ids, false ) )
+			if( !iked.cmp_ph2id( ph2id, *ids, false ) )
 				continue;
 		}
 
 		if( idd != NULL )
 		{
 			IKE_PH2ID ph2id;
-			paddr_ph2id( tmp_policy->paddr_dst, ph2id );
+			iked.paddr_ph2id( tmp_policy->paddr_dst, ph2id );
 
-			if( !cmp_ph2id( ph2id, *idd, false ) )
+			if( !iked.cmp_ph2id( ph2id, *idd, false ) )
 				continue;
 		}
 
-		log.txt( LLOG_DEBUG, "DB : policy found\n" );
+		iked.log.txt( LLOG_DEBUG, "DB : policy found\n" );
 
 		//
 		// increase our refrence count
@@ -178,17 +149,62 @@ bool _IKED::get_policy( bool lock, IDB_POLICY ** policy, long dir, u_int16_t typ
 		}
 
 		if( lock )
-			lock_sdb.unlock();
+			iked.lock_idb.unlock();
 
 		return true;
 	}
 
-	log.txt( LLOG_DEBUG, "DB : policy not found\n" );
+	iked.log.txt( LLOG_DEBUG, "DB : policy not found\n" );
 
 	if( lock )
-		lock_sdb.unlock();
+		iked.lock_idb.unlock();
 
 	return false;
+}
+
+void _IDB_LIST_POLICY::flush()
+{
+	clean();
+}
+
+//==============================================================================
+// policy list entry
+//==============================================================================
+
+_IDB_POLICY::_IDB_POLICY( PFKI_SPINFO * spinfo )
+{
+	memset( &paddr_src, 0, sizeof( paddr_src ) );
+	memset( &paddr_dst, 0, sizeof( paddr_dst ) );
+
+	memset( &sp, 0, sizeof( sp ) );
+	memset( xforms, 0, sizeof( xforms ) );
+
+	route = false;
+
+	if( spinfo != NULL )
+	{
+		PFKI_SPINFO * tmp_spinfo = this;
+		memcpy( tmp_spinfo, spinfo, sizeof( PFKI_SPINFO ) );
+	}
+}
+
+_IDB_POLICY::~_IDB_POLICY()
+{
+}
+
+//------------------------------------------------------------------------------
+// abstract functions from parent class
+//
+
+char * _IDB_POLICY::name()
+{
+	static char * xname = "policy";
+	return xname;
+}
+
+IDB_RC_LIST * _IDB_POLICY::list()
+{
+	return &iked.idb_list_policy;
 }
 
 void _IDB_POLICY::beg()

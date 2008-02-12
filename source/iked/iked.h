@@ -98,11 +98,12 @@
 #include "libith.h"
 #include "libpfk.h"
 #include "libike.h"
+#include "crypto.h"
 #include "ike.h"
 #include "idb.h"
+#include "iked.idb.h"
 #include "xauth.h"
 #include "xconf.h"
-#include "crypto.h"
 
 #ifdef OPT_DTP
 #include "libdtp.h"
@@ -339,13 +340,21 @@ typedef class _IKED
 
 	friend class _IDB_RC_ENTRY;
 	friend class _IDB_PEER;
-	friend class _IDB_POLICY;
 	friend class _IDB_TUNNEL;
+	friend class _IDB_POLICY;
 	friend class _IDB_XCH;
 	friend class _IDB_PH1;
 	friend class _IDB_PH2;
 	friend class _IDB_CFG;
 	friend class _IDB_INF;
+
+	friend class _IDB_LIST_IKED;
+	friend class _IDB_LIST_PEER;
+	friend class _IDB_LIST_TUNNEL;
+	friend class _IDB_LIST_POLICY;
+	friend class _IDB_LIST_PH1;
+	friend class _IDB_LIST_PH2;
+	friend class _IDB_LIST_CFG;
 
 	friend class _ITH_EVENT_TUNDHCP;
 
@@ -406,6 +415,17 @@ typedef class _IKED
 	LIST	list_socket;		// socket list
 	LIST	list_netgrp;		// net groups list
 
+	ITH_LOCK	lock_net;
+	ITH_LOCK	lock_idb;
+
+	IDB_LIST_PH2ID		idb_list_netgrp;
+	IDB_LIST_PEER		idb_list_peer;
+	IDB_LIST_TUNNEL		idb_list_tunnel;
+	IDB_LIST_POLICY		idb_list_policy;
+	IDB_LIST_PH1		idb_list_ph1;
+	IDB_LIST_PH2		idb_list_ph2;
+	IDB_LIST_CFG		idb_list_cfg;
+
 	long	sock_ike_open;
 	long	sock_natt_open;
 
@@ -436,11 +456,6 @@ typedef class _IKED
 
 	PCAP_DUMP	pcap_decrypt;
 	PCAP_DUMP	pcap_encrypt;
-
-	// locking functions
-
-	ITH_LOCK	lock_sdb;
-	ITH_LOCK	lock_net;
 
 	// xauth and xconf classes
 
@@ -541,15 +556,6 @@ typedef class _IKED
 
 	bool	cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt );
 	bool	cmp_ph2id( IKE_PH2ID & idt, IKE_PH2ID & ids, bool exact );
-
-	// ike security db functions
-
-	bool	get_peer( bool lock, IDB_PEER ** peer, IKE_SADDR * saddr );
-	bool	get_policy( bool lock, IDB_POLICY ** policy, long dir, u_int16_t type, u_int32_t * plcyid, IKE_SADDR * src, IKE_SADDR * dst, IKE_PH2ID * ids, IKE_PH2ID * idd );
-	bool	get_tunnel( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, IKE_SADDR * saddr, bool port );
-	bool	get_phase1( bool lock, IDB_PH1 ** ph1, IDB_TUNNEL * tunnel, XCH_STATUS min, XCH_STATUS max, IKE_COOKIES * cookies );
-	bool	get_phase2( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, XCH_STATUS min, XCH_STATUS max, u_int32_t * seqid, uint32_t * msgid, IKE_SPI * spi_l, IKE_SPI * spi_r );
-	bool	get_config( bool lock, IDB_CFG ** cfg, IDB_TUNNEL * tunnel, unsigned long msgid );
 
 	// ike packet handler functions
 
