@@ -84,8 +84,8 @@ typedef class DLX _IDB_LIST : public LIST
 class _IDB_RC_LIST;
 
 #define IDB_FLAG_DEAD		1
-#define IDB_FLAG_ENDED		2
-#define IDB_FLAG_NOEND		4
+#define IDB_FLAG_IMMEDIATE	2
+#define IDB_FLAG_ENDCALLED	4
 
 typedef class DLX _IDB_RC_ENTRY : public IDB_ENTRY
 {
@@ -108,6 +108,8 @@ typedef class DLX _IDB_RC_ENTRY : public IDB_ENTRY
 	{
 		return idb_flags &= ~flags;
 	}
+
+	void callend();
 
 	virtual void beg() = 0;
 	virtual void end() = 0;

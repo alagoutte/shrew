@@ -2175,6 +2175,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	if( vend.size() == vend_ssoft.size() )
 		if( !memcmp( vend.buff(), vend_ssoft.buff(), vend_ssoft.size() ) )
 		{
+			ph1->ssoft_r = true;
 			log.txt( LLOG_INFO, "ii : peer is SHREW SOFT compatible\n" );
 			return LIBIKE_OK;
 		}

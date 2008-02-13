@@ -106,6 +106,15 @@ _IDB_RC_ENTRY::~_IDB_RC_ENTRY()
 {
 }
 
+void _IDB_RC_ENTRY::callend()
+{
+	if( !chkflags( IDB_FLAG_ENDCALLED ) )
+	{
+		setflags( IDB_FLAG_ENDCALLED );
+		end();
+	}
+}
+
 bool _IDB_RC_ENTRY::add( bool lock )
 {
 	if( lock )
@@ -153,24 +162,16 @@ bool _IDB_RC_ENTRY::dec( bool lock, bool setdel )
 		list()->rc_lock()->lock();
 
 	if( setdel )
-	{
 		setflags( IDB_FLAG_DEAD );
-		clrflags( IDB_FLAG_NOEND );
-	}
 
-	if(  chkflags( IDB_FLAG_DEAD ) &&
-		!chkflags( IDB_FLAG_ENDED ) &&
-		!chkflags( IDB_FLAG_NOEND ) )
-	{
-		setflags( IDB_FLAG_ENDED );
-		end();
-	}
+	if( chkflags( IDB_FLAG_DEAD ) )
+		callend();
 
 	assert( idb_refcount > 0 );
 
 	idb_refcount--;
 
-	if( idb_refcount || !( idb_flags & IDB_FLAG_DEAD ) )
+	if( idb_refcount || ( !chkflags( IDB_FLAG_DEAD ) && !chkflags( IDB_FLAG_IMMEDIATE ) ) )
 	{
 		list()->rc_log()->txt(
 			LLOG_LOUD,

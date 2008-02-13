@@ -776,7 +776,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// check for special case processing
 				//
 
-				if( !ph1->chkpt_r )
+				if( !ph1->chkpt_r || ph1->ssoft_r )
 				{
 					//
 					// standard xauth processing

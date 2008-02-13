@@ -141,7 +141,7 @@ typedef class _IDB_LIST_PH2ID : public IDB_LIST, public IDB_ENTRY
 }IDB_LIST_PH2ID;
 
 //==============================================================================
-// network map list ( list of phase2 IDs )
+// network map list ( list of phase2 ID lists )
 //
 
 typedef class _IDB_ENTRY_NETMAP : public IDB_ENTRY
@@ -565,6 +565,9 @@ typedef class _IDB_PH1 : public IDB_XCH
 
 	bool	xauth_l;	// local will support xauth
 	bool	xauth_r;	// remote will support xauth
+
+	bool	ssoft_l;	// local is shrew soft compatible
+	bool	ssoft_r;	// remote is shrew soft compatible
 
 	bool	unity_l;	// local is cisco unity compatible
 	bool	unity_r;	// remote is cisco unity compatible
