@@ -931,6 +931,7 @@ long _IKED::process_phase2_send( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 			size_t end = packet.size();
 
+			ph2->hda.del();
 			ph2->hda.set( packet.buff() + beg, end - beg );
 
 			//
@@ -1771,6 +1772,8 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2, long dir, IKE_PROPOSA
 	//
 
 	pfkey_send_update( ph2, proposal, ekey, akey, dir );
+
+	ph2->lstate |= LSTATE_HASKEYS;
 
 	return LIBIKE_OK;
 }

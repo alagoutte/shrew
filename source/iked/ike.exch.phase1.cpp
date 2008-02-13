@@ -2261,6 +2261,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	if( vendcmp( vend, vend_ssoft, false ) )
 	{
 		ph1->vendopts_r.flag.ssoft = true;
+		ph1->vendopts_r.flag.unity = true;
 		log.txt( LLOG_INFO, "ii : peer is SHREW SOFT compatible\n" );
 		return LIBIKE_OK;
 	}

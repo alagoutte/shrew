@@ -326,20 +326,11 @@ _IDB_PH2::~_IDB_PH2()
 	}
 
 	//
-	// log deletion
-	//
-
-	if( xch_errorcode != XCH_FAILED_EXPIRED )
-		iked.log.txt( LLOG_INFO, "ii : phase2 removal before expire time\n" );
-	else
-		iked.log.txt( LLOG_INFO, "ii : phase2 removal after expire time\n" );
-
-	//
 	// inform pfkey interface
 	//
 
 	if( ( xch_errorcode != XCH_FAILED_FLUSHED ) &&
-		( lstate & LSTATE_HASSPI ) )
+		( lstate & LSTATE_HASKEYS ) )
 		iked.pfkey_send_delete( this );
 
 	//
@@ -350,6 +341,15 @@ _IDB_PH2::~_IDB_PH2()
 		tunnel->stats.sa_dead++;
 	else
 		tunnel->stats.sa_fail++;
+
+	//
+	// log deletion
+	//
+
+	if( xch_errorcode != XCH_FAILED_EXPIRED )
+		iked.log.txt( LLOG_INFO, "ii : phase2 removal before expire time\n" );
+	else
+		iked.log.txt( LLOG_INFO, "ii : phase2 removal after expire time\n" );
 
 	//
 	// dereference our tunnel
