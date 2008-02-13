@@ -224,7 +224,7 @@ _IDB_TUNNEL::~_IDB_TUNNEL()
 	// dereference our peer
 	//
 
-	peer->dec( false );
+	peer->dec( true );
 
 	//
 	// cleanup our filter

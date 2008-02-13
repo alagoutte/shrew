@@ -313,7 +313,7 @@ _IDB_PH2::~_IDB_PH2()
 	{
 		IDB_PH1 * ph1;
 		if( iked.idb_list_ph1.find(
-				false,
+				true,
 				&ph1,
 				tunnel,
 				XCH_STATUS_MATURE,
@@ -321,7 +321,7 @@ _IDB_PH2::~_IDB_PH2()
 				NULL ) )
 		{
 			iked.inform_new_delete( ph1, this );
-			ph1->dec( false );
+			ph1->dec( true );
 		}
 	}
 
@@ -355,7 +355,7 @@ _IDB_PH2::~_IDB_PH2()
 	// dereference our tunnel
 	//
 
-	tunnel->dec( false );
+	tunnel->dec( true );
 }
 
 //------------------------------------------------------------------------------

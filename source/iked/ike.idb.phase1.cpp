@@ -605,11 +605,11 @@ _IDB_PH1::~_IDB_PH1()
 			IDB_PH2 * ph2 = iked.idb_list_ph2.get( ph2_index );
 			if( ( ph2->tunnel == tunnel ) && ( ph2->status() == XCH_STATUS_PENDING ) )
 			{
-				ph2->inc( false );
+				ph2->inc( true );
 
 				ph2->status( XCH_STATUS_DEAD, XCH_FAILED_PENDING, 0 );
 
-				if( ph2->dec( false ) )
+				if( ph2->dec( true ) )
 				{
 					ph2_index--;
 					ph2_count--;
@@ -628,6 +628,25 @@ _IDB_PH1::~_IDB_PH1()
 		iked.log.txt( LLOG_INFO, "ii : phase1 removal after expire time\n" );
 
 	//
+	// if we have negotiated a replacement
+	// isakmp sa, change our delete status
+	// to normal. some gateways will send
+	// a delete message for the old sa and
+	// we don't want to treat this as an
+	// error condition.
+	//
+
+	if( xch_errorcode == XCH_FAILED_PEER_DELETE )
+		if( iked.idb_list_ph1.find(
+				true,
+				NULL,
+				tunnel,
+				XCH_STATUS_MATURE,
+				XCH_STATUS_MATURE,
+				NULL ) )
+			xch_errorcode = XCH_NORMAL;
+
+	//
 	// if this is a client tunnel and there
 	// was an error negotiating phase1, set
 	// a close error message
@@ -641,7 +660,7 @@ _IDB_PH1::~_IDB_PH1()
 	// derefrence our tunnel
 	//
 
-	tunnel->dec( false );
+	tunnel->dec( true );
 }
 
 //------------------------------------------------------------------------------
