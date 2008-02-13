@@ -630,7 +630,7 @@ _IDB_PH1::~_IDB_PH1()
 	//
 	// if we have negotiated a replacement
 	// isakmp sa, change our delete status
-	// to normal. some gateways will send
+	// to expired. some gateways will send
 	// a delete message for the old sa and
 	// we don't want to treat this as an
 	// error condition.
@@ -644,7 +644,7 @@ _IDB_PH1::~_IDB_PH1()
 				XCH_STATUS_MATURE,
 				XCH_STATUS_MATURE,
 				NULL ) )
-			xch_errorcode = XCH_NORMAL;
+			xch_errorcode = XCH_FAILED_EXPIRED;
 
 	//
 	// if this is a client tunnel and there
