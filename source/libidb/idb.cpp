@@ -186,6 +186,8 @@ bool _IDB_RC_ENTRY::dec( bool lock, bool setdel )
 		return false;
 	}
 
+	callend();
+
 	list()->del_entry( this );
 
 	if( lock )
