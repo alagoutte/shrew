@@ -147,7 +147,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			packet_ip_dump,
 			ph1->tunnel->saddr_r,
 			ph1->tunnel->saddr_l,
-			ph1->tunnel->natt_v );
+			ph1->tunnel->natt_version );
 
 		//
 		// obtain ethernet header

@@ -142,7 +142,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			packet_ip_dump,
 			cfg->tunnel->saddr_r,
 			cfg->tunnel->saddr_l,
-			cfg->tunnel->natt_v );
+			cfg->tunnel->natt_version );
 
 		//
 		// obtain ethernet header
@@ -264,7 +264,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( config_chk_hash( ph1, cfg, msgid ) != LIBIKE_OK )
 	{
-		if( !ph1->zwall_r )
+		if( !ph1->vendopts_r.flag.zwall )
 		{
 			//
 			// update status and release
@@ -526,8 +526,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						config_xconf_get( cfg,
 							getmask,
 							cfg->tunnel->xconf.rqst,
-							ph1->unity_l && ph1->unity_r,
-							ph1->chkpt_l && ph1->chkpt_r );
+							ph1->vendopts_r );
 
 						//
 						// update state and flag for removal
@@ -564,8 +563,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						config_xconf_get( cfg,
 							getmask,
 							cfg->tunnel->xconf.rqst,
-							ph1->unity_l && ph1->unity_r,
-							ph1->chkpt_l && ph1->chkpt_r );
+							ph1->vendopts_r );
 
 						//
 						// update state and flag for removal
@@ -608,8 +606,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						config_xconf_get( cfg,
 							cfg->tunnel->xconf.rqst,
 							0,
-							ph1->unity_l && ph1->unity_r,
-							ph1->chkpt_l && ph1->chkpt_r );
+							ph1->vendopts_r );
 
 						cfg->attr_reset();
 
@@ -709,8 +706,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						config_xconf_get( cfg,
 							readmask,
 							0,
-							ph1->unity_l && ph1->unity_r,
-							ph1->chkpt_l && ph1->chkpt_r );
+							ph1->vendopts_r );
 
 						cfg->attr_reset();
 
@@ -756,7 +752,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 		// determine xauth operation
 		//
 
-		if( ph1->xauth_l )
+		if( ph1->vendopts_l.flag.xauth )
 		{
 			//
 			// client xauth response
@@ -776,7 +772,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				// check for special case processing
 				//
 
-				if( !ph1->chkpt_r || ph1->ssoft_r )
+				if( !ph1->vendopts_r.flag.chkpt )
 				{
 					//
 					// standard xauth processing
@@ -818,7 +814,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 					//
 
 					if( ( cfg->tunnel->tstate & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
-						if( !ph1->zwall_r && !ph1->swind_r )
+						if( !ph1->vendopts_r.flag.zwall &&
+							!ph1->vendopts_r.flag.swind )
 							cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
 				}
 				else
@@ -938,14 +935,13 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				cfg->mtype = ISAKMP_CFG_REQUEST;
 				cfg->attr_reset();
 
-				if( ph1->chkpt_l && ph1->chkpt_r )
+				if( ph1->vendopts_r.flag.chkpt )
 					iked.rand_bytes( &cfg->ident, sizeof( cfg->ident ) );
 
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.rqst,
 					0xffffffff,
-					ph1->unity_l && ph1->unity_r,
-					ph1->chkpt_l && ph1->chkpt_r );
+					ph1->vendopts_r );
 
 				//
 				// flag as sent and release
@@ -1016,8 +1012,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.rqst,
 					0xffffffff,
-					ph1->unity_l && ph1->unity_r,
-					ph1->chkpt_l && ph1->chkpt_r );
+					ph1->vendopts_r );
 
 				//
 				// flag as sent and release
@@ -1083,7 +1078,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 		// determine xauth operation
 		//
 
-		if( ph1->xauth_l )
+		if( ph1->vendopts_l.flag.xauth )
 		{
 			//
 			// gateway xauth request
@@ -1286,8 +1281,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.opts,
 					0,
-					ph1->unity_l && ph1->unity_r,
-					ph1->chkpt_l && ph1->chkpt_r );
+					ph1->vendopts_r );
 
 				//
 				// send config packet
@@ -1354,8 +1348,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 				config_xconf_set( cfg,
 					cfg->tunnel->xconf.opts,
 					0,
-					ph1->unity_l && ph1->unity_r,
-					ph1->chkpt_l && ph1->chkpt_r );
+					ph1->vendopts_r );
 
 				//
 				// make sure the msgid is unique
@@ -1403,7 +1396,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 	return LIBIKE_OK;
 }
 
-long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool unity, bool chkpt )
+long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VENDOPTS vendopts )
 {
 	//
 	// the modecfg draft defines valid lengths
@@ -1418,7 +1411,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 	char	null_len = 0;
 	char	null_val[ 4 ] = { 0 };
 
-	if( chkpt )
+	if( vendopts.flag.chkpt )
 	{
 		null_ptr = null_val;
 		null_len = 4;
@@ -1551,7 +1544,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 	// cisco unity attributes
 	//
 
-	if( unity )
+	if( vendopts.flag.unity )
 	{
 		if( setmask & IPSEC_OPTS_DOMAIN )
 		{
@@ -1738,7 +1731,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 	// checkpoint attributes
 	//
 
-	if( chkpt )
+	if( vendopts.flag.chkpt )
 	{
 		cfg->attr_add_v( CHKPT_MARCIPAN_REASON_CODE,
 				null_ptr, null_len );
@@ -1785,7 +1778,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool
 	return LIBIKE_OK;
 }
 
-long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool unity, bool chkpt )
+long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VENDOPTS vendopts )
 {
 	long count = cfg->attr_count();
 	long index = 0;
@@ -1977,7 +1970,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool
 		// cisco unity attributes
 		//
 
-		if( unhandled && unity )
+		if( vendopts.flag.unity && unhandled )
 		{
 			unhandled = false;
 

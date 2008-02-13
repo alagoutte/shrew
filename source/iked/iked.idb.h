@@ -208,6 +208,34 @@ enum XCH_ERRORCODE
 	XCH_FAILED_DHCPCONFIG
 };
 
+typedef struct _VENDOPTS
+{
+	union
+	{
+		struct
+		{
+			unsigned long xauth	:1;
+			unsigned long frag	:1;
+			unsigned long dpdv1	:1;
+			unsigned long hbeat	:1;
+			unsigned long natt	:1;
+
+			unsigned long ssoft	:1;
+			unsigned long kame	:1;
+			unsigned long unity	:1;
+			unsigned long netsc	:1;
+			unsigned long zwall	:1;
+			unsigned long swind	:1;
+			unsigned long swall	:1;
+			unsigned long chkpt	:1;
+
+		}flag;
+
+		unsigned long flags;
+	};
+
+}VENDOPTS;
+
 typedef class _IKED_XAUTH IKED_XAUTH;
 typedef class _IKED_XCONF IKED_XCONF;
 
@@ -390,7 +418,8 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 
 	IKE_SADDR	saddr_l;
 	IKE_SADDR	saddr_r;
-	long		natt_v;
+
+	long			natt_version;
 
 	IKE_XAUTH		xauth;
 	IKE_XCONF		xconf;
@@ -559,41 +588,11 @@ typedef class _IDB_PH1 : public IDB_XCH
 	IKE_PH1ID	ph1id_l;
 	IKE_PH1ID	ph1id_r;
 
-	//
-	// FIXME : vendor capabilities should be a bitmask
-	//
+	VENDOPTS	vendopts_l;
+	VENDOPTS	vendopts_r;
 
-	bool	xauth_l;	// local will support xauth
-	bool	xauth_r;	// remote will support xauth
-
-	bool	ssoft_l;	// local is shrew soft compatible
-	bool	ssoft_r;	// remote is shrew soft compatible
-
-	bool	unity_l;	// local is cisco unity compatible
-	bool	unity_r;	// remote is cisco unity compatible
-
-	bool	netsc_l;	// local is netscreen compatible
-	bool	netsc_r;	// remote is netscreen compatible
-
-	bool	zwall_l;	// local is zywall compatible
-	bool	zwall_r;	// remote is zywall compatible
-
-	bool	swind_l;	// local is sidewinder compatible
-	bool	swind_r;	// remote is sidewinder compatible
-
-	bool	chkpt_l;	// local is checkpoint compatible
-	bool	chkpt_r;	// remote is checkpoint compatible
-
-	bool	natt_l;		// local will support natt
-	bool	natt_r;		// remote will support natt
-	long	natt_v;		// version negotiated
-	uint8_t	natt_p;		// payload identifier
-
-	bool	dpd_l;		// local will support dead peer detect
-	bool	dpd_r;		// remote will support dead peer detect
-
-	bool	frag_l;		// local will support fragmentation
-	bool	frag_r;		// remote will support fragmentation
+	long	natt_version;	// version negotiated
+	uint8_t	natt_pldtype;	// payload identifier
 
 	bool	natted_l;	// local address is natted
 	bool	natted_r;	// remote address is natted

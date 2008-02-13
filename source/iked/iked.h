@@ -643,8 +643,8 @@ typedef class _IKED
 
 	// config exchange helper functions
 
-	long	config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, bool unity, bool chkpt );
-	long	config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, bool unity, bool chkpt );
+	long	config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VENDOPTS vendopts );
+	long	config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VENDOPTS vendopts );
 
 	long	config_chk_hash( IDB_PH1 * ph1, IDB_CFG * cfg, unsigned long msgid );
 	long	config_message_send( IDB_PH1 * ph1, IDB_CFG * cfg );

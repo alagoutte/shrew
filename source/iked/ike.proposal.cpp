@@ -849,7 +849,7 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 
 							if( policy->xforms[ xindex ].mode == IPSEC_MODE_TUNNEL )
 							{
-								switch( ph2->tunnel->natt_v )
+								switch( ph2->tunnel->natt_version )
 								{
 									case IPSEC_NATT_NONE:
 										proposal.encap = ISAKMP_ENCAP_TUNNEL;
@@ -869,7 +869,7 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 							}
 							else
 							{
-								switch( ph2->tunnel->natt_v )
+								switch( ph2->tunnel->natt_version )
 								{
 									case IPSEC_NATT_NONE:
 										proposal.encap = ISAKMP_ENCAP_TRANSPORT;

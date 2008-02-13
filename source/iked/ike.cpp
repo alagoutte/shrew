@@ -79,7 +79,7 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 			packet_ip_dump,
 			ph1->tunnel->saddr_l,
 			ph1->tunnel->saddr_r,
-			ph1->tunnel->natt_v );
+			ph1->tunnel->natt_version );
 
 		//
 		// obtain ethernet header
@@ -129,7 +129,7 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	encap_size += sizeof( UDP_HEADER );
 
 	// account for non-esp marker
-	if( ph1->tunnel->natt_v >= IPSEC_NATT_V02 )
+	if( ph1->tunnel->natt_version >= IPSEC_NATT_V02 )
 		encap_size += sizeof( unsigned long );
 
 	//
@@ -140,7 +140,8 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	bool packet_frag = false;
 	size_t packet_left = packet.size();
 
-	if( ph1->frag_l && ph1->frag_r )
+	if( ph1->vendopts_l.flag.frag &&
+		ph1->vendopts_r.flag.frag )
 		if( ( packet_left + encap_size ) > ph1->tunnel->peer->frag_ike_size )
 			packet_frag = true;
 
@@ -255,7 +256,7 @@ long _IKED::packet_ike_xmit( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	text_addr( txtaddr_r, &ph1->tunnel->saddr_r, true );
 
 	char * encap_mode = encap_ike;
-	if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
+	if( ph1->tunnel->natt_version != IPSEC_NATT_NONE )
 		encap_mode = encap_nat;
 
 	//
@@ -268,7 +269,7 @@ long _IKED::packet_ike_xmit( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 		packet_ip,
 		ph1->tunnel->saddr_l,
 		ph1->tunnel->saddr_r,
-		ph1->tunnel->natt_v );
+		ph1->tunnel->natt_version );
 
 	//
 	// log the result

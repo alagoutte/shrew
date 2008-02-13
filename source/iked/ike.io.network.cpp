@@ -458,7 +458,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		// then dump the packet
 		//
 
-		if( !ph1->frag_l )
+		if( !ph1->vendopts_l.flag.frag )
 		{
 			log.txt( LLOG_ERROR, "!! : fragmented packet received but local support is disabled\n" );
 			ph1->dec( true );

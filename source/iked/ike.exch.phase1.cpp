@@ -173,7 +173,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			packet_ip_dump,
 			ph1->tunnel->saddr_r,
 			ph1->tunnel->saddr_l,
-			ph1->tunnel->natt_v );
+			ph1->tunnel->natt_version );
 
 		//
 		// obtain ethernet header
@@ -463,7 +463,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 				if( ( ph1->auth_id == XAUTH_AUTH_INIT_PSK ) ||
 					( ph1->auth_id == XAUTH_AUTH_INIT_RSA ) ||
 					( ph1->auth_id == HYBRID_AUTH_INIT_RSA ) )
-					ph1->xauth_l = true;
+					ph1->vendopts_l.flag.xauth = true;
 
 				// 
 				// setup the sa dhgroup for main mode
@@ -605,7 +605,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 					case IKE_AUTH_PRESHARED_KEY:
 					case XAUTH_AUTH_INIT_PSK:
 					{
-						payload_add_nonce( packet, ph1->nonce_l, ph1->natt_p );
+						payload_add_nonce( packet, ph1->nonce_l, ph1->natt_pldtype );
 						break;
 					}
 
@@ -614,7 +614,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 					case HYBRID_AUTH_INIT_RSA:
 					{
 						payload_add_nonce( packet, ph1->nonce_l, ISAKMP_PAYLOAD_CERT_REQ );
-						payload_add_creq( packet, ISAKMP_CERT_X509_SIG, ph1->natt_p );
+						payload_add_creq( packet, ISAKMP_CERT_X509_SIG, ph1->natt_pldtype );
 						ph1->xstate |= XSTATE_SENT_CR;
 						break;
 					}
@@ -624,10 +624,10 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				// optionally add nat discovery hash payloads
 				//
 
-				if( ph1->natt_v != IPSEC_NATT_NONE )
+				if( ph1->natt_version != IPSEC_NATT_NONE )
 				{
 					phase1_gen_natd( ph1 );
-					payload_add_natd( packet, ph1->natd_ld, ph1->natt_p );
+					payload_add_natd( packet, ph1->natd_ld, ph1->natt_pldtype );
 					payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
 				}
 
@@ -793,7 +793,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 					case IKE_AUTH_PRESHARED_KEY:
 					case XAUTH_AUTH_INIT_PSK:
 					{
-						payload_add_nonce( packet, ph1->nonce_l, ph1->natt_p );
+						payload_add_nonce( packet, ph1->nonce_l, ph1->natt_pldtype );
 						break;
 					}
 
@@ -802,7 +802,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 					case HYBRID_AUTH_INIT_RSA:
 					{
 						payload_add_nonce( packet, ph1->nonce_l, ISAKMP_PAYLOAD_CERT_REQ );
-						payload_add_creq( packet, ISAKMP_CERT_X509_SIG, ph1->natt_p );
+						payload_add_creq( packet, ISAKMP_CERT_X509_SIG, ph1->natt_pldtype );
 						ph1->xstate |= XSTATE_SENT_CR;
 						break;
 					}
@@ -812,10 +812,10 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				// optionally add nat discovery hash payloads
 				//
 
-				if( ph1->natt_v != IPSEC_NATT_NONE )
+				if( ph1->natt_version != IPSEC_NATT_NONE )
 				{
 					phase1_gen_natd( ph1 );
-					payload_add_natd( packet, ph1->natd_ld, ph1->natt_p );
+					payload_add_natd( packet, ph1->natd_ld, ph1->natt_pldtype );
 					payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
 				}
 
@@ -1083,16 +1083,16 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							//
 
 							phase1_gen_hash_i( ph1, ph1->hash_l );
-							payload_add_hash( packet, ph1->hash_l, ph1->natt_p );
+							payload_add_hash( packet, ph1->hash_l, ph1->natt_pldtype );
 
 							//
 							// optionally add nat discovery hash payloads
 							//
 
-							if( ph1->natt_v != IPSEC_NATT_NONE )
+							if( ph1->natt_version != IPSEC_NATT_NONE )
 							{
 								phase1_gen_natd( ph1 );
-								payload_add_natd( packet, ph1->natd_ld, ph1->natt_p );
+								payload_add_natd( packet, ph1->natd_ld, ph1->natt_pldtype );
 								payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
 							}
 
@@ -1134,16 +1134,16 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							BDATA sign;
 							phase1_gen_hash_i( ph1, ph1->hash_l );
 							prvkey_rsa_encrypt( ph1->tunnel->peer->key, ph1->hash_l, sign );
-							payload_add_sign( packet, sign, ph1->natt_p );
+							payload_add_sign( packet, sign, ph1->natt_pldtype );
 
 							//
 							// optionally add nat discovery hash payloads
 							//
 
-							if( ph1->natt_v != IPSEC_NATT_NONE )
+							if( ph1->natt_version != IPSEC_NATT_NONE )
 							{
 								phase1_gen_natd( ph1 );
-								payload_add_natd( packet, ph1->natd_ld, ph1->natt_p );
+								payload_add_natd( packet, ph1->natd_ld, ph1->natt_pldtype );
 								payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
 							}
 
@@ -1249,16 +1249,16 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 					}
 				}
 
-				phase1_add_vend( ph1, packet, ph1->natt_p );
+				phase1_add_vend( ph1, packet, ph1->natt_pldtype );
 
 				//
 				// optionally add nat discovery hash payloads
 				//
 
-				if( ph1->natt_v != IPSEC_NATT_NONE )
+				if( ph1->natt_version != IPSEC_NATT_NONE )
 				{
 					phase1_gen_natd( ph1 );
-					payload_add_natd( packet, ph1->natd_ld, ph1->natt_p );
+					payload_add_natd( packet, ph1->natd_ld, ph1->natt_pldtype );
 					payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
 				}
 
@@ -1387,7 +1387,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		// is required at this time
 		//
 
-		if( !ph1->initiator && ph1->xauth_l )
+		if( !ph1->initiator && ph1->vendopts_l.flag.xauth )
 		{
 			//
 			// initiate xauth to verify our peer
@@ -1400,7 +1400,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			cfg->dec( true );
 		}
 
-		if( ph1->initiator && !ph1->xauth_l )
+		if( ph1->initiator && !ph1->vendopts_l.flag.xauth )
 		{
 			//
 			// initiate a pull config request or
@@ -1452,7 +1452,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		// add pahse1 natt event
 		//
 
-		if( ph1->tunnel->natt_v != IPSEC_NATT_NONE )
+		if( ph1->tunnel->natt_version != IPSEC_NATT_NONE )
 		{
 			ph1->tunnel->stats.natt = true;
 
@@ -1467,7 +1467,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		//
 
 		if( ( ph1->tunnel->peer->dpd_mode == IPSEC_DPD_FORCE ) ||
-			( ph1->dpd_l && ph1->dpd_r ) )
+			( ph1->vendopts_l.flag.dpdv1 && ph1->vendopts_r.flag.dpdv1 ) )
 		{
 			ph1->tunnel->stats.dpd = true;
 
@@ -1477,7 +1477,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			ith_timer.add( &ph1->event_dpd );
 		}
 
-		if( ph1->frag_l && ph1->frag_r )
+		if( ph1->vendopts_l.flag.frag && ph1->vendopts_r.flag.frag )
 			ph1->tunnel->stats.frag = true;
 
 		//
@@ -1896,15 +1896,65 @@ long _IKED::phase1_gen_hash_r( IDB_PH1 * sa, BDATA & hash )
 	return LIBIKE_OK;
 }
 
+inline uint8_t vendpld( long & count, uint8_t next )
+{
+	if( --count )
+		return ISAKMP_PAYLOAD_VEND;
+	else
+		return next;
+}
+
 long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 {
+	//
+	// determine vendor id count
+	//
+
+	long vid_count = 0;
+
+	if( ph1->vendopts_l.flag.xauth )
+		vid_count++;
+
+	if( ph1->vendopts_l.flag.natt )
+	{
+		if( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE )
+			vid_count += 5;
+
+		if( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_DRAFT )
+			vid_count += 2;
+
+		if( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC )
+			vid_count += 3;
+	}
+
+	if( ph1->vendopts_l.flag.frag )
+		vid_count++;
+
+	if( ph1->vendopts_l.flag.dpdv1 )
+		vid_count++;
+
+	if( ph1->vendopts_l.flag.ssoft )
+		vid_count++;
+
+	if( ph1->vendopts_l.flag.unity )
+		vid_count++;
+
+	if( ph1->vendopts_l.flag.netsc )
+		vid_count++;
+
+	if( ph1->vendopts_l.flag.swind )
+		vid_count++;
+
+	if( ph1->vendopts_l.flag.chkpt )
+		vid_count++;
+
 	//
 	// optionally add xauth vendor id payload
 	//
 
-	if( ph1->xauth_l )
+	if( ph1->vendopts_l.flag.xauth )
 	{
-		payload_add_vend( packet, vend_xauth, ISAKMP_PAYLOAD_VEND );
+		payload_add_vend( packet, vend_xauth, vendpld( vid_count, next ) );
 		log.txt( LLOG_INFO, "ii : local supports XAUTH\n" );
 	}
 
@@ -1912,7 +1962,7 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 	// optionally add natt vendor id payloads
 	//
 
-	if( ph1->natt_l )
+	if( ph1->vendopts_l.flag.natt )
 	{
 		//
 		// add natt draft 00-01 id paylaods
@@ -1921,9 +1971,9 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
 			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_DRAFT ) )
 		{
-			payload_add_vend( packet, vend_natt_v00, ISAKMP_PAYLOAD_VEND );
+			payload_add_vend( packet, vend_natt_v00, vendpld( vid_count, next ) );
 			log.txt( LLOG_INFO, "ii : local supports nat-t ( draft v00 )\n" );
-			payload_add_vend( packet, vend_natt_v01, ISAKMP_PAYLOAD_VEND );
+			payload_add_vend( packet, vend_natt_v01, vendpld( vid_count, next ) );
 			log.txt( LLOG_INFO, "ii : local supports nat-t ( draft v01 )\n" );
 		}
 
@@ -1934,11 +1984,11 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
 			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC ) )
 		{
-			payload_add_vend( packet, vend_natt_v02, ISAKMP_PAYLOAD_VEND );
+			payload_add_vend( packet, vend_natt_v02, vendpld( vid_count, next ) );
 			log.txt( LLOG_INFO, "ii : local supports nat-t ( draft v02 )\n" );
-			payload_add_vend( packet, vend_natt_v03, ISAKMP_PAYLOAD_VEND );
+			payload_add_vend( packet, vend_natt_v03, vendpld( vid_count, next ) );
 			log.txt( LLOG_INFO, "ii : local supports nat-t ( draft v03 )\n" );
-			payload_add_vend( packet, vend_natt_rfc, ISAKMP_PAYLOAD_VEND );
+			payload_add_vend( packet, vend_natt_rfc, vendpld( vid_count, next ) );
 			log.txt( LLOG_INFO, "ii : local supports nat-t ( rfc )\n" );
 		}
 	}
@@ -1947,9 +1997,9 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 	// optionally add fragmentation vendor id payload
 	//
 
-	if( ph1->frag_l )
+	if( ph1->vendopts_l.flag.frag )
 	{
-		payload_add_vend( packet, vend_frag, ISAKMP_PAYLOAD_VEND );
+		payload_add_vend( packet, vend_frag, vendpld( vid_count, next ) );
 		log.txt( LLOG_INFO, "ii : local supports FRAGMENTATION\n" );
 	}
 
@@ -1957,68 +2007,103 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 	// optionally add dpd vendor id payload
 	//
 
-	if( ph1->dpd_l )
+	if( ph1->vendopts_l.flag.dpdv1 )
 	{
-		payload_add_vend( packet, vend_dpd1, ISAKMP_PAYLOAD_VEND );
+		payload_add_vend( packet, vend_dpd1, vendpld( vid_count, next ) );
 		log.txt( LLOG_INFO, "ii : local supports DPDv1\n" );
 	}
 
 	//
-	// add shrew soft vendor id payload
+	// optionally add shrew soft vendor id payload
 	//
 
-	payload_add_vend( packet, vend_ssoft, ISAKMP_PAYLOAD_VEND );
-	log.txt( LLOG_INFO, "ii : local is SHREW SOFT compatible\n" );
+	if( ph1->vendopts_l.flag.ssoft )
+	{
+		payload_add_vend( packet, vend_ssoft, vendpld( vid_count, next ) );
+		log.txt( LLOG_INFO, "ii : local is SHREW SOFT compatible\n" );
+	}
 
 	//
-	// add unity vendor id payload
+	// optionally add unity vendor id payload
 	//
 
-	payload_add_vend( packet, vend_unity, ISAKMP_PAYLOAD_VEND );
-	log.txt( LLOG_INFO, "ii : local is CISCO UNITY compatible\n" );
+	if( ph1->vendopts_l.flag.unity )
+	{
+		payload_add_vend( packet, vend_unity, vendpld( vid_count, next ) );
+		log.txt( LLOG_INFO, "ii : local is CISCO UNITY compatible\n" );
+	}
 
 	//
-	// add netscreen vendor payload
+	// optionally add netscreen vendor payload
 	//
 
-	payload_add_vend( packet, vend_netsc, ISAKMP_PAYLOAD_VEND );
-	log.txt( LLOG_INFO, "ii : local is NETSCREEN compatible\n" );
+	if( ph1->vendopts_l.flag.netsc )
+	{
+		payload_add_vend( packet, vend_netsc, vendpld( vid_count, next ) );
+		log.txt( LLOG_INFO, "ii : local is NETSCREEN compatible\n" );
+	}
 
 	//
-	// add sidewinder vendor payload
+	// optionally add sidewinder vendor payload
 	//
 
-	payload_add_vend( packet, vend_swind, ISAKMP_PAYLOAD_VEND );
-	log.txt( LLOG_INFO, "ii : local is SIDEWINDER compatible\n" );
+	if( ph1->vendopts_l.flag.swind )
+	{
+		payload_add_vend( packet, vend_swind, vendpld( vid_count, next ) );
+		log.txt( LLOG_INFO, "ii : local is SIDEWINDER compatible\n" );
+	}
 
 	//
-	// prepair and add checkpoint vendor id payload ( must be last )
+	// prepair and optionally add checkpoint vendor
+	// id payload ( must be last )
 	//
 
-	uint32_t prod;
-	uint32_t vers;
-	uint32_t feat;
+	if( ph1->vendopts_l.flag.chkpt )
+	{
+		uint32_t prod;
+		uint32_t vers;
+		uint32_t feat;
 
-	if( ph1->tunnel->peer->contact != IPSEC_CONTACT_CLIENT )
-		prod = htonl( 1 );			// 01 == gateway
-	else
-		prod = htonl( 2 );			// 02 == client
+		if( ph1->tunnel->peer->contact != IPSEC_CONTACT_CLIENT )
+			prod = htonl( 1 );			// 01 == gateway
+		else
+			prod = htonl( 2 );			// 02 == client
 
-	vers = htonl( 5006 );			// NG AI R56
-	feat = htonl( 0x18800000 );		// all features
+		vers = htonl( 5006 );			// NG AI R56
+		feat = htonl( 0x18800000 );		// all features
 
-	BDATA vend_chkpt2;
-	vend_chkpt2.add( vend_chkpt );	// base vendor id
-	vend_chkpt2.add( &prod, 4 );	// client
-	vend_chkpt2.add( &vers, 4 );	// version
-	vend_chkpt2.add( 0, 4 );		// timestamp
-	vend_chkpt2.add( 0, 4 );		// reserved
-	vend_chkpt2.add( &feat, 4 );	// features
+		BDATA vend_chkpt2;
+		vend_chkpt2.add( vend_chkpt );	// base vendor id
+		vend_chkpt2.add( &prod, 4 );	// client
+		vend_chkpt2.add( &vers, 4 );	// version
+		vend_chkpt2.add( 0, 4 );		// timestamp
+		vend_chkpt2.add( 0, 4 );		// reserved
+		vend_chkpt2.add( &feat, 4 );	// features
 
-	payload_add_vend( packet, vend_chkpt2, next );
-	log.txt( LLOG_INFO, "ii : local is CHECKPOINT compatible\n" );
+		payload_add_vend( packet, vend_chkpt2, vendpld( vid_count, next ) );
+		log.txt( LLOG_INFO, "ii : local is CHECKPOINT compatible\n" );
+	}
 
 	return LIBIKE_OK;
+}
+
+inline bool vendcmp( BDATA & vend1, BDATA & vend2, bool prefix )
+{
+	if( prefix )
+	{
+		if( vend1.size() > vend2.size() )
+			return false;
+	}
+	else
+	{
+		if( vend1.size() != vend2.size() )
+			return false;
+	}
+
+	return !memcmp(
+				vend1.buff(),
+				vend2.buff(),
+				vend2.size() );
 }
 
 long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
@@ -2027,229 +2112,224 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for xauth vendor id
 	//
 
-	if( vend.size() == vend_xauth.size() )
-		if( !memcmp( vend.buff(), vend_xauth.buff(), vend_xauth.size() ) )
-		{
-			ph1->xauth_r = true;
-			log.txt( LLOG_INFO, "ii : peer supports XAUTH\n" );
-			return LIBIKE_OK;
-		}
+	if( vendcmp( vend, vend_xauth, false ) )
+	{
+		ph1->vendopts_r.flag.xauth = true;
+		log.txt( LLOG_INFO, "ii : peer supports XAUTH\n" );
+		return LIBIKE_OK;
+	}
 
 	//
 	// check for fragmentation vendor id
 	//
 
-	if( vend.size() == vend_frag.size() )
-		if( !memcmp( vend.buff(), vend_frag.buff(), vend_frag.size() ) )
-		{
-			ph1->frag_r = true;
-			log.txt( LLOG_INFO, "ii : peer supports FRAGMENTATION\n" );
-			return LIBIKE_OK;
-		}
+	if( vendcmp( vend, vend_frag, false ) )
+	{
+		ph1->vendopts_r.flag.frag = true;
+		log.txt( LLOG_INFO, "ii : peer supports FRAGMENTATION\n" );
+		return LIBIKE_OK;
+	}
 
 	//
 	// check for dead peer detection vendor id
 	//
 
-	if( vend.size() == vend_dpd1.size() )
-		if( !memcmp( vend.buff(), vend_dpd1.buff(), vend_dpd1.size() ) )
-		{
-			ph1->dpd_r = true;
-			log.txt( LLOG_INFO, "ii : peer supports DPDv1\n" );
-			return LIBIKE_OK;
-		}
+	if( vendcmp( vend, vend_dpd1, false ) )
+	{
+		ph1->vendopts_r.flag.dpdv1 = true;
+		log.txt( LLOG_INFO, "ii : peer supports DPDv1\n" );
+		return LIBIKE_OK;
+	}
 
 	//
 	// check for heartbeat notify detection vendor id
 	//
 
-	if( vend.size() == vend_hbeat.size() )
-		if( !memcmp( vend.buff(), vend_hbeat.buff(), vend_hbeat.size() ) )
-		{
-			log.txt( LLOG_INFO, "ii : peer supports HEARTBEAT-NOTIFY\n" );
-			return LIBIKE_OK;
-		}
-
-	//
-	// check for natt draft 00-01 vendor ids
-	//
-
-	if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
-		( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_DRAFT ) )
+	if( vendcmp( vend, vend_hbeat, false ) )
 	{
-		//
-		// check for natt v00 vendor id
-		//
-
-		if( vend.size() == vend_natt_v00.size() )
-			if( !memcmp( vend.buff(), vend_natt_v00.buff(), vend_natt_v00.size() ) )
-			{
-				ph1->natt_r = true;
-				if( ph1->natt_v < IPSEC_NATT_V00 )
-				{
-					ph1->natt_v = IPSEC_NATT_V00;
-					ph1->natt_p = ISAKMP_PAYLOAD_NAT_VXX_DISC;
-				}
-				log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v00 )\n" );
-				return LIBIKE_OK;
-			}
-
-		//
-		// check for natt v01 vendor id
-		//
-
-		if( vend.size() == vend_natt_v01.size() )
-			if( !memcmp( vend.buff(), vend_natt_v01.buff(), vend_natt_v01.size() ) )
-			{
-				ph1->natt_r = true;
-				if( ph1->natt_v < IPSEC_NATT_V01 )
-				{
-					ph1->natt_v = IPSEC_NATT_V01;
-					ph1->natt_p = ISAKMP_PAYLOAD_NAT_VXX_DISC;
-				}
-				log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v01 )\n" );
-				return LIBIKE_OK;
-			}
+		ph1->vendopts_r.flag.hbeat = true;
+		log.txt( LLOG_INFO, "ii : peer supports HEARTBEAT-NOTIFY\n" );
+		return LIBIKE_OK;
 	}
 
 	//
-	// check for natt draft 02-rfc vendor ids
+	// check for natt v00 vendor id
 	//
 
-	if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
-		( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC ) )
+	if( vendcmp( vend, vend_natt_v00, false ) )
 	{
-		//
-		// check for natt v02 vendor id
-		//
-
-		if( vend.size() == vend_natt_v02.size() )
-			if( !memcmp( vend.buff(), vend_natt_v02.buff(), vend_natt_v02.size() ) )
+		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
+			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_DRAFT ) )
+		{
+			if( ph1->natt_version < IPSEC_NATT_V00 )
 			{
-				ph1->natt_r = true;
-				if( ph1->natt_v < IPSEC_NATT_V02 )
-				{
-					ph1->natt_v = IPSEC_NATT_V02;
-					ph1->natt_p = ISAKMP_PAYLOAD_NAT_VXX_DISC;
-				}
-				log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v02 )\n" );
-				return LIBIKE_OK;
+				ph1->vendopts_r.flag.natt = true;
+				ph1->natt_version = IPSEC_NATT_V00;
+				ph1->natt_pldtype = ISAKMP_PAYLOAD_NAT_VXX_DISC;
 			}
+		}
 
-		//
-		// check for natt v03 vendor id
-		//
+		log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v00 )\n" );
+		return LIBIKE_OK;
+	}
 
-		if( vend.size() == vend_natt_v03.size() )
-			if( !memcmp( vend.buff(), vend_natt_v03.buff(), vend_natt_v03.size() ) )
+	//
+	// check for natt v01 vendor id
+	//
+
+	if( vendcmp( vend, vend_natt_v01, false ) )
+	{
+		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
+			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_DRAFT ) )
+		{
+			if( ph1->natt_version < IPSEC_NATT_V01 )
 			{
-				ph1->natt_r = true;
-				if( ph1->natt_v < IPSEC_NATT_V03 )
-				{
-					ph1->natt_v = IPSEC_NATT_V03;
-					ph1->natt_p = ISAKMP_PAYLOAD_NAT_VXX_DISC;
-				}
-				log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v03 )\n" );
-				return LIBIKE_OK;
+				ph1->vendopts_r.flag.natt = true;
+				ph1->natt_version = IPSEC_NATT_V01;
+				ph1->natt_pldtype = ISAKMP_PAYLOAD_NAT_VXX_DISC;
 			}
+		}
 
-		//
-		// check for natt rfc vendor id
-		//
+		log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v01 )\n" );
+		return LIBIKE_OK;
+	}
 
-		if( vend.size() == vend_natt_rfc.size() )
-			if( !memcmp( vend.buff(), vend_natt_rfc.buff(), vend_natt_rfc.size() ) )
+	//
+	// check for natt v02 vendor id
+	//
+
+	if( vendcmp( vend, vend_natt_v02, false ) )
+	{
+		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
+			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC ) )
+		{
+			if( ph1->natt_version < IPSEC_NATT_V02 )
 			{
-				ph1->natt_r = true;
-				ph1->natt_v = IPSEC_NATT_RFC;
-				ph1->natt_p = ISAKMP_PAYLOAD_NAT_RFC_DISC;
-				log.txt( LLOG_INFO, "ii : peer supports nat-t ( rfc )\n" );
-				return LIBIKE_OK;
+				ph1->vendopts_r.flag.natt = true;
+				ph1->natt_version = IPSEC_NATT_V02;
+				ph1->natt_pldtype = ISAKMP_PAYLOAD_NAT_VXX_DISC;
 			}
+		}
+
+		log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v02 )\n" );
+		return LIBIKE_OK;
+	}
+
+	//
+	// check for natt v03 vendor id
+	//
+
+	if( vendcmp( vend, vend_natt_v03, false ) )
+	{
+		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
+			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC ) )
+		{
+			if( ph1->natt_version < IPSEC_NATT_V03 )
+			{
+				ph1->vendopts_r.flag.natt = true;
+				ph1->natt_version = IPSEC_NATT_V03;
+				ph1->natt_pldtype = ISAKMP_PAYLOAD_NAT_VXX_DISC;
+			}
+		}
+
+		log.txt( LLOG_INFO, "ii : peer supports nat-t ( draft v03 )\n" );
+		return LIBIKE_OK;
+	}
+
+	//
+	// check for natt rfc vendor id
+	//
+
+	if( vendcmp( vend, vend_natt_rfc, false ) )
+	{
+		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
+			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC ) )
+		{
+			ph1->vendopts_r.flag.natt = true;
+			ph1->natt_version = IPSEC_NATT_RFC;
+			ph1->natt_pldtype = ISAKMP_PAYLOAD_NAT_RFC_DISC;
+		}
+
+		log.txt( LLOG_INFO, "ii : peer supports nat-t ( rfc )\n" );
+		return LIBIKE_OK;
 	}
 
 	//
 	// check for shrew soft vendor id
 	//
 
-	if( vend.size() == vend_ssoft.size() )
-		if( !memcmp( vend.buff(), vend_ssoft.buff(), vend_ssoft.size() ) )
-		{
-			ph1->ssoft_r = true;
-			log.txt( LLOG_INFO, "ii : peer is SHREW SOFT compatible\n" );
-			return LIBIKE_OK;
-		}
+	if( vendcmp( vend, vend_ssoft, false ) )
+	{
+		ph1->vendopts_r.flag.ssoft = true;
+		log.txt( LLOG_INFO, "ii : peer is SHREW SOFT compatible\n" );
+		return LIBIKE_OK;
+	}
 
 	//
 	// check for kame vendor id
 	//
 
-	if( vend.size() == vend_kame.size() )
-		if( !memcmp( vend.buff(), vend_kame.buff(), vend_kame.size() ) )
-		{
-			log.txt( LLOG_INFO, "ii : peer is IPSEC-TOOLS compatible\n" );
-			return LIBIKE_OK;
-		}
+	if( vendcmp( vend, vend_kame, false ) )
+	{
+		ph1->vendopts_r.flag.kame = true;
+		log.txt( LLOG_INFO, "ii : peer is IPSEC-TOOLS compatible\n" );
+		return LIBIKE_OK;
+	}
 
 	//
 	// check for unity vendor id
 	//
 
-	if( vend.size() == vend_unity.size() )
-		if( !memcmp( vend.buff(), vend_unity.buff(), vend_unity.size() ) )
-		{
-			ph1->unity_r = true;
-			log.txt( LLOG_INFO, "ii : peer is CISCO UNITY compatible\n" );
-			return LIBIKE_OK;
-		}
+	if( vendcmp( vend, vend_unity, false ) )
+	{
+		ph1->vendopts_r.flag.unity = true;
+		log.txt( LLOG_INFO, "ii : peer is CISCO UNITY compatible\n" );
+		return LIBIKE_OK;
+	}
 
 	//
 	// check for netscreen vendor id
 	//
 
-	if( vend.size() >= vend_netsc.size() )
-		if( !memcmp( vend.buff(), vend_netsc.buff(), vend_netsc.size() ) )
-		{
-			ph1->netsc_r = true;
-			log.txt( LLOG_INFO, "ii : peer is NETSCREEN compatible\n" );
-			return LIBIKE_OK;
-		}
+	if( vendcmp( vend, vend_netsc, true ) )
+	{
+		ph1->vendopts_r.flag.netsc = true;
+		log.txt( LLOG_INFO, "ii : peer is NETSCREEN compatible\n" );
+		return LIBIKE_OK;
+	}
 
 	//
 	// check for zywall vendor id
 	//
 
-	if( vend.size() == vend_zwall.size() )
-		if( !memcmp( vend.buff(), vend_zwall.buff(), vend_zwall.size() ) )
-		{
-			ph1->zwall_r = true;
-			log.txt( LLOG_INFO, "ii : peer is ZYWALL compatible\n" );
-			return LIBIKE_OK;
-		}
+	if( vendcmp( vend, vend_zwall, false ) )
+	{
+		ph1->vendopts_r.flag.zwall = true;
+		log.txt( LLOG_INFO, "ii : peer is ZYWALL compatible\n" );
+		return LIBIKE_OK;
+	}
 
 	//
 	// check for sidewinder vendor id
 	//
 
-	if( vend.size() == vend_swind.size() )
-		if( !memcmp( vend.buff(), vend_swind.buff(), vend_swind.size() ) )
-		{
-			ph1->swind_r = true;
-			log.txt( LLOG_INFO, "ii : peer is SIDEWINDER compatible\n" );
-			return LIBIKE_OK;
-		}
+	if( vendcmp( vend, vend_swind, false ) )
+	{
+		ph1->vendopts_r.flag.swind = true;
+		log.txt( LLOG_INFO, "ii : peer is SIDEWINDER compatible\n" );
+		return LIBIKE_OK;
+	}
 
 	//
 	// check for checkpoint vendor id
 	//
 
-	if( vend.size() >= vend_chkpt.size() )
-		if( !memcmp( vend.buff(), vend_chkpt.buff(), vend_chkpt.size() ) )
-		{
-			ph1->chkpt_r = true;
-			log.txt( LLOG_INFO, "ii : peer is CHECKPOINT compatible\n" );
-			return LIBIKE_OK;
-		}
+	if( vendcmp( vend, vend_chkpt, true ) )
+	{
+		ph1->vendopts_r.flag.chkpt = true;
+		log.txt( LLOG_INFO, "ii : peer is CHECKPOINT compatible\n" );
+		return LIBIKE_OK;
+	}
 
 	log.bin(
 		LLOG_DEBUG,
@@ -2446,7 +2526,7 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 			// make sure remote peer negotiated natt
 			//
 
-			if( !ph1->natt_v )
+			if( !ph1->natt_version )
 			{
 				log.txt( LLOG_INFO, "ii : nat-t is unsupported by remote peer\n" );
 				break;
@@ -2503,7 +2583,7 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 
 			if( xlated )
 			{
-				ph1->tunnel->natt_v = ph1->natt_v;
+				ph1->tunnel->natt_version = ph1->natt_version;
 				break;
 			}
 
@@ -2521,10 +2601,10 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 			// set natt to negotiated version or draft v00
 			//
 
-			if( ph1->natt_v != IPSEC_NATT_NONE )
-				ph1->tunnel->natt_v = ph1->natt_v;
+			if( ph1->natt_version != IPSEC_NATT_NONE )
+				ph1->tunnel->natt_version = ph1->natt_version;
 			else
-				ph1->tunnel->natt_v = IPSEC_NATT_V00;
+				ph1->tunnel->natt_version = IPSEC_NATT_V00;
 
 			break;
 
@@ -2536,10 +2616,10 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 			// set natt to negotiated version or rfc
 			//
 
-			if( ph1->natt_v != IPSEC_NATT_NONE )
-				ph1->tunnel->natt_v = ph1->natt_v;
+			if( ph1->natt_version != IPSEC_NATT_NONE )
+				ph1->tunnel->natt_version = ph1->natt_version;
 			else
-				ph1->tunnel->natt_v = IPSEC_NATT_RFC;
+				ph1->tunnel->natt_version = IPSEC_NATT_RFC;
 
 			break;
 	}
@@ -2550,7 +2630,7 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 
 	ph1->tunnel->lstate |= LSTATE_NATT_FLOAT;
 
-	if( ph1->tunnel->natt_v >= IPSEC_NATT_V02 )
+	if( ph1->tunnel->natt_version >= IPSEC_NATT_V02 )
 	{
 		//
 		// switch our port to natt
@@ -2602,7 +2682,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 		{
 			if( ph1->tunnel->peer->natt_mode <= IPSEC_NATT_V02 )
 			{
-				if( !ph1->natt_l )
+				if( !ph1->vendopts_l.flag.natt )
 				{
 					log.txt( LLOG_INFO,
 						"ii : local nat traversal is <= v02 but initiator port floated\n" );
@@ -2610,7 +2690,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 					return false;
 				}
 
-				if( !ph1->natt_r )
+				if( !ph1->vendopts_r.flag.natt )
 				{
 					log.txt( LLOG_INFO,
 						"ii : remote nat traversal is <= v02 but initiator port floated\n" );
@@ -2645,7 +2725,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 		// negotiated natt version
 		//
 
-		ph1->tunnel->natt_v = ph1->natt_v;
+		ph1->tunnel->natt_version = ph1->natt_version;
 
 		log.txt( LLOG_INFO,
 			"ii : floating to nat-t udp ports %u -> %u\n",
@@ -2682,7 +2762,7 @@ long _IKED::phase1_chk_idr( IDB_PH1 * ph1 )
 	// compare the id values
 	//
 
-	if( !cmp_ph1id( idt, ph1->ph1id_r, ph1->natt_l ) )
+	if( !cmp_ph1id( idt, ph1->ph1id_r, ph1->vendopts_l.flag.natt ) )
 		return LIBIKE_FAILED;
 
 	return LIBIKE_OK;

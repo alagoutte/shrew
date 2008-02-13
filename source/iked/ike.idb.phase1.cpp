@@ -156,7 +156,7 @@ bool _ITH_EVENT_PH1SOFT::func()
 
 	if( ph1->tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
 	{
-		if( ph1->xauth_l )
+		if( ph1->vendopts_l.flag.xauth )
 		{
 			ph1->tunnel->tstate &= ~TSTATE_SENT_XAUTH;
 			ph1->tunnel->tstate &= ~TSTATE_RECV_XAUTH;
@@ -368,38 +368,17 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 
 	memset( &cookies, 0, sizeof( cookies ) );
 
-	xauth_l = false;
-	xauth_r = false;
+	vendopts_l.flags = 0;
+	vendopts_r.flags = 0;
 
-	unity_l = true;
-	netsc_l = true;
-	zwall_l = true;
-	swind_l = true;
-	chkpt_l = true;
-
-	unity_r = false;
-	netsc_r = false;
-	zwall_r = false;
-	swind_r = false;
-	chkpt_r = false;
-
-	natt_l = false;
-	natt_r = false;
-
-	natt_v = 0;
-	natt_p = ISAKMP_PAYLOAD_NONE;
-
-	dpd_l = false;
-	dpd_r = false;
-
-	dpd_req = 0;
-	dpd_res = 0;
-
-	frag_l = false;
-	frag_r = false;
+	natt_version = IPSEC_NATT_NONE;
+	natt_pldtype = ISAKMP_PAYLOAD_NONE;
 
 	natted_l = false;
 	natted_r = false;
+
+	dpd_req = 0;
+	dpd_res = 0;
 
 	ctype_l = 0;
 	ctype_r = 0;
@@ -459,21 +438,40 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	iked.rand_bytes( nonce_l.buff(), ISAKMP_NONCE_SIZE );
 
 	//
+	// always advertise as shrew soft
+	//
+
+	vendopts_l.flag.ssoft = true;
+
+	//
+	// determine if this is a client tunnel
+	//
+
+	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
+	{
+		vendopts_l.flag.unity = true;
+		vendopts_l.flag.netsc = true;
+		vendopts_l.flag.zwall = true;
+		vendopts_l.flag.swind = true;
+		vendopts_l.flag.chkpt = true;
+	}
+
+	//
 	// determine ike fragmentation negotiation
 	//
 
 	if( tunnel->peer->frag_ike_mode >= IPSEC_FRAG_ENABLE )
-		frag_l = true;
+		vendopts_l.flag.frag = true;
 
 	if( tunnel->peer->frag_ike_mode == IPSEC_FRAG_FORCE )
-		frag_r = true;
+		vendopts_r.flag.frag = true;
 
 	//
 	// determine natt negotiation
 	//
 
 	if( tunnel->peer->natt_mode >= IPSEC_NATT_ENABLE )
-		natt_l = true;
+		vendopts_l.flag.natt = true;
 
 	//
 	// determine dpd negotiation
@@ -481,7 +479,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 
 	if( tunnel->peer->dpd_mode >= IPSEC_DPD_ENABLE )
 	{
-		dpd_l = true;
+		vendopts_l.flag.dpdv1 = true;
 
 		long dpdseq;
 		iked.rand_bytes( &dpdseq, sizeof( dpdseq ) );
@@ -492,7 +490,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	}
 
 	if( tunnel->peer->dpd_mode == IPSEC_DPD_FORCE )
-		dpd_r = true;
+		vendopts_r.flag.dpdv1 = true;
 
 	//
 	// locate the first isakmp proposal
@@ -517,7 +515,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 		if( ( proposal->auth_id == XAUTH_AUTH_INIT_PSK ) ||
 			( proposal->auth_id == XAUTH_AUTH_INIT_RSA ) ||
 			( proposal->auth_id == HYBRID_AUTH_INIT_RSA ) )
-			xauth_l = true;
+			vendopts_l.flag.xauth = true;
 	}
 
 	//

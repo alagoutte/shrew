@@ -989,7 +989,7 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 	//
 
 	bool use_ports = false;
-	if( ph2->tunnel->natt_v != IPSEC_NATT_NONE )
+	if( ph2->tunnel->natt_version != IPSEC_NATT_NONE )
 		use_ports = true;
 
 	//
@@ -1300,7 +1300,7 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 				case ISAKMP_ENCAP_VXX_UDP_TRANSPORT:
 				case ISAKMP_ENCAP_RFC_UDP_TRANSPORT:
 				{
-					if( ph2->tunnel->natt_v >= IPSEC_NATT_V02 )
+					if( ph2->tunnel->natt_version >= IPSEC_NATT_V02 )
 						sainfo.natt.type = UDP_ENCAP_ESPINUDP;
 					else
 						sainfo.natt.type = UDP_ENCAP_ESPINUDP_NON_IKE;
@@ -1418,7 +1418,7 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 	//
 
 	bool use_ports = false;
-	if( ph2->tunnel->natt_v != IPSEC_NATT_NONE )
+	if( ph2->tunnel->natt_version != IPSEC_NATT_NONE )
 		use_ports = true;
 
 	//
@@ -1530,7 +1530,7 @@ long _IKED::pfkey_send_delete( IDB_PH2 * ph2 )
 		//
 
 		bool use_ports = false;
-		if( ph2->tunnel->natt_v != IPSEC_NATT_NONE )
+		if( ph2->tunnel->natt_version != IPSEC_NATT_NONE )
 			use_ports = true;
 
 		cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_src.saddr, use_ports );
@@ -1592,7 +1592,7 @@ long _IKED::pfkey_send_delete( IDB_PH2 * ph2 )
 		//
 
 		bool use_ports = false;
-		if( ph2->tunnel->natt_v != IPSEC_NATT_NONE )
+		if( ph2->tunnel->natt_version != IPSEC_NATT_NONE )
 			use_ports = true;
 
 		cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_src.saddr, use_ports );

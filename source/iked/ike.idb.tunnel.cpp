@@ -158,7 +158,7 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 	lstate = 0;
 	close = XCH_NORMAL;
 
-	natt_v = IPSEC_NATT_NONE;
+	natt_version = IPSEC_NATT_NONE;
 	dhcp_sock = INVALID_SOCKET;
 	force_all = false;
 
