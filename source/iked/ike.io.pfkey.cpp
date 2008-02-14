@@ -686,7 +686,12 @@ long _IKED::pfkey_recv_spadd( PFKI_MSG & msg )
 	//
 
 	if( policy->nailed )
+	{
+		log.txt( LLOG_DEBUG, "ii : calling init phase2 for nailed policy\n" );
 		pfkey_init_phase2( true, spinfo.sp.type, spinfo.sp.id, 0 );
+	}
+
+	policy->dec( true );
 
 	return LIBIKE_OK;
 }
