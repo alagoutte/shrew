@@ -2655,7 +2655,7 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 
 #ifdef WIN32
 
-		iked.filter_tunnel_add( ph1->tunnel, true );
+		iked.tunnel_filter_add( ph1->tunnel, true );
 
 #endif
 
@@ -2738,7 +2738,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 
 #ifdef WIN32
 
-		iked.filter_tunnel_add( ph1->tunnel, true );
+		iked.tunnel_filter_add( ph1->tunnel, true );
 
 #endif
 

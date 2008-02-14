@@ -407,12 +407,11 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	char txtid_src[ LIBIKE_MAX_TEXTP2ID ];
 	char txtid_dst[ LIBIKE_MAX_TEXTP2ID ];
 
+	//
+	// define inbound policy
+	//
+
 	PFKI_SPINFO spinfo;
-
-	//
-	// create inbound policy
-	//
-
 	memset( &spinfo, 0, sizeof( spinfo ) );
 
 	spinfo.sp.type = type;
@@ -442,10 +441,30 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		txtid_src,
 		txtid_dst );
 
-	pfkey_send_spadd( &spinfo );
-	
 	//
-	// create outbound policy
+	// create an inbound policy object
+	//
+
+	IDB_POLICY * policy = new IDB_POLICY( &spinfo );
+	if( policy == NULL )
+	{
+		log.txt( LLOG_ERROR, 
+			"!! : failed to allocate inbound policy object\n" );
+
+		return false;
+	}
+
+	//
+	// add the inbbound policy to spd
+	//
+
+	policy->add( true );
+	policy->dec( true );
+
+	pfkey_send_spadd( &spinfo );
+
+	//
+	// define outbound policy
 	//
 
 	memset( &spinfo, 0, sizeof( spinfo ) );
@@ -477,7 +496,18 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		txtid_src,
 		txtid_dst );
 
-	pfkey_send_spadd( &spinfo );
+	//
+	// create an outbound policy object
+	//
+
+	policy = new IDB_POLICY( &spinfo );
+	if( policy == NULL )
+	{
+		log.txt( LLOG_ERROR, 
+			"!! : failed to allocate outbound policy object\n" );
+
+		return false;
+	}
 
 	//
 	// create client policy route
@@ -485,8 +515,6 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 
 	if( route && ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) )
 	{
-		bool	routed = false;
-
 		switch( type )
 		{
 			case IPSEC_POLICY_IPSEC:
@@ -501,12 +529,12 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 					addr,
 					mask );
 
-				routed = iproute.add(
-							tunnel->xconf.addr,
-							true,
-							addr,
-							mask,
-							tunnel->xconf.addr );
+				policy->route = iproute.add(
+									tunnel->xconf.addr,
+									true,
+									addr,
+									mask,
+									tunnel->xconf.addr );
 
 				break;
 			}
@@ -519,14 +547,14 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 				in_addr	cur_mask;
 				in_addr	cur_next;
 
-				routed = iproute.best(
-							cur_iaddr,
-							cur_local,
-							cur_addr,
-							cur_mask,
-							cur_next );
+				policy->route = iproute.best(
+									cur_iaddr,
+									cur_local,
+									cur_addr,
+									cur_mask,
+									cur_next );
 
-				if( routed )
+				if( policy->route )
 				{
 					in_addr addr = id2.addr1;
 					in_addr mask = id2.addr2;
@@ -534,19 +562,19 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 					if( id2.type == ISAKMP_ID_IPV4_ADDR )
 						mask.s_addr = 0xffffffff;
 
-					routed = iproute.add(
-								cur_iaddr,
-								cur_local,
-								addr,
-								mask,
-								cur_next );
+					policy->route = iproute.add(
+										cur_iaddr,
+										cur_local,
+										addr,
+										mask,
+										cur_next );
 				}
 
 				break;
 			}
 		}
 
-		if( routed )
+		if( policy->route )
 		{
 			log.txt( LLOG_INFO,
 				"ii : created %s policy route for %s\n",
@@ -561,6 +589,15 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 				txtid_dst );
 		}
 	}
+
+	//
+	// add the outbound policy to spd
+	//
+
+	policy->add( true );
+	policy->dec( true );
+
+	pfkey_send_spadd( &spinfo );
 
 	return true;
 }
@@ -593,6 +630,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 			&policy,
 			IPSEC_DIR_INBOUND,
 			type,
+			NULL,
 			NULL,
 			src,
 			dst,
@@ -633,6 +671,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 			IPSEC_DIR_OUTBOUND,
 			type,
 			NULL,
+			NULL,
 			src,
 			dst,
 			&id1,
@@ -657,9 +696,9 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	// remove client policy route
 	//
 
-	if( route && ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) )
+	if( route && policy->route && ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) )
 	{
-		bool	routed = false;
+		bool removed = false;
 
 		switch( type )
 		{
@@ -671,7 +710,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 				if( id2.type == ISAKMP_ID_IPV4_ADDR )
 					mask.s_addr = 0xffffffff;
 
-				routed = iproute.del(
+				removed = iproute.del(
 							tunnel->xconf.addr,
 							true,
 							addr,
@@ -681,6 +720,8 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 				iproute.decrement(
 					addr,
 					mask );
+
+				break;
 			}
 
 			case IPSEC_POLICY_NONE:
@@ -691,14 +732,14 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 				in_addr	cur_mask;
 				in_addr	cur_next;
 
-				routed = iproute.best(
+				removed = iproute.best(
 							cur_iaddr,
 							cur_local,
 							cur_addr,
 							cur_mask,
 							cur_next );
 
-				if( routed )
+				if( removed )
 				{
 					in_addr addr = id2.addr1;
 					in_addr mask = id2.addr2;
@@ -709,7 +750,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 					if( ( cur_addr.s_addr == addr.s_addr ) &&
 						( cur_mask.s_addr == mask.s_addr ) )
 					{
-						routed = iproute.del(
+						removed = iproute.del(
 									cur_iaddr,
 									cur_local,
 									addr,
@@ -717,10 +758,12 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 									cur_next );
 					}
 				}
+
+				break;
 			}
 		}
 
-		if( routed )
+		if( removed )
 		{
 			text_ph2id( txtid_dst, &id2 );
 

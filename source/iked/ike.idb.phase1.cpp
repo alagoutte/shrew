@@ -633,7 +633,7 @@ _IDB_PH1::~_IDB_PH1()
 	// to expired. some gateways will send
 	// a delete message for the old sa and
 	// we don't want to treat this as an
-	// error condition.
+	// error condition below.
 	//
 
 	if( xch_errorcode == XCH_FAILED_PEER_DELETE )

@@ -486,8 +486,8 @@ typedef class _IKED
 
 #ifdef WIN32
 
-	long	filter_tunnel_add( IDB_TUNNEL * tunnel, bool natt );
-	long	filter_tunnel_del( IDB_TUNNEL * tunnel );
+	long	tunnel_filter_add( IDB_TUNNEL * tunnel, bool natt );
+	long	tunnel_filter_del( IDB_TUNNEL * tunnel );
 
 #endif
 
@@ -729,7 +729,8 @@ typedef class _IKED
 	bool	paddr_ph2id( PFKI_ADDR & paddr, IKE_PH2ID & ph2id );
 	bool	ph2id_paddr( IKE_PH2ID & ph2id, PFKI_ADDR & paddr );
 
-	long	pfkey_recv_spinfo( PFKI_MSG & msg );
+	long	pfkey_recv_spadd( PFKI_MSG & msg );
+	long	pfkey_recv_spnew( PFKI_MSG & msg );
 	long	pfkey_recv_acquire( PFKI_MSG & msg );
 	long	pfkey_recv_getspi( PFKI_MSG & msg );
 	long	pfkey_recv_flush( PFKI_MSG & msg );

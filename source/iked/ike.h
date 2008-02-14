@@ -586,6 +586,7 @@ typedef struct _IKE_PEER
 	unsigned char	contact;
 	unsigned char	exchange;
 	bool			notify;
+	bool			nailed;
 	long			natt_mode;
 	unsigned short	natt_port;
 	long			natt_rate;

@@ -50,7 +50,7 @@ IDB_POLICY * _IDB_LIST_POLICY::get( int index )
 	return static_cast<IDB_POLICY*>( get_entry( index ) );
 }
 
-bool _IDB_LIST_POLICY::find( bool lock, IDB_POLICY ** policy, long dir, u_int16_t type, u_int32_t * plcyid, IKE_SADDR * src, IKE_SADDR * dst, IKE_PH2ID * ids, IKE_PH2ID * idd )
+bool _IDB_LIST_POLICY::find( bool lock, IDB_POLICY ** policy, long dir, u_int16_t type, u_int32_t * seq, u_int32_t * plcyid, IKE_SADDR * src, IKE_SADDR * dst, IKE_PH2ID * ids, IKE_PH2ID * idd )
 {
 	if( policy != NULL )
 		*policy = NULL;
@@ -87,6 +87,14 @@ bool _IDB_LIST_POLICY::find( bool lock, IDB_POLICY ** policy, long dir, u_int16_
 
 		if( tmp_policy->sp.type != type )
 			continue;
+
+		//
+		// compare policy sequence
+		//
+
+		if( seq != NULL )
+			if( *seq != tmp_policy->seq )
+				continue;
 
 		//
 		// compare policy id
@@ -180,6 +188,7 @@ _IDB_POLICY::_IDB_POLICY( PFKI_SPINFO * spinfo )
 	memset( xforms, 0, sizeof( xforms ) );
 
 	route = false;
+	iked.rand_bytes( &seq, sizeof( seq ) );
 
 	if( spinfo != NULL )
 	{

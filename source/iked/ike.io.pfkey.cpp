@@ -200,16 +200,26 @@ long _IKED::loop_ike_pfkey()
 
 				break;
 
-			case SADB_X_SPDDUMP:
-			case SADB_X_SPDGET:
 			case SADB_X_SPDADD:
+			case SADB_X_SPDGET:
 
 				log.txt( LLOG_DEBUG,
 					"K< : recv pfkey %s %s message\n",
 					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
 					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
 
-				pfkey_recv_spinfo( msg );
+				pfkey_recv_spadd( msg );
+
+				break;
+
+			case SADB_X_SPDDUMP:
+
+				log.txt( LLOG_DEBUG,
+					"K< : recv pfkey %s %s message\n",
+					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
+					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+
+				pfkey_recv_spnew( msg );
 
 				break;
 
@@ -329,7 +339,120 @@ bool _IKED::ph2id_paddr( IKE_PH2ID & ph2id, PFKI_ADDR & paddr )
 	return false;
 }
 
-long _IKED::pfkey_recv_spinfo( PFKI_MSG & msg )
+long _IKED::pfkey_recv_spadd( PFKI_MSG & msg )
+{
+	PFKI_SPINFO spinfo;
+	memset( &spinfo, 0, sizeof( spinfo ) );
+
+	if( pfki.read_policy( msg, spinfo ) != PFKI_OK )
+	{
+		log.txt( LLOG_ERROR,
+			"K! : failed to read basic policy info\n" );
+
+		return LIBIKE_FAILED;
+	}
+
+	if( ( pfki.read_address_src( msg, spinfo.paddr_src ) != PFKI_OK ) ||
+		( pfki.read_address_dst( msg, spinfo.paddr_dst ) != PFKI_OK ) )
+	{
+		log.txt( LLOG_ERROR,
+			"K! : failed to read policy address info\n" );
+
+		return LIBIKE_FAILED;
+	}
+
+	char txtid_src[ LIBIKE_MAX_TEXTP2ID ];
+	char txtid_dst[ LIBIKE_MAX_TEXTP2ID ];
+
+	text_addr( txtid_src, &spinfo.paddr_src, true, true );
+	text_addr( txtid_dst, &spinfo.paddr_dst, true, true );
+
+	log.txt( LLOG_DECODE,
+		"ii : - id   = %i\n"
+		"ii : - type = %s\n"
+		"ii : - dir  = %s\n"
+		"ii : - src  = %s\n"
+		"ii : - dst  = %s\n",
+		spinfo.sp.id,
+		pfki.name( NAME_SPTYPE, spinfo.sp.type ),
+		pfki.name( NAME_SPDIR, spinfo.sp.dir ),
+		txtid_src,
+		txtid_dst );
+
+	if( spinfo.sp.type == IPSEC_POLICY_IPSEC )
+	{
+		for( long xindex = 0; xindex < PFKI_MAX_XFORMS; xindex++ )
+		{
+			if( !spinfo.xforms[ xindex ].proto )
+			{
+				if( xindex )
+					break;
+
+				log.txt( LLOG_ERROR, "!! : failed to add policy, no transforms defind\n" );
+				return LIBIKE_FAILED;
+			}
+
+			char txtaddr_src[ LIBIKE_MAX_TEXTADDR ];
+			char txtaddr_dst[ LIBIKE_MAX_TEXTADDR ];
+
+			text_addr( txtaddr_src, &spinfo.xforms[ xindex ].saddr_src, false );
+			text_addr( txtaddr_dst, &spinfo.xforms[ xindex ].saddr_dst, false );
+
+			log.txt( LLOG_DECODE,
+				"ii : - transform #%i\n"
+				"ii : -- proto = %i\n"
+				"ii : -- level = %s\n"
+				"ii : -- mode  = %s\n"
+				"ii : -- reqid = %i\n"
+				"ii : -- tsrc  = %s\n"
+				"ii : -- tdst  = %s\n",
+				xindex,
+				spinfo.xforms[ xindex ].proto,
+				pfki.name( NAME_SPLEVEL, spinfo.xforms[ xindex ].level ),
+				pfki.name( NAME_SPMODE, spinfo.xforms[ xindex ].mode ),
+				spinfo.xforms[ xindex ].reqid,
+				txtaddr_src,
+				txtaddr_dst );
+		}
+	}
+
+	//
+	// locate policy
+	//
+
+	IDB_POLICY * policy;
+
+	if( !idb_list_policy.find(
+			true,
+			&policy,
+			spinfo.sp.dir,
+			spinfo.sp.type,
+			&spinfo.seq,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			NULL ) )
+	{
+		log.txt( LLOG_ERROR,
+			"!! : unable to locate policy with sequence 0x%08x\n",
+			spinfo.sp.id );
+
+		return LIBIKE_FAILED;
+	}
+
+	//
+	// update policy id
+	//
+
+	policy->sp.id = spinfo.sp.id;
+
+	log.txt( LLOG_DEBUG, "ii : policy id updated\n" );
+
+	return LIBIKE_OK;
+}
+
+long _IKED::pfkey_recv_spnew( PFKI_MSG & msg )
 {
 	PFKI_SPINFO spinfo;
 	memset( &spinfo, 0, sizeof( spinfo ) );
@@ -488,6 +611,7 @@ long _IKED::pfkey_recv_acquire( PFKI_MSG & msg )
 			&policy_out,
 			IPSEC_DIR_OUTBOUND,
 			spinfo.sp.type,
+			NULL,
 			&spinfo.sp.id,
 			NULL,
 			NULL,
@@ -519,6 +643,7 @@ long _IKED::pfkey_recv_acquire( PFKI_MSG & msg )
 			&policy_in,
 			IPSEC_DIR_INBOUND,
 			spinfo.sp.type,
+			NULL,
 			NULL,
 			&dst,
 			&src,
@@ -950,6 +1075,7 @@ long _IKED::pfkey_recv_spdel( PFKI_MSG & msg )
 			&policy,
 			spinfo.sp.dir,
 			spinfo.sp.type,
+			NULL,
 			&spinfo.sp.id,
 			NULL,
 			NULL,

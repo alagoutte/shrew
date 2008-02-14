@@ -475,7 +475,7 @@ typedef class _IDB_POLICY : public IDB_RC_ENTRY, public PFKI_SPINFO
 {
 	public:
 
-	bool	route;
+	bool		route;
 
 	virtual	char *			name();
 	virtual IDB_RC_LIST *	list();
@@ -499,6 +499,7 @@ typedef class _IDB_LIST_POLICY : public IDB_LIST_IKED
 			IDB_POLICY ** policy,
 			long dir,
 			u_int16_t type,
+			u_int32_t * seq,
 			u_int32_t * plcyid,
 			IKE_SADDR * src,
 			IKE_SADDR * dst,

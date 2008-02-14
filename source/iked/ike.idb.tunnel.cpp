@@ -200,7 +200,7 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 
 #ifdef WIN32
 
-	iked.filter_tunnel_add( this, false );
+	iked.tunnel_filter_add( this, false );
 
 #endif
 }
@@ -232,7 +232,7 @@ _IDB_TUNNEL::~_IDB_TUNNEL()
 
 #ifdef WIN32
 
-	iked.filter_tunnel_del( this );
+	iked.tunnel_filter_del( this );
 
 #endif
 }
@@ -260,7 +260,7 @@ void _IDB_TUNNEL::beg()
 
 #ifdef WIN32
 
-	iked.filter_tunnel_add( this, false );
+	iked.tunnel_filter_add( this, false );
 
 #endif
 }
