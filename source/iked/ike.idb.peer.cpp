@@ -110,8 +110,6 @@ _IDB_PEER::_IDB_PEER( IKE_PEER * set_peer )
 
 	if( set_peer != NULL )
 		*static_cast<IKE_PEER*>( this ) = *set_peer;
-
-	nailed = true;
 }
 
 _IDB_PEER::~_IDB_PEER()
