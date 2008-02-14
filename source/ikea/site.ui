@@ -2364,6 +2364,28 @@
                             <string>Modify</string>
                         </property>
                     </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>checkBoxPolicyAuto</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>40</y>
+                                <width>240</width>
+                                <height>16</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Obtain Topology Automatically or Tunnel All</string>
+                        </property>
+                        <property name="autoRepeat">
+                            <bool>false</bool>
+                        </property>
+                        <property name="checked">
+                            <bool>true</bool>
+                        </property>
+                    </widget>
                     <widget class="QListView">
                         <column>
                             <property name="text">
@@ -2396,15 +2418,15 @@
                         <property name="geometry">
                             <rect>
                                 <x>10</x>
-                                <y>41</y>
+                                <y>61</y>
                                 <width>241</width>
-                                <height>190</height>
+                                <height>170</height>
                             </rect>
                         </property>
                     </widget>
                     <widget class="QCheckBox">
                         <property name="name">
-                            <cstring>checkBoxPolicyAuto</cstring>
+                            <cstring>checkBoxPolicyNailed</cstring>
                         </property>
                         <property name="geometry">
                             <rect>
@@ -2415,13 +2437,13 @@
                             </rect>
                         </property>
                         <property name="text">
-                            <string>Obtain Topology Automatically or Tunnel All</string>
+                            <string>Maintain Persistent Security Associations</string>
                         </property>
                         <property name="autoRepeat">
                             <bool>false</bool>
                         </property>
                         <property name="checked">
-                            <bool>true</bool>
+                            <bool>false</bool>
                         </property>
                     </widget>
                 </widget>

@@ -719,6 +719,13 @@ void _IKEC::run()
 		}
 	}
 
+	// nailed policy enable
+
+	numb = 0;
+	config.get_number( "policy-nailed", &numb );
+	if( numb )
+		peer.nailed = true;
+
 	// auto policy enable
 
 	numb = 0;

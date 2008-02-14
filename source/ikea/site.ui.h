@@ -665,6 +665,16 @@ bool site::Load( CONFIG & config )
 	if( config.get_number( "phase2-life-kbytes", &numb ) )
 		lineEditP2LifeData->setText( QString::number( numb, 10 ) );
 
+	// policy nailed sa option ( defailt off )
+
+	numb = 0;
+	config.get_number( "policy-nailed", &numb );
+	if( numb )
+		checkBoxPolicyNailed->setChecked( true );
+	else
+		checkBoxPolicyNailed->setChecked( false );
+		
+
 	// policy configuration ( default auto )
 
 	numb = 1;
@@ -1134,7 +1144,12 @@ bool site::Save( CONFIG & config )
 		( char * ) comboBoxP2Compress->currentText().ascii(),
 		comboBoxP2Compress->currentText().length() );
 
-	// policy configuration
+	// policy nailed sa option
+
+	if( !checkBoxPolicyNailed->isChecked() )
+		config.set_number( "policy-nailed", 0 );
+	else
+		config.set_number( "policy-nailed", 1 );
 
 	if( checkBoxPolicyAuto->isChecked() )
 	{
