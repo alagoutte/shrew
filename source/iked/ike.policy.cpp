@@ -509,6 +509,8 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		return false;
 	}
 
+	policy->nailed = tunnel->peer->nailed;
+
 	//
 	// create client policy route
 	//

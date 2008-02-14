@@ -476,6 +476,7 @@ typedef class _IDB_POLICY : public IDB_RC_ENTRY, public PFKI_SPINFO
 	public:
 
 	bool		route;
+	bool		nailed;
 
 	virtual	char *			name();
 	virtual IDB_RC_LIST *	list();
@@ -685,6 +686,7 @@ typedef class _IDB_PH2 : public IDB_XCH
 
 	uint32_t	seqid_in;
 	uint32_t	seqid_out;
+	uint32_t	nailed_plcyid;
 	long		spicount;
 
 	long		dhgr_id;

@@ -729,6 +729,8 @@ typedef class _IKED
 	bool	paddr_ph2id( PFKI_ADDR & paddr, IKE_PH2ID & ph2id );
 	bool	ph2id_paddr( IKE_PH2ID & ph2id, PFKI_ADDR & paddr );
 
+	long	pfkey_init_phase2( bool nailed, u_int16_t plcytype, u_int32_t plcyid, u_int32_t seq );
+
 	long	pfkey_recv_spadd( PFKI_MSG & msg );
 	long	pfkey_recv_spnew( PFKI_MSG & msg );
 	long	pfkey_recv_acquire( PFKI_MSG & msg );

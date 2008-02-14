@@ -339,6 +339,236 @@ bool _IKED::ph2id_paddr( IKE_PH2ID & ph2id, PFKI_ADDR & paddr )
 	return false;
 }
 
+long _IKED::pfkey_init_phase2( bool nailed, u_int16_t plcytype, u_int32_t plcyid, u_int32_t seq )
+{
+	//
+	// locate oubound policy by id
+	//
+
+	IDB_POLICY * policy_out;
+
+	if( !idb_list_policy.find(
+			true,
+			&policy_out,
+			IPSEC_DIR_OUTBOUND,
+			plcytype,
+			NULL,
+			&plcyid,
+			NULL,
+			NULL,
+			NULL,
+			NULL ) )
+	{
+		log.txt( LLOG_ERROR, "!! : unable to locate outbound policy for init phase2\n" );
+
+		return LIBIKE_FAILED;
+	}
+
+	//
+	// if this policy was marked as
+	// nailed for a client tunnel,
+	// ignore the request if it came
+	// in the form of an aquire
+	//
+
+	if( policy_out->nailed && !nailed )
+	{
+		log.txt( LLOG_INFO, "ii : ignoring init phase2 by acquire, tunnel is nailed\n" );
+
+		return LIBIKE_FAILED;
+	}
+
+	//
+	// locate inbound policy by the
+	// source and destination addrs
+	// and ids
+	//
+
+	IKE_SADDR src, dst;
+	policy_get_addrs( policy_out, src, dst );
+
+	IKE_PH2ID ids, idd;
+	paddr_ph2id( policy_out->paddr_src, ids );
+	paddr_ph2id( policy_out->paddr_dst, idd );
+
+	IDB_POLICY * policy_in;
+
+	if( !idb_list_policy.find(
+			true,
+			&policy_in,
+			IPSEC_DIR_INBOUND,
+			plcytype,
+			NULL,
+			NULL,
+			&dst,
+			&src,
+			&idd,
+			&ids ) )
+	{
+		log.txt( LLOG_ERROR, "!! : unable to locate inbound policy for init phase2\n" );
+
+		policy_out->dec( true );
+
+		return LIBIKE_FAILED;
+	}
+
+	//
+	// attempt to locate an existing
+	// tunnel for the policy
+	//
+
+	IDB_TUNNEL * tunnel;
+	if( !idb_list_tunnel.find(
+			true,
+			&tunnel,
+			NULL,
+			&dst,
+			false ) )
+	{
+		//
+		// attempt to locate an existing
+		// peer config for the policy
+		//
+		
+		IDB_PEER * peer;
+		if( !idb_list_peer.find(
+				true,
+				&peer,
+				&dst ) )
+		{
+			log.txt( LLOG_ERROR, "!! : unable to locate peer config for policy\n" );
+
+			policy_in->dec( true );
+			policy_out->dec( true );
+
+			return LIBIKE_FAILED;
+		}
+
+		//
+		// attempt to locate the socket
+		// for our address and the ike
+		// port value
+		//
+
+		if( socket_locate( src ) != LIBIKE_OK )
+		{
+			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+			text_addr( txtaddr, &src, false );
+
+			log.txt( LLOG_ERROR,
+				"!! : unable to create tunnel, no socket for address %s\n",
+				txtaddr );
+
+			policy_in->dec( true );
+			policy_out->dec( true );
+
+			return LIBIKE_FAILED;
+		}
+
+		//
+		// attempt to create and add a new
+		// tunnel for the peer
+		//
+
+		tunnel = new IDB_TUNNEL( peer, &src, &peer->saddr );
+
+		if( tunnel == NULL )
+		{
+			log.txt( LLOG_ERROR, "!! : unable to create new tunnel object\n" );
+
+			peer->dec( true );
+			policy_in->dec( true );
+			policy_out->dec( true );
+
+			return LIBIKE_FAILED;
+		}
+
+		if( !tunnel->add( true ) )
+		{
+			log.txt( LLOG_ERROR, "!! : unable to add tunnel object\n" );
+
+			delete tunnel;
+
+			peer->dec( true );
+			policy_in->dec( true );
+			policy_out->dec( true );
+
+			return LIBIKE_FAILED;
+		}
+
+		peer->dec( true );
+	}
+
+	//
+	// create a new phase2 handler
+	// for the security association
+	//
+
+	IDB_PH2 * ph2 = new IDB_PH2( tunnel, true, 0, seq );
+	if( ph2 == NULL )
+	{
+		tunnel->dec( true );
+		policy_in->dec( true );
+		policy_out->dec( true );
+
+		return LIBIKE_FAILED;
+	}
+
+	if( !ph2->add( true ) != LIBIKE_OK )
+	{
+		delete ph2;
+
+		tunnel->dec( true );
+		policy_in->dec( true );
+		policy_out->dec( true );
+
+		return LIBIKE_FAILED;
+	}
+
+	//
+	// configure client nailed policy id
+	//
+
+	if( nailed )
+		ph2->nailed_plcyid = policy_out->sp.id;
+
+	//
+	// configure the phase2 network ids
+	//
+
+	ph2->ph2id_ls = ids;
+	ph2->ph2id_ld = idd;
+
+	//
+	// configure the phase2 proposal list
+	//
+
+	phase2_gen_prop( ph2, policy_out );
+
+	//
+	// configure the phase2 dh group
+	//
+
+	ph2->setup_dhgrp();
+
+	//
+	// acquire any needed pfkey spis
+	//
+
+	pfkey_send_getspi( policy_in, ph2 );
+
+	//
+	// cleanup
+	//
+
+	ph2->dec( true );
+	tunnel->dec( true );
+	policy_in->dec( true );
+	policy_out->dec( true );
+
+	return LIBIKE_OK;
+}
+
 long _IKED::pfkey_recv_spadd( PFKI_MSG & msg )
 {
 	PFKI_SPINFO spinfo;
@@ -448,6 +678,15 @@ long _IKED::pfkey_recv_spadd( PFKI_MSG & msg )
 	policy->sp.id = spinfo.sp.id;
 
 	log.txt( LLOG_DEBUG, "ii : policy id updated\n" );
+
+	//
+	// if this policy was marked as
+	// nailed for a client tunnel,
+	// call init phase2 now
+	//
+
+	if( policy->nailed )
+		pfkey_init_phase2( true, spinfo.sp.type, spinfo.sp.id, 0 );
 
 	return LIBIKE_OK;
 }
@@ -601,210 +840,14 @@ long _IKED::pfkey_recv_acquire( PFKI_MSG & msg )
 		txtid_dst );
 
 	//
-	// locate oubound policy by id
+	// initiate phase2 based on the aquire info
 	//
 
-	IDB_POLICY * policy_out;
-
-	if( !idb_list_policy.find(
-			true,
-			&policy_out,
-			IPSEC_DIR_OUTBOUND,
-			spinfo.sp.type,
-			NULL,
-			&spinfo.sp.id,
-			NULL,
-			NULL,
-			NULL,
-			NULL ) )
-	{
-		log.txt( LLOG_ERROR, "!! : unable to locate outbound policy for acquire\n" );
-
-		return LIBIKE_FAILED;
-	}
-
-	//
-	// locate inbound policy by the
-	// source and destination addrs
-	// and ids
-	//
-
-	IKE_SADDR src, dst;
-	policy_get_addrs( policy_out, src, dst );
-
-	IKE_PH2ID ids, idd;
-	paddr_ph2id( policy_out->paddr_src, ids );
-	paddr_ph2id( policy_out->paddr_dst, idd );
-
-	IDB_POLICY * policy_in;
-
-	if( !idb_list_policy.find(
-			true,
-			&policy_in,
-			IPSEC_DIR_INBOUND,
-			spinfo.sp.type,
-			NULL,
-			NULL,
-			&dst,
-			&src,
-			&idd,
-			&ids ) )
-	{
-		log.txt( LLOG_ERROR, "!! : unable to locate inbound policy for acquire\n" );
-
-		policy_out->dec( true );
-
-		return LIBIKE_FAILED;
-	}
-
-	//
-	// attempt to locate an existing
-	// tunnel for the policy
-	//
-
-	IDB_TUNNEL * tunnel;
-	if( !idb_list_tunnel.find(
-			true,
-			&tunnel,
-			NULL,
-			&dst,
-			false ) )
-	{
-		//
-		// attempt to locate an existing
-		// peer config for the policy
-		//
-		
-		IDB_PEER * peer;
-		if( !idb_list_peer.find(
-				true,
-				&peer,
-				&dst ) )
-		{
-			log.txt( LLOG_ERROR, "!! : unable to locate peer config for policy\n" );
-
-			policy_in->dec( true );
-			policy_out->dec( true );
-
-			return LIBIKE_FAILED;
-		}
-
-		//
-		// attempt to locate the socket
-		// for our address and the ike
-		// port value
-		//
-
-		if( socket_locate( src ) != LIBIKE_OK )
-		{
-			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-			text_addr( txtaddr, &src, false );
-
-			log.txt( LLOG_ERROR,
-				"!! : unable to create tunnel, no socket for address %s\n",
-				txtaddr );
-
-			policy_in->dec( true );
-			policy_out->dec( true );
-
-			return LIBIKE_FAILED;
-		}
-
-		//
-		// attempt to create and add a new
-		// tunnel for the peer
-		//
-
-		tunnel = new IDB_TUNNEL( peer, &src, &peer->saddr );
-
-		if( tunnel == NULL )
-		{
-			log.txt( LLOG_ERROR, "!! : unable to create new tunnel object\n" );
-
-			peer->dec( true );
-			policy_in->dec( true );
-			policy_out->dec( true );
-
-			return LIBIKE_FAILED;
-		}
-
-		if( !tunnel->add( true ) )
-		{
-			log.txt( LLOG_ERROR, "!! : unable to add tunnel object\n" );
-
-			delete tunnel;
-
-			peer->dec( true );
-			policy_in->dec( true );
-			policy_out->dec( true );
-
-			return LIBIKE_FAILED;
-		}
-
-		peer->dec( true );
-	}
-
-	//
-	// create a new phase2 handler
-	// for the security association
-	//
-
-	IDB_PH2 * ph2 = new IDB_PH2( tunnel, true, 0, msg.hdr->sadb_msg_seq );
-	if( ph2 == NULL )
-	{
-		tunnel->dec( true );
-		policy_in->dec( true );
-		policy_out->dec( true );
-
-		return LIBIKE_FAILED;
-	}
-
-	if( !ph2->add( true ) != LIBIKE_OK )
-	{
-		delete ph2;
-
-		tunnel->dec( true );
-		policy_in->dec( true );
-		policy_out->dec( true );
-
-		return LIBIKE_FAILED;
-	}
-
-	//
-	// configure the phase2 network ids
-	//
-
-	ph2->ph2id_ls = ids;
-	ph2->ph2id_ld = idd;
-
-	//
-	// configure the phase2 proposal list
-	//
-
-	phase2_gen_prop( ph2, policy_out );
-
-	//
-	// configure the phase2 dh group
-	//
-
-	ph2->setup_dhgrp();
-
-	//
-	// acquire any needed pfkey spis
-	//
-
-	pfkey_send_getspi( policy_in, ph2 );
-
-	//
-	// cleanup
-	//
-
-	ph2->dec( true );
-	tunnel->dec( true );
-	policy_in->dec( true );
-	policy_out->dec( true );
-
-	return LIBIKE_OK;
+	return pfkey_init_phase2(
+				false,
+				spinfo.sp.type,
+				spinfo.sp.id,
+				msg.hdr->sadb_msg_seq );
 }
 
 long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
