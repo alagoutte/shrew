@@ -99,6 +99,12 @@ void * help( void * arg )
 {
 	ITH_PARAM * param = ( ITH_PARAM * ) arg;
 
+	sigset_t signal_mask;
+	sigemptyset( &signal_mask );
+	sigaddset( &signal_mask, SIGINT );
+	sigaddset( &signal_mask, SIGTERM );
+	pthread_sigmask( SIG_BLOCK, &signal_mask, NULL );
+
 	param->exec->func( param->arg );
 
 	delete param;
