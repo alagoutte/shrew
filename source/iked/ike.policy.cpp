@@ -611,6 +611,8 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 
 	IDB_POLICY * policy;
 
+	bool policy_route = false;
+
 	IKE_SADDR * src;
 	IKE_SADDR * dst;
 
@@ -679,6 +681,8 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 			&id1,
 			&id2 ) )
 	{
+		policy_route = policy->route;
+
 		text_addr( txtid_src, &policy->paddr_src, false, true );
 		text_addr( txtid_dst, &policy->paddr_dst, false, true );
 
@@ -698,7 +702,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	// remove client policy route
 	//
 
-	if( route && policy->route && ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) )
+	if( route && policy_route && ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) )
 	{
 		bool removed = false;
 
