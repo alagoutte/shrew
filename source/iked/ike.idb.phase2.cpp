@@ -310,60 +310,6 @@ _IDB_PH2::_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, uint32_t set_ms
 _IDB_PH2::~_IDB_PH2()
 {
 	clean();
-
-	//
-	// send a delete message if required
-	//
-
-	if( ( lstate & LSTATE_HASKEYS ) &&
-		( xch_errorcode != XCH_FAILED_EXPIRED ) &&
-		( xch_errorcode != XCH_FAILED_PEER_DELETE ) )
-	{
-		IDB_PH1 * ph1;
-		if( iked.idb_list_ph1.find(
-				true,
-				&ph1,
-				tunnel,
-				XCH_STATUS_MATURE,
-				XCH_STATUS_DEAD,
-				NULL ) )
-		{
-			iked.inform_new_delete( ph1, this );
-			ph1->dec( true );
-		}
-	}
-
-	//
-	// inform pfkey interface
-	//
-
-	if( ( xch_errorcode != XCH_FAILED_FLUSHED ) &&
-		( lstate & LSTATE_HASKEYS ) )
-		iked.pfkey_send_delete( this );
-
-	//
-	// update tunnel stats
-	//
-
-	if( lstate & LSTATE_HASKEYS )
-		tunnel->stats.sa_dead++;
-	else
-		tunnel->stats.sa_fail++;
-
-	//
-	// log deletion
-	//
-
-	if( xch_errorcode != XCH_FAILED_EXPIRED )
-		iked.log.txt( LLOG_INFO, "ii : phase2 removal before expire time\n" );
-	else
-		iked.log.txt( LLOG_INFO, "ii : phase2 removal after expire time\n" );
-
-	//
-	// dereference our tunnel
-	//
-
-	tunnel->dec( true );
 }
 
 //------------------------------------------------------------------------------
@@ -414,6 +360,67 @@ void _IDB_PH2::end()
 			"DB : phase2 hard event canceled ( ref count = %i )\n",
 			idb_refcount );
 	}
+
+	//
+	// clear the resend queue
+	//
+
+	resend_clear();
+
+	//
+	// send a delete message if required
+	//
+
+	if( ( lstate & LSTATE_HASKEYS ) &&
+		( xch_errorcode != XCH_FAILED_EXPIRED ) &&
+		( xch_errorcode != XCH_FAILED_PEER_DELETE ) )
+	{
+		IDB_PH1 * ph1;
+		if( iked.idb_list_ph1.find(
+				false,
+				&ph1,
+				tunnel,
+				XCH_STATUS_MATURE,
+				XCH_STATUS_DEAD,
+				NULL ) )
+		{
+			iked.inform_new_delete( ph1, this );
+
+			ph1->dec( false );
+		}
+	}
+
+	//
+	// inform pfkey interface
+	//
+
+	if( ( xch_errorcode != XCH_FAILED_FLUSHED ) &&
+		( lstate & LSTATE_HASKEYS ) )
+		iked.pfkey_send_delete( this );
+
+	//
+	// update tunnel stats
+	//
+
+	if( lstate & LSTATE_HASKEYS )
+		tunnel->stats.sa_dead++;
+	else
+		tunnel->stats.sa_fail++;
+
+	//
+	// log deletion
+	//
+
+	if( xch_errorcode != XCH_FAILED_EXPIRED )
+		iked.log.txt( LLOG_INFO, "ii : phase2 removal before expire time\n" );
+	else
+		iked.log.txt( LLOG_INFO, "ii : phase2 removal after expire time\n" );
+
+	//
+	// dereference our tunnel
+	//
+
+	tunnel->dec( false );
 }
 
 //------------------------------------------------------------------------------

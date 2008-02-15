@@ -568,99 +568,6 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 _IDB_PH1::~_IDB_PH1()
 {
 	clean();
-
-	//
-	// send a delete message if required
-	//
-
-	if( ( lstate & LSTATE_HASKEYS ) &&
-		( xch_errorcode != XCH_FAILED_EXPIRED ) &&
-		( xch_errorcode != XCH_FAILED_PEER_DELETE ) )
-		iked.inform_new_delete( this, NULL );
-
-	//
-	// if this sa never reached maturity,
-	// locate any pending phase2 handles
-	// for this tunnel and delete them
-	//
-	// FIXME : This should be timer driven
-	//
-
-	if( !( lstate & LSTATE_HASKEYS ) )
-	{
-		//
-		// FIXME : Use find here
-		//
-
-		long ph2_count = iked.idb_list_ph2.count();
-		long ph2_index = 0;
-
-		for( ; ph2_index < ph2_count; ph2_index++ )
-		{
-			//
-			// get the next phase2 in our list
-			// and attempt to match tunnel ids
-			// 
-
-			IDB_PH2 * ph2 = iked.idb_list_ph2.get( ph2_index );
-			if( ( ph2->tunnel == tunnel ) && ( ph2->status() == XCH_STATUS_PENDING ) )
-			{
-				ph2->inc( true );
-
-				ph2->status( XCH_STATUS_DEAD, XCH_FAILED_PENDING, 0 );
-
-				if( ph2->dec( true ) )
-				{
-					ph2_index--;
-					ph2_count--;
-				}
-			}
-		}
-	}
-
-	//
-	// log deletion
-	//
-
-	if( xch_errorcode != XCH_FAILED_EXPIRED )
-		iked.log.txt( LLOG_INFO, "ii : phase1 removal before expire time\n" );
-	else
-		iked.log.txt( LLOG_INFO, "ii : phase1 removal after expire time\n" );
-
-	//
-	// if we have negotiated a replacement
-	// isakmp sa, change our delete status
-	// to expired. some gateways will send
-	// a delete message for the old sa and
-	// we don't want to treat this as an
-	// error condition below.
-	//
-
-	if( xch_errorcode == XCH_FAILED_PEER_DELETE )
-		if( iked.idb_list_ph1.find(
-				true,
-				NULL,
-				tunnel,
-				XCH_STATUS_MATURE,
-				XCH_STATUS_MATURE,
-				NULL ) )
-			xch_errorcode = XCH_FAILED_EXPIRED;
-
-	//
-	// if this is a client tunnel and there
-	// was an error negotiating phase1, set
-	// a close error message
-	//
-
-	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
-		if( xch_errorcode != XCH_FAILED_EXPIRED )
-			tunnel->close = xch_errorcode;
-
-	//
-	// derefrence our tunnel
-	//
-
-	tunnel->dec( true );
 }
 
 //------------------------------------------------------------------------------
@@ -727,6 +634,105 @@ void _IDB_PH1::end()
 			"DB : phase1 hard event canceled ( ref count = %i )\n",
 			idb_refcount );
 	}
+
+	//
+	// clear the resend queue
+	//
+
+	resend_clear();
+
+	//
+	// send a delete message if required
+	//
+
+	if( ( lstate & LSTATE_HASKEYS ) &&
+		( xch_errorcode != XCH_FAILED_EXPIRED ) &&
+		( xch_errorcode != XCH_FAILED_PEER_DELETE ) )
+		iked.inform_new_delete( this, NULL );
+
+	//
+	// if this sa never reached maturity,
+	// locate any pending phase2 handles
+	// for this tunnel and delete them
+	//
+	// FIXME : This should be timer driven
+	//
+
+	if( !( lstate & LSTATE_HASKEYS ) )
+	{
+		//
+		// FIXME : Use find here
+		//
+
+		long ph2_count = iked.idb_list_ph2.count();
+		long ph2_index = 0;
+
+		for( ; ph2_index < ph2_count; ph2_index++ )
+		{
+			//
+			// get the next phase2 in our list
+			// and attempt to match tunnel ids
+			// 
+
+			IDB_PH2 * ph2 = iked.idb_list_ph2.get( ph2_index );
+			if( ( ph2->tunnel == tunnel ) && ( ph2->status() == XCH_STATUS_PENDING ) )
+			{
+				ph2->inc( false );
+
+				ph2->status( XCH_STATUS_DEAD, XCH_FAILED_PENDING, 0 );
+
+				if( ph2->dec( false ) )
+				{
+					ph2_index--;
+					ph2_count--;
+				}
+			}
+		}
+	}
+
+	//
+	// log deletion
+	//
+
+	if( xch_errorcode != XCH_FAILED_EXPIRED )
+		iked.log.txt( LLOG_INFO, "ii : phase1 removal before expire time\n" );
+	else
+		iked.log.txt( LLOG_INFO, "ii : phase1 removal after expire time\n" );
+
+	//
+	// if we have negotiated a replacement
+	// isakmp sa, change our delete status
+	// to expired. some gateways will send
+	// a delete message for the old sa and
+	// we don't want to treat this as an
+	// error condition below.
+	//
+
+	if( xch_errorcode == XCH_FAILED_PEER_DELETE )
+		if( iked.idb_list_ph1.find(
+				false,
+				NULL,
+				tunnel,
+				XCH_STATUS_MATURE,
+				XCH_STATUS_MATURE,
+				NULL ) )
+			xch_errorcode = XCH_FAILED_EXPIRED;
+
+	//
+	// if this is a client tunnel and there
+	// was an error negotiating phase1, set
+	// a close error message
+	//
+
+	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
+		if( xch_errorcode != XCH_FAILED_EXPIRED )
+			tunnel->close = xch_errorcode;
+
+	//
+	// derefrence our tunnel
+	//
+
+	tunnel->dec( false );
 }
 
 //------------------------------------------------------------------------------

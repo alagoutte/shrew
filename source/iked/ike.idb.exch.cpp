@@ -196,12 +196,8 @@ void _IDB_XCH::resend_clear()
 	//
 
 	if( iked.ith_timer.del( &event_resend ) )
-		dec( true );
-
-	lock.lock();
+		dec( false );
 
 	event_resend.ipqueue.flush();
-
-	lock.unlock();
 }
 

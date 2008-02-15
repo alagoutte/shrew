@@ -208,25 +208,6 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 _IDB_TUNNEL::~_IDB_TUNNEL()
 {
 	//
-	// cleaup tunnels that respond to clients
-	//
-
-	if( peer->contact != IPSEC_CONTACT_CLIENT )
-	{
-		if( peer->plcy_mode != POLICY_MODE_DISABLE )
-			iked.policy_list_remove( this, false );
-
-		if( xconf.opts & IPSEC_OPTS_ADDR )
-			peer->xconf_source->pool4_rel( xconf.addr );
-	}
-
-	//
-	// dereference our peer
-	//
-
-	peer->dec( true );
-
-	//
 	// cleanup our filter
 	//
 
@@ -372,4 +353,23 @@ void _IDB_TUNNEL::end()
 			}
 		}
 	}
+
+	//
+	// cleaup tunnels that respond to clients
+	//
+
+	if( peer->contact != IPSEC_CONTACT_CLIENT )
+	{
+		if( peer->plcy_mode != POLICY_MODE_DISABLE )
+			iked.policy_list_remove( this, false );
+
+		if( xconf.opts & IPSEC_OPTS_ADDR )
+			peer->xconf_source->pool4_rel( xconf.addr );
+	}
+
+	//
+	// dereference our peer
+	//
+
+	peer->dec( false );
 }

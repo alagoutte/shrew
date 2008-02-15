@@ -141,8 +141,6 @@ _IDB_CFG::_IDB_CFG( IDB_TUNNEL * set_tunnel, bool set_initiator, unsigned long s
 _IDB_CFG::~_IDB_CFG()
 {
 	clean();
-
-	tunnel->dec( true );
 }
 
 //------------------------------------------------------------------------------
@@ -177,6 +175,18 @@ void _IDB_CFG::end()
 			"DB : config resend event canceled ( ref count = %i )\n",
 			idb_refcount );
 	}
+
+	//
+	// clear the resend queue
+	//
+
+	resend_clear();
+
+	//
+	// dereference tunnel
+	//
+
+	tunnel->dec( false );
 }
 
 //------------------------------------------------------------------------------
