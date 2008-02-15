@@ -657,7 +657,7 @@ long _IKED::pfkey_recv_spadd( PFKI_MSG & msg )
 			&policy,
 			spinfo.sp.dir,
 			spinfo.sp.type,
-			&spinfo.seq,
+			&msg.hdr->sadb_msg_seq,
 			NULL,
 			NULL,
 			NULL,
@@ -666,18 +666,16 @@ long _IKED::pfkey_recv_spadd( PFKI_MSG & msg )
 	{
 		log.txt( LLOG_ERROR,
 			"!! : unable to locate policy with sequence 0x%08x\n",
-			spinfo.sp.id );
+			spinfo.seq );
 
 		return LIBIKE_FAILED;
 	}
 
 	//
-	// update policy id
+	// update the policy id
 	//
 
 	policy->sp.id = spinfo.sp.id;
-
-	log.txt( LLOG_DEBUG, "ii : policy id updated\n" );
 
 	//
 	// if this policy was marked as

@@ -189,13 +189,11 @@ _IDB_POLICY::_IDB_POLICY( PFKI_SPINFO * spinfo )
 
 	route = false;
 	nailed = false;
-	iked.rand_bytes( &seq, sizeof( seq ) );
+
+	iked.rand_bytes( &spinfo->seq, sizeof( spinfo->seq ) );
 
 	if( spinfo != NULL )
-	{
-		PFKI_SPINFO * tmp_spinfo = this;
-		memcpy( tmp_spinfo, spinfo, sizeof( PFKI_SPINFO ) );
-	}
+		*static_cast<PFKI_SPINFO*>( this ) = *spinfo;
 }
 
 _IDB_POLICY::~_IDB_POLICY()
