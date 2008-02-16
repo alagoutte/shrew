@@ -44,10 +44,10 @@
 
 void topology::init()
 {
-        lineEditAddress->setInputMask( "00D . 00D . 00D . 00D" );
+        lineEditAddress->setInputMask( "009 . 009 . 009 . 009" );
         lineEditAddress->setText( "0.0.0.0" );
 
-        lineEditNetmask->setInputMask( "00D . 00D . 00D . 00D" );
+        lineEditNetmask->setInputMask( "009 . 009 . 009 . 009" );
         lineEditNetmask->setText( "0.0.0.0" );
 }
 
