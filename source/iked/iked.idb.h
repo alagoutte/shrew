@@ -611,7 +611,7 @@ typedef class _IDB_PH1 : public IDB_XCH
 
 	uint16_t	auth_id;	// selected authentication type
 
-	LIST	frags;
+	IDB_LIST	frags;
 
 	BDATA	key;
 
@@ -748,7 +748,7 @@ typedef class _IDB_CFG : public IDB_XCH
 {
 	protected:
 
-	LIST	attrs;
+	IDB_LIST	attrs;
 
 	public:
 

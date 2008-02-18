@@ -77,7 +77,7 @@
 #include <time.h>
 #include <assert.h>
 #include "export.h"
-#include "utils.list.h"
+#include "idb.h"
 
 #define MEDIA_ETHERNET			0x0001
 
@@ -343,64 +343,10 @@ struct pcap_pkthdr {
 };
 
 //
-// basic data class
-//
-
-#define BDATA_ALL		~0
-
-typedef class DLX _BDATA
-{
-	protected:
-
-	unsigned char *	data_buff;
-	size_t			data_real;
-	size_t			data_size;
-	size_t			data_oset;
-
-	size_t			grow( size_t new_size = ~0 );
-
-	public:
-
-	_BDATA&	operator =( _BDATA & bdata );
-
-	_BDATA();
-	_BDATA( _BDATA & bdata );
-	virtual ~_BDATA();
-
-	size_t			oset( size_t new_oset = ~0 );
-	size_t			size( size_t new_size = ~0 );
-
-	char *			text();
-	unsigned char *	buff();
-
-	bool set( _BDATA & bdata, size_t oset = 0 );
-	bool set( char value, size_t size, size_t oset = 0 );
-	bool set( char * buff, size_t size, size_t oset = 0 );
-	bool set( void * buff, size_t size, size_t oset = 0 );
-
-	bool ins( _BDATA & bdata, size_t oset = 0 );
-	bool ins( int value, size_t size, size_t oset = 0 );
-	bool ins( char * buff, size_t size, size_t oset = 0 );
-	bool ins( void * buff, size_t size, size_t oset = 0 );
-
-	bool add( _BDATA & bdata );
-	bool add( int value, size_t size );
-	bool add( char * buff, size_t size );
-	bool add( void * buff, size_t size );
-
-	bool get( _BDATA & bdata, size_t size = BDATA_ALL );
-	bool get( char * buff, size_t size );
-	bool get( void * buff, size_t size );
-
-	void del( bool null = false );
-
-}BDATA, *PBDATA;
-
-//
 // packet classes
 //
 
-typedef class DLX _PACKET : public _BDATA
+typedef class DLX _PACKET : public _BDATA, public IDB_ENTRY
 {
 	public:
 
@@ -445,7 +391,7 @@ typedef class DLX _PACKET_UDP : public _PACKET
 
 }PACKET_UDP;
 
-typedef struct DLX _DNS_QUERY
+typedef struct DLX _DNS_QUERY : public IDB_ENTRY
 {
 	char * name;
 	unsigned short	type;
@@ -453,7 +399,7 @@ typedef struct DLX _DNS_QUERY
 
 }DNS_QUERY;
 
-typedef struct DLX _DNS_RECORD
+typedef struct DLX _DNS_RECORD : public IDB_ENTRY
 {
 	char * name;
 	unsigned short	type;
@@ -467,10 +413,10 @@ typedef class DLX _PACKET_DNS : public _PACKET
 {
 	private:
 
-	LIST	list_ques;
-	LIST	list_answ;
-	LIST	list_ath_rr;
-	LIST	list_add_rr;
+	IDB_LIST	list_ques;
+	IDB_LIST	list_answ;
+	IDB_LIST	list_ath_rr;
+	IDB_LIST	list_add_rr;
 
 	bool	read_name( char * name, long & size );
 	bool	read_query( DNS_QUERY ** query );
@@ -498,7 +444,7 @@ typedef class DLX _PACKET_DNS : public _PACKET
 
 }PACKET_DNS;
 
-typedef class _IPFRAG_ENTRY
+typedef class _IPFRAG_ENTRY : IDB_ENTRY
 {
 	friend class _IPFRAG;
 
@@ -511,8 +457,8 @@ typedef class DLX _IPFRAG
 {
 	private:
 
-	LIST	used;
-	LIST	free;
+	IDB_LIST	used;
+	IDB_LIST	free;
 
 	time_t	lastchk;
 
@@ -530,22 +476,18 @@ typedef class DLX _IPFRAG
 
 }IPFRAG;
 
-typedef class DLX _IPQUEUE
+typedef class DLX _IPQUEUE : private IDB_LIST
 {
-	private:
-
-	LIST	queue;
-
 	public:
 
 	_IPQUEUE();
-	~_IPQUEUE();
+	virtual ~_IPQUEUE();
 
 	bool	add( PACKET_IP & packet );
 	bool	get( PACKET_IP & packet, long index );
 
 	long	count();
-	void	flush();
+	void	clean();
 
 }IPQUEUE;
 

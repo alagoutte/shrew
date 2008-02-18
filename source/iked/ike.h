@@ -42,7 +42,7 @@
 #ifndef _IKE_H_
 #define _IKE_H_
 
-#include "libip.h"
+#include "idb.h"
 
 #define CONF_STRLEN					256
 
@@ -509,7 +509,7 @@ typedef struct _IKE_SADDR
 
 }IKE_SADDR;
 
-typedef struct _IKE_ATTR
+typedef struct _IKE_ATTR : public IDB_ENTRY
 {
 	bool		basic;
 	uint16_t	atype;
@@ -660,7 +660,7 @@ typedef struct _IKE_NOTIFY
 
 }IKE_NOTIFY;
 
-typedef struct _IKE_FRAG
+typedef struct _IKE_FRAG : public IDB_ENTRY
 {
 	public:
 

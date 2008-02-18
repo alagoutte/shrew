@@ -47,7 +47,7 @@ _IPQUEUE::_IPQUEUE()
 
 _IPQUEUE::~_IPQUEUE()
 {
-	flush();
+	clean();
 }
 
 bool _IPQUEUE::add( PACKET_IP & packet )
@@ -58,7 +58,7 @@ bool _IPQUEUE::add( PACKET_IP & packet )
 
 	qpacket->add( packet );
 
-	if( !queue.add_item( qpacket ) )
+	if( !add_entry( qpacket ) )
 	{
 		delete qpacket;
 		return false;
@@ -69,27 +69,21 @@ bool _IPQUEUE::add( PACKET_IP & packet )
 
 bool _IPQUEUE::get( PACKET_IP & packet, long index )
 {
-	PACKET_IP * qpacket = ( PACKET_IP * ) queue.get_item( index );
+	PACKET_IP * qpacket = static_cast<PACKET_IP*>( get_entry( index ) );
 	if( qpacket == NULL )
 		return false;
 
-	packet.del();
-	packet.add( *qpacket );
+	packet = *qpacket;
 
 	return true;
 }
 
 long _IPQUEUE::count()
 {
-	return queue.get_count();
+	return IDB_LIST::count();
 }
 
-void _IPQUEUE::flush()
+void _IPQUEUE::clean()
 {
-	while( count() )
-	{
-		PACKET_IP * packet = ( PACKET_IP * ) queue.get_item( 0 );
-		queue.del_item( packet );
-		delete packet;
-	}
+	IDB_LIST::clean();
 }

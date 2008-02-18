@@ -81,6 +81,8 @@
 # endif
 #endif
 
+#include "idb.h"
+
 //
 // Win32 specific
 //
@@ -299,7 +301,7 @@ typedef class DLX _PFKI_MSG
 
 }PFKI_MSG;
 
-typedef class DLX _PFKI
+typedef class DLX _PFKI : public IDB_ENTRY
 {
 	friend class _PFKS;
 

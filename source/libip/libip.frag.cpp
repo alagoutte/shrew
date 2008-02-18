@@ -210,7 +210,7 @@ bool _IPFRAG::defrag_add( PACKET_IP & fragment, unsigned short & id )
 		// step through all our fragments
 		//
 
-		long count = used.get_count();
+		long count = used.count();
 		long index = 0;
 
 		for( ; index < count; index++ )
@@ -219,7 +219,7 @@ bool _IPFRAG::defrag_add( PACKET_IP & fragment, unsigned short & id )
 			// get the next fragment in our list
 			//
 
-			IPFRAG_ENTRY * entry = ( IPFRAG_ENTRY * ) used.get_item( index );
+			IPFRAG_ENTRY * entry = static_cast<IPFRAG_ENTRY*>( used.get_entry( index ) );
 			assert( entry != NULL );
 
 			//
@@ -234,8 +234,8 @@ bool _IPFRAG::defrag_add( PACKET_IP & fragment, unsigned short & id )
 				// list and move it to the free list
 				//
 
-				used.del_item( entry );
-				free.add_item( entry );
+				used.del_entry( entry );
+				free.add_entry( entry );
 
 				//
 				// correct for our change in list
@@ -256,15 +256,14 @@ bool _IPFRAG::defrag_add( PACKET_IP & fragment, unsigned short & id )
 
 	IPFRAG_ENTRY * entry = NULL;
 
-	if( free.get_count() > 0 )
+	if( free.count() > 0 )
 	{
-		entry = ( IPFRAG_ENTRY * ) free.get_item( 0 );
+		entry = static_cast<IPFRAG_ENTRY*>( free.del_entry( 0 ) );
 		entry->packet.size( 0 );
-		free.del_item( entry );
 	}
 	else
 	{
-		long count = used.get_count() + free.get_count();
+		long count = used.count() + free.count();
 		if( count < IPFRAG_MAX_FRAGCOUNT )
 			entry = new IPFRAG_ENTRY();
 	}
@@ -291,7 +290,7 @@ bool _IPFRAG::defrag_add( PACKET_IP & fragment, unsigned short & id )
 	// add this fragment to our used list
 	//
 
-	return used.add_item( entry );
+	return used.add_entry( entry );
 }
 
 bool _IPFRAG::defrag_chk( unsigned short ident )
@@ -310,7 +309,7 @@ bool _IPFRAG::defrag_chk( unsigned short ident )
 		// on the fragmentation offset
 		//
 
-		long count = used.get_count();
+		long count = used.count();
 		long index = 0;
 		bool found = false;
 
@@ -320,7 +319,7 @@ bool _IPFRAG::defrag_chk( unsigned short ident )
 			// get the next fragment in our list
 			//
 
-			IPFRAG_ENTRY * entry = ( IPFRAG_ENTRY * ) used.get_item( index );
+			IPFRAG_ENTRY * entry = static_cast<IPFRAG_ENTRY*>( used.get_entry( index ) );
 			assert( entry != NULL );
 
 			//
@@ -408,7 +407,7 @@ bool _IPFRAG::defrag_get( unsigned short ident, PACKET_IP & packet )
 		// on the fragmentation offset
 		//
 
-		long count = used.get_count();
+		long count = used.count();
 		long index = 0;
 		bool found = false;
 
@@ -418,7 +417,7 @@ bool _IPFRAG::defrag_get( unsigned short ident, PACKET_IP & packet )
 			// get the next fragment in our list
 			//
 
-			IPFRAG_ENTRY * entry = ( IPFRAG_ENTRY * ) used.get_item( index );
+			IPFRAG_ENTRY * entry = static_cast<IPFRAG_ENTRY*>( used.get_entry( index ) );
 			assert( entry != NULL );
 
 			//
@@ -501,8 +500,8 @@ bool _IPFRAG::defrag_get( unsigned short ident, PACKET_IP & packet )
 				// and free its resources
 				//
 
-				used.del_item( entry );
-				free.add_item( entry );
+				used.del_entry( entry );
+				free.add_entry( entry );
 
 				//
 				// determine if this was the last

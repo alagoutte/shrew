@@ -61,6 +61,7 @@
 #include <assert.h>
 #include <string.h>
 #include <time.h>
+#include "libip.h"
 #include "ike.h"
 #include "export.h"
 

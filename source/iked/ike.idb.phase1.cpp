@@ -898,7 +898,7 @@ bool _IDB_PH1::frag_add( unsigned char * data, unsigned long size, long index, b
 	// add the fragment to our list
 	//
 
-	return frags.add_item( frag );
+	return frags.add_entry( frag );
 }
 
 bool _IDB_PH1::frag_get( PACKET_IKE & packet )
@@ -918,12 +918,12 @@ bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 		// and look for the next index
 		//
 
-		int count = frags.get_count();
+		int count = frags.count();
 		int index = 0;
 
 		for( ; index < count; index++ )
 		{
-			IKE_FRAG * frag = ( IKE_FRAG * ) frags.get_item( index );
+			IKE_FRAG * frag = static_cast<IKE_FRAG*>( frags.get_entry( index ) );
 
 			//
 			// does this match our next index
@@ -978,12 +978,12 @@ bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 		// and look for the next index
 		//
 
-		int count = frags.get_count();
+		int count = frags.count();
 		int index = 0;
 
 		for( ; index < count; index++ )
 		{
-			IKE_FRAG * frag = ( IKE_FRAG * ) frags.get_item( index );
+			IKE_FRAG * frag = static_cast<IKE_FRAG*>( frags.get_entry( index ) );
 
 			//
 			// does this match our next index
@@ -1022,12 +1022,7 @@ bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 	// purge our fragment list
 	//
 
-	while( frags.get_count() )
-	{
-		IKE_FRAG * frag = ( IKE_FRAG * ) frags.get_item( 0 );
-		frags.del_item( frag );
-		delete frag;
-	}
+	frags.clean();
 
 	return true;
 }

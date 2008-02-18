@@ -203,7 +203,7 @@ bool _IDB_CFG::attr_add_b( unsigned short atype, unsigned short bdata )
 	attr->basic = true;
 	attr->bdata = bdata;
 
-	return attrs.add_item( attr );
+	return attrs.add_entry( attr );
 }
 
 bool _IDB_CFG::attr_add_v( unsigned short atype, void * vdata, size_t vsize )
@@ -216,7 +216,7 @@ bool _IDB_CFG::attr_add_v( unsigned short atype, void * vdata, size_t vsize )
 	attr->basic = false;
 	attr->vdata.set( ( char * ) vdata, vsize );
 
-	return attrs.add_item( attr );
+	return attrs.add_entry( attr );
 }
 
 bool _IDB_CFG::attr_has( unsigned short atype )
@@ -236,22 +236,17 @@ bool _IDB_CFG::attr_has( unsigned short atype )
 
 IKE_ATTR * _IDB_CFG::attr_get( long index )
 {
-	return ( IKE_ATTR * ) attrs.get_item( index );
+	return static_cast<IKE_ATTR*>( attrs.get_entry( index ) );
 }
 
 long _IDB_CFG::attr_count()
 {
-	return attrs.get_count();
+	return attrs.count();
 }
 
 void _IDB_CFG::attr_reset()
 {
-	while( attrs.get_count() )
-	{
-		IKE_ATTR * attr = attr_get( 0 );
-		attrs.del_item( attr );
-		delete attr;
-	}
+	attrs.clean();
 }
 
 bool _IDB_CFG::setup()

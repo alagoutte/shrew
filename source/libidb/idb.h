@@ -43,9 +43,62 @@
 #define _IDB_H_
 
 #include "export.h"
-#include "libip.h"
 #include "liblog.h"
 #include "libith.h"
+
+//==============================================================================
+// Basic data class
+//==============================================================================
+
+#define BDATA_ALL		~0
+
+typedef class DLX _BDATA
+{
+	protected:
+
+	unsigned char *	data_buff;
+	size_t			data_real;
+	size_t			data_size;
+	size_t			data_oset;
+
+	size_t			grow( size_t new_size = ~0 );
+
+	public:
+
+	_BDATA&	operator =( _BDATA & bdata );
+
+	_BDATA();
+	_BDATA( _BDATA & bdata );
+	virtual ~_BDATA();
+
+	size_t			oset( size_t new_oset = ~0 );
+	size_t			size( size_t new_size = ~0 );
+
+	char *			text();
+	unsigned char *	buff();
+
+	bool set( _BDATA & bdata, size_t oset = 0 );
+	bool set( char value, size_t size, size_t oset = 0 );
+	bool set( char * buff, size_t size, size_t oset = 0 );
+	bool set( void * buff, size_t size, size_t oset = 0 );
+
+	bool ins( _BDATA & bdata, size_t oset = 0 );
+	bool ins( int value, size_t size, size_t oset = 0 );
+	bool ins( char * buff, size_t size, size_t oset = 0 );
+	bool ins( void * buff, size_t size, size_t oset = 0 );
+
+	bool add( _BDATA & bdata );
+	bool add( int value, size_t size );
+	bool add( char * buff, size_t size );
+	bool add( void * buff, size_t size );
+
+	bool get( _BDATA & bdata, size_t size = BDATA_ALL );
+	bool get( char * buff, size_t size );
+	bool get( void * buff, size_t size );
+
+	void del( bool null = false );
+
+}BDATA, *PBDATA;
 
 //==============================================================================
 // standard IDB list classes
@@ -60,9 +113,17 @@ typedef class DLX _IDB_ENTRY
 
 }IDB_ENTRY;
 
-typedef class DLX _IDB_LIST : public LIST
+#define GROW_SIZE	16
+
+typedef class DLX _IDB_LIST
 {
 	public:
+
+	IDB_ENTRY **	entry_list;
+	long			entry_max;
+	long			entry_num;
+
+	bool			grow();
 
 	_IDB_LIST();
 	virtual ~_IDB_LIST();

@@ -412,13 +412,12 @@ typedef class _IKED
 
 	short	ident;				// ip identity
 
-	LIST	list_socket;		// socket list
-	LIST	list_netgrp;		// net groups list
-
 	ITH_LOCK	lock_net;
 	ITH_LOCK	lock_idb;
 
-	IDB_LIST		idb_list_netgrp;
+	IDB_LIST	list_socket;		// socket list
+
+	IDB_LIST			idb_list_netgrp;
 	IDB_LIST_PEER		idb_list_peer;
 	IDB_LIST_TUNNEL		idb_list_tunnel;
 	IDB_LIST_POLICY		idb_list_policy;

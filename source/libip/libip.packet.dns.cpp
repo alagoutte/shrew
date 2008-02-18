@@ -57,44 +57,10 @@ PACKET_DNS::_PACKET_DNS()
 
 PACKET_DNS::~_PACKET_DNS()
 {
-	DNS_QUERY * query;
-	DNS_RECORD * record;
-
-	long index = 0;
-	long count = list_ques.get_count();
-
-	for( ; index < count; index++ )
-	{
-		query = ( DNS_QUERY * ) list_ques.get_item( index );
-		delete query;
-	}
-
-	index = 0;
-	count = list_answ.get_count();
-
-	for( ; index < count; index++ )
-	{
-		record = ( DNS_RECORD * ) list_answ.get_item( index );
-		delete record;
-	}
-
-	index = 0;
-	count = list_ath_rr.get_count();
-
-	for( ; index < count; index++ )
-	{
-		record = ( DNS_RECORD * ) list_ath_rr.get_item( index );
-		delete record;
-	}
-
-	index = 0;
-	count = list_add_rr.get_count();
-
-	for( ; index < count; index++ )
-	{
-		record = ( DNS_RECORD * ) list_add_rr.get_item( index );
-		delete record;
-	}
+	list_ques.clean();
+	list_answ.clean();
+	list_ath_rr.clean();
+	list_add_rr.clean();
 }
 
 bool PACKET_DNS::read_name( char * name, long & size )
@@ -325,7 +291,7 @@ bool PACKET_DNS::read()
 		if( !read_query( &query ) )
 			return false;
 
-		list_ques.add_item( query );
+		list_ques.add_entry( query );
 	}
 
 	//
@@ -338,7 +304,7 @@ bool PACKET_DNS::read()
 		if( !read_record( &record ) )
 			return false;
 
-		list_answ.add_item( record );
+		list_answ.add_entry( record );
 	}
 
 	//
@@ -351,7 +317,7 @@ bool PACKET_DNS::read()
 		if( !read_record( &record ) )
 			return false;
 
-		list_ath_rr.add_item( record );
+		list_ath_rr.add_entry( record );
 	}
 
 	//
@@ -364,7 +330,7 @@ bool PACKET_DNS::read()
 		if( !read_record( &record ) )
 			return false;
 
-		list_add_rr.add_item( record );
+		list_add_rr.add_entry( record );
 	}
 
 	return true;
@@ -377,25 +343,25 @@ bool PACKET_DNS::write()
 
 bool PACKET_DNS::get_question( DNS_QUERY ** query, long index )
 {
-	*query = ( DNS_QUERY * ) list_ques.get_item( index );
+	*query = static_cast<DNS_QUERY*>( list_ques.get_entry( index ) );
 	return ( *query != NULL );
 }
 
 bool PACKET_DNS::get_answer( DNS_RECORD ** record, long index )
 {
-	*record = ( DNS_RECORD * ) list_answ.get_item( index );
+	*record = static_cast<DNS_RECORD*>(list_answ.get_entry( index ) );
 	return ( *record != NULL );
 }
 
 bool PACKET_DNS::get_authority( DNS_RECORD ** record, long index )
 {
-	*record = ( DNS_RECORD * ) list_ath_rr.get_item( index );
+	*record = static_cast<DNS_RECORD*>( list_ath_rr.get_entry( index ) );
 	return ( *record != NULL );
 }
 
 bool PACKET_DNS::get_additional( DNS_RECORD ** record, long index )
 {
-	*record = ( DNS_RECORD * ) list_add_rr.get_item( index );
+	*record = static_cast<DNS_RECORD*>( list_add_rr.get_entry( index ) );
 	return ( *record != NULL );
 }
 
