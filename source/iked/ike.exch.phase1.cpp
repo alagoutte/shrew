@@ -2087,11 +2087,11 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 	return LIBIKE_OK;
 }
 
-inline bool vendcmp( BDATA & vend1, BDATA & vend2, bool prefix )
+inline bool vendcmp( BDATA & vend1, BDATA & vend2, bool prefix = false )
 {
 	if( prefix )
 	{
-		if( vend1.size() > vend2.size() )
+		if( vend1.size() < vend2.size() )
 			return false;
 	}
 	else
@@ -2112,7 +2112,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for xauth vendor id
 	//
 
-	if( vendcmp( vend, vend_xauth, false ) )
+	if( vendcmp( vend, vend_xauth ) )
 	{
 		ph1->vendopts_r.flag.xauth = true;
 		log.txt( LLOG_INFO, "ii : peer supports XAUTH\n" );
@@ -2123,7 +2123,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for fragmentation vendor id
 	//
 
-	if( vendcmp( vend, vend_frag, false ) )
+	if( vendcmp( vend, vend_frag ) )
 	{
 		ph1->vendopts_r.flag.frag = true;
 		log.txt( LLOG_INFO, "ii : peer supports FRAGMENTATION\n" );
@@ -2134,7 +2134,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for dead peer detection vendor id
 	//
 
-	if( vendcmp( vend, vend_dpd1, false ) )
+	if( vendcmp( vend, vend_dpd1 ) )
 	{
 		ph1->vendopts_r.flag.dpdv1 = true;
 		log.txt( LLOG_INFO, "ii : peer supports DPDv1\n" );
@@ -2145,7 +2145,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for heartbeat notify detection vendor id
 	//
 
-	if( vendcmp( vend, vend_hbeat, false ) )
+	if( vendcmp( vend, vend_hbeat ) )
 	{
 		ph1->vendopts_r.flag.hbeat = true;
 		log.txt( LLOG_INFO, "ii : peer supports HEARTBEAT-NOTIFY\n" );
@@ -2156,7 +2156,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for natt v00 vendor id
 	//
 
-	if( vendcmp( vend, vend_natt_v00, false ) )
+	if( vendcmp( vend, vend_natt_v00 ) )
 	{
 		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
 			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_DRAFT ) )
@@ -2177,7 +2177,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for natt v01 vendor id
 	//
 
-	if( vendcmp( vend, vend_natt_v01, false ) )
+	if( vendcmp( vend, vend_natt_v01 ) )
 	{
 		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
 			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_DRAFT ) )
@@ -2198,7 +2198,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for natt v02 vendor id
 	//
 
-	if( vendcmp( vend, vend_natt_v02, false ) )
+	if( vendcmp( vend, vend_natt_v02 ) )
 	{
 		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
 			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC ) )
@@ -2219,7 +2219,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for natt v03 vendor id
 	//
 
-	if( vendcmp( vend, vend_natt_v03, false ) )
+	if( vendcmp( vend, vend_natt_v03 ) )
 	{
 		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
 			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC ) )
@@ -2240,7 +2240,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for natt rfc vendor id
 	//
 
-	if( vendcmp( vend, vend_natt_rfc, false ) )
+	if( vendcmp( vend, vend_natt_rfc ) )
 	{
 		if( ( ph1->tunnel->peer->natt_mode == IPSEC_NATT_ENABLE ) ||
 			( ph1->tunnel->peer->natt_mode == IPSEC_NATT_FORCE_RFC ) )
@@ -2258,7 +2258,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for shrew soft vendor id
 	//
 
-	if( vendcmp( vend, vend_ssoft, false ) )
+	if( vendcmp( vend, vend_ssoft ) )
 	{
 		ph1->vendopts_r.flag.ssoft = true;
 		ph1->vendopts_r.flag.unity = true;
@@ -2270,7 +2270,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for kame vendor id
 	//
 
-	if( vendcmp( vend, vend_kame, false ) )
+	if( vendcmp( vend, vend_kame ) )
 	{
 		ph1->vendopts_r.flag.kame = true;
 		log.txt( LLOG_INFO, "ii : peer is IPSEC-TOOLS compatible\n" );
@@ -2281,7 +2281,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for unity vendor id
 	//
 
-	if( vendcmp( vend, vend_unity, false ) )
+	if( vendcmp( vend, vend_unity ) )
 	{
 		ph1->vendopts_r.flag.unity = true;
 		log.txt( LLOG_INFO, "ii : peer is CISCO UNITY compatible\n" );
@@ -2292,7 +2292,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for netscreen vendor id
 	//
 
-	if( vendcmp( vend, vend_netsc, true ) )
+	if( vendcmp( vend, vend_netsc ) )
 	{
 		ph1->vendopts_r.flag.netsc = true;
 		log.txt( LLOG_INFO, "ii : peer is NETSCREEN compatible\n" );
@@ -2303,7 +2303,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for zywall vendor id
 	//
 
-	if( vendcmp( vend, vend_zwall, false ) )
+	if( vendcmp( vend, vend_zwall ) )
 	{
 		ph1->vendopts_r.flag.zwall = true;
 		log.txt( LLOG_INFO, "ii : peer is ZYWALL compatible\n" );
@@ -2314,7 +2314,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for sidewinder vendor id
 	//
 
-	if( vendcmp( vend, vend_swind, false ) )
+	if( vendcmp( vend, vend_swind ) )
 	{
 		ph1->vendopts_r.flag.swind = true;
 		log.txt( LLOG_INFO, "ii : peer is SIDEWINDER compatible\n" );
