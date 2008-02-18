@@ -56,11 +56,10 @@ long _IKED::socket_init()
 
 void _IKED::socket_done()
 {
-	while( list_socket.get_count() )
+	while( list_socket.count() )
 	{
-		SOCK_INFO * sock_info = ( SOCK_INFO * ) list_socket.get_item( 0 );
+		SOCK_INFO * sock_info = static_cast<SOCK_INFO*>( list_socket.del_entry( 0 ) );
 		close( sock_info->sock );
-		list_socket.del_item( sock_info );
 		delete sock_info;
 	}
 }
@@ -76,13 +75,13 @@ long _IKED::socket_select( unsigned long timeout )
 
 	lock_net.lock();
 
-	long count = list_socket.get_count();
+	long count = list_socket.count();
 	long index = 0;
 	int  hival = 0;
 
 	for( ; index < count; index++ )
 	{
-		SOCK_INFO * sock_info = ( SOCK_INFO * ) list_socket.get_item( index );
+		SOCK_INFO * sock_info = static_cast<SOCK_INFO*>( list_socket.get_entry( index ) );
 
 		FD_SET( sock_info->sock, &fdset );
 
@@ -179,7 +178,7 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 
 	lock_net.lock();
 
-	list_socket.add_item( sock_info );
+	list_socket.add_entry( sock_info );
 
 	lock_net.unlock();
 
@@ -208,12 +207,12 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 
 long _IKED::socket_locate( IKE_SADDR & saddr )
 {
-	long count = list_socket.get_count();
+	long count = list_socket.count();
 	long index = 0;
 
 	for( ; index < count; index++ )
 	{
-		SOCK_INFO * sock_info = ( SOCK_INFO * ) list_socket.get_item( index );
+		SOCK_INFO * sock_info = static_cast<SOCK_INFO*>( list_socket.get_entry( index ) );
 
 		if( has_sockaddr( &sock_info->saddr.saddr  ) )
 			if( cmp_sockaddr( sock_info->saddr.saddr, saddr.saddr, false ) )
@@ -251,12 +250,12 @@ long _IKED::recv_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 
 	socklen_t	flen = sizeof( from.saddr4 );
 
-	long count = list_socket.get_count();
+	long count = list_socket.count();
 	long index = 0;
 
 	for( ; index < count; index++ )
 	{
-		SOCK_INFO * sock_info = ( SOCK_INFO * ) list_socket.get_item( index );
+		SOCK_INFO * sock_info = static_cast<SOCK_INFO*>( list_socket.get_entry( index ) );
 
 		unsigned char buff[ RAWNET_BUFF_SIZE ];
 		unsigned char ctrl[ 256 ];
@@ -375,12 +374,12 @@ long _IKED::send_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 		saddr_src.saddr4.sin_port,
 		saddr_dst.saddr4.sin_port );
 
-	long count = list_socket.get_count();
+	long count = list_socket.count();
 	long index = 0;
 
 	for( ; index < count; index++ )
 	{
-		SOCK_INFO * sock_info = ( SOCK_INFO * ) list_socket.get_item( index );
+		SOCK_INFO * sock_info = static_cast<SOCK_INFO*>( list_socket.get_entry( index ) );
 
 		if( has_sockaddr( &sock_info->saddr.saddr ) )
 		{

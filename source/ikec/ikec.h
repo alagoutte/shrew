@@ -57,8 +57,8 @@
 #include <pwd.h>
 #include <stdarg.h>
 #include <netdb.h>
-//#include <netinet/in.h>
-//#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 //#include <arpa/inet.h>
 
 #include "root.h"

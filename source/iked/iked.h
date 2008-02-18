@@ -298,7 +298,7 @@ YY_DECL;
 
 #ifdef UNIX
 
-typedef struct _SOCK_INFO
+typedef struct _SOCK_INFO : public IDB_ENTRY
 {
 	int			sock;
 	IKE_SADDR	saddr;

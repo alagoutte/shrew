@@ -158,9 +158,9 @@ _CONFIG & _CONFIG::operator = ( _CONFIG & config )
 	del_all();
 	set_id( config.get_id() );
 
-	for( long index = 0; index < config.data.get_count(); index++ )
+	for( long index = 0; index < config.count(); index++ )
 	{
-		CFGDAT * cfgdat = ( CFGDAT * ) config.data.get_item( index );
+		CFGDAT * cfgdat = static_cast<CFGDAT*>( config.get_entry( index ) );
 		switch( cfgdat->type )
 		{
 			case DATA_STRING:
@@ -184,9 +184,9 @@ CFGDAT * _CONFIG::get_data( long type, const char * key, bool add )
 {
 	CFGDAT * cfgdat;
 
-	for( long index = 0; index < data.get_count(); index++ )
+	for( long index = 0; index < count(); index++ )
 	{
-		cfgdat = ( CFGDAT * ) data.get_item( index );
+		cfgdat = static_cast<CFGDAT*>( get_entry( index ) );
 		if( ( cfgdat->type == type ) && !strcasecmp( cfgdat->key, key ) )
 			return cfgdat;
 	}
@@ -199,7 +199,7 @@ CFGDAT * _CONFIG::get_data( long type, const char * key, bool add )
 			cfgdat->type = type;
 			cpp_strdup( &cfgdat->key, key );
 
-			data.add_item( cfgdat );
+			add_entry( cfgdat );
 			return cfgdat;
 		}
 	}
@@ -211,12 +211,12 @@ void _CONFIG::del( const char * key )
 {
 	CFGDAT * cfgdat;
 
-	for( long index = 0; index < data.get_count(); index++ )
+	for( long index = 0; index < count(); index++ )
 	{
-		cfgdat = ( CFGDAT * ) data.get_item( index );
+		cfgdat = static_cast<CFGDAT*>( get_entry( index ) );
 		if( !strcasecmp( cfgdat->key, key ) )
 		{
-			data.del_item( cfgdat );
+			del_entry( cfgdat );
 			delete cfgdat;
 		}
 	}
@@ -224,12 +224,7 @@ void _CONFIG::del( const char * key )
 
 void _CONFIG::del_all()
 {
-	while( data.get_count() )
-	{
-		CFGDAT * cfgdat = ( CFGDAT * ) data.get_item( 0 );
-		data.del_item( cfgdat );
-		delete cfgdat;
-	}
+	clean();
 }
 
 bool _CONFIG::add_string( const char * key, const char * val, int size )
@@ -469,11 +464,11 @@ bool _CONFIG::file_write( char * path )
 	if( !fp )
 		return false;
 
-	for( long index = 0; index < data.get_count(); index++ )
+	for( long index = 0; index < count(); index++ )
 	{
 		char buff[ 1024 ];
 
-		CFGDAT * cfgdat = ( CFGDAT * ) data.get_item( index );
+		CFGDAT * cfgdat = static_cast<CFGDAT*>( get_entry( index ) );
 		switch( cfgdat->type )
 		{
 			case DATA_STRING:

@@ -9,7 +9,9 @@
 
 include_directories(
 	${IKE_SOURCE_DIR}/source/
-	${IKE_SOURCE_DIR}/source/libip
+	${IKE_SOURCE_DIR}/source/libidb
+	${IKE_SOURCE_DIR}/source/libith
+	${IKE_SOURCE_DIR}/source/liblog
 	${QT_INCLUDE_DIR} )
 
 link_directories(
@@ -54,7 +56,9 @@ add_executable(
 
 target_link_libraries(
 	ikea
-        ip
+        idb
+        ith
+        log
 	pthread
 	${QT_LIBRARIES} )
 

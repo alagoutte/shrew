@@ -12,6 +12,9 @@ include_directories(
 	${IKE_SOURCE_DIR}/source/ikea
 	${IKE_SOURCE_DIR}/source/iked
 	${IKE_SOURCE_DIR}/source/libike
+	${IKE_SOURCE_DIR}/source/libidb
+	${IKE_SOURCE_DIR}/source/libith
+	${IKE_SOURCE_DIR}/source/liblog
 	${IKE_SOURCE_DIR}/source/libip
 	${QT_INCLUDE_DIR} )
 
@@ -50,7 +53,9 @@ add_executable(
 target_link_libraries(
 	ikec
 	ike
-        ip
+        idb
+        ith
+        log
 	pthread
 	${QT_LIBRARIES} )
 

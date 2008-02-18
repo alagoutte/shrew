@@ -9,6 +9,9 @@
 
 include_directories(
         ${IKE_SOURCE_DIR}/source
+        ${IKE_SOURCE_DIR}/source/libidb
+        ${IKE_SOURCE_DIR}/source/libith
+        ${IKE_SOURCE_DIR}/source/liblog
 	${INC_KERNEL_DIR} )
 
 add_library(

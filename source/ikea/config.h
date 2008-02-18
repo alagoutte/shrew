@@ -42,7 +42,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#include "utils.list.h"
+#include "idb.h"
 
 #define MAX_CONFSTRING		128
 #define MAX_CONFBINARY		512
@@ -59,7 +59,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef class _CFGDAT
+typedef class _CFGDAT : public IDB_ENTRY
 {
 	friend class _CONFIG;
 	
@@ -81,12 +81,11 @@ protected:
 	
 }CFGDAT;
 
-typedef class DLX _CONFIG
+typedef class DLX _CONFIG : private IDB_LIST
 {
 	protected:
 	
-	const char * id;
-	LIST	data;
+	const char *	id;
 	
 	CFGDAT *	get_data( long type, const char * key, bool add = false );
 	
