@@ -39,6 +39,7 @@
  */
 
 #include "idb.h"
+#include "base64.h"
 
 //==============================================================================
 // basic data class
@@ -125,6 +126,54 @@ char * _BDATA::text()
 unsigned char * _BDATA::buff()
 {
 	return data_buff;
+}
+
+bool _BDATA::base64_encode()
+{
+	BDATA	b64_temp;
+	size_t	b64_size;
+
+	if( !b64_temp.size( size() * 2 + 2 ) )
+		return false;
+
+	b64_size = b64_ntop(
+					buff(),
+					( long ) size(),
+					b64_temp.text(),
+					( long ) b64_temp.size() );
+
+	if( b64_size == -1 )
+		return false;
+
+	b64_temp.size( b64_size + 1 );
+	b64_temp.buff()[ b64_size ] = 0;
+
+	*this = b64_temp;
+
+	return true;
+}
+
+bool _BDATA::base64_decode()
+{
+	BDATA	b64_temp;
+	size_t	b64_size;
+
+	if( !b64_temp.size( size() ) )
+		return false;
+
+	b64_size = b64_pton(
+					text(),
+					b64_temp.buff(),
+					( long ) b64_temp.size() );
+
+	if( b64_size == -1 )
+		return false;
+
+	b64_temp.size( b64_size );
+
+	*this = b64_temp;
+
+	return true;
 }
 
 bool _BDATA::set( _BDATA & bdata, size_t oset )

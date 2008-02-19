@@ -65,7 +65,7 @@ typedef class DLX _BDATA
 
 	public:
 
-	_BDATA&	operator =( _BDATA & bdata );
+	_BDATA &		operator =( _BDATA & bdata );
 
 	_BDATA();
 	_BDATA( _BDATA & bdata );
@@ -76,6 +76,9 @@ typedef class DLX _BDATA
 
 	char *			text();
 	unsigned char *	buff();
+
+	bool	base64_encode();
+	bool	base64_decode();
 
 	bool set( _BDATA & bdata, size_t oset = 0 );
 	bool set( char value, size_t size, size_t oset = 0 );
