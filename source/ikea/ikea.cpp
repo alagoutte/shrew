@@ -41,6 +41,42 @@
 
 #include "ikea.h"
 
+void update_site( CONFIG * config, const char * path, long & version )
+{
+	switch( version )
+	{
+		//
+		// version 0
+		//
+
+		case 0:
+		{
+			//
+			// upgrade the auth-mutual-psk string
+			// to a binary value
+			//
+
+			char text[ MAX_CONFSTRING ];
+			long size = MAX_CONFSTRING;
+
+			if( config->get_string( "auth-mutual-psk", text, size, 0 ) )
+			{
+				config->del( "auth-mutual-psk" );
+				BDATA psk;
+				psk.set( text, strlen( text ) );
+				config->set_binary( "auth-mutual-psk", psk );
+			}
+
+			printf( "updating site \'%s\' to version 1\n", config->get_id() );
+
+			break;
+		}
+	}
+
+	config->set_number( "version", ++version );
+	config->file_write( path );
+}
+
 _IKEA::_IKEA()
 {
 }
@@ -92,22 +128,32 @@ bool _IKEA::init( root * setr )
 	for( ; eit != entryList.constEnd(); ++eit)
 	{
 		QString fileName = *eit;
-		QString filePath;
+		QString filePath = ikea.sites + "/" + fileName;
 
 		CONFIG config;
-		config.file_read( ( char * ) fileName.ascii() );
+		if( config.file_read( filePath.ascii() ) )
+		{
+			config.set_id( fileName.ascii() );
 
-		filePath = ikea.sites + "/" + fileName;
+			long version = 0;
+			config.get_number( "version", &version );
+			while( version < CLIENT_VER_CFG )
+				update_site( &config, filePath.ascii(), version );
 
-		printf( "adding entry for site file \'%s\'\n", fileName.ascii() );
+			printf( "adding entry for site file \'%s\'\n", fileName.ascii() );
 
-		QIconViewItem * i = new QIconViewItem( r->iconViewSites );
-		if( i == NULL )
-			return false;
+			QIconViewItem * i = new QIconViewItem( r->iconViewSites );
+			if( i == NULL )
+				return false;
 
-		i->setText( fileName.ascii() );
-		i->setPixmap( QPixmap::fromMimeSource( "site.png" ) );
-		i->setRenameEnabled ( true );
+			i->setText( fileName.ascii() );
+			i->setPixmap( QPixmap::fromMimeSource( "site.png" ) );
+			i->setRenameEnabled ( true );
+		}
+		else
+		{
+			printf( "error loading site file \'%s\'\n", fileName.ascii() );
+		}
 	}
 
 	return true;

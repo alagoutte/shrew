@@ -41,116 +41,63 @@
 
 #include "config.h"
 
-/*
-  * STRING helper functions
-  *
-  */
+//==============================================================================
+// helper functions
+//
 
-bool cpp_strdup( const char ** new_string, const char * src_string )
+#define DELIM_NEW	','
+#define DELIM_OLD	char( 0x255 )
+
+inline char * text_delim( char * text )
 {
-        // sanity check for pointer
+	char * delim;
 
-        if( !src_string )
-                return false;
+	delim = strchr( text, DELIM_NEW );
+	if( delim == NULL )
+		delim = strchr( text, DELIM_OLD );
 
-        // get string length and allocate storage
-
-        int string_len = strlen( src_string ) + 1;
-        char * tmp_string = new char[ string_len ];
-
-        // check for memory allocation error
-
-        if( !tmp_string )
-                return false;
-
-        // copy contents ( including null )
-
-        memcpy( tmp_string, src_string, string_len );
-        *new_string = tmp_string;
-
-        return true;
-}
-		
-bool cpp_strdel( const char ** del_string )
-{
-        // sanity check for pointer
-
-        if( !( *del_string ) )
-                return false;
- 
-        // delte the string contents and null pointer
-
-        delete [] *del_string;
-        *del_string = 0;
-         
-        return true;
+	return delim;
 }
 
-// string duplication up to length chars using c++ add
-// for memory allocation
-
-bool cpp_strndup( const char ** new_string, const char * src_string, unsigned long length )
+inline size_t text_length( char * text )
 {
-        // sanity check for pointer
+	char chrset[] =
+	{
+		char( DELIM_NEW ),
+		char( DELIM_OLD ),
+		char( 0x00 )
+	};
 
-        if( !src_string )
-                return false;
-
-        // calc new string length and allocate storage
- 
-        unsigned long string_len = strlen( src_string );
-        if( length < string_len )
-                string_len = length;
-        
-        char * tmp_string = new char[ string_len + 1 ];   
-
-        // check for memory allocation error
-
-        if( !tmp_string )
-                return false;
-
-        // copy contents and null terminate
-
-        memcpy( tmp_string, src_string, string_len );
-        tmp_string[ string_len ] = 0;
-        *new_string = tmp_string;
- 
-        return true;
+	return strcspn( text, chrset );
 }
 
-/*
- * CONFIG class member functions
- *
- */
+//==============================================================================
+// configuration classes
+//
 
 _CFGDAT::_CFGDAT()
 {
-	key = 0;
-	bval = 0;
-	size = 0;
+	nval = 0;
 }
 
 _CONFIG::_CONFIG()
 {
-	id = 0;
 }
 
 _CONFIG::~_CONFIG()
 {
-	cpp_strdel( &id );
 }
 
 bool _CONFIG::set_id( const char * set_id )
 {
-	cpp_strdel( &id );
-	cpp_strdup( &id, set_id );
-
+	id.del();
+	id.set( set_id, strlen( set_id ) + 1 );
 	return true;
 }
 
 const char * _CONFIG::get_id()
 {
-	return id;
+	return id.text();
 }
 
 _CONFIG & _CONFIG::operator = ( _CONFIG & config )
@@ -164,15 +111,15 @@ _CONFIG & _CONFIG::operator = ( _CONFIG & config )
 		switch( cfgdat->type )
 		{
 			case DATA_STRING:
-				set_string( cfgdat->key, cfgdat->sval, cfgdat->size );
+				set_string( cfgdat->key.text(), cfgdat->vval.text(), cfgdat->vval.size() );
 				break;
 
 			case DATA_NUMBER:
-				set_number( cfgdat->key, cfgdat->nval );
+				set_number( cfgdat->key.text(), cfgdat->nval );
 				break;
 
 			case DATA_BINARY:
-				set_binary( cfgdat->key, cfgdat->bval, cfgdat->size );
+				set_binary( cfgdat->key.text(), cfgdat->vval );
 				break;
 		}
 	}
@@ -187,24 +134,28 @@ CFGDAT * _CONFIG::get_data( long type, const char * key, bool add )
 	for( long index = 0; index < count(); index++ )
 	{
 		cfgdat = static_cast<CFGDAT*>( get_entry( index ) );
-		if( ( cfgdat->type == type ) && !strcasecmp( cfgdat->key, key ) )
+
+		if( cfgdat->type != type )
+			continue;
+		
+		if( !strcasecmp( cfgdat->key.text(), key ) )
 			return cfgdat;
 	}
 
 	if( add )
 	{
 		cfgdat = new CFGDAT;
-		if( cfgdat )
-		{
-			cfgdat->type = type;
-			cpp_strdup( &cfgdat->key, key );
+		if( cfgdat == NULL )
+			return NULL;
 
-			add_entry( cfgdat );
-			return cfgdat;
-		}
+		cfgdat->type = type;
+		cfgdat->key.set( key, strlen( key ) + 1 );
+		add_entry( cfgdat );
+
+		return cfgdat;
 	}
 
-	return 0;
+	return NULL;
 }
 
 void _CONFIG::del( const char * key )
@@ -214,7 +165,8 @@ void _CONFIG::del( const char * key )
 	for( long index = 0; index < count(); index++ )
 	{
 		cfgdat = static_cast<CFGDAT*>( get_entry( index ) );
-		if( !strcasecmp( cfgdat->key, key ) )
+
+		if( !strcasecmp( cfgdat->key.text(), key ) )
 		{
 			del_entry( cfgdat );
 			delete cfgdat;
@@ -227,86 +179,47 @@ void _CONFIG::del_all()
 	clean();
 }
 
-bool _CONFIG::add_string( const char * key, const char * val, int size )
+bool _CONFIG::add_string( const char * key, const char * val, size_t size )
 {
 	CFGDAT * cfgdat = get_data( DATA_STRING, key, true );
 	if( !cfgdat )
 		return false;
 
-	if( cfgdat->sval )
+	if( cfgdat->vval.size() )
 	{
-		long	new_size = cfgdat->size + size + 1;
-		char *	new_data = new char[ new_size + 1 ];
-		if( !new_data )
-			return false;
-
-		memcpy( new_data, cfgdat->sval, cfgdat->size );
-		new_data[ cfgdat->size ] = char( 255 );
-
-		memcpy( new_data + cfgdat->size + 1, val, size );
-		new_data[ new_size ] = 0;
-
-		cpp_strdel( &cfgdat->sval );
-
-		cfgdat->sval = new_data;
-		cfgdat->size = new_size;
+		cfgdat->vval.set( ",", 1, cfgdat->vval.size() - 1 );
+		cfgdat->vval.add( val, size );
+		cfgdat->vval.add( "", 1 );
 	}
 	else
 	{
-		cpp_strndup( &cfgdat->sval, val, size );
-		cfgdat->size = size;
+		cfgdat->vval.add( val, size );
+		cfgdat->vval.add( "", 1 );
 	}
 
 	return true;
 }
 
-bool _CONFIG::set_string( const char * key, const char * val, int size )
+bool _CONFIG::set_string( const char * key, const char * val, size_t size )
 {
 	del( key );
-	return add_string( key, val, size );
+	add_string( key, val, size );
+
+	return true;
 }
 
-long _CONFIG::has_string( const char * key, const char * val, int size )
-{
-	CFGDAT * cfgdat = get_data( DATA_STRING, key );
-	if( !cfgdat )
-		return -1;
-
-	const char * oldptr = cfgdat->sval;
-	const char * newptr = cfgdat->sval;
-
-	long index = 0;
-
-	while( newptr )
-	{
-		newptr = strchr( oldptr, char( 255 ) );
-
-		if( newptr )
-			if( ( newptr - oldptr ) < size )
-				size = newptr - oldptr;
-
-		if( !strncmp( val, oldptr, size ) )
-			return index;
-		
-		oldptr = newptr + 1;
-		index++;
-	}
-
-	return -1;
-}
-
-bool _CONFIG::get_string( const char * key, char * val, int size, int index )
+bool _CONFIG::get_string( const char * key, char * val, size_t size, int index )
 {
 	CFGDAT * cfgdat = get_data( DATA_STRING, key );
 	if( !cfgdat )
 		return false;
 
-	const char * strptr = cfgdat->sval;
+	char * strptr = cfgdat->vval.text();
 
 	for( ; index > 0; index-- )
 	{
-		char * tmpptr = strchr( strptr, char( 255 ) );
-		if( !tmpptr )
+		char * tmpptr = text_delim( strptr );
+		if( tmpptr == NULL )
 			return false;
 
 		strptr = tmpptr + 1;
@@ -316,15 +229,46 @@ bool _CONFIG::get_string( const char * key, char * val, int size, int index )
 
 	size--;
 
-	char chrset[] = { char( 0xff ), char( 0x00 ) };
-	int clen = strcspn( strptr, chrset );
+	size_t clen = text_length( strptr );
 	if( clen < size )
 		size = clen;
 
-	strncpy( val, strptr, size );
+	memcpy( val, strptr, size );
 	val[ size ] = 0;
 
 	return true;
+}
+
+long _CONFIG::has_string( const char * key, const char * val, size_t size )
+{
+	CFGDAT * cfgdat = get_data( DATA_STRING, key );
+	if( !cfgdat )
+		return -1;
+
+	char * oldptr = cfgdat->vval.text();
+	char * newptr = cfgdat->vval.text();
+
+	long index = 0;
+
+	while( newptr )
+	{
+		newptr = text_delim( oldptr );
+
+		if( newptr )
+		{
+			size_t diff = newptr - oldptr;
+			if( diff < size )
+				size = diff;
+		}
+
+		if( !strncmp( val, oldptr, size ) )
+			return index;
+		
+		oldptr = newptr + 1;
+		index++;
+	}
+
+	return -1;
 }
 
 bool _CONFIG::set_number( const char * key, long val )
@@ -349,141 +293,205 @@ bool _CONFIG::get_number( const char * key, long * val )
 	return true;
 }
 
-bool _CONFIG::set_binary( const char * key, char * val, long size )
+bool _CONFIG::set_binary( const char * key, BDATA & val )
 {
 	CFGDAT * cfgdat = get_data( DATA_BINARY, key, true );
 	if( !cfgdat )
 		return false;
 
-	if( cfgdat->bval )
-	{
-		delete [] cfgdat->bval;
-		cfgdat->size = 0;
-	}
-
-	cfgdat->bval = new char[ size ];
-	if( cfgdat->bval )
-	{
-		memcpy( cfgdat->bval, val, size );
-		cfgdat->size = size;
-	}
+	cfgdat->vval = val;
 
 	return true;
 }
 
-bool _CONFIG::get_binary( const char * key, char * val, long size )
+bool _CONFIG::get_binary( const char * key, BDATA & val )
 {
 	CFGDAT * cfgdat = get_data( DATA_BINARY, key );
 	if( !cfgdat )
 		return false;
 
-	if( cfgdat->size == size )
-	{
-		memcpy( val, cfgdat->bval, size );
-		cfgdat->size = size;
-	}
-	else
-		return false;
+	val = cfgdat->vval;
 
 	return true;
 }
 
-bool _CONFIG::file_read( char * path )
+bool _CONFIG::file_write( const char * path )
 {
-	FILE * fp = fopen( path, "r" );
-	if( !fp )
+	FILE * fp = fopen( path, "w" );
+	if( fp == NULL )
 		return false;
 
-	bool fail = false;
-	char buff[ 1024 ];
-
-	while( fgets( buff, 1024, fp ) )
+	for( long index = 0; index < count(); index++ )
 	{
-		long size = strlen( buff );
-		if( size < 4 )
+		CFGDAT * cfgdat = static_cast<CFGDAT*>( get_entry( index ) );
+		switch( cfgdat->type )
 		{
-			fail = true;
-			break;
+			case DATA_STRING:
+				fprintf( fp, "s:%s:%s\n", cfgdat->key.text(), cfgdat->vval.text() );
+				break;
+
+			case DATA_NUMBER:
+				fprintf( fp, "n:%s:%i\n", cfgdat->key.text(), cfgdat->nval );
+				break;
+
+			case DATA_BINARY:
+			{
+				BDATA b64;
+				b64 = cfgdat->vval;
+				b64.base64_encode();
+				fprintf( fp, "b:%s:%s\n", cfgdat->key.text(), b64.text() );
+				break;
+			}
 		}
+	}
 
-		if( buff[ 1 ] != ':' )
-		{
-			fail = true;
-			break;
-		}
+	fclose( fp );
 
-		char * val = strchr( &buff[ 2 ], ':' );
-		if( val == NULL )
-		{
-			fail = true;
-			break;
-		}
+	return true;
+}
 
-		*val = '\0';
-		val++;
+bool _CONFIG::file_read( const char * path )
+{
+	FILE * fp = fopen( path, "r" );
+	if( fp == NULL )
+		return false;
 
-		char * trm = strchr( val, '\n' );
-		if( trm != NULL )
-			*trm = '\0';
+	long line = 0;
 
-		char * id = &buff[ 2 ];
+	while( true )
+	{
+		int	next;
+		int	type;
+		BDATA	name;
+		BDATA	data;
 
-		if( strlen( id ) <= 0 )
-		{
-			fail = true;
-			break;
-		}
+		//
+		// get value type
+		//
 
-		if( strlen( val ) <= 0 )
+		type = fgetc( fp );
+
+		if( ( type == ' ' ) ||
+			( type == '\r' ) )
 			continue;
 
-		switch( buff[ 0 ] )
+		if( ( type == '\n' ) ||
+			( type == EOF ) )
+			break;
+
+		//
+		// get delim
+		//
+
+		if( fgetc( fp ) != ':' )
+		{
+			printf( "invalid delimiter \'%c\' between type and name ( line %i )\n",
+				next, line );
+			goto parse_fail;
+		}
+
+		//
+		// get value name
+		//
+
+		while( true )
+		{
+			next = fgetc( fp );
+
+			if( ( next == ':' ) ||
+				( next == '\n' ) ||
+				( next == EOF ) )
+				break;
+
+			name.add( next, 1 );
+		}
+
+		if( !name.size() )
+			goto parse_fail;
+
+		name.add( "", 1 );
+
+		//
+		// check delim
+		//
+
+		if( next != ':' )
+		{
+			printf( "invalid delimiter \'%c\' between name and value ( line %i )\n",
+				next, line );
+			goto parse_fail;
+		}
+
+		//
+		// get value data
+		//
+
+		while( true )
+		{
+			next = fgetc( fp );
+
+			if( ( next == '\n' ) ||
+				( next == EOF ) )
+				break;
+
+			data.add( next, 1 );
+		}
+
+		if( !data.size() )
+			goto parse_fail;
+
+		data.add( "", 1 );
+
+		switch( type )
 		{
 			case 's':
 			{
-				add_string( id, val, strlen( val ) );
+//				printf( "string attribute %s read ( %i bytes )\n",
+//					name.text(),
+//					data.size() );
+				add_string( name.text(), data.text(), data.size() );
 				break;
 			}
 
 			case 'n':
 			{
-				set_number( id, atol( val ) );
+//				printf( "number attribute %s read ( %i bytes )\n",
+//					name.text(),
+//					data.size() );
+				set_number( name.text(), atol( data.text() ) );
 				break;
 			}
-		}
-	}
 
-	fclose( fp );
-
-	return !fail;
-}
-
-bool _CONFIG::file_write( char * path )
-{
-	FILE * fp = fopen( path, "w+" );
-	if( !fp )
-		return false;
-
-	for( long index = 0; index < count(); index++ )
-	{
-		char buff[ 1024 ];
-
-		CFGDAT * cfgdat = static_cast<CFGDAT*>( get_entry( index ) );
-		switch( cfgdat->type )
-		{
-			case DATA_STRING:
-				sprintf( buff, "s:%s:%s\n", cfgdat->key, cfgdat->sval );
+			case 'b':
+			{
+//				printf( "binary attribute %s read ( %i bytes )\n",
+//					name.text(),
+//					data.size() );
+				BDATA b64;
+				b64 = data;
+				b64.base64_decode();
+				set_binary( name.text(), b64 );
 				break;
+			}
 
-			case DATA_NUMBER:
-				sprintf( buff, "n:%s:%li\n", cfgdat->key, cfgdat->nval );
-				break;
+			default:
+				printf( "invalid value type \'%c\' ( line %i )\n",
+					type, line );
+				goto parse_fail;
 		}
 
-		fputs( buff, fp );
+		line++;
 	}
 
 	fclose( fp );
 
 	return true;
+
+	parse_fail:
+
+	printf( "parse error in line %i\n", line );
+
+	fclose( fp );
+
+	return false;
 }

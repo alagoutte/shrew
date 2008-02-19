@@ -1025,13 +1025,15 @@ void _IKEC::run()
 	{
 		// mutual preshared key
 
-		if( !config.get_string( "auth-mutual-psk", text, MAX_CONFSTRING, 0 ) )
+		BDATA psk;
+
+		if( !config.get_binary( "auth-mutual-psk", psk ) )
 		{
 			log( STATUS_FAIL, "config error : auth-mutual-psk undefined\n" );
 			goto config_failed;
 		}
 
-		result = ikei.send_msg_cfgstr( CFGSTR_CRED_PSK, text, strlen( text ), &msgres );
+		result = ikei.send_msg_cfgstr( CFGSTR_CRED_PSK, psk.text(), psk.size(), &msgres );
 		if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
 		{
 			log( STATUS_FAIL, "pre-shared key config failed\n" );

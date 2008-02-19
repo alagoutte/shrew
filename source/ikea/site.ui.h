@@ -579,9 +579,9 @@ bool site::Load( CONFIG & config )
 		text, MAX_CONFSTRING, 0 ) )
 		lineEditPKeyFile->setText( text );
 
-	if( config.get_string( "auth-mutual-psk",
-		text, MAX_CONFSTRING, 0 ) )
-		lineEditPSK->setText( text );
+	BDATA psk;
+	if( config.get_binary( "auth-mutual-psk", psk ) )
+		lineEditPSK->setText( psk.text() );
 
 	// phase1 dh group ( default auto )
 
@@ -1045,9 +1045,13 @@ bool site::Save( CONFIG & config )
 		config.del( "auth-client-key" );
 
 	if( lineEditPSK->isEnabled() )
-		config.set_string( "auth-mutual-psk",
-			( char * ) lineEditPSK->text().ascii(),
+	{
+		BDATA psk;
+		psk.set(
+			lineEditPSK->text().ascii(),
 			lineEditPSK->text().length() );
+		config.set_binary( "auth-mutual-psk", psk );
+	}
 	else
 		config.del( "auth-mutual-psk" );
 

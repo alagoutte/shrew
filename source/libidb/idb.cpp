@@ -191,11 +191,6 @@ bool _BDATA::set( char value, size_t size, size_t oset )
 	return true;
 }
 
-bool _BDATA::set( char * buff, size_t size, size_t oset )
-{
-	return set( ( void * ) buff, size, oset );
-}
-
 bool _BDATA::set( void * buff, size_t size, size_t oset )
 {
 	size_t new_size = oset + size;
@@ -212,6 +207,16 @@ bool _BDATA::set( void * buff, size_t size, size_t oset )
 	return true;
 }
 
+bool _BDATA::set( char * buff, size_t size, size_t oset )
+{
+	return set( ( void * ) buff, size, oset );
+}
+
+bool _BDATA::set( const char * buff, size_t size, size_t oset )
+{
+	return set( ( void * ) buff, size, oset );
+}
+
 bool _BDATA::ins( _BDATA & bdata, size_t oset )
 {
 	return ins( bdata.buff(), bdata.size(),	oset );
@@ -225,11 +230,6 @@ bool _BDATA::ins( int value, size_t size, size_t oset )
 	memset( data_buff + oset, value, size );
 
 	return true;
-}
-
-bool _BDATA::ins( char * buff, size_t size, size_t oset )
-{
-	return ins( ( void * ) buff, size );
 }
 
 bool _BDATA::ins( void * buff, size_t size, size_t oset )
@@ -257,6 +257,16 @@ bool _BDATA::ins( void * buff, size_t size, size_t oset )
 	return true;
 }
 
+bool _BDATA::ins( char * buff, size_t size, size_t oset )
+{
+	return ins( ( void * ) buff, size );
+}
+
+bool _BDATA::ins( const char * buff, size_t size, size_t oset )
+{
+	return ins( ( void * ) buff, size );
+}
+
 bool _BDATA::add( _BDATA & bdata )
 {
 	return add( bdata.buff(), bdata.size() );
@@ -272,11 +282,6 @@ bool _BDATA::add( int value, size_t size )
 	return true;
 }
 
-bool _BDATA::add( char * buff, size_t size )
-{
-	return add( ( void * ) buff, size );
-}
-
 bool _BDATA::add( void * buff, size_t size )
 {
 	size_t new_size = data_size + size;
@@ -290,6 +295,16 @@ bool _BDATA::add( void * buff, size_t size )
 	data_size = new_size;
 
 	return true;
+}
+
+bool _BDATA::add( char * buff, size_t size )
+{
+	return add( ( void * ) buff, size );
+}
+
+bool _BDATA::add( const char * buff, size_t size )
+{
+	return add( ( void * ) buff, size );
 }
 
 bool _BDATA::get( _BDATA & bdata, size_t size )

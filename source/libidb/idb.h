@@ -82,22 +82,25 @@ typedef class DLX _BDATA
 
 	bool set( _BDATA & bdata, size_t oset = 0 );
 	bool set( char value, size_t size, size_t oset = 0 );
-	bool set( char * buff, size_t size, size_t oset = 0 );
 	bool set( void * buff, size_t size, size_t oset = 0 );
+	bool set( char * buff, size_t size, size_t oset = 0 );
+	bool set( const char * buff, size_t size, size_t oset = 0 );
 
 	bool ins( _BDATA & bdata, size_t oset = 0 );
 	bool ins( int value, size_t size, size_t oset = 0 );
-	bool ins( char * buff, size_t size, size_t oset = 0 );
 	bool ins( void * buff, size_t size, size_t oset = 0 );
+	bool ins( char * buff, size_t size, size_t oset = 0 );
+	bool ins( const char * buff, size_t size, size_t oset = 0 );
 
 	bool add( _BDATA & bdata );
 	bool add( int value, size_t size );
-	bool add( char * buff, size_t size );
 	bool add( void * buff, size_t size );
+	bool add( char * buff, size_t size );
+	bool add( const char * buff, size_t size );
 
 	bool get( _BDATA & bdata, size_t size = BDATA_ALL );
-	bool get( char * buff, size_t size );
 	bool get( void * buff, size_t size );
+	bool get( char * buff, size_t size );
 
 	void del( bool null = false );
 

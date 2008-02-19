@@ -44,14 +44,13 @@
 
 #include "idb.h"
 
-#define MAX_CONFSTRING		128
-#define MAX_CONFBINARY		512
+#define MAX_CONFSTRING	256
 
-#define DATA_STRING		1
-#define DATA_NUMBER		2
-#define DATA_BINARY		3
+#define DATA_STRING	1
+#define DATA_NUMBER	2
+#define DATA_BINARY	3
 
-#define CONFIG_OK		0
+#define CONFIG_OK	0
 #define CONFIG_FAILED	1
 #define CONFIG_CANCEL	2
 
@@ -62,30 +61,24 @@
 typedef class _CFGDAT : public IDB_ENTRY
 {
 	friend class _CONFIG;
-	
-protected:
-	
-	const char *	key;
-	long		type;
-	
-	union
-	{
-		const char *	sval;
-		char *		bval;
-		long		nval;
-	};
-	
-	long size;
-	
+
+	protected:
+
+	BDATA	key;
+
+	long	type;
+	BDATA	vval;
+	long	nval;
+
 	_CFGDAT();
-	
+
 }CFGDAT;
 
 typedef class DLX _CONFIG : private IDB_LIST
 {
 	protected:
 	
-	const char *	id;
+	BDATA		id;
 	
 	CFGDAT *	get_data( long type, const char * key, bool add = false );
 	
@@ -96,25 +89,25 @@ typedef class DLX _CONFIG : private IDB_LIST
 	
 	_CONFIG & operator = ( _CONFIG & value );
 	
-	bool	file_read( char * path );
-	bool	file_write( char * path );
+	bool	file_read( const char * path );
+	bool	file_write( const char * path );
 	
-	bool	set_id( const char * id );
+	bool		set_id( const char * id );
 	const char *	get_id();
 	
 	void	del( const char * key );
 	void	del_all();
 	
-	bool	add_string( const char * key, const char * val, int size );
-	bool	set_string( const char * key, const char * val, int size );
-	long	has_string( const char * key, const char * val, int size );
-	bool	get_string( const char * key, char * val, int size, int index );
-	
+	bool	add_string( const char * key, const char * val, size_t size );
+	bool	set_string( const char * key, const char * val, size_t size );
+	long	has_string( const char * key, const char * val, size_t size );
+	bool	get_string( const char * key, char * val, size_t size, int index );
+
 	bool	set_number( const char * key, long val );
 	bool	get_number( const char * key, long * val );
 	
-	bool	set_binary( const char * key, char * val, long size );
-	bool	get_binary( const char * key, char * val, long size );
+	bool	set_binary( const char * key, BDATA & val );
+	bool	get_binary( const char * key, BDATA & val );
 	
 }CONFIG;
 
