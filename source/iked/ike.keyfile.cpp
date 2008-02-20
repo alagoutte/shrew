@@ -67,29 +67,6 @@ int keyfile_cb( char * buf, int size, int rwflag, void * userdata )
 	return size;
 }
 
-void _IKED::load_path( char * file, char * fpath )
-{
-
-#ifdef WIN32
-
-	if( PathIsRelative( file ) )
-	{
-		sprintf_s( 
-			fpath,
-			MAX_PATH,
-			"%s\\certificates\\%s",
-			path_ins,
-			file );
-	}
-	else
-
-#endif
-
-	{
-		strcpy_s( fpath, MAX_PATH, file );
-	}
-}
-
 bool _IKED::cert_2_bdata( BDATA & cert, X509 * x509 )
 {
 	int size = i2d_X509( x509, NULL );
@@ -113,11 +90,8 @@ bool _IKED::bdata_2_cert( X509 ** x509, BDATA & cert )
 	return true;
 }
 
-long _IKED::cert_load( BDATA & cert, char * file, bool ca, BDATA & pass )
+long _IKED::cert_load( BDATA & cert, char * fpath, bool ca, BDATA & pass )
 {
-	char fpath[ MAX_PATH ];
-	load_path( file, fpath );
-
 #ifdef WIN32
 
 	FILE * fp;
@@ -202,11 +176,8 @@ bool _IKED::cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 	return true;
 }
 
-long _IKED::cert_save( BDATA & cert, char * file )
+long _IKED::cert_save( BDATA & cert, char * fpath )
 {
-	char fpath[ MAX_PATH ];
-	load_path( file, fpath );
-
 	X509 * x509;
 	if( !bdata_2_cert( &x509, cert ) )
 		return FILE_FAIL;
@@ -713,11 +684,8 @@ bool _IKED::cert_verify( IDB_LIST_CERT & certs, BDATA & ca, BDATA & cert )
 	return ( result > 0 );
 }
 
-long _IKED::prvkey_rsa_load( EVP_PKEY ** evp_pkey, char * file, BDATA & pass )
+long _IKED::prvkey_rsa_load( EVP_PKEY ** evp_pkey, char * fpath, BDATA & pass )
 {
-	char fpath[ MAX_PATH ];
-	load_path( file, fpath );
-
 #ifdef WIN32
 
 	FILE * fp;

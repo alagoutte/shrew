@@ -191,7 +191,8 @@ X Add support for Windows x86/amd64 Vista platforms
 X Fix route management for tunnels that force all traffic
 X Add support for renegotiating IKSAMP SAs in client mode
 X Add support for persistent IPSEC SAs
-. Add support for storing key and cert data in the site config
+X Add support for site configuration file format versioning
+X Add support for storing key and cert data in the site config
 . Add user preference dialog for site manager
 . Add preference for client minimize to system tray
 . Add preference for pre-populating user names
@@ -205,6 +206,7 @@ x Validate and document support for Juniper SSG gateways
 x Validate and document support for Fortigate gateways
 x Validate and document support for Zywall gateways
 x Validate and document support for Checkpoint gateways
+x Validate and document support for Sidewinder gateways
 . Validate and document support for SonicWall gateways
 ? Improve DPD timeout algorithm
 ? Add support for client connect/disconnect script execution
