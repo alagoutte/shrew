@@ -77,16 +77,6 @@ target_link_libraries(
 	crypto
 	pthread )
 
-# linux realtime library
-
-if( PATH_LIB_RT )
-
-	target_link_libraries(
-		iked
-		rt )
-
-endif( PATH_LIB_RT )
-
 # LDAP support option
 
 if( LDAP )

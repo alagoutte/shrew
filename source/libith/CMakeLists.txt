@@ -14,6 +14,17 @@ add_library(
 	ith
 	libith.cpp )
 
+# linux realtime library
+
+if( PATH_LIB_RT )
+
+	target_link_libraries(
+		iked
+		rt )
+
+endif( PATH_LIB_RT )
+
+
 set_target_properties(
 	ith PROPERTIES
 	VERSION ${RELVER}
