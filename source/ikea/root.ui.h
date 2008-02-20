@@ -262,3 +262,206 @@ void root::About()
 	a.textLabelVersion->setText( "Ver " + Major + "." + Minor + "." + Build );
 	a.exec();
 }
+
+bool file_to_bdata( char * path, BDATA & bdata )
+{
+	bdata.del();
+
+	FILE * fp = fopen( path, "rb" );
+	if( fp == NULL )
+		return false;
+
+	while( true )
+	{
+		int next = fgetc( fp );
+		if( next == EOF )
+			break;
+
+		bdata.add( next, 1 );
+	}
+
+	fclose( fp );
+
+	return ( bdata.size() > 0 );
+}
+
+bool bdata_to_file( BDATA & bdata, char * path )
+{
+	FILE * fp = fopen( path, "wb" );
+	if( fp == NULL )
+		return false;
+
+	size_t count = bdata.size();
+	size_t index = 0;
+
+	for( ; index < count; index++ )
+		fputc( bdata.buff()[ index ], fp );
+
+	fclose( fp );
+
+	return true;
+}
+
+void root::ImportSite()
+{
+	// get the input path
+
+        QString types(
+                "OpenSSL Files (*.vpn);;"
+                "All files (*)" );
+
+        QFileDialog f( this );
+        f.setDir( ikea.site_path() );
+        f.setFilters( types );
+
+        if( f.exec() != QDialog::Accepted )
+		return;
+
+	// load the site config
+
+	CONFIG config;
+	config.file_read( f.selectedFile().ascii() );
+
+	// modify for import
+
+	char tmpfile[ 1024 ];
+	char tmppath[ 1024 ];
+	BDATA tmpdata;
+
+	if( config.get_binary( "auth-client-cert-data", tmpdata ) &&
+	    config.get_string( "auth-client-cert", tmpfile, 1023, 0 ) )
+	{
+		snprintf( tmppath, 1023, "%s/%s", ikea.cert_path(), tmpfile );
+		bdata_to_file( tmpdata, tmppath );
+
+		config.set_string( "auth-client-cert", tmppath, strlen( tmppath ) );
+		config.del( "auth-client-cert-data" );
+	}
+
+	if( config.get_binary( "auth-client-key-data", tmpdata ) &&
+	    config.get_string( "auth-client-key", tmpfile, 1023, 0 ) )
+	{
+		snprintf( tmppath, 1023, "%s/%s", ikea.cert_path(), tmpfile );
+		bdata_to_file( tmpdata, tmppath );
+
+		config.set_string( "auth-client-key", tmppath, strlen( tmppath ) );
+		config.del( "auth-client-key-data" );
+	}
+
+	if( config.get_binary( "auth-server-cert-data", tmpdata ) &&
+	    config.get_string( "auth-server-cert", tmpfile, 1023, 0 ) )
+	{
+		snprintf( tmppath, 1023, "%s/%s", ikea.cert_path(), tmpfile );
+		bdata_to_file( tmpdata, tmppath );
+
+		config.set_string( "auth-server-cert", tmppath, strlen( tmppath ) );
+		config.del( "auth-server-cert-data" );
+	}
+
+	// determine short name
+
+	const char * tmpname = f.selectedFile().ascii();
+	if( strchr( tmpname, '/' ) )
+		tmpname = strrchr( tmpname, '/' ) + 1;
+
+	// mangle name if duplicate
+
+	int index = 2;
+	QString name( tmpname );
+	while( iconViewSites->findItem( name, Qt::ExactMatch ) != NULL )
+		name += " (" + QString::number( index++ ) + ")";
+
+	// save the site config
+
+	snprintf( tmppath, 1024, "%s/%s", ikea.site_path(), name.ascii() );
+
+	config.file_write( tmppath );
+
+	// create icon for site
+
+	QIconViewItem * i = new QIconViewItem( iconViewSites );
+	if( i == NULL )
+		return;
+
+	i->setPixmap( QPixmap::fromMimeSource( "site.png" ) );
+	i->setSelected( true );
+	i->setRenameEnabled( true );
+	i->setText( name );
+	selected = name;
+	i->rename();
+}
+
+void root::ExportSite()
+{
+	QIconViewItem * i = iconViewSites->currentItem();
+	if( i == NULL )
+		return;
+
+	// load site config
+
+	CONFIG config;
+
+	char path[ 1024 ];
+	snprintf( path, 1024, "%s/%s",
+		ikea.site_path(),
+		i->text().ascii() );
+
+	config.file_read( path );
+
+	// get the output path
+
+        QString types(
+                "OpenSSL Files (*.vpn);;"
+                "All files (*)" );
+
+        QFileDialog f( this );
+	f.setMode( QFileDialog::AnyFile );
+        f.setDir( ikea.site_path() );
+        f.setFilters( types );
+
+        if( f.exec() != QDialog::Accepted )
+		return;
+
+	// modify for export
+
+	char tmppath[ 1024 ];
+	BDATA tmpdata;
+
+	if( config.get_string( "auth-client-cert", tmppath, 1023, 0 ) )
+	{
+		file_to_bdata( tmppath, tmpdata );
+
+		char * tmpfile = tmppath;
+		if( strchr( tmpfile, '/' ) )
+			tmpfile = strrchr( tmpfile, '/' );
+
+		config.set_string( "auth-client-cert", tmpfile, strlen( tmpfile ) );
+		config.set_binary( "auth-client-cert-data", tmpdata );
+	}
+
+	if( config.get_string( "auth-client-key", tmppath, 1023, 0 ) )
+	{
+		file_to_bdata( tmppath, tmpdata );
+
+		char * tmpfile = tmppath;
+		if( strchr( tmpfile, '/' ) )
+			tmpfile = strrchr( tmpfile, '/' );
+
+		config.set_string( "auth-client-key", tmpfile, strlen( tmpfile ) );
+		config.set_binary( "auth-client-key-data", tmpdata );
+	}
+
+	if( config.get_string( "auth-server-cert", tmppath, 1023, 0 ) )
+	{
+		file_to_bdata( tmppath, tmpdata );
+
+		char * tmpfile = tmppath;
+		if( strchr( tmpfile, '/' ) )
+			tmpfile = strrchr( tmpfile, '/' );
+
+		config.set_string( "auth-server-cert", tmpfile, strlen( tmpfile ) );
+		config.set_binary( "auth-server-cert-data", tmpdata );
+	}
+
+	config.file_write( f.selectedFile().ascii() );
+}

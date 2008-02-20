@@ -336,6 +336,18 @@
         <receiver>root</receiver>
         <slot>SelectSite(QIconViewItem*)</slot>
     </connection>
+    <connection>
+        <sender>fileImportAction</sender>
+        <signal>activated()</signal>
+        <receiver>root</receiver>
+        <slot>ImportSite()</slot>
+    </connection>
+    <connection>
+        <sender>fileExportAction</sender>
+        <signal>activated()</signal>
+        <receiver>root</receiver>
+        <slot>ExportSite()</slot>
+    </connection>
 </connections>
 <includes>
     <include location="local" impldecl="in implementation">root.ui.h</include>
@@ -346,9 +358,11 @@
     <slot>ModSite()</slot>
     <slot>DelSite()</slot>
     <slot>ContextSite( QIconViewItem * item, const QPoint &amp; pos )</slot>
+    <slot>SelectSite( QIconViewItem * item )</slot>
     <slot>RenameSite( QIconViewItem * item, const QString &amp; name )</slot>
     <slot>About()</slot>
-    <slot>SelectSite( QIconViewItem * item )</slot>
+    <slot>ImportSite()</slot>
+    <slot>ExportSite()</slot>
 </slots>
 <pixmapinproject/>
 <layoutdefaults spacing="6" margin="11"/>
