@@ -19,7 +19,7 @@ add_library(
 if( PATH_LIB_RT )
 
 	target_link_libraries(
-		iked
+		ith
 		rt )
 
 endif( PATH_LIB_RT )
