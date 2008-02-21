@@ -372,11 +372,12 @@ bool _CONFIG::file_read( const char * path )
 		type = fgetc( fp );
 
 		if( ( type == ' ' ) ||
-			( type == '\r' ) )
+			( type == '\t' ) ||
+			( type == '\r' ) ||
+			( type == '\n' ) )
 			continue;
 
-		if( ( type == '\n' ) ||
-			( type == EOF ) )
+		if( type == EOF )
 			break;
 
 		//
@@ -429,6 +430,9 @@ bool _CONFIG::file_read( const char * path )
 		while( true )
 		{
 			next = fgetc( fp );
+
+			if( next == '\r' )
+				continue;
 
 			if( ( next == '\n' ) ||
 				( next == EOF ) )
