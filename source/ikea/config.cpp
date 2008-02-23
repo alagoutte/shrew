@@ -441,9 +441,6 @@ bool _CONFIG::file_read( const char * path )
 			data.add( next, 1 );
 		}
 
-		if( !data.size() )
-			goto parse_fail;
-
 		data.add( "", 1 );
 
 		switch( type )
@@ -453,6 +450,7 @@ bool _CONFIG::file_read( const char * path )
 //				printf( "string attribute %s read ( %i bytes )\n",
 //					name.text(),
 //					data.size() );
+
 				add_string( name.text(), data.text(), data.size() );
 				break;
 			}
@@ -462,6 +460,7 @@ bool _CONFIG::file_read( const char * path )
 //				printf( "number attribute %s read ( %i bytes )\n",
 //					name.text(),
 //					data.size() );
+
 				set_number( name.text(), atol( data.text() ) );
 				break;
 			}
@@ -471,6 +470,7 @@ bool _CONFIG::file_read( const char * path )
 //				printf( "binary attribute %s read ( %i bytes )\n",
 //					name.text(),
 //					data.size() );
+
 				BDATA b64;
 				b64 = data;
 				b64.base64_decode();
