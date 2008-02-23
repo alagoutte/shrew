@@ -394,8 +394,9 @@ void _IDB_PH2::end()
 	// inform pfkey interface
 	//
 
-	if( ( xch_errorcode != XCH_FAILED_FLUSHED ) &&
-		( lstate & LSTATE_HASKEYS ) )
+	if( ( lstate & LSTATE_HASKEYS ) &&
+		( xch_errorcode != XCH_FAILED_FLUSHED ) &&
+		( xch_errorcode != XCH_FAILED_EXPIRED ) )
 		iked.pfkey_send_delete( this );
 
 	//
