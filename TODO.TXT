@@ -193,9 +193,9 @@ X Add support for renegotiating IKSAMP SAs in client mode
 X Add support for persistent IPSEC SAs
 X Add support for site configuration file format versioning
 X Add support for storing key and cert data in the site config
-. Add user preference dialog for site manager
-. Add preference for client minimize to system tray
-. Add preference for pre-populating user names
+X Add user preference dialog for site manager
+X Add preference for client minimize to system tray
+X Add preference for pre-populating user names
 . Add checks for illegal site configuration names
 . Fix static buffer usage for temporary string data
 . Add timestamps for non-syslog log output
