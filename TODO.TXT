@@ -55,8 +55,8 @@ X Fix multiple tunnel issues
 X Write documentation
 X Button default issue in ipsecc
 X Test non-admin user operation
-X Correct loss of default route ( use DHCP HANDOUT ? )
-X Correct the VNET MTU dropping to 175 ( THANK GOD !!! )
+X Correct loss of default route
+X Correct the VNET MTU dropping to 175
 X Update VProt Interface to handle Dialup Adapters
 . !!! All reported bugs !!!
 
@@ -196,9 +196,9 @@ X Add support for storing key and cert data in the site config
 X Add user preference dialog for site manager
 X Add preference for client minimize to system tray
 X Add preference for pre-populating user names
+X Add timestamps for non-syslog log output
 . Add checks for illegal site configuration names
 . Fix static buffer usage for temporary string data
-. Add timestamps for non-syslog log output
 . Import new logo and improved icon sets
 . Fix MS dnscache problems the right way
 x Validate and document support for Cisco ASA gateways
@@ -207,34 +207,34 @@ x Validate and document support for Fortigate gateways
 x Validate and document support for Zywall gateways
 x Validate and document support for Checkpoint gateways
 x Validate and document support for Sidewinder gateways
-. Validate and document support for SonicWall gateways
-? Improve DPD timeout algorithm
-? Add support for client connect/disconnect script execution
-? Add adaptive communications during connect ( Frag/NATT )
-? Move to a purely primitive based tunnel confguration interface
-? Add ability to drag site connections as shortcuts
-? Add support for lzs compression ( patent encumbered )
-? Add support for microsoft certificate and key storage api
 . !!! All reported bugs !!!
 
 2.1.1 release - Bug fix and fine tuning
 ----------------------------------------------------------------------
+? Improve DPD timeout algorithm
+? Add ability to drag site connections as shortcuts
 . !!! All reported bugs !!!
 
 2.2.0 release - Feature Parity ...
 ----------------------------------------------------------------------
-. Stateful client side firewall
+. Secure Domain Login
+. Validate and document support for SonicWall gateways
 . Finalized kernel drivers signed by Microsoft WHQL
 . Add support for unattended installations ( needs signed drivers )
+? Add support for client connect/disconnect script execution
+? Add adaptive communications during connect ( Frag/NATT )
+? Move to a purely primitive based tunnel confguration interface
+? Add support for lzs compression ( patent encumbered )
+? Add support for microsoft certificate and key storage api
 . !!! All reported bugs !!!
 
 2.3.0 release - Feature Parity ...
 ----------------------------------------------------------------------
-. Secure Domain Login
 . !!! All reported bugs !!!
 
 3.0.0 release - High Performance
 ----------------------------------------------------------------------
+. Stateful client side firewall
 . Create lightweight kernel or userland buildable crypto library
 . Move ip security processing into the kernel
 . !!! All reported bugs !!!

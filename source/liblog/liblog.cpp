@@ -50,25 +50,73 @@ _LOG::~_LOG()
 	close();
 }
 
-size_t _LOG::tstamp( char * buff, size_t size )
+bool _LOG::write_buff( char * buff, size_t size )
 {
-/*
-	time_t		ctime;
-	struct tm *	ltime;
+	//
+	// build time stamp
+	//
 
-	time( &ctime );
-	ltime = localtime( &ctime );
+	char	tbuff[ LOG_MAX_TXT ];
+	size_t	tlen = 0;
 
-	return strftime( buff, length, "%y/%m/%d %H:%M:%S ", ltime );
-*/
-	buff[ 0 ] = 0;
-	return 0;
-}
+	if( !( log_flags & LOGFLAG_SYSTEM ) )
+	{
+		time_t		ctime;
+		struct tm *	ltime;
 
-bool _LOG::append( char * buff, size_t size )
-{
+		time( &ctime );
+		ltime = localtime( &ctime );
+
+		tlen = strftime( tbuff, LOG_MAX_TXT, "%y/%m/%d %H:%M:%S ", ltime );
+	}
+
 	lock.lock();
 
+	//
+	// log buffer to console
+	//
+
+	if( log_flags & LOGFLAG_ECHO )
+		printf( buff );
+
+	//
+	// log individual lines
+	//
+
+	char *	line = buff;
+	size_t	oset = 0;
+	size_t	llen;
+
+	while( line != NULL && line[ 0 ] )
+	{
+		char * next = strchr( line, '\n' );
+
+		if( next != NULL )
+		{
+			if( log_flags & LOGFLAG_SYSTEM )
+				next[ 0 ] = 0;
+
+			next++;
+			llen = next - line;
+		}
+		else
+			llen = strlen( line );
+
+		if( tlen )
+			write_line( tbuff, tlen );
+
+		write_line( line, llen );
+
+		line = next;
+	}
+
+	lock.unlock();
+
+	return true;
+}
+
+bool _LOG::write_line( char * buff, size_t size )
+{
 #ifdef WIN32
 
 	DWORD dwsize = ( DWORD ) size;
@@ -96,11 +144,6 @@ bool _LOG::append( char * buff, size_t size )
 		}
 	}
 #endif
-
-	if( log_flags & LOGFLAG_ECHO )
-		printf( buff );
-
-	lock.unlock();
 
 	return true;
 }
@@ -200,11 +243,9 @@ void _LOG::txt( long level, const char * fmt, ... )
 		size_t	tused = 0;
 
 		vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list );
+		sprintf_s( fbuff, tsize, tbuff );
 
-		tused += tstamp( fbuff, tsize );
-		tused += sprintf_s( fbuff + tused, tsize - tused, tbuff );
-
-		append( fbuff, tused );
+		write_buff( fbuff, tused );
 	}
 }
 
@@ -229,9 +270,7 @@ void _LOG::bin( long level, long blevel, void * bin, size_t len, const char * fm
 		// add our text label
 
 		vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list ); 
-
-		tused += tstamp( fbuff, tsize );
-		tused += sprintf_s( fbuff + tused, tsize - tused, "%s ( %ld bytes )", tbuff, len );
+		tused += sprintf_s( fbuff, tsize, "%s ( %ld bytes )", tbuff, len );
 
 		// check binary log level
 
@@ -272,7 +311,7 @@ void _LOG::bin( long level, long blevel, void * bin, size_t len, const char * fm
 
 		tused += sprintf_s( &fbuff[ tused ], tsize - tused, "\n" );
 
-		append( fbuff, tused );
+		write_buff( fbuff, tused );
 	}
 
 	return;

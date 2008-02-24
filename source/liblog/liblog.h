@@ -95,8 +95,8 @@ typedef struct DLX _LOG
 	long		log_level;
 	long		log_flags;
 
-	size_t	tstamp( char * buff, size_t size );
-	bool	append( char * buff, size_t size );
+	bool	write_buff( char * buff, size_t size );
+	bool	write_line( char * buff, size_t size );
 
 	public:
 
