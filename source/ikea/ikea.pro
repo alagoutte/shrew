@@ -18,7 +18,8 @@ SOURCES	+= main.cpp \
 FORMS	= site.ui \
 	root.ui \
 	topology.ui \
-	about.ui
+	about.ui \
+	conflict.ui
 
 IMAGES	= png/policy_exc.png \
 	png/policy_inc.png \

@@ -43,6 +43,12 @@
 
 static QString selected;
 
+bool file_exists( const char * path )
+{
+	struct stat sb;
+	return( stat( path, &sb ) == 0 );
+}
+
 void root::ConnectSite()
 {
 	QIconViewItem * i = iconViewSites->currentItem();
@@ -73,14 +79,19 @@ void root::AddSite()
 		// mangle name if duplicate
 
 		int index = 2;
-		QString name = s.lineEditHost->text().ascii();
-		while( iconViewSites->findItem( name, Qt::ExactMatch ) != NULL )
-			name += " (" + QString::number( index++ ) + ")";
+		QString tmpname = s.lineEditHost->text().ascii();
+		while( iconViewSites->findItem( tmpname, Qt::ExactMatch ) != NULL )
+		{
+			tmpname = s.lineEditHost->text().ascii();
+			tmpname += QString( " (" );
+			tmpname += QString::number( index++ );
+			tmpname += QString( ")" );
+		}
 
 		char path[ 1024 ];
 		snprintf( path, 1024, "%s/%s",
 			ikea.site_path(),
-			name.ascii() );
+			tmpname.ascii() );
 
 		config.file_write( path );
 
@@ -93,8 +104,8 @@ void root::AddSite()
 		i->setPixmap( QPixmap::fromMimeSource( "site.png" ) );
 		i->setSelected( true );
 		i->setRenameEnabled( true );
-		i->setText( name );
-		selected = name;
+		i->setText( tmpname );
+		selected = tmpname;
 		i->rename();
 	}
 }
@@ -226,30 +237,30 @@ void root::RenameSite( QIconViewItem * item, const QString & name )
 		ikea.site_path(),
 		name.ascii() );
 
-	struct stat sb;
-	if( !stat( path2, &sb ) )
+	// mangle name if duplicate
+
+	int index = 2;
+	QString tmpname = name;
+
+	while( file_exists( path2 ) )
 	{
-		QMessageBox m;
-		if( m.warning( this,
-			   "Warning",
-			   "A site with the same name already exists. Are your sure you want to overwrite?",
-			   QMessageBox::Yes,
-			   QMessageBox::Cancel ) != QMessageBox::Yes )
-		{
-			//
-			// aborted
-			//
+		tmpname = name;
+		tmpname += QString( " (" );
+		tmpname += QString::number( index++ );
+		tmpname += QString( ")" );
 
-			item->setText( selected );
-			return;
-		}
-
-		delete item;
+		snprintf( path2, 1024, "%s/%s",
+			ikea.site_path(),
+			tmpname.ascii() );
 	}
 
-	rename( path1, path2 );
+	printf( "name = %s\n", tmpname.ascii() );
+	printf( "path = %s\n", path2 );
 
-	selected = name;
+	rename( path1, path2 );
+	item->setText( tmpname );
+
+	selected = tmpname;
 }
 
 void root::About()
@@ -311,7 +322,6 @@ void root::ImportSite()
                 "All files (*)" );
 
         QFileDialog f( this );
-        f.setDir( ikea.site_path() );
         f.setFilters( types );
 
         if( f.exec() != QDialog::Accepted )
@@ -332,6 +342,19 @@ void root::ImportSite()
 	    config.get_string( "auth-client-cert", tmpfile, 1023, 0 ) )
 	{
 		snprintf( tmppath, 1023, "%s/%s", ikea.cert_path(), tmpfile );
+
+		while( file_exists( tmppath ) )
+		{
+			conflict fc( this );
+			fc.lineConflictName->setText( tmpfile );
+
+			if( fc.exec() == CONFLICT_OVERWRITE )
+				break;
+
+			snprintf( tmppath, 1023, "%s/%s", ikea.cert_path(),
+				fc.lineConflictName->text().ascii() );
+		}
+
 		bdata_to_file( tmpdata, tmppath );
 
 		config.set_string( "auth-client-cert", tmppath, strlen( tmppath ) );
@@ -342,6 +365,19 @@ void root::ImportSite()
 	    config.get_string( "auth-client-key", tmpfile, 1023, 0 ) )
 	{
 		snprintf( tmppath, 1023, "%s/%s", ikea.cert_path(), tmpfile );
+
+		while( file_exists( tmppath ) )
+		{
+			conflict fc( this );
+			fc.lineConflictName->setText( tmpfile );
+
+			if( fc.exec() == CONFLICT_OVERWRITE )
+				break;
+
+			snprintf( tmppath, 1023, "%s/%s", ikea.cert_path(),
+				fc.lineConflictName->text().ascii() );
+		}
+
 		bdata_to_file( tmpdata, tmppath );
 
 		config.set_string( "auth-client-key", tmppath, strlen( tmppath ) );
@@ -352,28 +388,49 @@ void root::ImportSite()
 	    config.get_string( "auth-server-cert", tmpfile, 1023, 0 ) )
 	{
 		snprintf( tmppath, 1023, "%s/%s", ikea.cert_path(), tmpfile );
+
+		while( file_exists( tmppath ) )
+		{
+			conflict fc( this );
+			fc.lineConflictName->setText( tmpfile );
+
+			if( fc.exec() == CONFLICT_OVERWRITE )
+				break;
+
+			snprintf( tmppath, 1023, "%s/%s", ikea.cert_path(),
+				fc.lineConflictName->text().ascii() );
+		}
+
 		bdata_to_file( tmpdata, tmppath );
 
 		config.set_string( "auth-server-cert", tmppath, strlen( tmppath ) );
 		config.del( "auth-server-cert-data" );
 	}
 
-	// determine short name
+	// determine filespec name
 
-	const char * tmpname = f.selectedFile().ascii();
-	if( strchr( tmpname, '/' ) )
-		tmpname = strrchr( tmpname, '/' ) + 1;
+	long oset = 0;
+	if( f.selectedFile().find( '/' ) != -1 )
+		oset = f.selectedFile().findRev( '/' ) + 1;
+
+	QString filespec = f.selectedFile().ascii() + oset;
 
 	// mangle name if duplicate
 
 	int index = 2;
-	QString name( tmpname );
-	while( iconViewSites->findItem( name, Qt::ExactMatch ) != NULL )
-		name += " (" + QString::number( index++ ) + ")";
+	QString tmpname = filespec;
+
+	while( iconViewSites->findItem( tmpname, Qt::ExactMatch ) != NULL )
+	{
+		tmpname = filespec;
+		tmpname += QString( " (" );
+		tmpname += QString::number( index++ );
+		tmpname += QString( ")" );
+	}
 
 	// save the site config
 
-	snprintf( tmppath, 1024, "%s/%s", ikea.site_path(), name.ascii() );
+	snprintf( tmppath, 1024, "%s/%s", ikea.site_path(), tmpname.ascii() );
 
 	config.file_write( tmppath );
 
@@ -386,8 +443,8 @@ void root::ImportSite()
 	i->setPixmap( QPixmap::fromMimeSource( "site.png" ) );
 	i->setSelected( true );
 	i->setRenameEnabled( true );
-	i->setText( name );
-	selected = name;
+	i->setText( tmpname );
+	selected = tmpname;
 	i->rename();
 }
 

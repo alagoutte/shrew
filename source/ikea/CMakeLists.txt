@@ -21,6 +21,7 @@ set(
 	UIC_FILES
 	site.ui
 	root.ui
+	conflict.ui
 	topology.ui
 	about.ui )
 
