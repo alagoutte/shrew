@@ -197,9 +197,9 @@ X Add user preference dialog for site manager
 X Add preference for client minimize to system tray
 X Add preference for pre-populating user names
 X Add timestamps for non-syslog log output
-. Add checks for illegal site configuration names
-. Fix static buffer usage for temporary string data
-. Import new logo and improved icon sets
+X Add checks for illegal site configuration names
+X Add site name and file conflict resolution dialogs
+X Fix any differences between unix and windows site configuration
 . Fix MS dnscache problems the right way
 x Validate and document support for Cisco ASA gateways
 x Validate and document support for Juniper SSG gateways
@@ -211,15 +211,16 @@ x Validate and document support for Sidewinder gateways
 
 2.1.1 release - Bug fix and fine tuning
 ----------------------------------------------------------------------
+. Import new logo and improved icon sets
+. Fix static buffer usage for temporary string data
 ? Improve DPD timeout algorithm
 ? Add ability to drag site connections as shortcuts
 . !!! All reported bugs !!!
 
 2.2.0 release - Feature Parity ...
 ----------------------------------------------------------------------
-. Secure Domain Login
-. Validate and document support for SonicWall gateways
 . Finalized kernel drivers signed by Microsoft WHQL
+. Validate and document support for SonicWall gateways
 . Add support for unattended installations ( needs signed drivers )
 ? Add support for client connect/disconnect script execution
 ? Add adaptive communications during connect ( Frag/NATT )
@@ -230,6 +231,8 @@ x Validate and document support for Sidewinder gateways
 
 2.3.0 release - Feature Parity ...
 ----------------------------------------------------------------------
+. Use QT to build unified cross platform GUI components
+. Secure Domain Login
 . !!! All reported bugs !!!
 
 3.0.0 release - High Performance
