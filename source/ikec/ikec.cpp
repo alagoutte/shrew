@@ -682,7 +682,7 @@ void _IKEC::run()
 
 	// enable dns options
 
-	if( config.get_number( "client-dns-enable", &numb ) )
+	if( config.get_number( "client-dns-used", &numb ) )
 	{
 		if( numb )
 		{

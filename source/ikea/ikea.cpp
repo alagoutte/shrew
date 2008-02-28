@@ -45,11 +45,7 @@ void update_site( CONFIG * config, const char * path, long & version )
 {
 	switch( version )
 	{
-		//
-		// version 0
-		//
-
-		case 0:
+		case 0: // version 0 -> 1
 		{
 			//
 			// upgrade the auth-mutual-psk string
@@ -67,13 +63,31 @@ void update_site( CONFIG * config, const char * path, long & version )
 				config->set_binary( "auth-mutual-psk", psk );
 			}
 
-			printf( "updating site \'%s\' to version 1\n", config->get_id() );
+			break;
+		}
 
+		case 1:	// version 1 -> 2
+		{
+			//
+			// update client-dns-enable number to
+			// client-dns-used
+			//
+
+			long numb;
+
+			if( config->get_number( "client-dns-enable", &numb ) )
+			{
+				config->del( "client-dns-enable" );
+				config->set_number( "client-dns-used", numb );
+			}
+			
 			break;
 		}
 	}
 
-	config->set_number( "version", ++version );
+	version++;
+	printf( "updated site \'%s\' to version %i\n", config->get_id(), version );
+	config->set_number( "version", version );
 	config->file_write( path );
 }
 

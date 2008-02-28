@@ -434,6 +434,13 @@ void root::ImportSite()
 
 	config.file_write( tmppath );
 
+	// update the site version if required
+
+	long version = 0;
+	config.get_number( "version", &version );
+	while( version < CLIENT_VER_CFG )
+		update_site( &config, tmppath, version );
+
 	// create icon for site
 
 	QIconViewItem * i = new QIconViewItem( iconViewSites );

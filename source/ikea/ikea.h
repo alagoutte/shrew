@@ -90,4 +90,6 @@ typedef class _IKEA
 
 extern IKEA ikea;
 
+void update_site( CONFIG * config, const char * path, long & version );
+
 #endif

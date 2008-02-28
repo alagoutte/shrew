@@ -237,6 +237,95 @@ configuration directory. The configuration should be suitable to allow for
 client operation but can also be modified to allow for site to site or client
 gateway operation as well. See the iked.conf man page for more details.
 
-Once the iked process has been launched, the ikea application can be used to
-build remote access client configurations and initiate sessions. See the online
+Once the iked process has been launched, the VPN Access Manager application
+( ikea ) is used to build remote access client configurations and initiate
+client connections. When the Access Manager GUI is used to initiate a client
+connection, a VPN Connect application ( ikec ) process is created. This process
+interacts with iked to initiate the connection. Please see the online
 documentation available at http://www.shrew.net for more details.
+
+================================================================================
+EXPORTED CONFIGURATION FILES
+================================================================================
+
+A site configuration contains all the data required to connect to a site using
+the VPN client tools. These configuration files can be exported or imported
+using the VPN Access Manager application. The file format used to describe the
+site configuration is a text ducument that contains one attribute per line with
+one or more attribute values. The attribute type is denoted by a single 
+charachter field followed by the attribute name field and then by a value. The
+fields are separated using a colon charachter. For example, the following line
+describes a string attribute names network-host with a value of 10.1.1.1
+
+s:network-host:10.1.1.1
+
+Attributes are denoted as one of three types.
+
+s = String
+n = Number
+b = Binary ( bas64 encoded )
+
+Multi valued strings are separated using a comma charachter and binary values
+are base64 encoded. Here is a list of attributes currently supported.
+
+s:network-host:<hostname>|<IP address>
+n:network-ike-port:<IKE UDP port>
+s:network-auto-mode:disable|pull|push|dhcp
+s:client-iface:virtual|direct
+n:client-addr-auto:0|1
+s:client-ip-addr:<virtual IP address>
+s:client-ip-mask:<virtual IP netmask>
+n:network-mtu-size:<virtual MTU>
+n:client-wins-used:0|1
+n:client-wins-auto:0|1
+s:client-wins-addr:<WINS server IP address list>
+n:client-dns-used:0|1
+n:client-dns-auto:0|1
+s:client-dns-addr:<DNS server IP address list>
+s:client-dns-suffix:<DNS default suffix>
+n:client-splitdns-used:0|1
+n:client-splitdns-auto:0|1
+s:client-splitdns-list:<DNS split suffix list>
+s:network-natt-mode:disable|enable|force-draft|force-rfc
+s:network-frag-mode:disable|enable|force
+n:network-dpd-enable:0|1
+n:network-notify-enable:0|1
+n:client-banner-enable:0|1
+s:auth-method:hybrid-rsa-xauth|mutual-rsa-xauth|mutual-psk-xauth|mutual-rsa|mutual-psk
+s:auth-server-cert:<path to server ca>
+s:auth-client-cert:<path to client public cert>
+s:auth-client-key:<path to client private key>
+b:auth-mutual-psk:<mutual pre-shared key>
+s:ident-client-type:asn1dn|keyid|fqdn|ufqdn|address
+s:ident-client-data:<type specific value>
+s:ident-server-type:asn1dn|keyid|fqdn|ufqdn|address
+s:ident-server-data:<type specific value>
+s:phase1-exchange:main|aggressive
+s:phase1-cipher:auto|aes|blowfish|3des|cast|des
+n:phase1-keylen:<key length> ( 0 = auto )
+s:phase1-hash:auto|md5|sha1
+n:phase1-dhgorup:1|2|5|14|15
+n:phase1-life-secs:<life time>
+n:phase1-life-kbytes:<life KBytes>
+s:phase2-transform:auto|esp-aes|esp-blowfish|esp-3des|esp-cast|esp-des
+n:phase2-keylen:<key length> ( 0 = auto )
+s:phase2-hmac:auto|md5|sha1
+n:phase2-pfsgroup:-1|0|1|2|5|14|15 ( -1 = disabled, 0 = auto )
+n:phase2-life-secs:<life time>
+n:phase2-life-kbytes:<life KBytes>
+n:policy-nailed:0|1 ( persistent IPsec SAs )
+n:policy-list-auto:0|1
+s:policy-list-exclude:<address/netmask list>
+s:policy-list-include:<address/netmask list>
+
+NOTE : When a file is exported, the certificate and key file paths are modified
+to only contain the unqualified filename. The actual file data is encoded as a
+binary value. This allows the certificate information to be exported along with
+other site configuration data. Here are the related attributes after export.
+
+s:auth-server-cert:<server ca filename>
+b:auth-server-cert-data:<server ca file contents>
+s:auth-client-cert:<client public cert filename>
+b:auth-client-cert-data:<client public cert file contents>
+s:auth-client-key:<client private key filename>
+b:auth-client-key-data:<client private key file contents>

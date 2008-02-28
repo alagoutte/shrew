@@ -417,10 +417,10 @@ bool site::Load( CONFIG & config )
 	else
 		checkBoxBanner->setChecked( false );
 
-	// dns enabled ( default enabled )
+	// dns used ( default used )
 
 	numb = 1;
-	config.get_number( "client-dns-enable", &numb );
+	config.get_number( "client-dns-used", &numb );
 
 	if( !numb )
 	{
@@ -882,13 +882,13 @@ bool site::Save( CONFIG & config )
 	{
 		// disabled
 
-		config.set_number( "client-dns-enable", 0 );
+		config.set_number( "client-dns-used", 0 );
 	}
 	else
 	{
 		// enabled
 
-		config.set_number( "client-dns-enable", 1 );
+		config.set_number( "client-dns-used", 1 );
 
 		// dns settings
 
