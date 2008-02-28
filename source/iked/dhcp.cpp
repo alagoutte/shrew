@@ -57,6 +57,12 @@ long _IKED::socket_dhcp_create( IDB_TUNNEL * tunnel )
 	rand_bytes( &tunnel->dhcp_xid, 4 );
 
 	//
+	// create dhcp hw address id
+	//
+
+	rand_bytes( &tunnel->dhcp_hwaddr, 5 );
+
+	//
 	// create dhcp socket
 	//
 
@@ -214,6 +220,16 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 	if( !( tunnel->tstate & TSTATE_RECV_CONFIG ) )
 	{
 		//
+		// alternate hardware types for
+		// non-rfc conformant gateways
+		//
+
+		if( tunnel->event_dhcp.retry & 1 )
+			tunnel->dhcp_hwtype = BOOTP_HW_EHTERNET;
+		else
+			tunnel->dhcp_hwtype = BOOTP_HW_IPSEC;
+
+		//
 		// create dhcp discover packet
 		//
 
@@ -228,14 +244,14 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 
 		dhcp_head.magic = DHCP_MAGIC;
 		dhcp_head.op = BOOTP_REQUEST;			// bootp request
-		dhcp_head.htype = BOOTP_HW_IPSEC;		// bootp hardware type
+		dhcp_head.htype = tunnel->dhcp_hwtype;	// bootp hardware type
 		dhcp_head.hlen = 6;						// hardware address length
 		dhcp_head.xid = tunnel->dhcp_xid;		// transaction id
 
 		dhcp_head.chaddr[ 0 ] = 0x40;			// locally administered unicast MAC
-		memcpy(									// local ipv4 interface address
-			dhcp_head.chaddr + 2,
-			&src, sizeof( src ) );
+		memcpy(									// local hardware address id
+			dhcp_head.chaddr + 1,
+			tunnel->dhcp_hwaddr, 5 );
 
 		packet.add(
 			&dhcp_head,
@@ -247,18 +263,18 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 
 		packet.add_byte( DHCP_OPT_CLIENTID );	// message type
 		packet.add_byte( 7 );					// opt size
-		packet.add_byte( BOOTP_HW_IPSEC );		// client hw type
+		packet.add_byte( tunnel->dhcp_hwtype );	// client hw type
 		packet.add( dhcp_head.chaddr, 6 );		// client id value
 
 		//
 		// send the packet
 		//
 
+		tunnel->event_dhcp.retry++;
+
 		log.txt( LLOG_DEBUG, "ii : sending DHCP over IPsec discover\n" );
 
 		socket_dhcp_send( tunnel, packet );
-
-		tunnel->event_dhcp.retry++;
 	}
 
 	//
@@ -282,14 +298,14 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 
 		dhcp_head.magic = DHCP_MAGIC;
 		dhcp_head.op = BOOTP_REQUEST;			// bootp request
-		dhcp_head.htype = BOOTP_HW_IPSEC;		// bootp hardware type
+		dhcp_head.htype = tunnel->dhcp_hwtype;	// bootp hardware type
 		dhcp_head.hlen = 6;						// hardware address length
 		dhcp_head.xid = tunnel->dhcp_xid;		// transaction id
 
 		dhcp_head.chaddr[ 0 ] = 0x40;			// locally administered unicast MAC
-		memcpy(									// local ip interface address
-			dhcp_head.chaddr + 2,
-			&src, sizeof( src ) );
+		memcpy(									// local hardware address id
+			dhcp_head.chaddr + 1,
+			tunnel->dhcp_hwaddr, 5 );
 
 		packet.add(
 			&dhcp_head,
@@ -316,11 +332,11 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		// send the packet
 		//
 
+		tunnel->event_dhcp.retry++;
+
 		log.txt( LLOG_DEBUG, "ii : sending DHCP over IPsec request\n" );
 
 		socket_dhcp_send( tunnel, packet );
-
-		tunnel->event_dhcp.retry++;
 	}
 
 	return LIBIKE_OK;
@@ -346,7 +362,6 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 	}
 
 	if( ( dhcp_head.op != BOOTP_REPLY ) ||			// bootp reply
-		( dhcp_head.htype != BOOTP_HW_IPSEC ) ||	// bootp hardware type
 		( dhcp_head.hlen != 6 ) ||					// hardware address length
 		( dhcp_head.magic != DHCP_MAGIC ) )			// magic cookie
 	{
@@ -354,6 +369,20 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 		tunnel->dec( true );
 		return LIBIKE_FAILED;
 	}
+
+	if(	( dhcp_head.htype != BOOTP_HW_EHTERNET ) &&	// bootp hardware type
+		( dhcp_head.htype != BOOTP_HW_IPSEC ) )
+	{
+		log.txt( LLOG_ERROR, "!! : invalid DHCP reply hardware type\n" );
+		tunnel->dec( true );
+		return LIBIKE_FAILED;
+	}
+
+	//
+	// respond to the solicited type
+	//
+
+	tunnel->dhcp_hwtype = dhcp_head.htype;
 
 	//
 	// examine the dhcp reply options
@@ -555,8 +584,6 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 
 				tunnel->xconf.nscfg.nbns_count =  config.nscfg.nbns_count;
 			}
-
-			tunnel->event_dhcp.retry = 0;
 
 			tunnel->tstate |= TSTATE_RECV_CONFIG;
 		}

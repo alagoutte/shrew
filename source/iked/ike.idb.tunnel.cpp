@@ -52,7 +52,7 @@ bool _ITH_EVENT_TUNDHCP::func()
 	// retry timeout
 	//
 
-	if( tunnel->close || ( retry > 8 ) )
+	if( tunnel->close || ( retry > 6 ) )
 	{
 		tunnel->close = XCH_FAILED_DHCPCONFIG;
 		tunnel->dec( true );

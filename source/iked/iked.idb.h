@@ -257,7 +257,7 @@ typedef class _ITH_EVENT_TUNDHCP : public ITH_EVENT
 
 	time_t	lease;
 	time_t	renew;
-	time_t	retry;
+	long	retry;
 
 	bool	func();
 
@@ -441,6 +441,8 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 	//
 
 	uint32_t	dhcp_xid;
+	uint8_t		dhcp_hwtype;
+	uint8_t		dhcp_hwaddr[ 5 ];
 	SOCKET		dhcp_sock;
 
 	ITH_EVENT_TUNDHCP	event_dhcp;
