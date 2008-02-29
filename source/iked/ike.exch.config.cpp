@@ -1541,6 +1541,61 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 	}
 
 	//
+	// non cisco unity attributes
+	//
+
+	if( !vendopts.flag.unity )
+	{
+		if( setmask & IPSEC_OPTS_SPLITNET )
+		{
+			if( nullmask & IPSEC_OPTS_SPLITNET )
+			{
+				cfg->attr_add_v( INTERNAL_IP4_SUBNET, NULL, 0 );
+
+				log.txt( LLOG_DEBUG,
+					"ii : - IP4 Subnet\n" );
+			}
+			else
+			{
+				IKE_PH2ID ph2id;
+
+				long index = 0;
+
+				while( cfg->tunnel->idlist_incl.get( ph2id, index++ ) )
+				{
+					IKE_SUBNET subnet;
+					memset( &subnet, 0, sizeof( subnet ) );
+
+					subnet.addr = ph2id.addr1;
+					subnet.mask = ph2id.addr2;
+
+					cfg->attr_add_v( INTERNAL_IP4_SUBNET,
+						&subnet,
+						sizeof( subnet ) );
+
+					char txtid[ LIBIKE_MAX_TEXTP2ID ];
+					text_ph2id( txtid, &ph2id );
+
+					log.txt( LLOG_DEBUG,
+						"ii : - IP4 Subnet = %s\n",
+						txtid );
+
+					//
+					// we need to perform special
+					// operations if we instruct
+					// our peer to force all via
+					// this tunnel
+					//
+
+					if( !subnet.addr.s_addr &&
+						!subnet.mask.s_addr )
+						cfg->tunnel->force_all = true;
+				}
+			}
+		}
+	}
+
+	//
 	// cisco unity attributes
 	//
 
@@ -1964,6 +2019,71 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 
 			default:
 				unhandled = true;
+		}
+
+		//
+		// non cisco unity attributes
+		//
+
+		if( !vendopts.flag.unity && unhandled )
+		{
+			unhandled = false;
+	
+			switch( attr->atype )
+			{
+				case INTERNAL_IP4_SUBNET:
+				{
+					getmask |= IPSEC_OPTS_SPLITNET;
+
+					if( ( readmask & IPSEC_OPTS_SPLITNET ) && attr->vdata.size() )
+					{
+						int net_count = int( attr->vdata.size() / sizeof( IKE_SUBNET ) );
+						int net_index = 0;
+
+						for( ; net_index < net_count; net_index++ )
+						{
+							long offset = sizeof( IKE_SUBNET ) * net_index;
+							IKE_SUBNET * subnet = ( IKE_SUBNET * ) ( attr->vdata.buff() + offset );
+
+							IKE_PH2ID ph2id;
+							memset( &ph2id, 0, sizeof( ph2id ) );
+
+							ph2id.type = ISAKMP_ID_IPV4_ADDR_SUBNET;
+							ph2id.addr1 = subnet->addr;
+							ph2id.addr2 = subnet->mask;
+
+							char txtid[ LIBIKE_MAX_TEXTP2ID ];
+							text_ph2id( txtid, &ph2id );
+
+							log.txt( LLOG_DEBUG,
+								"ii : - IP4 Subnet = %s\n",
+								txtid );
+
+							if( readmask & IPSEC_OPTS_SPLITNET )
+								cfg->tunnel->idlist_incl.add( ph2id );
+
+							//
+							// we need to perform special
+							// operations if we force all
+							// taffic via this tunnel
+							//
+
+							if( !subnet->addr.s_addr &&
+								!subnet->mask.s_addr )
+								cfg->tunnel->force_all = true;
+						}
+					}
+					else
+					{
+						log.txt( LLOG_DEBUG, "ii : - IP4 Subnet\n" );
+					}
+
+					break;
+				}
+
+				default:
+					unhandled = true;
+			}
 		}
 
 		//

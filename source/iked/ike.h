@@ -672,6 +672,13 @@ typedef struct _IKE_FRAG : public IDB_ENTRY
 
 #pragma pack( 1 )
 
+typedef struct _IKE_SUBNET
+{
+	in_addr addr;
+	in_addr mask;
+
+}IKE_SUBNET;
+
 typedef struct _IKE_UNITY_NET
 {
 	in_addr addr;
