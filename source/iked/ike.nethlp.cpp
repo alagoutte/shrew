@@ -45,6 +45,67 @@
 // general network helper functions
 //
 
+void _IKED::text_prot( char * text, int prot )
+{
+	static char * prot_00 = "ANY";
+	static char * prot_01 = "ICMP";
+	static char * prot_04 = "IPIP";
+	static char * prot_06 = "TCP";
+	static char * prot_17 = "UDP";
+	static char * prot_47 = "GRE";
+	static char * prot_50 = "ESP";
+	static char * prot_51 = "AH";
+
+	char * temp = NULL;
+
+	switch( prot )
+	{
+		case 0:
+			temp = prot_00;
+			break;
+
+		case 1:
+			temp = prot_01;
+			break;
+
+		case 4:
+			temp = prot_04;
+			break;
+
+		case 6:
+			temp = prot_06;
+			break;
+
+		case 17:
+			temp = prot_17;
+			break;
+
+		case 47:
+			temp = prot_47;
+			break;
+
+		case 50:
+			temp = prot_50;
+			break;
+
+		case 51:
+			temp = prot_51;
+			break;
+	}
+
+	if( temp != NULL )
+		strcpy_s(
+			text,
+			LIBIKE_MAX_TEXTPROT,
+			temp );
+	else
+		sprintf_s(
+			text,
+			LIBIKE_MAX_TEXTPROT,
+			"%i",
+			prot );
+}
+
 void _IKED::text_addr( char * text, in_addr & addr )
 {
 	unsigned long haddr = ntohl( addr.s_addr );
@@ -76,6 +137,21 @@ void _IKED::text_mask( char * text, in_addr & addr )
 		LIBIKE_MAX_TEXTADDR,
 		"%lu",
 		bits );
+}
+
+void _IKED::text_port( char * text, int port )
+{
+	if( !port )
+		strcpy_s(
+			text,
+			LIBIKE_MAX_TEXTPORT,
+			"*" );
+	else
+		sprintf_s(
+			text,
+			LIBIKE_MAX_TEXTPORT,
+			"%i",
+			ntohs( port ) );
 }
 
 void _IKED::text_addr( char * text, sockaddr * saddr, bool port )
@@ -235,48 +311,62 @@ void _IKED::text_ph1id( char * text, IKE_PH1ID * ph1id )
 
 void _IKED::text_ph2id( char * text, IKE_PH2ID * ph2id )
 {
+	char txtprot[ LIBIKE_MAX_TEXTPROT ];
 	char txtaddr1[ LIBIKE_MAX_TEXTADDR ];
 	char txtaddr2[ LIBIKE_MAX_TEXTADDR ];
+	char txtport[ LIBIKE_MAX_TEXTPORT ];
 
 	switch( ph2id->type )
 	{
 		case ISAKMP_ID_IPV4_ADDR:
 
+			text_prot( txtprot, ph2id->prot );
 			text_addr( txtaddr1, ph2id->addr1 );
+			text_port( txtport, ph2id->port );
 
 			sprintf_s(
 				text,
 				LIBIKE_MAX_TEXTP2ID,
-				"%s",
-				txtaddr1 );
+				"%s:%s:%s",
+				txtprot,
+				txtaddr1,
+				txtport );
 
 			break;
 
 		case ISAKMP_ID_IPV4_ADDR_SUBNET:
 
+			text_prot( txtprot, ph2id->prot );
 			text_addr( txtaddr1, ph2id->addr1 );
 			text_mask( txtaddr2, ph2id->addr2 );
+			text_port( txtport, ph2id->port );
 
 			sprintf_s(
 				text,
 				LIBIKE_MAX_TEXTP2ID,
-				"%s/%s",
+				"%s:%s/%s:%s",
+				txtprot,
 				txtaddr1,
-				txtaddr2 );
+				txtaddr2,
+				txtport );
 
 			break;
 
 		case ISAKMP_ID_IPV4_ADDR_RANGE:
 
+			text_prot( txtprot, ph2id->prot );
 			text_addr( txtaddr1, ph2id->addr1 );
 			text_addr( txtaddr2, ph2id->addr2 );
+			text_port( txtport, ph2id->port );
 
 			sprintf_s(
 				text,
 				LIBIKE_MAX_TEXTP2ID,
-				"%s-%s",
+				"%s:%s-%s:%s",
+				txtprot,
 				txtaddr1,
-				txtaddr2 );
+				txtaddr2,
+				txtport );
 
 			break;
 

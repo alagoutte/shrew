@@ -195,9 +195,11 @@ YY_DECL;
 #define LIBIKE_IKE_PORT			500		// default isakmp port
 #define LIBIKE_NATT_PORT		4500	// default nat-t port
 
+#define LIBIKE_MAX_TEXTPROT		5		// max text protocol length
 #define LIBIKE_MAX_TEXTADDR		24		// max text address length
+#define LIBIKE_MAX_TEXTPORT		6		// max text port length
 #define LIBIKE_MAX_TEXTP1ID		256		// max text phase1 id length
-#define LIBIKE_MAX_TEXTP2ID		50		// max text phase2 id length
+#define LIBIKE_MAX_TEXTP2ID		64		// max text phase2 id length
 #define LIBIKE_MAX_TEXTSPI		64		// max text phase2 id length
 #define LIBIKE_MAX_VARID		512		// max variable id length
 #define LIBIKE_MAX_DHGRP		512		// max dh group size
@@ -508,8 +510,10 @@ typedef class _IKED
 
 #endif
 
+	void	text_prot( char * text, int prot );
 	void	text_addr( char * text, in_addr & addr );
 	void	text_mask( char * text, in_addr & addr );
+	void	text_port( char * text, int port );
 	void	text_addr( char * text, sockaddr * saddr, bool port );
 	void	text_addr( char * text, IKE_SADDR * iaddr, bool port );
 	void	text_addr( char * text, PFKI_ADDR * paddr, bool port, bool netmask );

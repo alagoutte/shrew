@@ -681,9 +681,12 @@ typedef struct _IKE_SUBNET
 
 typedef struct _IKE_UNITY_NET
 {
-	in_addr addr;
-	in_addr mask;
-	char	padd[ 6 ];
+	in_addr		addr;
+	in_addr		mask;
+	uint8_t		prot;
+	uint8_t		pad;
+	uint16_t	port_loc;
+	uint16_t	port_rmt;
 
 }IKE_UNITY_NET;
 

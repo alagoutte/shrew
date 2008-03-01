@@ -429,8 +429,8 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		cpy_sockaddr( tunnel->saddr_l.saddr, spinfo.xforms[ 0 ].saddr_dst, false );
 	}
 
-	text_addr( txtid_src, &spinfo.paddr_src, false, true );
-	text_addr( txtid_dst, &spinfo.paddr_dst, false, true );
+	text_ph2id( txtid_src, &id2 );
+	text_ph2id( txtid_dst, &id1 );
 
 	log.txt( LLOG_INFO, 
 		"ii : creating %s %s policy %s -> %s\n",
@@ -484,8 +484,8 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		cpy_sockaddr( tunnel->saddr_r.saddr, spinfo.xforms[ 0 ].saddr_dst, false );
 	}
 
-	text_addr( txtid_src, &spinfo.paddr_src, false, true );
-	text_addr( txtid_dst, &spinfo.paddr_dst, false, true );
+	text_ph2id( txtid_src, &id1 );
+	text_ph2id( txtid_dst, &id2 );
 
 	log.txt( LLOG_INFO, 
 		"ii : creating %s %s policy %s -> %s\n",
@@ -493,6 +493,8 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		pfki.name( NAME_SPDIR, spinfo.sp.dir ),
 		txtid_src,
 		txtid_dst );
+
+	text_addr( txtid_dst, &spinfo.paddr_dst, false, true );
 
 	//
 	// create an outbound policy object
@@ -639,8 +641,8 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 			&id2,
 			&id1 ) )
 	{
-		text_addr( txtid_src, &policy->paddr_src, false, true );
-		text_addr( txtid_dst, &policy->paddr_dst, false, true );
+		text_ph2id( txtid_src, &id2 );
+		text_ph2id( txtid_dst, &id1 );
 
 		log.txt( LLOG_INFO, 
 			"ii : removing %s %s policy %s -> %s\n",
@@ -681,8 +683,8 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	{
 		policy_route = policy->route;
 
-		text_addr( txtid_src, &policy->paddr_src, false, true );
-		text_addr( txtid_dst, &policy->paddr_dst, false, true );
+		text_ph2id( txtid_src, &id1 );
+		text_ph2id( txtid_dst, &id2 );
 
 		log.txt( LLOG_INFO, 
 			"ii : removing %s %s policy %s -> %s\n",
@@ -690,6 +692,8 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 			pfki.name( NAME_SPDIR, policy->sp.dir ),
 			txtid_src,
 			txtid_dst );
+
+		text_addr( txtid_dst, &policy->paddr_dst, false, true );
 
 		pfkey_send_spdel( policy );
 

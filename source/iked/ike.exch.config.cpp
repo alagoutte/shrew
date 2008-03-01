@@ -1672,8 +1672,10 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 					IKE_UNITY_NET unity_net;
 					memset( &unity_net, 0, sizeof( unity_net ) );
 
+					unity_net.prot = ph2id.prot;
 					unity_net.addr = ph2id.addr1;
 					unity_net.mask = ph2id.addr2;
+					unity_net.port_rmt = ph2id.port;
 
 					cfg->attr_add_v( UNITY_SPLIT_INCLUDE,
 						&unity_net,
@@ -2181,9 +2183,11 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 							IKE_PH2ID ph2id;
 							memset( &ph2id, 0, sizeof( ph2id ) );
 
+							ph2id.prot = unity_net->prot;
 							ph2id.type = ISAKMP_ID_IPV4_ADDR_SUBNET;
 							ph2id.addr1 = unity_net->addr;
 							ph2id.addr2 = unity_net->mask;
+							ph2id.port = unity_net->port_rmt;
 
 							char txtid[ LIBIKE_MAX_TEXTP2ID ];
 							text_ph2id( txtid, &ph2id );
