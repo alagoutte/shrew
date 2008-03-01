@@ -369,9 +369,10 @@ bool _IKED::policy_dhcp_create( IDB_TUNNEL * tunnel )
 
 	IKE_PH2ID dst;
 	memset( &dst, 0, sizeof( dst ) );
-	dst.type = ISAKMP_ID_IPV4_ADDR_SUBNET;
+	dst.type = ISAKMP_ID_IPV4_ADDR;
 	dst.prot = PROTO_IP_UDP;
 	dst.port = htons( UDP_PORT_DHCPS );
+	dst.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
 	return policy_create( tunnel, IPSEC_POLICY_IPSEC, src, dst, false );
 }
@@ -393,9 +394,10 @@ bool _IKED::policy_dhcp_remove( IDB_TUNNEL * tunnel )
 
 	IKE_PH2ID dst;
 	memset( &dst, 0, sizeof( dst ) );
-	dst.type = ISAKMP_ID_IPV4_ADDR_SUBNET;
+	dst.type = ISAKMP_ID_IPV4_ADDR;
 	dst.prot = PROTO_IP_UDP;
 	dst.port = htons( UDP_PORT_DHCPS );
+	dst.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
 	return policy_remove( tunnel, IPSEC_POLICY_IPSEC, src, dst, false );
 }
