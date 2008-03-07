@@ -68,9 +68,7 @@ long _IKED::loop_ike_pfkey()
 		//
 
 		PFKI_MSG msg;
-
 		long result = pfki.next_msg( msg );
-
 		if( result == PFKI_NODATA )
 			continue;
 

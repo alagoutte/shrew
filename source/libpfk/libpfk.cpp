@@ -245,7 +245,6 @@ _PFKI::~_PFKI()
 	olapp.hEvent = NULL;
 
 	detach();
-
 }
 
 void CALLBACK msg_end( DWORD result, DWORD size, LPOVERLAPPED overlapped )
@@ -256,13 +255,6 @@ long _PFKI::wait_msg()
 {
 	if( !wait )
 	{
-		//
-		// begin an overlapped read operation.
-		// if successful, set wait to true so
-		// we remember that the operation is
-		// in progress
-		//
-
 		memset( &tmsg, 0, sizeof( tmsg ) );
 
 		if( ReadFileEx( hpipe, &tmsg, sizeof( tmsg ), &olapp, &msg_end ) )
@@ -270,17 +262,11 @@ long _PFKI::wait_msg()
 		else
 		{
 			long result = GetLastError();
-
 			if( ( result == ERROR_INVALID_HANDLE ) ||
 				( result == ERROR_BROKEN_PIPE ) )
 				return PFKI_FAILED;
 		}
 	}
-
-	//
-	// wait for our overlapped read
-	// operation to complete.
-	//
 
 	if( !SleepEx( 10, true ) )
 		return PFKI_NODATA;

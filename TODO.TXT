@@ -201,6 +201,7 @@ X Add checks for illegal site configuration names
 X Add site name and file conflict resolution dialogs
 X Fix any differences between unix and windows site configuration
 . Fix MS dnscache problems the right way
+. Fix windows pfkey message processing latency
 x Validate and document support for Cisco ASA gateways
 x Validate and document support for Juniper SSG gateways
 x Validate and document support for Fortigate gateways

@@ -621,6 +621,7 @@ typedef struct _IKE_NSCFG
 
 	in_addr		dnss_list[ IPSEC_DNSS_MAX ];	// dns server list
 	uint32_t	dnss_count;						// dns server count
+	uint32_t	dnss_nodyn;						// dns dynamic update disabled
 
 	in_addr		nbns_list[ IPSEC_NBNS_MAX ];	// wins server list
 	uint32_t	nbns_count;						// wins server count
