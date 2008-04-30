@@ -42,7 +42,7 @@
 #ifndef _IKE_H_
 #define _IKE_H_
 
-#include "idb.h"
+#include "libidb.h"
 
 #define CONF_STRLEN					256
 

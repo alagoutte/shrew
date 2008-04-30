@@ -41,100 +41,9 @@
 
 #include "libith.h"
 
-//
-// thread execution class
-//
-
-typedef struct _ITH_PARAM
-{
-	ITH_EXEC *	exec;
-	void *		arg;
-
-}ITH_PARAM;
-
-_ITH_EXEC::_ITH_EXEC()
-{
-}
-
-#ifdef WIN32
-
-unsigned long __stdcall help( void * arg )
-{
-	ITH_PARAM * param = ( ITH_PARAM * ) arg;
-
-	long result = param->exec->func( param->arg );
-
-	delete param;
-
-	return result;
-}
-
-bool _ITH_EXEC::exec( void * arg )
-{
-	ITH_PARAM * param = new ITH_PARAM;
-	if( param == NULL )
-		return false;
-
-	param->exec = this;
-	param->arg = arg;
-
-	DWORD tid;
-
-	CreateThread(
-		NULL,
-		0,
-		help,
-		param,
-		0,
-		&tid );
-
-	return true;
-}
-
-#endif
-
-#ifdef UNIX
-
-void * help( void * arg )
-{
-	ITH_PARAM * param = ( ITH_PARAM * ) arg;
-
-	sigset_t signal_mask;
-	sigemptyset( &signal_mask );
-	sigaddset( &signal_mask, SIGINT );
-	sigaddset( &signal_mask, SIGTERM );
-	pthread_sigmask( SIG_BLOCK, &signal_mask, NULL );
-
-	param->exec->func( param->arg );
-
-	delete param;
-
-	return NULL;
-}
-
-bool _ITH_EXEC::exec( void * arg )
-{
-	ITH_PARAM * param = new ITH_PARAM;
-	if( param == NULL )
-		return false;
-
-	param->exec = this;
-	param->arg = arg;
-
-	pthread_create(
-		&thread,
-		NULL,
-		&help,
-		param );
-
-	return true;
-}
-
-#endif
-
-//
+//==============================================================================
 // mutex lock class
-//
+//==============================================================================
 
 #ifdef WIN32
 
@@ -267,9 +176,100 @@ bool _ITH_LOCK::unlock()
 
 #endif
 
-//
-// execution timer class
-//
+//==============================================================================
+// thread execution class
+//==============================================================================
+
+typedef struct _ITH_PARAM
+{
+	ITH_EXEC *	exec;
+	void *		arg;
+
+}ITH_PARAM;
+
+_ITH_EXEC::_ITH_EXEC()
+{
+}
+
+#ifdef WIN32
+
+unsigned long __stdcall help( void * arg )
+{
+	ITH_PARAM * param = ( ITH_PARAM * ) arg;
+
+	long result = param->exec->func( param->arg );
+
+	delete param;
+
+	return result;
+}
+
+bool _ITH_EXEC::exec( void * arg )
+{
+	ITH_PARAM * param = new ITH_PARAM;
+	if( param == NULL )
+		return false;
+
+	param->exec = this;
+	param->arg = arg;
+
+	DWORD tid;
+
+	CreateThread(
+		NULL,
+		0,
+		help,
+		param,
+		0,
+		&tid );
+
+	return true;
+}
+
+#endif
+
+#ifdef UNIX
+
+void * help( void * arg )
+{
+	ITH_PARAM * param = ( ITH_PARAM * ) arg;
+
+	sigset_t signal_mask;
+	sigemptyset( &signal_mask );
+	sigaddset( &signal_mask, SIGINT );
+	sigaddset( &signal_mask, SIGTERM );
+	pthread_sigmask( SIG_BLOCK, &signal_mask, NULL );
+
+	param->exec->func( param->arg );
+
+	delete param;
+
+	return NULL;
+}
+
+bool _ITH_EXEC::exec( void * arg )
+{
+	ITH_PARAM * param = new ITH_PARAM;
+	if( param == NULL )
+		return false;
+
+	param->exec = this;
+	param->arg = arg;
+
+	pthread_create(
+		&thread,
+		NULL,
+		&help,
+		param );
+
+	return true;
+}
+
+#endif
+
+//==============================================================================
+// event execution timer classes
+//==============================================================================
 
 _ITH_TIMER::_ITH_TIMER()
 {
@@ -517,3 +517,326 @@ bool _ITH_TIMER::del( ITH_EVENT * event )
 
 	return ( next != NULL );
 }
+
+//==============================================================================
+// inter process communication classes
+//==============================================================================
+
+//
+// inter process communication client
+//
+
+#ifdef WIN32
+
+_ITH_IPCC::_ITH_IPCC()
+{
+	conn = INVALID_HANDLE_VALUE;
+	hmutex = NULL;
+	hevent = NULL;
+}
+
+_ITH_IPCC::~_ITH_IPCC()
+{
+	detach();
+}
+
+long _ITH_IPCC::io_recv( void * data, size_t & size, long timeout )
+{
+	OVERLAPPED olapp;
+	memset( &olapp, 0, sizeof( olapp ) );
+	olapp.hEvent = hevent;
+
+	WaitForSingleObject( hmutex, INFINITE );
+
+	DWORD dwsize = ( DWORD ) size;
+	long result = ReadFile( conn, data, dwsize, &dwsize, &olapp );
+
+	if( !result && ( GetLastError() == ERROR_IO_PENDING ) )
+	{
+		result = WaitForSingleObject(
+					hevent,
+					timeout );
+
+		if( result == WAIT_TIMEOUT )
+		{
+			CancelIo( conn );
+			ReleaseMutex( hmutex );
+			return IPCERR_NODATA;
+		}
+
+		result = GetOverlappedResult(
+					conn,
+					&olapp,
+					&dwsize,
+					true );
+	}
+
+	size = dwsize;
+
+	if( !result )
+	{
+		result = GetLastError();
+		switch( result )
+		{
+			case ERROR_NO_DATA:
+				ReleaseMutex( hmutex );
+				return IPCERR_NODATA;
+
+			case ERROR_MORE_DATA:
+				ReleaseMutex( hmutex );
+				return IPCERR_BUFFER;
+
+			case ERROR_BROKEN_PIPE:
+				conn = INVALID_HANDLE_VALUE;
+				ReleaseMutex( hmutex );
+				return IPCERR_CLOSED;
+		}
+	}
+
+	ReleaseMutex( hmutex );
+	return IPCERR_OK;
+}
+
+long _ITH_IPCC::io_send( void * data, size_t & size )
+{
+	OVERLAPPED olapp;
+	memset( &olapp, 0, sizeof( olapp ) );
+	olapp.hEvent = hevent;
+
+	WaitForSingleObject( hmutex, INFINITE );
+
+	DWORD dwsize = ( DWORD ) size;
+	long result = WriteFile( conn, data, dwsize, &dwsize, &olapp );
+
+	if( !result && ( GetLastError() == ERROR_IO_PENDING ) )
+	{
+		result = GetOverlappedResult(
+					conn,
+					&olapp,
+					&dwsize,
+					true );
+	}
+
+	size = dwsize;
+
+	if( !result )
+	{
+		switch( GetLastError() )
+		{
+			case ERROR_MORE_DATA:
+				ReleaseMutex( hmutex );
+				return IPCERR_BUFFER;
+
+			case ERROR_BROKEN_PIPE:
+				conn = INVALID_HANDLE_VALUE;
+				ReleaseMutex( hmutex );
+				return IPCERR_CLOSED;
+		}
+	}
+
+	ReleaseMutex( hmutex );
+	return IPCERR_OK;
+}
+
+bool _ITH_IPCC::attach( char * path, long timeout )
+{
+	if( !WaitNamedPipe( path, timeout ) )
+		return false;
+
+	conn = CreateFile(
+				path,
+				GENERIC_READ | GENERIC_WRITE,
+				FILE_SHARE_READ | FILE_SHARE_WRITE,
+				NULL,
+				OPEN_EXISTING,
+				FILE_FLAG_OVERLAPPED,
+				NULL );
+
+	if( conn == INVALID_HANDLE_VALUE )
+		return false;
+
+	hmutex = CreateMutex( NULL, false, NULL );
+
+	if( hmutex == NULL )
+		return false;
+
+	hevent = CreateEvent( NULL, true, false, NULL );
+
+	if( hevent == NULL )
+		return false;
+
+	return true;
+}
+
+void _ITH_IPCC::detach()
+{
+	if( hevent != NULL )
+	{
+		CloseHandle( hevent );
+		hevent = NULL;
+	}
+
+	if( hmutex != NULL )
+	{
+		CloseHandle( hmutex );
+		hmutex = NULL;
+	}
+
+	if( conn != INVALID_HANDLE_VALUE )
+	{
+		CloseHandle( conn );
+		conn = INVALID_HANDLE_VALUE;
+	}
+}
+
+//
+// inter process communication server
+//
+
+_ITH_IPCS::_ITH_IPCS()
+{
+	conn	= INVALID_HANDLE_VALUE;
+	sid		= NULL;
+	acl		= NULL;
+	psa		= NULL;
+}
+
+_ITH_IPCS::~_ITH_IPCS()
+{
+	if( acl != NULL )
+		LocalFree( acl );
+
+	if( sid != NULL )
+		FreeSid( sid );
+
+	if( conn != INVALID_HANDLE_VALUE )
+		CloseHandle( conn );
+
+	conn = INVALID_HANDLE_VALUE;
+}
+
+bool _ITH_IPCS::init( char * path, bool admin )
+{
+	// create the well-known world sid
+
+	SID_IDENTIFIER_AUTHORITY basesid = SECURITY_NT_AUTHORITY;
+
+	if( admin )
+	{
+		// domain admin sid
+
+		if( !AllocateAndInitializeSid(
+				&basesid,
+				1,
+				SECURITY_BUILTIN_DOMAIN_RID,
+				DOMAIN_ALIAS_RID_ADMINS,
+				0, 0, 0, 0, 0, 0,
+				&sid ) )
+			return false;
+	}
+	else
+	{
+		// domain user sid
+
+		if( !AllocateAndInitializeSid(
+				&basesid,
+				1,
+				SECURITY_WORLD_RID,
+				0,
+				0, 0, 0, 0, 0, 0,
+				&sid ) )
+			return false;
+	}
+
+	// initialize the explicit access info
+
+	memset( &ea, sizeof( ea ), 0 );
+	ea.grfAccessPermissions = KEY_READ | KEY_WRITE;
+	ea.grfAccessMode = SET_ACCESS;
+	ea.grfInheritance= NO_INHERITANCE;
+	ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+	ea.Trustee.ptstrName  = ( LPTSTR ) sid;
+
+	if( admin )
+		ea.Trustee.TrusteeType = TRUSTEE_IS_GROUP;
+	else
+		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+
+	// create a new ACL that contains the new ACEs.
+
+	if( SetEntriesInAcl( 1, &ea, NULL, &acl ) != ERROR_SUCCESS )
+		return false;
+
+	// Initialize a security descriptor
+
+	if( !InitializeSecurityDescriptor( &sd, SECURITY_DESCRIPTOR_REVISION ) ) 
+		return false;
+ 
+	// Add the ACL to the security descriptor.
+
+	if( !SetSecurityDescriptorDacl(
+			&sd,
+			TRUE,		// bDaclPresent flag
+			acl,
+			FALSE ) )	// not a default DACL
+		return false;
+
+	// Initialize a security attributes structure.
+
+	sa.nLength = sizeof ( SECURITY_ATTRIBUTES );
+	sa.lpSecurityDescriptor = &sd;
+	sa.bInheritHandle = FALSE;
+
+	conn = CreateNamedPipe(
+			path,
+			FILE_FLAG_FIRST_PIPE_INSTANCE |
+			FILE_FLAG_OVERLAPPED |
+			PIPE_ACCESS_DUPLEX,
+		    PIPE_TYPE_MESSAGE |
+			PIPE_READMODE_MESSAGE |
+			PIPE_NOWAIT,
+			PIPE_UNLIMITED_INSTANCES,
+			8192,
+			8192,
+		    10,
+			&sa );
+
+	if( conn == INVALID_HANDLE_VALUE )
+		return false;
+
+	return true;
+}
+
+bool _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
+{
+	if( conn == INVALID_HANDLE_VALUE )
+		conn = CreateNamedPipe(
+				path,
+				FILE_FLAG_OVERLAPPED |
+				PIPE_ACCESS_DUPLEX,
+				PIPE_TYPE_MESSAGE |
+				PIPE_READMODE_MESSAGE |
+				PIPE_NOWAIT,
+				PIPE_UNLIMITED_INSTANCES,
+				8192,
+				8192,
+				10,
+				&sa );
+
+	ipcconn = INVALID_HANDLE_VALUE;
+
+	if( ConnectNamedPipe( conn, NULL ) )
+		ipcconn = conn;
+	else
+		if( GetLastError() == ERROR_PIPE_CONNECTED )
+			ipcconn = conn;
+
+	if( ipcconn == INVALID_HANDLE_VALUE )
+		return false;
+
+	conn = INVALID_HANDLE_VALUE;
+
+	return true;
+}
+
+#endif

@@ -45,6 +45,7 @@
 #ifdef WIN32
 # include <windows.h>
 # include <assert.h>
+# include <aclapi.h>
 #endif
 
 #ifdef UNIX
@@ -91,31 +92,9 @@ typedef timeval ITH_TIMEVAL;
 
 #endif
 
-//
-// thread execution class
-//
-
-typedef class DLX _ITH_EXEC
-{
-
-#ifdef UNIX
-
-	pthread_t thread;
-
-#endif
-
-	public:
-
-	_ITH_EXEC();
-
-	bool			exec( void * arg );
-	virtual long	func( void * arg ) = 0;
-
-}ITH_EXEC;
-
-//
+//==============================================================================
 // mutex lock class
-//
+//==============================================================================
 
 typedef class DLX _ITH_LOCK
 {
@@ -149,9 +128,31 @@ typedef class DLX _ITH_LOCK
 
 }ITH_LOCK;
 
-//
-// execution event class
-//
+//==============================================================================
+// thread execution class
+//==============================================================================
+
+typedef class DLX _ITH_EXEC
+{
+
+#ifdef UNIX
+
+	pthread_t thread;
+
+#endif
+
+	public:
+
+	_ITH_EXEC();
+
+	bool			exec( void * arg );
+	virtual long	func( void * arg ) = 0;
+
+}ITH_EXEC;
+
+//==============================================================================
+// event execution timer classes
+//==============================================================================
 
 typedef class DLX _ITH_EVENT
 {
@@ -162,10 +163,6 @@ typedef class DLX _ITH_EVENT
 	virtual	bool func() = 0;
 
 }ITH_EVENT;
-
-//
-// execution timer class
-//
 
 typedef struct _ITH_ENRTY
 {
@@ -205,5 +202,90 @@ typedef class DLX _ITH_TIMER : public _ITH_EXEC
 	bool	del( ITH_EVENT * event );
 
 }ITH_TIMER;
+
+//==============================================================================
+// inter process communication classes
+//==============================================================================
+
+#ifdef WIN32
+
+#define IPCCONN			HANDLE
+
+#endif
+
+#ifdef UNIX
+
+#define IPCCONN			int
+
+#endif
+
+#define IPCTYPE_SYSIPC	1
+#define IPCTYPE_SOCKET	2
+
+#define IPCERR_OK		1
+#define IPCERR_FAILED	2
+#define IPCERR_BUFFER	3
+#define IPCERR_CLOSED	4
+#define IPCERR_NODATA	5
+
+typedef class DLX _ITH_IPCC
+{
+	private:
+
+#ifdef WIN32
+
+	HANDLE		hmutex;
+	HANDLE		hevent;
+
+#endif
+
+	protected:
+
+	IPCCONN		conn;
+
+	long	io_recv( void * data, size_t & size, long timeout );
+	long	io_send( void * data, size_t & size );
+
+	public:
+
+	_ITH_IPCC();
+	~_ITH_IPCC();
+
+	bool	attach( char * path, long timeout );
+	void	detach();
+
+}ITH_IPCC;
+
+typedef class DLX _ITH_IPCS
+{
+	private:
+
+#ifdef WIN32
+
+	PSID		sid;
+	PACL		acl;
+
+	EXPLICIT_ACCESS			ea;
+	SECURITY_DESCRIPTOR		sd;
+	SECURITY_ATTRIBUTES		sa;
+	PSECURITY_ATTRIBUTES	psa;
+
+#endif
+
+	protected:
+
+	IPCCONN		conn;
+
+	public:
+
+	_ITH_IPCS();
+	~_ITH_IPCS();
+
+	bool	init( char * path, bool admin );
+	void	done();
+
+	bool	inbound( char * path, IPCCONN & ipcconn );
+
+}ITH_IPCS;
 
 #endif

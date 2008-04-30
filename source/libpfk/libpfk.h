@@ -81,7 +81,7 @@
 # endif
 #endif
 
-#include "idb.h"
+#include "libidb.h"
 
 //
 // Win32 specific

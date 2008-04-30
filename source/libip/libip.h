@@ -77,7 +77,7 @@
 #include <time.h>
 #include <assert.h>
 #include "export.h"
-#include "idb.h"
+#include "libidb.h"
 
 #define MEDIA_ETHERNET			0x0001
 
