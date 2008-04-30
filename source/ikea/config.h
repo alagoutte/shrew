@@ -42,7 +42,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#include "idb.h"
+#include "libidb.h"
 
 #define MAX_CONFSTRING	256
 

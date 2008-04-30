@@ -15,7 +15,7 @@ include_directories(
 
 add_library(
 	idb
-	idb.cpp
+	libidb.cpp
 	base64.cpp )
 
 set_target_properties(
