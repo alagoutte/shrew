@@ -41,147 +41,269 @@
 
 #include "libike.h"
 
-#define	MAX_BASIC_MSG	sizeof( IKEI_MSG_BASIC ) + IKEI_MAX_BDATA
-
-#ifdef WIN32
-
-_IKEI::_IKEI()
+void _IKEI_MSG::init( long type )
 {
-	hpipe = INVALID_HANDLE_VALUE;
-	memset( &olapp, 0, sizeof( olapp ) );
-	wait = false;
+	del();
+	header.type = type;
 }
 
-_IKEI::~_IKEI()
+long _IKEI_MSG::get_basic( long * value, BDATA * bdata )
 {
-	if( olapp.hEvent != NULL )
-		CloseHandle( olapp.hEvent );
+	IKEI_BASIC basic;
+	if( !get( &basic, sizeof( basic ) ) )
+		return IPCERR_FAILED;
 
-	detach();
+	if( value != NULL )
+		*value = basic.value;
+
+	if( bdata != NULL )
+		if( !get( *bdata, basic.bsize ) )
+			return IPCERR_FAILED;
+
+	return IPCERR_OK;
 }
 
-long _IKEI::attach( long timeout )
+long _IKEI_MSG::set_basic( long value, BDATA * bdata )
 {
-	if( !WaitNamedPipe( IKEI_PIPE_NAME, timeout ) )
-		return IKEI_FAILED;
+	IKEI_BASIC basic;
+	basic.value = value;
 
-	hpipe = CreateFile(
-				IKEI_PIPE_NAME,
-				GENERIC_READ | GENERIC_WRITE,
-				FILE_SHARE_READ | FILE_SHARE_WRITE,
-				NULL,
-				OPEN_EXISTING,
-				FILE_FLAG_OVERLAPPED,
-				NULL );
+	if( bdata != NULL )
+		basic.bsize = bdata->size();
+	else
+		basic.bsize = 0;
 
-	if( hpipe == INVALID_HANDLE_VALUE )
-		return IKEI_FAILED;
+	if( !add( &basic, sizeof( basic ) ) )
+		return IPCERR_FAILED;
 
-	return IKEI_OK;
+	if( bdata != NULL )
+		if( !add( *bdata ) )
+			return IPCERR_FAILED;
+
+	return IPCERR_OK;
+}
+
+long _IKEI_MSG::get_struct( long * value, void * sdata, size_t ssize )
+{
+	IKEI_BASIC basic;
+	if( !get( &basic, sizeof( basic ) ) )
+		return IPCERR_FAILED;
+
+	if( value != NULL )
+		*value = basic.value;
+
+	if( sdata != NULL )
+		if( !get( sdata, ssize ) )
+			return IPCERR_FAILED;
+
+	return IPCERR_OK;
+}
+
+long _IKEI_MSG::set_struct( long value, void * sdata, size_t ssize )
+{
+	IKEI_BASIC basic;
+	basic.value = value;
+
+	if( sdata != NULL )
+		basic.bsize = ssize;
+	else
+		basic.bsize = 0;
+
+	if( !add( &basic, sizeof( basic ) ) )
+		return IPCERR_FAILED;
+
+	if( sdata != NULL )
+		if( !add( sdata, ssize ) )
+			return IPCERR_FAILED;
+
+	return IPCERR_OK;
+}
+
+long _IKEI_MSG::get_result( long * msgres )
+{
+	return get_basic( msgres );
+}
+
+long _IKEI_MSG::set_result( long msgres )
+{
+	init( IKEI_MSGID_RESULT );
+	return set_basic( msgres );
+}
+
+long _IKEI_MSG::get_status( long * status, BDATA * str )
+{
+	return get_basic( status, str );
+}
+
+long _IKEI_MSG::set_status( long status, BDATA * str )
+{
+	init( IKEI_MSGID_STATUS );
+	return set_basic( status, str );
+}
+
+long _IKEI_MSG::set_status( long status, char * str )
+{
+	BDATA text;
+	text.set( str, strlen( str ) + 1 );
+
+	return set_status( status, &text );
+}
+
+long _IKEI_MSG::get_stats( IKEI_STATS * stats )
+{
+	return get_struct( 0, stats, sizeof( IKEI_STATS ) );
+}
+
+long _IKEI_MSG::set_stats( IKEI_STATS * stats )
+{
+	init( IKEI_MSGID_STATS );
+	return set_struct( 0, stats, sizeof( IKEI_STATS ) );
+}
+
+long _IKEI_MSG::get_enable( long * enable )
+{
+	return get_basic( enable );
+}
+
+long _IKEI_MSG::set_enable( long enable )
+{
+	init( IKEI_MSGID_ENABLE );
+	return set_basic( enable );
+}
+
+long _IKEI_MSG::get_peer( IKE_PEER * peer )
+{
+	return get_struct( 0, peer, sizeof( IKE_PEER ) );
+}
+
+long _IKEI_MSG::set_peer( IKE_PEER * peer )
+{
+	init( IKEI_MSGID_PEER );
+	return set_struct( 0, peer, sizeof( IKE_PEER ) );
+}
+
+long _IKEI_MSG::get_proposal( IKE_PROPOSAL * proposal )
+{
+	return get_struct( 0, proposal, sizeof( IKE_PROPOSAL ) );
+}
+
+long _IKEI_MSG::set_proposal( IKE_PROPOSAL * proposal )
+{
+	init( IKEI_MSGID_PROPOSAL );
+	return set_struct( 0, proposal, sizeof( IKE_PROPOSAL ) );
+}
+
+long _IKEI_MSG::get_client( IKE_XCONF * xconf )
+{
+	return get_struct( 0, xconf, sizeof( IKE_XCONF ) );
+}
+
+long _IKEI_MSG::set_client( IKE_XCONF * xconf )
+{
+	init( IKEI_MSGID_CLIENT );
+	return set_struct( 0, xconf, sizeof( IKE_XCONF ) );
+}
+
+long _IKEI_MSG::get_network( long * type, IKE_PH2ID * ph2id )
+{
+	return get_struct( type, ph2id, sizeof( IKE_PH2ID ) );
+}
+
+long _IKEI_MSG::set_network( long type, IKE_PH2ID * ph2id )
+{
+	init( IKEI_MSGID_NETWORK );
+	return set_struct( type, ph2id, sizeof( IKE_PH2ID ) );
+}
+
+long _IKEI_MSG::get_cfgstr( long * type, BDATA * str )
+{
+	return get_basic( type, str );
+}
+
+long _IKEI_MSG::set_cfgstr( long type, BDATA * str )
+{
+	init( IKEI_MSGID_CFGSTR );
+	return set_basic( type, str );
+}
+
+bool _IKEI::attach( long timeout )
+{
+	return ITH_IPCC::attach( IKEI_PIPE_NAME, timeout );
+}
+
+void _IKEI::wakeup()
+{
+	ITH_IPCC::wakeup();
 }
 
 void _IKEI::detach()
 {
-	if( hpipe != INVALID_HANDLE_VALUE )
-		CloseHandle( hpipe );
-
-	hpipe = INVALID_HANDLE_VALUE;
+	ITH_IPCC::detach();
 }
 
-void CALLBACK msg_end( DWORD result, DWORD size, LPOVERLAPPED overlapped )
+long _IKEI::send_message( IKEI_MSG & msg )
 {
+	msg.header.size = msg.size() + sizeof( msg.header );
+	msg.ins( &msg.header, sizeof( msg.header ) );
+
+	return io_send( msg.buff(), msg.header.size );
 }
 
-long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
+long _IKEI::recv_message( IKEI_MSG & msg )
 {
-	if( !wait )
+	msg.oset( 0 );
+	msg.size( sizeof( IKEI_HEADER ) );
+
+	size_t size = msg.size();
+
+	long result = io_recv( msg.buff(), size );
+
+	if( ( result == IPCERR_OK ) || ( result == IPCERR_BUFFER ) )
 	{
-		//
-		// begin an overlapped read operation.
-		// if successful, set wait to true so
-		// we remember that the operation is
-		// in progress
-		//
+		if( !msg.get( &msg.header, sizeof( IKEI_HEADER ) ) )
+			return IPCERR_FAILED;
 
-		memset( &tmsg, 0, sizeof( tmsg ) );
-
-		if( ReadFileEx( hpipe, &tmsg, sizeof( tmsg ), &olapp, &msg_end ) )
-			wait = true;
-		else
-		{
-			long result = GetLastError();
-
-			if( ( result == ERROR_INVALID_HANDLE ) ||
-				( result == ERROR_BROKEN_PIPE ) )
-				return IKEI_FAILED;
-		}
+		if( msg.header.size > msg.size() )
+			result = IPCERR_BUFFER;
 	}
 
-	//
-	// wait for our overlapped read
-	// operation to complete.
-	//
-
-	if( !SleepEx( timeout, true ) )
-		return IKEI_NODATA;
-
-	wait = false;
-
-	//
-	// copy the message header into
-	// the callers buffer
-	//
-
-	memcpy( &msg, &tmsg, sizeof( tmsg ) );
-
-	return IKEI_OK;
-}
-
-long _IKEI::recv_msg( void * data, size_t & size )
-{
-	//
-	// read the rest of the message
-	//
-
-	memcpy( data, &tmsg, sizeof( tmsg ) );
-
-	unsigned char * buff = ( unsigned char * ) data;
-
-	DWORD dwsize = DWORD( tmsg.size - sizeof( tmsg ) );
-
-	long result = ReadFile( hpipe,
-					buff + sizeof( tmsg ),
-					dwsize,
-					&dwsize,
-					NULL );
-
-	size = dwsize;
-
-	if( !result )
+	if( result == IPCERR_BUFFER )
 	{
-		if( GetLastError() == ERROR_BROKEN_PIPE )
-			return IKEI_FAILED;
+		msg.size( msg.header.size );
+		size = msg.size() - sizeof( IKEI_HEADER );
+
+		result = io_recv( msg.buff() + sizeof( IKEI_HEADER ), size );
 	}
 
-	return IKEI_OK;
+	return result;
 }
 
-long _IKEI::send_msg( void * data, size_t size )
+long _IKEI::send_recv_message( IKEI_MSG & msg )
 {
-	DWORD dwsize = DWORD( size );
+	long result = send_message( msg );
+	if( result != IPCERR_OK )
+		return result;
 
-	long result = WriteFile( hpipe, data, dwsize, &dwsize, &olapp );
-
-	size = dwsize;
-
-	if( !result )
-		if( GetLastError() == ERROR_BROKEN_PIPE )
-			return IKEI_FAILED;
-
-	return IKEI_OK;
+	return recv_message( msg );
 }
 
-#endif
+bool _IKES::init()
+{
+	return ITH_IPCS::init( IKEI_PIPE_NAME, false );
+}
+
+IKEI * _IKES::inbound()
+{
+	IPCCONN ipcconn;
+	if( !ITH_IPCS::inbound( IKEI_PIPE_NAME, ipcconn ) )
+		return NULL;
+
+	IKEI * ikei = new IKEI;
+	if( ikei != NULL )
+		ikei->io_conf( ipcconn );
+
+	return ikei;
+}
 
 #ifdef UNIX
 
@@ -279,325 +401,6 @@ long _IKEI::send_msg( void * data, size_t size )
 
 	return IKEI_OK;
 }
-
-#endif
-
-long _IKEI::recv_basic( long type, long * value, void * bdata, size_t * bsize )
-{
-	char msg_buff[ MAX_BASIC_MSG ];
-
-	IKEI_MSG_BASIC *	msg_head = ( IKEI_MSG_BASIC * ) msg_buff;
-	char *				msg_data = ( char * ) ( msg_buff + sizeof( IKEI_MSG_BASIC ) );
-	size_t				msg_size = MAX_BASIC_MSG;
-
-	long result;
-
-	result = recv_msg( msg_buff, msg_size );
-	if( result != IKEI_OK )
-		return result;
-
-	assert( type == msg_head->msg.type );
-
-	if( value )
-		*value = msg_head->value;
-
-	if( bdata && bsize )
-	{
-		if( *bsize < msg_head->bsize )
-			return IKEI_FAILED;
-
-		memcpy( bdata, msg_data, msg_head->bsize );
-
-		*bsize = msg_head->bsize;
-	}
-
-	return IKEI_OK;
-}
-
-long _IKEI::send_basic( long type, long value, void * bdata, size_t bsize )
-{
-	char msg_buff[ MAX_BASIC_MSG ];
-
-	IKEI_MSG_BASIC *	msg_head = ( IKEI_MSG_BASIC * ) msg_buff;
-	char *				msg_data = ( char * ) ( msg_buff + sizeof( IKEI_MSG_BASIC ) );
-	size_t				msg_size = sizeof( IKEI_MSG_BASIC ) + bsize;
-
-	msg_head->msg.type = type;
-	msg_head->msg.size = msg_size;
-	msg_head->value = value;
-	msg_head->bsize = bsize;
-
-	memcpy( msg_data, bdata, bsize );
-
-	return send_msg( msg_buff, msg_size );
-}
-
-long _IKEI::send_bidir( long type, long value, void * bdata, size_t bsize, long * msgres )
-{
-	long result;
-	
-	result = send_basic( type, value, bdata, bsize );
-	if( result != IKEI_OK )
-		return result;
-
-	result = wait_msg( tmsg, 10000 );
-	if( result != IKEI_OK )
-		return result;
-
-	return recv_basic( IKEI_MSGID_RESULT, msgres, NULL, NULL );
-}
-
-long _IKEI::next_msg( IKEI_MSG & msg )
-{
-	memset( &msg, 0, sizeof( msg ) );
-
-	return wait_msg( msg, 10 );
-}
-
-//
-// UNI-DIRECTION MESSAGE HANDLERS
-//
-
-long _IKEI::send_msg_result( long msgres )
-{
-	return send_basic( IKEI_MSGID_RESULT, msgres, NULL, 0 );
-}
-
-long _IKEI::recv_msg_status( long * status, char * str, size_t & len )
-{
-	return recv_basic( IKEI_MSGID_STATUS, status, str, &len );
-}
-
-long _IKEI::send_msg_status( long status, const char * str, long * msgres )
-{
-	long len = long( strlen( str ) );
-	return send_basic( IKEI_MSGID_STATUS, status, ( void * ) str, len );
-}
-
-long _IKEI::recv_msg_stats( IKEI_STATS * stats )
-{
-	size_t length = sizeof( IKEI_STATS );
-	return recv_basic( IKEI_MSGID_STATS, NULL, stats, &length ); 
-}
-
-long _IKEI::send_msg_stats( IKEI_STATS * stats, long * msgres )
-{
-	return send_basic( IKEI_MSGID_STATS, 0, stats, sizeof( IKEI_STATS ) );
-}
-
-long _IKEI::send_msg_enable( long enable )
-{
-	return send_basic( IKEI_MSGID_ENABLE, enable, NULL, 0 );
-}
-
-long _IKEI::recv_msg_enable( long * enable )
-{
-	return recv_basic( IKEI_MSGID_ENABLE, enable, NULL, NULL );
-}
-
-//
-// BI-DIRECTION MESSAGE HANDLERS
-//
-
-long _IKEI::recv_msg_peer( IKE_PEER * peer )
-{
-	size_t length = sizeof( IKE_PEER );
-	return recv_basic( IKEI_MSGID_PEER, NULL, peer, &length ); 
-}
-
-long _IKEI::send_msg_peer( IKE_PEER * peer, long * msgres )
-{
-	return send_bidir( IKEI_MSGID_PEER, 0, peer, sizeof( IKE_PEER ), msgres ); 
-}
-
-long _IKEI::recv_msg_proposal( IKE_PROPOSAL * proposal )
-{
-	size_t length = sizeof( IKE_PROPOSAL );
-	return recv_basic( IKEI_MSGID_PROPOSAL, NULL, proposal, &length ); 
-}
-
-long _IKEI::send_msg_proposal( IKE_PROPOSAL * proposal, long * msgres )
-{
-	return send_bidir( IKEI_MSGID_PROPOSAL, 0, proposal, sizeof( IKE_PROPOSAL ), msgres ); 
-}
-
-long _IKEI::recv_msg_client( IKE_XCONF * xconf )
-{
-	size_t length = sizeof( IKE_XCONF );
-	return recv_basic( IKEI_MSGID_CLIENT, NULL, xconf, &length ); 
-}
-
-long _IKEI::send_msg_client( IKE_XCONF * xconf, long * msgres )
-{
-	return send_bidir( IKEI_MSGID_CLIENT, 0, xconf, sizeof( IKE_XCONF ), msgres );
-}
-
-long _IKEI::recv_msg_network( IKE_PH2ID * ph2id, long * type )
-{
-	size_t length = sizeof( IKE_PH2ID );
-	return recv_basic( IKEI_MSGID_NETWORK, type, ph2id, &length ); 
-}
-
-long _IKEI::send_msg_network( IKE_PH2ID * ph2id, long type, long * msgres )
-{
-	return send_bidir( IKEI_MSGID_NETWORK, type, ph2id, sizeof( IKE_PH2ID ), msgres );
-}
-
-long _IKEI::recv_msg_cfgstr( long * type, char * str, size_t * len )
-{
-	return recv_basic( IKEI_MSGID_CFGSTR, type, str, len );
-}
-
-long _IKEI::send_msg_cfgstr( long type, char * str, size_t len, long * msgres )
-{
-	return send_bidir( IKEI_MSGID_CFGSTR, type, str, len, msgres );
-}
-
-#ifdef WIN32
-
-_IKES::_IKES()
-{
-	hsrvc = INVALID_HANDLE_VALUE;
-	hpipe = INVALID_HANDLE_VALUE;
-}
-
-_IKES::~_IKES()
-{
-}
-
-//
-// check if a named pipe already exists
-//
-
-bool _IKES::init()
-{
-	hsrvc = OpenEvent(
-				EVENT_ALL_ACCESS,
-				false,
-				IKEI_EVENT_NAME );
-
-	if( hsrvc )
-	{
-		CloseHandle( hsrvc );
-		return false;
-	}
-
-	hsrvc =	CreateEvent(
-				NULL,
-				false,
-				false,
-				IKEI_EVENT_NAME );
-
-	if( hsrvc == INVALID_HANDLE_VALUE )
-		return false;
-
-	memset( &olapp, 0, sizeof( olapp ) );
-	olapp.hEvent = CreateEvent( NULL, true, false, NULL );
-
-	return true;
-}
-
-//
-// accept connections on the named pipe
-//
-
-IKEI * _IKES::inbound()
-{
-	if( hpipe == INVALID_HANDLE_VALUE )
-	{
-		PSID sid = NULL;
-		PACL acl = NULL;
-		EXPLICIT_ACCESS ea;
-		SID_IDENTIFIER_AUTHORITY sid_auth = SECURITY_WORLD_SID_AUTHORITY;
-		PSECURITY_DESCRIPTOR sd = NULL;
-		SECURITY_ATTRIBUTES sa;
-		long result;
-
-		// create a well-known sid
-		if( !AllocateAndInitializeSid(
-				&sid_auth,
-				1,
-				SECURITY_WORLD_RID,
-				0,
-				0, 0, 0, 0, 0, 0,
-				&sid ) )
-			goto cleanup;
-
-		// Initialize an EXPLICIT_ACCESS structure for an ACE.
-		// The ACE will allow Everyone read access to the key.
-		memset( &ea, sizeof( ea ), 0 );
-		ea.grfAccessPermissions = KEY_READ;
-		ea.grfAccessMode = SET_ACCESS;
-		ea.grfInheritance= NO_INHERITANCE;
-		ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
-		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
-		ea.Trustee.ptstrName  = ( LPTSTR ) sid;
-
-		// Initialize a security descriptor.  
-		sd = ( PSECURITY_DESCRIPTOR ) LocalAlloc( LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH );
-		if( sd == NULL )
-			goto cleanup; 
- 
-		if( !InitializeSecurityDescriptor( sd, SECURITY_DESCRIPTOR_REVISION ) ) 
-			goto cleanup; 
- 
-		// Add the ACL to the security descriptor. 
-		if( !SetSecurityDescriptorDacl(
-				sd, 
-				TRUE,     // bDaclPresent flag   
-				acl, 
-				FALSE ) )   // not a default DACL 
-			goto cleanup; 
-
-		// Initialize a security attributes structure.
-		sa.nLength = sizeof ( SECURITY_ATTRIBUTES );
-		sa.lpSecurityDescriptor = sd;
-		sa.bInheritHandle = FALSE;
-
-		hpipe = CreateNamedPipe(
-				IKEI_PIPE_NAME,
-				PIPE_ACCESS_DUPLEX |
-				FILE_FLAG_OVERLAPPED,
-			    PIPE_TYPE_MESSAGE |
-				PIPE_READMODE_MESSAGE |
-				PIPE_NOWAIT,
-				PIPE_UNLIMITED_INSTANCES,
-				8192,
-				8192,
-			    10,
-				&sa );
-
-		result = GetLastError();
-
-		cleanup:
-
-		if( sid != NULL )
-			FreeSid( sid );
-		if( acl )
-			LocalFree( acl );
-		if( sd )
-			LocalFree( sd );
-	}
-
-	if( ( ConnectNamedPipe( hpipe, NULL ) == TRUE ) ||
-		( GetLastError() == ERROR_PIPE_CONNECTED ) )
-	{
-		IKEI * ikedi = new IKEI;
-		if( ikedi == NULL )
-			return NULL;
-
-		ikedi->hpipe = hpipe;
-		hpipe = INVALID_HANDLE_VALUE;
-
-		return ikedi;
-	}
-
-	return NULL;
-}
-
-#endif
-
-#ifdef UNIX
 
 _IKES::_IKES()
 {

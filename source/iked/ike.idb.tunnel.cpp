@@ -147,6 +147,8 @@ bool _IDB_LIST_TUNNEL::find( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, I
 
 _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r )
 {
+	ikei = NULL;
+
 	//
 	// tunnels are removed immediately
 	// when the refcount reaches zero
@@ -216,6 +218,12 @@ _IDB_TUNNEL::~_IDB_TUNNEL()
 	iked.tunnel_filter_del( this );
 
 #endif
+
+	//
+	// dereference our peer
+	//
+
+	peer->dec( false );
 }
 
 //------------------------------------------------------------------------------
@@ -366,10 +374,4 @@ void _IDB_TUNNEL::end()
 		if( xconf.opts & IPSEC_OPTS_ADDR )
 			peer->xconf_source->pool4_rel( xconf.addr );
 	}
-
-	//
-	// dereference our peer
-	//
-
-	peer->dec( false );
 }

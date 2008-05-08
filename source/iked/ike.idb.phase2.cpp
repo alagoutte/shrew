@@ -310,6 +310,12 @@ _IDB_PH2::_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, uint32_t set_ms
 _IDB_PH2::~_IDB_PH2()
 {
 	clean();
+
+	//
+	// dereference our tunnel
+	//
+
+	tunnel->dec( false );
 }
 
 //------------------------------------------------------------------------------
@@ -334,16 +340,14 @@ void _IDB_PH2::beg()
 void _IDB_PH2::end()
 {
 	//
-	// remove scheduled events
+	// clear the resend queue
 	//
 
-	if( iked.ith_timer.del( &event_resend ) )
-	{
-		idb_refcount--;
-		iked.log.txt( LLOG_DEBUG,
-			"DB : phase2 resend event canceled ( ref count = %i )\n",
-			idb_refcount );
-	}
+	resend_clear( false );
+
+	//
+	// remove scheduled events
+	//
 
 	if( iked.ith_timer.del( &event_soft ) )
 	{
@@ -360,12 +364,6 @@ void _IDB_PH2::end()
 			"DB : phase2 hard event canceled ( ref count = %i )\n",
 			idb_refcount );
 	}
-
-	//
-	// clear the resend queue
-	//
-
-	resend_clear();
 
 	//
 	// send a delete message if required
@@ -416,12 +414,6 @@ void _IDB_PH2::end()
 		iked.log.txt( LLOG_INFO, "ii : phase2 removal before expire time\n" );
 	else
 		iked.log.txt( LLOG_INFO, "ii : phase2 removal after expire time\n" );
-
-	//
-	// dereference our tunnel
-	//
-
-	tunnel->dec( false );
 }
 
 //------------------------------------------------------------------------------
@@ -465,6 +457,4 @@ void _IDB_PH2::clean()
 	hash_r.del( true );
 
 	hda.del( true );
-
-	resend_clear();
 }

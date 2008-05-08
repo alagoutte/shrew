@@ -225,8 +225,9 @@ typedef class DLX _ITH_TIMER : public _ITH_EXEC
 #define IPCERR_OK		1
 #define IPCERR_FAILED	2
 #define IPCERR_BUFFER	3
-#define IPCERR_CLOSED	4
-#define IPCERR_NODATA	5
+#define IPCERR_WAKEUP	4
+#define IPCERR_CLOSED	5
+#define IPCERR_NODATA	6
 
 typedef class DLX _ITH_IPCC
 {
@@ -234,8 +235,13 @@ typedef class DLX _ITH_IPCC
 
 #ifdef WIN32
 
-	HANDLE		hmutex;
-	HANDLE		hevent;
+	HANDLE	hmutex_send;
+	HANDLE	hmutex_recv;
+
+	HANDLE	hevent_send;
+	HANDLE	hevent_wake;
+
+	bool	serv;
 
 #endif
 
@@ -243,7 +249,8 @@ typedef class DLX _ITH_IPCC
 
 	IPCCONN		conn;
 
-	long	io_recv( void * data, size_t & size, long timeout );
+	void	io_conf( IPCCONN sconn );
+	long	io_recv( void * data, size_t & size );
 	long	io_send( void * data, size_t & size );
 
 	public:
@@ -252,6 +259,7 @@ typedef class DLX _ITH_IPCC
 	~_ITH_IPCC();
 
 	bool	attach( char * path, long timeout );
+	void	wakeup();
 	void	detach();
 
 }ITH_IPCC;

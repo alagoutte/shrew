@@ -568,6 +568,12 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 _IDB_PH1::~_IDB_PH1()
 {
 	clean();
+
+	//
+	// derefrence our tunnel
+	//
+
+	tunnel->dec( false );
 }
 
 //------------------------------------------------------------------------------
@@ -592,16 +598,14 @@ void _IDB_PH1::beg()
 void _IDB_PH1::end()
 {
 	//
-	// remove scheduled events
+	// clear the resend queue
 	//
 
-	if( iked.ith_timer.del( &event_resend ) )
-	{
-		idb_refcount--;
-		iked.log.txt( LLOG_DEBUG,
-			"DB : phase1 resend event canceled ( ref count = %i )\n",
-			idb_refcount );
-	}
+	resend_clear( false );
+
+	//
+	// remove scheduled events
+	//
 
 	if( iked.ith_timer.del( &event_dpd ) )
 	{
@@ -634,12 +638,6 @@ void _IDB_PH1::end()
 			"DB : phase1 hard event canceled ( ref count = %i )\n",
 			idb_refcount );
 	}
-
-	//
-	// clear the resend queue
-	//
-
-	resend_clear();
 
 	//
 	// send a delete message if required
@@ -725,14 +723,13 @@ void _IDB_PH1::end()
 	//
 
 	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
+	{
 		if( xch_errorcode != XCH_FAILED_EXPIRED )
+		{
 			tunnel->close = xch_errorcode;
-
-	//
-	// derefrence our tunnel
-	//
-
-	tunnel->dec( false );
+			tunnel->ikei->wakeup();
+		}
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -872,8 +869,6 @@ void _IDB_PH1::clean()
 	natd_rd.del( true );
 
 	sign_r.del( true );
-
-	resend_clear();
 }
 
 bool _IDB_PH1::frag_add( unsigned char * data, unsigned long size, long index, bool last )

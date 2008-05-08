@@ -115,8 +115,7 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	// associated with this db object
 	//
 
-	if( retry )
-		xch->resend_clear();
+	xch->resend_clear( true );
 
 	//
 	// estimate the maximum packet size
@@ -238,7 +237,7 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	//
 
 	if( retry )
-		xch->resend_sched();
+		xch->resend_sched( true );
 
 	return LIBIKE_OK;
 }

@@ -650,20 +650,16 @@ bool _IDB_RC_ENTRY::dec( bool lock, bool setdel )
 
 	list()->del_entry( this );
 
+	list()->rc_log()->txt(
+		LLOG_DEBUG,
+		"DB : %s deleted ( obj count = %i )\n",
+		name(),
+		list()->count() );
+
 	if( lock )
 		list()->rc_lock()->unlock();
 
-	char *		tmp_name = name();
-	IDB_LIST *	tmp_list = list();
-	LOG *		tmp_log = list()->rc_log();
-	long		tmp_count = tmp_list->count();
-
 	delete this;
-
-	tmp_log->txt( LLOG_DEBUG,
-		"DB : %s deleted ( obj count = %i )\n",
-		tmp_name,
-		tmp_count );
 
 	return true;
 }

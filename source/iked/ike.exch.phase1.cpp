@@ -1315,11 +1315,13 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				{
 					ph1->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
 					ph1->clean();
+					ph1->resend_clear( true );
 				}
 				else
 				{
 					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_AUTH, ISAKMP_N_AUTHENTICATION_FAILED );
 					ph1->clean();
+					ph1->resend_clear( true );
 				}
 			}
 		}
@@ -1338,11 +1340,13 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				{
 					ph1->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
 					ph1->clean();
+					ph1->resend_clear( true );
 				}
 				else
 				{
 					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_AUTH, ISAKMP_N_AUTHENTICATION_FAILED );
 					ph1->clean();
+					ph1->resend_clear( true );
 				}
 			}
 		}

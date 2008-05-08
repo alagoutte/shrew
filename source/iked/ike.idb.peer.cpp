@@ -145,6 +145,10 @@ void _IDB_PEER::end()
 	// check for tunnel object refrences
 	//
 
+	//
+	// FIXME : THIS IS NOT SAFE!
+	//
+/*
 	long tunnel_count = iked.idb_list_tunnel.count();
 	long tunnel_index = 0;
 
@@ -160,4 +164,5 @@ void _IDB_PEER::end()
 		if( tunnel->peer == this )
 			tunnel->end();
 	}
+*/
 }

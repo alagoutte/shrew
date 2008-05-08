@@ -278,6 +278,9 @@ long _PFKI::wait_msg()
 
 long _PFKI::send_msg( PFKI_MSG & msg )
 {
+	if( hpipe == INVALID_HANDLE_VALUE )
+		return PFKI_FAILED;
+
 	DWORD result;
 
 	WriteFile( hpipe, msg.msg_buff, msg.msg_size, &result, NULL );

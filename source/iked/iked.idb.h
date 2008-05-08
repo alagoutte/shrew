@@ -192,6 +192,7 @@ enum XCH_ERRORCODE
 	XCH_NORMAL,
 	XCH_FAILED_CLIENT,
 	XCH_FAILED_NETWORK,
+	XCH_FAILED_ADAPTER,
 	XCH_FAILED_TIMEOUT,
 	XCH_FAILED_PENDING,
 	XCH_FAILED_EXPIRED,
@@ -415,6 +416,7 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 	long		lstate;
 
 	IDB_PEER *	peer;
+	IKEI *		ikei;
 
 	IKE_SADDR	saddr_l;
 	IKE_SADDR	saddr_r;
@@ -568,8 +570,8 @@ typedef class _IDB_XCH : public IDB_RC_ENTRY
 	XCH_STATUS	status( XCH_STATUS status, XCH_ERRORCODE errorcode, uint16_t notifycode );
 
 	bool	resend_queue( PACKET_IP & packet );
-	bool	resend_sched();
-	void	resend_clear() ;
+	bool	resend_sched( bool lock );
+	void	resend_clear( bool lock ) ;
 
 }IDB_XCH;
 

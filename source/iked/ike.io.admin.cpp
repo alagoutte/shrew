@@ -76,9 +76,6 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	{
 		long result;
 
-		char text[ MAX_PATH ];
-		size_t size = MAX_PATH;
-
 		//
 		// check for tunnel close
 		//
@@ -91,14 +88,17 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 		// get the next message
 		//
 
-		result = ikei->next_msg( msg );
+		result = ikei->recv_message( msg );
 
-		if( result == IKEI_FAILED )
+		if( result == IPCERR_CLOSED )
 			break;
 
-		if( result != IKEI_NODATA )
+		if( result == IPCERR_NODATA )
+			continue;
+
+		if( result == IPCERR_OK )
 		{
-			switch( msg.type )
+			switch( msg.header.type )
 			{
 				//
 				// peer config add message
@@ -109,7 +109,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					log.txt( LLOG_INFO, "<A : peer config add message\n" );
 
 					IKE_PEER ike_peer;
-					if( !ikei->recv_msg_peer( &ike_peer ) )
+					if( msg.get_peer( &ike_peer ) != IPCERR_OK )
 						break;
 
 					//
@@ -128,7 +128,10 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						delete peer;
 
-						ikei->send_msg_result( IKEI_FAILED );
+						msg.set_result( IKEI_RESULT_FAILED );
+						ikei->send_message( msg );
+
+						tunnel->close = XCH_FAILED_CLIENT;
 
 						break;
 					}
@@ -148,7 +151,10 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						delete tunnel;
 
-						ikei->send_msg_result( IKEI_FAILED );
+						msg.set_result( IKEI_RESULT_FAILED );
+						ikei->send_message( msg );
+
+						tunnel->close = XCH_FAILED_CLIENT;
 
 						break;
 					}
@@ -158,6 +164,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					//
 
 					tunnel = new IDB_TUNNEL( peer, &saddr_l, &peer->saddr );
+					tunnel->ikei = ikei;
 
 					//
 					// add new tunnel
@@ -169,12 +176,16 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						delete tunnel;
 
-						ikei->send_msg_result( IKEI_FAILED );
+						msg.set_result( IKEI_RESULT_FAILED );
+						ikei->send_message( msg );
+
+						tunnel->close = XCH_FAILED_CLIENT;
 
 						break;
 					}
 
-					ikei->send_msg_result( IKEI_OK );
+					msg.set_result( IKEI_RESULT_OK );
+					ikei->send_message( msg );
 
 					break;
 				}
@@ -188,7 +199,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					log.txt( LLOG_INFO, "<A : proposal config message\n" );
 
 					IKE_PROPOSAL proposal;
-					if( !ikei->recv_msg_proposal( &proposal ) )
+					if( msg.get_proposal( &proposal ) != IPCERR_OK )
 						break;
 
 					//
@@ -202,13 +213,17 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					if( !peer->proposals.add( &proposal, true ) )
 					{
 						log.txt( LLOG_ERROR, "!! : unable to add peer proposal\n" );
-						ikei->send_msg_result( IKEI_FAILED );
+
+						msg.set_result( IKEI_RESULT_FAILED );
+						ikei->send_message( msg );
+
 						tunnel->close = XCH_FAILED_CLIENT;
 
 						break;
 					}
 
-					ikei->send_msg_result( IKEI_OK );
+					msg.set_result( IKEI_RESULT_OK );
+					ikei->send_message( msg );
 
 					break;
 				}
@@ -222,11 +237,13 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 					log.txt( LLOG_INFO, "<A : client config message\n" );
 
 					IKE_XCONF xconf;
-					if( !ikei->recv_msg_client( &xconf ) )
+					if( msg.get_client( &xconf ) != IPCERR_OK )
 						break;
 
 					tunnel->xconf = xconf;
-					ikei->send_msg_result( IKEI_OK );
+
+					msg.set_result( IKEI_RESULT_OK );
+					ikei->send_message( msg );
 
 					break;
 				}
@@ -244,7 +261,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 					long type;
 
-					if( !ikei->recv_msg_network( &ph2id, &type ) )
+					if( msg.get_network( &type, &ph2id ) != IPCERR_OK )
 						break;
 
 					switch( type )
@@ -258,7 +275,8 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 							break;
 					}
 
-					ikei->send_msg_result( IKEI_OK );
+					msg.set_result( IKEI_RESULT_OK );
+					ikei->send_message( msg );
 
 					break;
 				}
@@ -269,12 +287,11 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 				case IKEI_MSGID_CFGSTR:
 				{
-					long type;
+					BDATA	text;
+					long	type;
 
-					if( !ikei->recv_msg_cfgstr( &type, text, &size ) )
+					if( msg.get_cfgstr( &type, &text ) != IPCERR_OK )
 						break;
-
-					text[ size ] = 0;
 
 					switch( type )
 					{
@@ -286,8 +303,10 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : xauth username message\n" );
 
-							tunnel->xauth.user.set( text, size );
-							ikei->send_msg_result( IKEI_OK );
+							tunnel->xauth.user = text;
+
+							msg.set_result( IKEI_RESULT_OK );
+							ikei->send_message( msg );
 
 							break;
 						}
@@ -300,8 +319,10 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : xauth password message\n" );
 
-							tunnel->xauth.pass.set( text, size );
-							ikei->send_msg_result( IKEI_OK );
+							tunnel->xauth.pass = text;
+
+							msg.set_result( IKEI_RESULT_OK );
+							ikei->send_message( msg );
 
 							break;
 						}
@@ -314,8 +335,10 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : preshared key message\n" );
 
-							tunnel->peer->psk.set( text, size );
-							ikei->send_msg_result( IKEI_OK );
+							tunnel->peer->psk = text;
+
+							msg.set_result( IKEI_RESULT_OK );
+							ikei->send_message( msg );
 
 							break;
 						}
@@ -328,8 +351,10 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : file password\n" );
 
-							tunnel->peer->fpass.set( text, size );
-							ikei->send_msg_result( IKEI_OK );
+							tunnel->peer->fpass = text;
+
+							msg.set_result( IKEI_RESULT_OK );
+							ikei->send_message( msg );
 
 							break;
 						}
@@ -340,26 +365,31 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_RSA_RCRT:
 						{
+							text.add( "", 1 );
+
 							log.txt( LLOG_INFO, "<A : remote cert \'%s\' message\n", text );
 
-							long loaded = cert_load( tunnel->peer->cert_r, text, true, tunnel->peer->fpass );
+							long loaded = cert_load( tunnel->peer->cert_r, text.text(), true, tunnel->peer->fpass );
 
 							switch( loaded )
 							{
 								case FILE_OK:
-									ikei->send_msg_result( IKEI_OK );
+									msg.set_result( IKEI_RESULT_OK );
+									ikei->send_message( msg );
 									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text );
 									break;
 
 								case FILE_PATH:
 									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text );
-									ikei->send_msg_result( IKEI_FAILED );
+									msg.set_result( IKEI_RESULT_FAILED );
+									ikei->send_message( msg );
 									tunnel->close = XCH_FAILED_CLIENT;
 									break;
 
 								case FILE_FAIL:
 									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text );
-									ikei->send_msg_result( IKEI_PASSWD );
+									msg.set_result( IKEI_RESULT_PASSWD );
+									ikei->send_message( msg );
 									break;
 							}
 
@@ -372,26 +402,31 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_RSA_LCRT:
 						{
+							text.add( "", 1 );
+
 							log.txt( LLOG_INFO, "<A : local cert \'%s\' message\n", text );
 
-							long loaded = cert_load( tunnel->peer->cert_l, text, false, tunnel->peer->fpass );
+							long loaded = cert_load( tunnel->peer->cert_l, text.text(), false, tunnel->peer->fpass );
 
 							switch( loaded )
 							{
 								case FILE_OK:
-									ikei->send_msg_result( IKEI_OK );
+									msg.set_result( IKEI_RESULT_OK );
+									ikei->send_message( msg );
 									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text );
 									break;
 
 								case FILE_PATH:
 									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text );
-									ikei->send_msg_result( IKEI_FAILED );
+									msg.set_result( IKEI_RESULT_FAILED );
+									ikei->send_message( msg );
 									tunnel->close = XCH_FAILED_CLIENT;
 									break;
 
 								case FILE_FAIL:
 									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text );
-									ikei->send_msg_result( IKEI_PASSWD );
+									msg.set_result( IKEI_RESULT_PASSWD );
+									ikei->send_message( msg );
 									break;
 							}
 
@@ -404,26 +439,31 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_RSA_LKEY:
 						{
+							text.add( "", 1 );
+
 							log.txt( LLOG_INFO, "<A : local key \'%s\' message\n", text );
 
-							long loaded = prvkey_rsa_load( &tunnel->peer->key, text, tunnel->peer->fpass );
+							long loaded = prvkey_rsa_load( &tunnel->peer->key, text.text(), tunnel->peer->fpass );
 
 							switch( loaded )
 							{
 								case FILE_OK:
-									ikei->send_msg_result( IKEI_OK );
+									msg.set_result( IKEI_RESULT_OK );
+									ikei->send_message( msg );
 									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text );
 									break;
 
 								case FILE_PATH:
 									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text );
-									ikei->send_msg_result( IKEI_FAILED );
+									msg.set_result( IKEI_RESULT_FAILED );
+									ikei->send_message( msg );
 									tunnel->close = XCH_FAILED_CLIENT;
 									break;
 
 								case FILE_FAIL:
 									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text );
-									ikei->send_msg_result( IKEI_PASSWD );
+									msg.set_result( IKEI_RESULT_PASSWD );
+									ikei->send_message( msg );
 									break;
 							}
 
@@ -436,10 +476,16 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_LID:
 						{
-							log.txt( LLOG_INFO, "<A : local id \'%s\' message\n", text );
+							BDATA idval;
+							idval = text;
+							idval.add( "", 1 );
 
-							tunnel->peer->iddata_l.set( text, size );
-							ikei->send_msg_result( IKEI_OK );
+							log.txt( LLOG_INFO, "<A : local id \'%s\' message\n", idval.text() );
+
+							tunnel->peer->iddata_l = text;
+
+							msg.set_result( IKEI_RESULT_OK );
+							ikei->send_message( msg );
 
 							break;
 						}
@@ -450,10 +496,16 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_CRED_RID:
 						{
-							log.txt( LLOG_INFO, "<A : remote id \'%s\' message\n", text );
+							BDATA idval;
+							idval = text;
+							idval.add( "", 1 );
 
-							tunnel->peer->iddata_r.set( text, size );
-							ikei->send_msg_result( IKEI_OK );
+							log.txt( LLOG_INFO, "<A : remote id \'%s\' message\n", idval.text() );
+
+							tunnel->peer->iddata_r = text;
+
+							msg.set_result( IKEI_RESULT_OK );
+							ikei->send_message( msg );
 
 							break;
 						}
@@ -464,13 +516,14 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 						case CFGSTR_SPLIT_DOMAIN:
 						{
-							log.txt( LLOG_INFO, "<A : split dns \'%s\' message\n", text );
+							text.add( "", 1 );
 
-							BDATA domain;
-							domain.set( text, size + 1 );
-							tunnel->domains.add( domain );
+							log.txt( LLOG_INFO, "<A : split dns \'%s\' message\n", text.text() );
 
-							ikei->send_msg_result( IKEI_OK );
+							tunnel->domains.add( text );
+
+							msg.set_result( IKEI_RESULT_OK );
+							ikei->send_message( msg );
 
 							break;
 						}
@@ -487,7 +540,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				{
 					long enable;
 
-					if( !ikei->recv_msg_enable( &enable ) )
+					if( msg.get_enable( &enable ) != IPCERR_OK )
 						break;
 
 					if( enable )
@@ -526,7 +579,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 								if( !vnet_get( &adapter ) )
 								{
 									log.txt( LLOG_ERROR, "ii : unable to create vnet adapter ...\n" );
-									tunnel->close = XCH_FAILED_CLIENT;
+									tunnel->close = XCH_FAILED_ADAPTER;
 
 									enable = false;
 								}
@@ -542,27 +595,35 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 								tunnel->xconf.addr = tunnel->saddr_l.saddr4.sin_addr;
 								tunnel->xconf.mask.s_addr = 0xffffffff;
 							}
-
 						}
-
-						ikei->send_msg_enable( true );
 					}
 					else
 					{
 						log.txt( LLOG_INFO, "<A : peer tunnel disable message\n" );
-
 						tunnel->close = XCH_FAILED_USERREQ;
+					}
 
-						ikei->send_msg_enable( false );
+					if( enable )
+					{
+						msg.set_enable( true );
+						ikei->send_message( msg );
+					}
+					else
+					{
+						msg.set_enable( false );
+						ikei->send_message( msg );
 					}
 
 					break;
 				}
 
 				default:
-
-					log.txt( LLOG_ERROR, "!! : message type is invalid ( %u )\n", msg.type );
+					log.txt( LLOG_ERROR, "!! : message type is invalid ( %u )\n", msg.header.type );
+					tunnel->close = XCH_FAILED_CLIENT;
+					break;
 			}
+
+			continue;
 		}
 
 		//
@@ -584,9 +645,10 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				//
 
 				if( tunnel->banner.size() )
-					ikei->send_msg_status(
-					STATUS_BANNER,
-					( char * ) tunnel->banner.buff() );
+				{
+					msg.set_status( STATUS_BANNER, &tunnel->banner );
+					ikei->send_message( msg );
+				}
 
 				//
 				// make sure we have a valid vnet
@@ -596,8 +658,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				if( !tunnel->xconf.addr.s_addr )
 				{
 					log.txt( LLOG_ERROR, "!! : invalid private address\n" );
-					ikei->send_msg_status( STATUS_FAIL, "invalid private address or netmask\n" );
-					tunnel->close = XCH_FAILED_CLIENT;
+					tunnel->close = XCH_FAILED_ADAPTER;
 					break;
 				}
 
@@ -612,7 +673,9 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				//
 
 				client_setup( adapter, tunnel );
-				ikei->send_msg_status( STATUS_INFO, "network device configured\n" );
+
+				msg.set_status( STATUS_INFO, "network device configured\n" );
+				ikei->send_message( msg );
 
 				//
 				// generate a policy list now
@@ -632,7 +695,8 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 				// tunnel is enabled
 				//
 
-				ikei->send_msg_status( STATUS_ENABLED, "tunnel enabled\n" );
+				msg.set_status( STATUS_ENABLED, "tunnel enabled\n" );
+				ikei->send_message( msg );
 
 				tunnel->tstate |= TSTATE_VNET_ENABLE;
 			}
@@ -647,7 +711,8 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 			{
 				if( stattick < time( NULL ) )
 				{
-					ikei->send_msg_stats( &tunnel->stats );
+					msg.set_stats( &tunnel->stats );
+					ikei->send_message( msg );
 
 					stattick = time( NULL );
 				}
@@ -687,7 +752,8 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 		// cleanup client settings
 		//
 
-		client_cleanup( adapter, tunnel );
+		if( tunnel->tstate & TSTATE_VNET_ENABLE )
+			client_cleanup( adapter, tunnel );
 
 		//
 		// if we were using a virutal adapter,
@@ -711,31 +777,38 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 		switch( tunnel->close )
 		{
 			//
-			// client specific reason with
-			// a notification already sent
+			// client message error
 			//
 			case XCH_FAILED_CLIENT:
+				msg.set_status( STATUS_FAIL, "client configuration error\n" );
 				break;
 
 			//
 			// network communication error
 			//
 			case XCH_FAILED_NETWORK:
-				ikei->send_msg_status( STATUS_FAIL, "network unavailable\n" );
+				msg.set_status( STATUS_FAIL, "network unavailable\n" );
+				break;
+
+			//
+			// adapter configuration error
+			//
+			case XCH_FAILED_ADAPTER:
+				msg.set_status( STATUS_FAIL, "adapter configuration failed\n" );
 				break;
 
 			//
 			// network timeout occurred
 			//
 			case XCH_FAILED_TIMEOUT:
-				ikei->send_msg_status( STATUS_FAIL, "negotiation timout occurred\n" );
+				msg.set_status( STATUS_FAIL, "negotiation timout occurred\n" );
 				break;
 
 			//
 			// terminated by user
 			//
 			case XCH_FAILED_USERREQ:
-				ikei->send_msg_status( STATUS_WARN, "session terminated by user\n" );
+				msg.set_status( STATUS_WARN, "session terminated by user\n" );
 				break;
 
 			//
@@ -744,58 +817,60 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 			case XCH_FAILED_MSG_FORMAT:
 			case XCH_FAILED_MSG_CRYPTO:
 			case XCH_FAILED_MSG_AUTH:
-				ikei->send_msg_status( STATUS_FAIL, "invalid message from gateway\n" );
+				msg.set_status( STATUS_FAIL, "invalid message from gateway\n" );
 				break;
 
 			//
 			// user authentication error
 			//
 			case XCH_FAILED_USER_AUTH:
-				ikei->send_msg_status( STATUS_FAIL, "user authentication error\n" );
+				msg.set_status( STATUS_FAIL, "user authentication error\n" );
 				break;
 
 			//
 			// peer authentication error
 			//
 			case XCH_FAILED_PEER_AUTH:
-				ikei->send_msg_status( STATUS_FAIL, "gateway authentication error\n" );
+				msg.set_status( STATUS_FAIL, "gateway authentication error\n" );
 				break;
 
 			//
 			// peer unresponsive
 			//
 			case XCH_FAILED_PEER_DEAD:
-				ikei->send_msg_status( STATUS_FAIL, "gateway is not responding\n" );
+				msg.set_status( STATUS_FAIL, "gateway is not responding\n" );
 				break;
 
 			//
 			// terminated by peer
 			//
 			case XCH_FAILED_PEER_DELETE:
-				ikei->send_msg_status( STATUS_FAIL, "session terminated by gateway\n" );
+				msg.set_status( STATUS_FAIL, "session terminated by gateway\n" );
 				break;
 
 			//
 			// dhcp unresponsive
 			//
 			case XCH_FAILED_IKECONFIG:
-				ikei->send_msg_status( STATUS_FAIL, "no config response from gateway\n" );
+				msg.set_status( STATUS_FAIL, "no config response from gateway\n" );
 				break;
 
 			//
 			// dhcp unresponsive
 			//
 			case XCH_FAILED_DHCPCONFIG:
-				ikei->send_msg_status( STATUS_FAIL, "no dhcp response from gateway\n" );
+				msg.set_status( STATUS_FAIL, "no dhcp response from gateway\n" );
 				break;
 
 			//
 			// unknown
 			//
 			default:
-				ikei->send_msg_status( STATUS_FAIL, "internal error occurred\n" );
+				msg.set_status( STATUS_FAIL, "internal error occurred\n" );
 				break;
 		}
+
+		ikei->send_message( msg );
 
 		//
 		// flush our arp cache
@@ -828,8 +903,11 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	// close the client interface
 	//
 
-	ikei->send_msg_status( STATUS_DISABLED, "tunnel disabled\n" );
+	msg.set_status( STATUS_DISABLED, "tunnel disabled\n" );
+	ikei->send_message( msg );
 	ikei->detach();
+
+	delete ikei;
 
 	log.txt( LLOG_INFO, "ii : admin process thread exit ...\n" );
 

@@ -639,6 +639,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 					ph2->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
 					ph2->clean();
+					ph2->resend_clear( true );
 				}
 			}
 		}
@@ -801,8 +802,6 @@ long _IKED::process_phase2_send( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 			phase2_gen_keys( ph1, ph2 );
 
-			ph2->clean();
-
 			//
 			// update sa state
 			//
@@ -810,6 +809,8 @@ long _IKED::process_phase2_send( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 			ph2->xstate |= XSTATE_SENT_LP;
 
 			ph2->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
+			ph2->clean();
+			ph2->resend_clear( true );
 		}
 	}
 

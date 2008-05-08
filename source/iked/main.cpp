@@ -376,6 +376,16 @@ int main( int argc, char * argv[], char * envp[] )
 #ifdef UNIX
 
 	//
+	// check that we are root
+	//
+
+	if( getuid() )
+	{
+		printf( "you must be root to run this program !!!\n" );
+		return LIBIKE_FAILED;
+	}
+
+	//
 	// check command line parameters
 	//
 
@@ -416,6 +426,7 @@ int main( int argc, char * argv[], char * envp[] )
 	iked.loop();
 
 #endif
+
 	return 0;
 }
 

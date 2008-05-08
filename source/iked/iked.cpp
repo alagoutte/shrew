@@ -130,21 +130,6 @@ bool _IKED::rand_bytes( void * buff, long size )
 
 long _IKED::init( long setlevel )
 {
-
-	//
-	// check that we are root
-	//
-
-#ifdef UNIX
-
-	if( getuid() )
-	{
-		printf( "you must be root to run this program !!!\n" );
-		return LIBIKE_FAILED;
-	}
-
-#endif
-
 	//
 	// initialize ike service interface
 	//

@@ -530,9 +530,14 @@ bool _ITH_TIMER::del( ITH_EVENT * event )
 
 _ITH_IPCC::_ITH_IPCC()
 {
+	hmutex_recv = CreateMutex( NULL, false, NULL );
+	hmutex_send = CreateMutex( NULL, false, NULL );
+
+	hevent_send = CreateEvent( NULL, true, false, NULL );
+	hevent_wake = CreateEvent( NULL, true, false, NULL );
+
+	serv = false;
 	conn = INVALID_HANDLE_VALUE;
-	hmutex = NULL;
-	hevent = NULL;
 }
 
 _ITH_IPCC::~_ITH_IPCC()
@@ -540,29 +545,137 @@ _ITH_IPCC::~_ITH_IPCC()
 	detach();
 }
 
-long _ITH_IPCC::io_recv( void * data, size_t & size, long timeout )
+
+void _ITH_IPCC::io_conf( IPCCONN sconn )
+{
+	serv = true;
+	conn = sconn;
+}
+
+VOID WINAPI io_recv_complete( DWORD result, DWORD size, LPOVERLAPPED olapp )
+{
+	// we do nothing here as the
+	// WaitForSingleObjectEx call
+	// will wake on io completion
+}
+
+long _ITH_IPCC::io_recv( void * data, size_t & size )
+{
+	DWORD dwsize = ( DWORD ) size;
+
+	OVERLAPPED olapp;
+	memset( &olapp, 0, sizeof( olapp ) );
+
+	WaitForSingleObject( hmutex_recv, INFINITE );
+
+	// windows does not always set
+	// the GetLastError value to
+	// success after ReadFileEx but
+	// the documentation says you
+	// should check it for errors
+
+	SetLastError( ERROR_SUCCESS );
+
+	long result = ReadFileEx(
+					conn,
+					data,
+					dwsize,
+					&olapp,
+					io_recv_complete );
+
+	if( !result )
+	{
+		ReleaseMutex( hmutex_recv );
+		return IPCERR_CLOSED;
+	}
+
+	result = GetLastError();
+
+	switch( result )
+	{
+		case ERROR_SUCCESS:
+
+			result = WaitForSingleObjectEx(
+						hevent_wake,
+						INFINITE,
+						true );
+
+			if( result == WAIT_OBJECT_0 )
+			{
+				// cancel the current overlaped
+				// request and give it a chance
+				// to complete in a wait state
+
+				CancelIo( conn );
+				SleepEx( 0, true );
+			}
+
+			result = GetOverlappedResult(
+						conn,
+						&olapp,
+						&dwsize,
+						true );
+
+			result = GetLastError();
+
+			break;
+	}
+
+	size = dwsize;
+
+	switch( result )
+	{
+		case ERROR_SUCCESS:
+			result = IPCERR_OK;
+			break;
+
+		case ERROR_MORE_DATA:
+			result = IPCERR_BUFFER;
+			break;
+
+		case ERROR_OPERATION_ABORTED:
+			ResetEvent( hevent_wake );
+			result = IPCERR_WAKEUP;
+			break;
+
+		case ERROR_BROKEN_PIPE:
+		case ERROR_INVALID_HANDLE:
+			result = IPCERR_CLOSED;
+			break;
+
+		default:
+			result = IPCERR_NODATA;
+			break;
+	}
+
+	ReleaseMutex( hmutex_recv );
+
+	return result;
+}
+
+long _ITH_IPCC::io_send( void * data, size_t & size )
 {
 	OVERLAPPED olapp;
 	memset( &olapp, 0, sizeof( olapp ) );
-	olapp.hEvent = hevent;
+	olapp.hEvent = hevent_send;
 
-	WaitForSingleObject( hmutex, INFINITE );
+	WaitForSingleObject( hmutex_send, INFINITE );
 
 	DWORD dwsize = ( DWORD ) size;
-	long result = ReadFile( conn, data, dwsize, &dwsize, &olapp );
+
+	long result = WriteFile(
+					conn,
+					data,
+					dwsize,
+					&dwsize,
+					&olapp );
 
 	if( !result && ( GetLastError() == ERROR_IO_PENDING ) )
 	{
-		result = WaitForSingleObject(
-					hevent,
-					timeout );
-
-		if( result == WAIT_TIMEOUT )
-		{
-			CancelIo( conn );
-			ReleaseMutex( hmutex );
-			return IPCERR_NODATA;
-		}
+		WaitForSingleObjectEx(
+			hevent_send,
+			INFINITE,
+			true );
 
 		result = GetOverlappedResult(
 					conn,
@@ -576,65 +689,21 @@ long _ITH_IPCC::io_recv( void * data, size_t & size, long timeout )
 	if( !result )
 	{
 		result = GetLastError();
+
 		switch( result )
 		{
-			case ERROR_NO_DATA:
-				ReleaseMutex( hmutex );
-				return IPCERR_NODATA;
-
 			case ERROR_MORE_DATA:
-				ReleaseMutex( hmutex );
+				ReleaseMutex( hmutex_send );
 				return IPCERR_BUFFER;
 
 			case ERROR_BROKEN_PIPE:
 				conn = INVALID_HANDLE_VALUE;
-				ReleaseMutex( hmutex );
+				ReleaseMutex( hmutex_send );
 				return IPCERR_CLOSED;
 		}
 	}
 
-	ReleaseMutex( hmutex );
-	return IPCERR_OK;
-}
-
-long _ITH_IPCC::io_send( void * data, size_t & size )
-{
-	OVERLAPPED olapp;
-	memset( &olapp, 0, sizeof( olapp ) );
-	olapp.hEvent = hevent;
-
-	WaitForSingleObject( hmutex, INFINITE );
-
-	DWORD dwsize = ( DWORD ) size;
-	long result = WriteFile( conn, data, dwsize, &dwsize, &olapp );
-
-	if( !result && ( GetLastError() == ERROR_IO_PENDING ) )
-	{
-		result = GetOverlappedResult(
-					conn,
-					&olapp,
-					&dwsize,
-					true );
-	}
-
-	size = dwsize;
-
-	if( !result )
-	{
-		switch( GetLastError() )
-		{
-			case ERROR_MORE_DATA:
-				ReleaseMutex( hmutex );
-				return IPCERR_BUFFER;
-
-			case ERROR_BROKEN_PIPE:
-				conn = INVALID_HANDLE_VALUE;
-				ReleaseMutex( hmutex );
-				return IPCERR_CLOSED;
-		}
-	}
-
-	ReleaseMutex( hmutex );
+	ReleaseMutex( hmutex_send );
 	return IPCERR_OK;
 }
 
@@ -653,38 +722,59 @@ bool _ITH_IPCC::attach( char * path, long timeout )
 				NULL );
 
 	if( conn == INVALID_HANDLE_VALUE )
+	{
+		long result = GetLastError();
 		return false;
-
-	hmutex = CreateMutex( NULL, false, NULL );
-
-	if( hmutex == NULL )
-		return false;
-
-	hevent = CreateEvent( NULL, true, false, NULL );
-
-	if( hevent == NULL )
-		return false;
+	}
 
 	return true;
 }
 
+void _ITH_IPCC::wakeup()
+{
+	if( hevent_wake != NULL )
+		SetEvent( hevent_wake );
+}
+
 void _ITH_IPCC::detach()
 {
-	if( hevent != NULL )
+	if( conn != INVALID_HANDLE_VALUE )
 	{
-		CloseHandle( hevent );
-		hevent = NULL;
+		CancelIo( conn );
+		FlushFileBuffers( conn );
 	}
 
-	if( hmutex != NULL )
+	if( hevent_send != NULL )
 	{
-		CloseHandle( hmutex );
-		hmutex = NULL;
+		CloseHandle( hevent_send );
+		hevent_send = NULL;
+	}
+
+	if( hevent_wake != NULL )
+	{
+		CloseHandle( hevent_wake );
+		hevent_wake = NULL;
+	}
+
+	if( hmutex_send != NULL )
+	{
+		CloseHandle( hmutex_send );
+		hmutex_send = NULL;
+	}
+
+	if( hmutex_recv != NULL )
+	{
+		CloseHandle( hmutex_recv );
+		hmutex_recv = NULL;
 	}
 
 	if( conn != INVALID_HANDLE_VALUE )
 	{
-		CloseHandle( conn );
+		if( serv )
+			DisconnectNamedPipe( conn );
+		else
+			CloseHandle( conn );
+
 		conn = INVALID_HANDLE_VALUE;
 	}
 }
@@ -794,12 +884,13 @@ bool _ITH_IPCS::init( char * path, bool admin )
 			PIPE_ACCESS_DUPLEX,
 		    PIPE_TYPE_MESSAGE |
 			PIPE_READMODE_MESSAGE |
-			PIPE_NOWAIT,
+			PIPE_WAIT,
 			PIPE_UNLIMITED_INSTANCES,
 			8192,
 			8192,
 		    10,
-			&sa );
+			NULL );
+//			&sa );
 
 	if( conn == INVALID_HANDLE_VALUE )
 		return false;
@@ -816,12 +907,13 @@ bool _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 				PIPE_ACCESS_DUPLEX,
 				PIPE_TYPE_MESSAGE |
 				PIPE_READMODE_MESSAGE |
-				PIPE_NOWAIT,
+				PIPE_WAIT,
 				PIPE_UNLIMITED_INSTANCES,
 				8192,
 				8192,
 				10,
-				&sa );
+				NULL );
+//				&sa );
 
 	ipcconn = INVALID_HANDLE_VALUE;
 

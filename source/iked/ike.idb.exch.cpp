@@ -119,7 +119,7 @@ _IDB_XCH::_IDB_XCH()
 
 _IDB_XCH::~_IDB_XCH()
 {
-	resend_clear();
+	event_resend.ipqueue.clean();
 }
 
 XCH_STATUS _IDB_XCH::status()
@@ -169,35 +169,70 @@ bool _IDB_XCH::resend_queue( PACKET_IP & packet )
 	return added;
 }
 
-bool _IDB_XCH::resend_sched()
+bool _IDB_XCH::resend_sched( bool lock )
 {
-	//
-	// reset our attempt counter
-	//
-
-	event_resend.attempt = 0;
+	if( lock )
+		iked.lock_idb.lock();
 
 	//
-	// add our resend event
+	// avoid events on dead exchanges
 	//
 
-	inc( true );
-	event_resend.delay = iked.retry_delay * 1000;
+	if( status() != XCH_STATUS_DEAD )
+	{
+		//
+		// reset our attempt counter
+		//
 
-	iked.ith_timer.add( &event_resend );
-	
+		event_resend.attempt = 0;
+
+		//
+		// add our resend event
+		//
+
+		event_resend.delay = iked.retry_delay * 1000;
+
+		if( iked.ith_timer.add( &event_resend ) )
+		{
+			idb_refcount++;
+			iked.log.txt( LLOG_DEBUG,
+				"DB : %s resend event scheduled ( ref count = %i )\n",
+				name(),
+				idb_refcount );
+		}
+	}
+
+	if( lock )
+		iked.lock_idb.unlock();
+
 	return true;
 }
 
-void _IDB_XCH::resend_clear()
+void _IDB_XCH::resend_clear( bool lock )
 {
+	if( lock )
+		iked.lock_idb.lock();
+
 	//
 	// remove resend event and clear our queue
 	//
 
 	if( iked.ith_timer.del( &event_resend ) )
-		dec( false );
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : %s resend event canceled ( ref count = %i )\n",
+			name(),
+			idb_refcount );
+	}
+
+	_IDB_XCH::lock.lock();
 
 	event_resend.ipqueue.clean();
+
+	_IDB_XCH::lock.unlock();
+
+	if( lock )
+		iked.lock_idb.unlock();
 }
 

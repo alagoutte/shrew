@@ -141,6 +141,12 @@ _IDB_CFG::_IDB_CFG( IDB_TUNNEL * set_tunnel, bool set_initiator, unsigned long s
 _IDB_CFG::~_IDB_CFG()
 {
 	clean();
+
+	//
+	// dereference tunnel
+	//
+
+	tunnel->dec( false );
 }
 
 //------------------------------------------------------------------------------
@@ -165,28 +171,10 @@ void _IDB_CFG::beg()
 void _IDB_CFG::end()
 {
 	//
-	// remove scheduled events
-	//
-
-	if( iked.ith_timer.del( &event_resend ) )
-	{
-		idb_refcount--;
-		iked.log.txt( LLOG_DEBUG,
-			"DB : config resend event canceled ( ref count = %i )\n",
-			idb_refcount );
-	}
-
-	//
 	// clear the resend queue
 	//
 
-	resend_clear();
-
-	//
-	// dereference tunnel
-	//
-
-	tunnel->dec( false );
+	resend_clear( false );
 }
 
 //------------------------------------------------------------------------------

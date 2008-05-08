@@ -62,13 +62,14 @@
 #include <string.h>
 #include <time.h>
 #include "libip.h"
+#include "libidb.h"
+#include "libith.h"
 #include "ike.h"
 #include "export.h"
 
-#define IKEI_EVENT_NAME				"ikedi"
 #define IKEI_PIPE_NAME				"\\\\.\\pipe\\ikedi"
 #define IKEI_SOCK_NAME				"/var/run/ikedi"
-#define IKEI_MAX_BDATA				2048
+#define	IKEI_TIMEOUT				3000
 
 #define IKEI_MSGID_RESULT			1
 #define IKEI_MSGID_ENABLE			2
@@ -79,6 +80,10 @@
 #define IKEI_MSGID_NETWORK			7
 #define IKEI_MSGID_CFGSTR			8
 #define IKEI_MSGID_STATS			9
+
+#define IKEI_RESULT_OK				0
+#define IKEI_RESULT_FAILED			1
+#define IKEI_RESULT_PASSWD			2
 
 #define CFGSTR_CRED_XAUTH_USER		1
 #define CFGSTR_CRED_XAUTH_PASS		2
@@ -98,26 +103,19 @@
 #define STATUS_WARN					5
 #define STATUS_FAIL					6
 
-#define IKEI_OK						1
-#define IKEI_PASSWD					2
-#define IKEI_FAILED					3
-#define IKEI_NODATA					4
-
-typedef struct _IKEI_MSG
+typedef struct _IKEI_HEADER
 {
-	long		peer;
 	long		type;
 	size_t		size;
 
-}IKEI_MSG, *pIKEI_MSG;
+}IKEI_HEADER;
 
-typedef struct _IKEI_MSG_BASIC
+typedef struct _IKEI_BASIC
 {
-	IKEI_MSG	msg;
 	long		value;
 	size_t		bsize;
 
-}IKEI_MSG_BASIC;
+}IKEI_BASIC;
 
 typedef struct _IKEI_STATS
 {
@@ -131,97 +129,72 @@ typedef struct _IKEI_STATS
 
 }IKEI_STATS;
 
-typedef class DLX _IKEI
-{
-	friend class _IKES;
-
-	protected:
-
-#ifdef WIN32
-
-	HANDLE		hpipe;
-	OVERLAPPED	olapp;
-	bool		wait;
-
-#endif
-
-#ifdef UNIX
-
-	int		sock;
-
-#endif
-
-	IKEI_MSG	tmsg;
-
-	long	wait_msg( IKEI_MSG & msg, long timeout );
-	long	recv_msg( void * data, size_t & size );
-	long	send_msg( void * data, size_t size );
-	long	peek_msg( void * data, size_t size );
-
-	long	recv_basic( long type, long * value, void * bdata, size_t * bsize );
-	long	send_basic( long type, long value, void * bdata, size_t bsize );
-	long	send_bidir( long type, long value, void * bdata, size_t bsize, long * msgres );
-
-	public:
-
-	_IKEI();
-	~_IKEI();
-
-	long	attach( long timeout );
-	void	detach();
-
-	long	next_msg( IKEI_MSG & msg );
-
-	long	send_msg_result( long msgres );
-
-	long	recv_msg_status( long * status, char * str, size_t & len );
-	long	send_msg_status( long status, const char * str, long * msgres = NULL );
-
-	long	recv_msg_stats( IKEI_STATS * stats );
-	long	send_msg_stats( IKEI_STATS * stats, long * msgres = NULL );
-
-	long	recv_msg_enable( long * enable );
-	long	send_msg_enable( long enable );
-
-	long	recv_msg_peer( IKE_PEER * peer );
-	long	send_msg_peer( IKE_PEER * peer, long * msgres = NULL );
-
-	long	recv_msg_proposal( IKE_PROPOSAL * proposal );
-	long	send_msg_proposal( IKE_PROPOSAL * proposal, long * msgres = NULL );
-
-	long	recv_msg_client( IKE_XCONF * xconf );
-	long	send_msg_client( IKE_XCONF * xconf, long * msgres = NULL );
-
-	long	recv_msg_network( IKE_PH2ID * ph2id, long * type );
-	long	send_msg_network( IKE_PH2ID * ph2id, long type, long * msgres = NULL );
-
-	long	recv_msg_cfgstr( long * type, char * str, size_t * len );
-	long	send_msg_cfgstr( long type, char * str, size_t len, long * msgres = NULL );
-
-}IKEI;
-
-typedef class DLX _IKES
+typedef class DLX _IKEI_MSG : public BDATA
 {
 	private:
 
-#ifdef WIN32
+	void	init( long type );
 
-	HANDLE		hsrvc;
-	HANDLE		hpipe;
-	OVERLAPPED	olapp;
+	long	get_basic( long * value, BDATA * bdata = NULL );
+	long	set_basic( long value, BDATA * bdata = NULL );
 
-#endif
-
-#ifdef UNIX
-
-	int		sock;
-
-#endif
+	long	get_struct( long * value, void * sdata, size_t ssize );
+	long	set_struct( long value, void * sdata, size_t ssize );
 
 	public:
 
-	_IKES();
-	~_IKES();
+	IKEI_HEADER	header;
+
+	long	get_result( long * msgres );
+	long	set_result( long msgres );
+
+	long	get_status( long * status, BDATA * str );
+	long	set_status( long status, BDATA * str );
+	long	set_status( long status, char * str );
+
+	long	get_stats( IKEI_STATS * stats );
+	long	set_stats( IKEI_STATS * stats );
+
+	long	get_enable( long * enable );
+	long	set_enable( long enable );
+
+	long	get_peer( IKE_PEER * peer );
+	long	set_peer( IKE_PEER * peer );
+
+	long	get_proposal( IKE_PROPOSAL * proposal );
+	long	set_proposal( IKE_PROPOSAL * proposal );
+
+	long	get_client( IKE_XCONF * xconf );
+	long	set_client( IKE_XCONF * xconf );
+
+	long	get_network( long * type, IKE_PH2ID * ph2id );
+	long	set_network( long type, IKE_PH2ID * ph2id );
+
+	long	get_cfgstr( long * type, BDATA * str );
+	long	set_cfgstr( long type, BDATA * str );
+
+}IKEI_MSG;
+
+typedef class DLX _IKEI : private _ITH_IPCC
+{
+	friend class _IKES;
+
+	public:
+
+	bool	attach( long timeout );
+	void	wakeup();
+	void	detach();
+
+	long	send_message( IKEI_MSG & msg );
+	long	recv_message( IKEI_MSG & msg );
+
+	long	send_recv_message( IKEI_MSG & msg );
+
+}IKEI;
+
+typedef class DLX _IKES : private _ITH_IPCS
+{
+	public:
 
 	bool	init();
 	IKEI *	inbound();

@@ -533,6 +533,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						//
 
 						cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
+						cfg->tunnel->ikei->wakeup();
 					}
 
 					break;
@@ -572,6 +573,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
 
 						cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
+						cfg->tunnel->ikei->wakeup();
 					}
 				}
 
