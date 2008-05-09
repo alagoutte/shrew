@@ -1022,6 +1022,7 @@ void _ITH_IPCS::wakeup()
 
 _ITH_IPCC::_ITH_IPCC()
 {
+	sock = -1;
 }
 
 _ITH_IPCC::~_ITH_IPCC()
@@ -1037,16 +1038,47 @@ void _ITH_IPCC::io_conf( IPCCONN sconn )
 
 long _ITH_IPCC::io_recv( void * data, size_t & size )
 {
-	return IPCERR_FAILED;
+	long result = recv( sock, data, size, 0 );
+	if( result < 0 )
+		return IPCERR_FAILED;
+
+	size = result;
+
+	return IPCERR_OK;
 }
 
 long _ITH_IPCC::io_send( void * data, size_t & size )
 {
-	return IPCERR_FAILED;
+	long result = send( sock, data, size, 0 );
+	if( result < 0 )
+		return IKEI_FAILED;
+
+	size = result;
+
+	return IPCERR_OK;
 }
 
 long _ITH_IPCC::attach( char * path, long timeout )
 {
+	sock = socket( AF_UNIX, SOCK_STREAM, 0 );
+	if( sock == -1 )
+		return IPCERR_FAILED;
+
+	struct sockaddr_un saddr;
+	saddr.sun_family = AF_UNIX;
+
+	long sun_len =  strlen( path ) + sizeof( saddr.sun_family );
+
+#ifndef __linux__
+	sun_len += sizeof( saddr.sun_len );
+	saddr.sun_len = sun_len;
+#endif
+
+	strcpy( saddr.sun_path, path );
+
+	if( connect( sock, ( struct sockaddr * ) &saddr, sun_len ) < 0 )
+		return IPCERR_FAILED;
+
 	return IPCERR_OK;
 }
 
@@ -1056,6 +1088,11 @@ void _ITH_IPCC::wakeup()
 
 void _ITH_IPCC::detach()
 {
+	if( sock != -1 )
+	{
+		close( sock );
+		sock = -1;
+	}
 }
 
 //
@@ -1064,6 +1101,7 @@ void _ITH_IPCC::detach()
 
 _ITH_IPCS::_ITH_IPCS()
 {
+	sock = -1;
 }
 
 _ITH_IPCS::~_ITH_IPCS()
@@ -1073,16 +1111,58 @@ _ITH_IPCS::~_ITH_IPCS()
 
 long _ITH_IPCS::init( char * path, bool admin )
 {
-	return IPCERR_FAILED;
+	unlink( IKEI_SOCK_NAME );
+
+	sock = socket( AF_UNIX, SOCK_STREAM, 0 );
+	if( sock == -1 )
+		return IPCERR_FAILED;
+
+	struct sockaddr_un saddr;
+	saddr.sun_family = AF_UNIX;
+
+	long sun_len =  strlen( path ) + sizeof( saddr.sun_family );
+
+#ifndef __linux__
+        sun_len += sizeof( saddr.sun_len );
+        saddr.sun_len = sun_len;
+#endif
+
+	strcpy( saddr.sun_path, path );
+
+	if( bind( sock, ( struct sockaddr * ) &saddr, sun_len ) < 0 )
+		return IPCERR_FAILED;
+
+	if( chmod( IKEI_SOCK_NAME, S_IRWXU | S_IRWXG | S_IRWXO ) < 0 )
+		return IPCERR_FAILED;
+
+	if( listen( sock, 5 ) < 0 )
+		return IPCERR_FAILED;
+
+	return IPCERR_OK;
 }
 
 void _ITH_IPCS::done()
 {
+	if( sock != -1 )
+		close( sock );
 }
 
 long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 {
-	return IPCERR_FAILED;
+	fd_set fdset;
+	FD_ZERO( &fdset );
+	FD_SET( sock, &fdset );
+
+	if( select( sock + 1, &fdset, NULL, NULL, NULL ) <= 0 )
+		return IPCERR_FAILED;
+
+	int csock = accept( sock, NULL, NULL );
+	if( csock < 0 )
+		return IPCERR_FAILED;
+
+	ipcconn = csock;
+
+	return IPCERR_OK;
 }
 
 void _ITH_IPCS::wakeup()
