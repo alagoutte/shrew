@@ -522,11 +522,11 @@ bool _ITH_TIMER::del( ITH_EVENT * event )
 // inter process communication classes
 //==============================================================================
 
+#ifdef WIN32
+
 //
 // inter process communication client
 //
-
-#ifdef WIN32
 
 _ITH_IPCC::_ITH_IPCC()
 {
@@ -1010,6 +1010,85 @@ long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 void _ITH_IPCS::wakeup()
 {
 	SetEvent( hevent_wake );
+}
+
+#endif
+
+#ifdef UNIX
+
+//
+// inter process communication client
+//
+
+_ITH_IPCC::_ITH_IPCC()
+{
+}
+
+_ITH_IPCC::~_ITH_IPCC()
+{
+	detach();
+}
+
+
+void _ITH_IPCC::io_conf( IPCCONN sconn )
+{
+	conn = sconn;
+}
+
+VOID WINAPI io_recv_complete( DWORD result, DWORD size, LPOVERLAPPED olapp )
+{
+	// we do nothing here as the
+	// WaitForSingleObjectEx call
+	// will wake on io completion
+}
+
+long _ITH_IPCC::io_recv( void * data, size_t & size )
+{
+	return IPCERR_FAILED;
+}
+
+long _ITH_IPCC::io_send( void * data, size_t & size )
+{
+	return IPCERR_FAILED;
+}
+
+void _ITH_IPCC::wakeup()
+{
+}
+
+void _ITH_IPCC::detach()
+{
+}
+
+//
+// inter process communication server
+//
+
+_ITH_IPCS::_ITH_IPCS()
+{
+}
+
+_ITH_IPCS::~_ITH_IPCS()
+{
+	done();
+}
+
+long _ITH_IPCS::init( char * path, bool admin )
+{
+	return IPCERR_FAILED;
+}
+
+void _ITH_IPCS::done()
+{
+}
+
+long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
+{
+	return IPCERR_FAILED;
+}
+
+void _ITH_IPCS::wakeup()
+{
 }
 
 #endif
