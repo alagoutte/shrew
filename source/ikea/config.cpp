@@ -239,6 +239,33 @@ bool _CONFIG::get_string( const char * key, char * val, size_t size, int index )
 	return true;
 }
 
+bool _CONFIG::get_string( const char * key, BDATA & val, int index )
+{
+	CFGDAT * cfgdat = get_data( DATA_STRING, key );
+	if( !cfgdat )
+		return false;
+
+	char * strptr = cfgdat->vval.text();
+
+	for( ; index > 0; index-- )
+	{
+		char * tmpptr = text_delim( strptr );
+		if( tmpptr == NULL )
+			return false;
+
+		strptr = tmpptr + 1;
+	}
+
+	// calculate final length
+
+	size_t clen = text_length( strptr );
+
+	val.del();
+	val.set( strptr, clen );
+
+	return true;
+}
+
 long _CONFIG::has_string( const char * key, const char * val, size_t size )
 {
 	CFGDAT * cfgdat = get_data( DATA_STRING, key );

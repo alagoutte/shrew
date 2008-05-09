@@ -102,6 +102,7 @@ typedef class DLX _CONFIG : private IDB_LIST
 	bool	set_string( const char * key, const char * val, size_t size );
 	long	has_string( const char * key, const char * val, size_t size );
 	bool	get_string( const char * key, char * val, size_t size, int index );
+	bool	get_string( const char * key, BDATA & val, int index );
 
 	bool	set_number( const char * key, long val );
 	bool	get_number( const char * key, long * val );

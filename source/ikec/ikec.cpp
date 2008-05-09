@@ -115,8 +115,9 @@ void _IKEC::run()
 	// load the config into ipsecc
 	//
 
-	char text[ MAX_CONFSTRING ];
-	long numb;
+	long	numb;
+	char	text[ MAX_CONFSTRING ];
+	BDATA	btext;
 
 	//
 	// ---------- PEER CONFIG ----------
@@ -749,9 +750,7 @@ void _IKEC::run()
 	long	result;
 	long	msgres;
 
-	result = ikei.attach( 10000 );
-
-	if( result != IKEI_OK )
+	if( ikei.attach( 3000 ) != IPCERR_OK )
 	{
 		log( STATUS_FAIL, "failed to attach to key daemon ...\n" );
 		return;
@@ -772,9 +771,12 @@ void _IKEC::run()
 	// send the peer configuration message
 	//
 
-	result = ikei.send_msg_peer( &peer, &msgres );
+	IKEI_MSG msg;
 
-	if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
+	msg.set_peer( &peer );
+	result = ikei.send_message( msg, &msgres );
+
+	if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
 	{
 		log( STATUS_FAIL, "peer config failed\n" );
 		goto config_failed;
@@ -786,9 +788,10 @@ void _IKEC::run()
 	// send proposal config messages
 	//
 
-	result = ikei.send_msg_proposal( &proposal_isakmp, &msgres );
+	msg.set_proposal( &proposal_isakmp );
+	result = ikei.send_message( msg, &msgres );
 
-	if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
+	if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
 	{
 		log( STATUS_FAIL, "isakmp proposal config failed\n" );
 		goto config_failed;
@@ -796,9 +799,10 @@ void _IKEC::run()
 
 	log( STATUS_INFO, "iskamp proposal configured\n" );
 
-	result = ikei.send_msg_proposal( &proposal_esp, &msgres );
+	msg.set_proposal( &proposal_esp );
+	result = ikei.send_message( msg, &msgres );
 
-	if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
+	if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
 	{
 		log( STATUS_FAIL, "esp proposal config failed\n" );
 		goto config_failed;
@@ -808,9 +812,10 @@ void _IKEC::run()
 
 	if( proposal_ipcomp.xform )
 	{
-		result = ikei.send_msg_proposal( &proposal_ipcomp, &msgres );
+		msg.set_proposal( &proposal_ipcomp );
+		result = ikei.send_message( msg, &msgres );
 
-		if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
+		if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
 		{
 			log( STATUS_FAIL, "ipcomp proposal config failed\n" );
 			goto config_failed;
@@ -823,9 +828,10 @@ void _IKEC::run()
 	// send the client configuration message
 	//
 
-	result = ikei.send_msg_client( &xconf, &msgres );
+	msg.set_client( &xconf );
+	result = ikei.send_message( msg, &msgres );
 
-	if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
+	if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
 	{
 		log( STATUS_FAIL, "client config failed\n" );
 		goto config_failed;
@@ -841,13 +847,30 @@ void _IKEC::run()
 		( proposal_isakmp.auth_id == XAUTH_AUTH_INIT_RSA ) ||
 		( proposal_isakmp.auth_id == HYBRID_AUTH_INIT_RSA ) )
 	{
-		ikei.send_msg_cfgstr( CFGSTR_CRED_XAUTH_USER,
-			( char * ) ikec.username.ascii(),
-			ikec.username.length() );
+		BDATA user;
+		user.set( ikec.username.ascii(), ikec.username.length() );
 
-		ikei.send_msg_cfgstr( CFGSTR_CRED_XAUTH_PASS,
-			( char * ) ikec.password.ascii(),
-			ikec.password.length() );
+		msg.set_cfgstr( CFGSTR_CRED_XAUTH_USER, &user );
+		result = ikei.send_message( msg, &msgres );
+
+		if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
+		{
+			log( STATUS_FAIL, "xauth username config failed\n" );
+			goto config_failed;
+		}
+
+		BDATA pass;
+		pass.set( ikec.password.ascii(), ikec.password.length() );
+
+		msg.set_cfgstr( CFGSTR_CRED_XAUTH_PASS, &pass );
+		result = ikei.send_message( msg, &msgres );
+
+		if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
+		{
+			log( STATUS_FAIL, "xauth password config failed\n" );
+			goto config_failed;
+		}
+
 	}
 
 	//
@@ -856,12 +879,11 @@ void _IKEC::run()
 
 	// client id data
 
-	text[ 0 ] = 0;
+	config.get_string( "ident-client-data", btext, 0 );
+	msg.set_cfgstr( CFGSTR_CRED_LID, &btext );
+	result = ikei.send_message( msg, &msgres );
 
-	config.get_string( "ident-client-data", text, MAX_CONFSTRING, 0 );
-	result = ikei.send_msg_cfgstr( CFGSTR_CRED_LID, text, strlen( text ), &msgres );
-
-	if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
+	if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
 	{
 		log( STATUS_FAIL, "local id config failed\n" );
 		goto config_failed;
@@ -871,12 +893,11 @@ void _IKEC::run()
 
 	// server id data
 
-	text[ 0 ] = 0;
+	config.get_string( "ident-server-data", btext, 0 );
+	msg.set_cfgstr( CFGSTR_CRED_RID, &btext );
+	result = ikei.send_message( msg, &msgres );
 
-	config.get_string( "ident-server-data", text, MAX_CONFSTRING, 0 );
-	result = ikei.send_msg_cfgstr( CFGSTR_CRED_RID, text, strlen( text ), &msgres );
-
-	if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
+	if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
 	{
 		log( STATUS_FAIL, "remote id config failed\n" );
 		goto config_failed;
@@ -894,7 +915,7 @@ void _IKEC::run()
 	{
 		// server certificate
 
-		if( !config.get_string( "auth-server-cert", text, MAX_CONFSTRING, 0 ) )
+		if( !config.get_string( "auth-server-cert", btext, 0 ) )
 		{
 			log( STATUS_FAIL, "config error : auth-server-cert undefined\n" );
 			goto config_failed;
@@ -902,15 +923,16 @@ void _IKEC::run()
 
 		server_cert_rety:
 
-		result = ikei.send_msg_cfgstr( CFGSTR_CRED_RSA_RCRT, text, strlen( text ), &msgres );
+		msg.set_cfgstr( CFGSTR_CRED_RSA_RCRT, &btext );
+		result = ikei.send_message( msg, &msgres );
 
-		if( ( result == IKEI_FAILED ) || ( msgres == IKEI_FAILED ) )
+		if( ( result != IPCERR_OK ) || ( msgres == IKEI_RESULT_FAILED ) )
 		{
 			log( STATUS_FAIL, "server cert config failed\n" );
 			goto config_failed;
 		}
 
-		if( msgres == IKEI_PASSWD )
+		if( msgres == IKEI_RESULT_PASSWD )
 		{
 			FilePassData PassData;
 			PassData.filepath = text;
@@ -924,9 +946,10 @@ void _IKEC::run()
 				goto config_failed;
 			}
 
-			ikei.send_msg_cfgstr( CFGSTR_CRED_FILE_PASS,
-				( char * ) PassData.password.ascii(),
-				PassData.password.length() );
+			btext.set( PassData.password.ascii(), PassData.password.length() );
+
+			msg.set_cfgstr( CFGSTR_CRED_FILE_PASS, &btext );
+			result = ikei.send_message( msg, &msgres );
 
 			goto server_cert_rety;
 		}
@@ -939,7 +962,7 @@ void _IKEC::run()
 	{
 		// client certificate
 
-		if( !config.get_string( "auth-client-cert", text, MAX_CONFSTRING, 0 ) )
+		if( !config.get_string( "auth-client-cert", btext, 0 ) )
 		{
 			log( STATUS_FAIL, "config error : auth-client-cert undefined\n" );
 			goto config_failed;
@@ -947,15 +970,16 @@ void _IKEC::run()
 
 		client_cert_rety:
 
-		result = ikei.send_msg_cfgstr( CFGSTR_CRED_RSA_LCRT, text, strlen( text ), &msgres );
+		msg.set_cfgstr( CFGSTR_CRED_RSA_LCRT, &btext );
+		result = ikei.send_message( msg, &msgres );
 
-		if( ( result == IKEI_FAILED ) || ( msgres == IKEI_FAILED ) )
+		if( ( result != IPCERR_OK ) || ( msgres == IKEI_RESULT_FAILED ) )
 		{
 			log( STATUS_FAIL, "client cert config failed\n" );
 			goto config_failed;
 		}
 
-		if( msgres == IKEI_PASSWD )
+		if( msgres == IKEI_RESULT_PASSWD )
 		{
 			FilePassData PassData;
 			PassData.filepath = text;
@@ -969,9 +993,10 @@ void _IKEC::run()
 				goto config_failed;
 			}
 
-			ikei.send_msg_cfgstr( CFGSTR_CRED_FILE_PASS,
-				( char * ) PassData.password.ascii(),
-				PassData.password.length() );
+			btext.set( PassData.password.ascii(), PassData.password.length() );
+
+			msg.set_cfgstr( CFGSTR_CRED_FILE_PASS, &btext );
+			result = ikei.send_message( msg, &msgres );
 
 			goto client_cert_rety;
 		}
@@ -980,7 +1005,7 @@ void _IKEC::run()
 
 		// client private key
 
-		if( !config.get_string( "auth-client-key", text, MAX_CONFSTRING, 0 ) )
+		if( !config.get_string( "auth-client-key", btext, 0 ) )
 		{
 			log( STATUS_FAIL, "config error : auth-client-key undefined\n" );
 			goto config_failed;
@@ -988,15 +1013,16 @@ void _IKEC::run()
 
 		client_pkey_rety:
 
-		result = ikei.send_msg_cfgstr( CFGSTR_CRED_RSA_LKEY, text, strlen( text ), &msgres );
+		msg.set_cfgstr( CFGSTR_CRED_RSA_LKEY, &btext );
+		result = ikei.send_message( msg, &msgres );
 
-		if( ( result == IKEI_FAILED ) || ( msgres == IKEI_FAILED ) )
+		if( ( result != IPCERR_OK ) || ( msgres == IKEI_RESULT_FAILED ) )
 		{
 			log( STATUS_FAIL, "client key config failed\n" );
 			goto config_failed;
 		}
 
-		if( msgres == IKEI_PASSWD )
+		if( msgres == IKEI_RESULT_PASSWD )
 		{
 			FilePassData PassData;
 			PassData.filepath = text;
@@ -1010,9 +1036,10 @@ void _IKEC::run()
 				goto config_failed;
 			}
 
-			ikei.send_msg_cfgstr( CFGSTR_CRED_FILE_PASS,
-				( char * ) PassData.password.ascii(),
-				PassData.password.length() );
+			btext.set( PassData.password.ascii(), PassData.password.length() );
+
+			msg.set_cfgstr( CFGSTR_CRED_FILE_PASS, &btext );
+			result = ikei.send_message( msg, &msgres );
 
 			goto client_pkey_rety;
 		}
@@ -1033,8 +1060,10 @@ void _IKEC::run()
 			goto config_failed;
 		}
 
-		result = ikei.send_msg_cfgstr( CFGSTR_CRED_PSK, psk.text(), psk.size(), &msgres );
-		if( ( result != IKEI_OK ) || ( msgres != IKEI_OK ) )
+		msg.set_cfgstr( CFGSTR_CRED_PSK, &psk );
+		result = ikei.send_message( msg, &msgres );
+
+		if( ( result != IPCERR_OK ) || ( msgres == IKEI_RESULT_FAILED ) )
 		{
 			log( STATUS_FAIL, "pre-shared key config failed\n" );
 			goto config_failed;
@@ -1051,8 +1080,17 @@ void _IKEC::run()
 		!( xconf.rqst & IPSEC_OPTS_SPLITDNS ) )
 	{
 		long index = 0;
-		while( config.get_string( "client-splitdns-list", text, MAX_CONFSTRING, index++ ) )
-			ikei.send_msg_cfgstr( CFGSTR_SPLIT_DOMAIN, text, strlen( text ) );
+		while( config.get_string( "client-splitdns-list", btext, index++ ) )
+		{
+			msg.set_cfgstr( CFGSTR_SPLIT_DOMAIN, &btext );
+			result = ikei.send_message( msg, &msgres );
+
+			if( ( result != IPCERR_OK ) || ( msgres == IKEI_RESULT_FAILED ) )
+			{
+				log( STATUS_FAIL, "split domain name config failed\n" );
+				goto config_failed;
+			}
+		}
 	}
 
 	//
@@ -1076,7 +1114,14 @@ void _IKEC::run()
 			ph2id.addr1.s_addr = addr;
 			ph2id.addr2.s_addr = mask;
 
-			ikei.send_msg_network( &ph2id, UNITY_SPLIT_EXCLUDE );
+			msg.set_network( UNITY_SPLIT_EXCLUDE, &ph2id );
+			result = ikei.send_message( msg, &msgres );
+
+			if( ( result != IPCERR_OK ) || ( msgres == IKEI_RESULT_FAILED ) )
+			{
+				log( STATUS_FAIL, "policy include config failed\n" );
+				goto config_failed;
+			}
 
 			index++;
 		}
@@ -1096,7 +1141,14 @@ void _IKEC::run()
 			ph2id.addr1.s_addr = addr;
 			ph2id.addr2.s_addr = mask;
 
-			ikei.send_msg_network( &ph2id, UNITY_SPLIT_INCLUDE );
+			msg.set_network( UNITY_SPLIT_INCLUDE, &ph2id );
+			result = ikei.send_message( msg, &msgres );
+
+			if( ( result != IPCERR_OK ) || ( msgres == IKEI_RESULT_FAILED ) )
+			{
+				log( STATUS_FAIL, "policy include config failed\n" );
+				goto config_failed;
+			}
 
 			index++;
 		}
@@ -1106,8 +1158,12 @@ void _IKEC::run()
 	// ---------- ENABLE TUNNEL ----------
 	//
 
-	if( !ikei.send_msg_enable( true ) )
-		return;
+	msg.set_enable( true );
+	if( ikei.send_message( msg ) != IPCERR_OK )
+	{
+		log( STATUS_FAIL, "send enable failed\n" );
+		goto config_failed;
+	}
 
 	//
 	// ---------- FEEDBACK LOOP ----------
@@ -1118,31 +1174,36 @@ void _IKEC::run()
 	while( true )
 	{
 		//
-		// check for user cancelation
-		//
-
-		if( cancel == true )
-			if( !ikei.send_msg_enable( false ) )
-				break;
-
-		//
 		// get the next message
 		//
 
-		IKEI_MSG msg;
-		result = ikei.next_msg( msg );
+		result = ikei.recv_message( msg );
 
-		if( result == IKEI_NODATA )
+		if( result == IPCERR_NODATA )
 			continue;
 
-		if( result == IKEI_FAILED )
+		if( ( result == IPCERR_FAILED ) ||
+		    ( result == IPCERR_CLOSED ) )
 			break;
+
+		//
+		// check for user cancelation
+		//
+
+		if( result == IPCERR_WAKEUP )
+		{
+			msg.set_enable( true );
+			if( ikei.send_message( msg ) != IPCERR_OK )
+				break;
+
+			continue;
+		}
 
 		//
 		// evaluate the message
 		//
 
-		switch( msg.type )
+		switch( msg.header.type )
 		{
 			//
 			// enable message
@@ -1150,8 +1211,7 @@ void _IKEC::run()
 
 			case IKEI_MSGID_ENABLE:
 			
-				result = ikei.recv_msg_enable( &msgres );
-				if( result != IKEI_OK )
+				if( msg.get_enable( &msgres ) != IPCERR_OK )
 					break;
 
 				QApplication::postEvent( r, new EnableEvent( msgres ) );
@@ -1164,14 +1224,10 @@ void _IKEC::run()
 
 			case IKEI_MSGID_STATUS:
 			{
-				char	txtmsg[ IKEI_MAX_BDATA + 1 ] = { 0 };
-				size_t	txtlen = IKEI_MAX_BDATA;
-
-				result = ikei.recv_msg_status( &status, txtmsg, txtlen );
-				if( result != IKEI_OK )
+				if( msg.get_status( &status, &btext ) != IPCERR_OK )
 					break;
 
-				log( status, txtmsg );
+				log( status, btext.text(), btext.size() );
 
 				break;
 			}
@@ -1184,8 +1240,7 @@ void _IKEC::run()
 			{
 				IKEI_STATS stats;
 
-				result = ikei.recv_msg_stats( &stats );
-				if( result != IKEI_OK )
+				if( msg.get_stats( &stats ) != IPCERR_OK )
 					break;
 
 				QApplication::postEvent( r, new StatsEvent( stats ) );

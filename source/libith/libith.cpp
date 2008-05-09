@@ -1035,13 +1035,6 @@ void _ITH_IPCC::io_conf( IPCCONN sconn )
 	conn = sconn;
 }
 
-VOID WINAPI io_recv_complete( DWORD result, DWORD size, LPOVERLAPPED olapp )
-{
-	// we do nothing here as the
-	// WaitForSingleObjectEx call
-	// will wake on io completion
-}
-
 long _ITH_IPCC::io_recv( void * data, size_t & size )
 {
 	return IPCERR_FAILED;
@@ -1050,6 +1043,11 @@ long _ITH_IPCC::io_recv( void * data, size_t & size )
 long _ITH_IPCC::io_send( void * data, size_t & size )
 {
 	return IPCERR_FAILED;
+}
+
+long _ITH_IPCC::attach( char * path, long timeout )
+{
+	return IPCERR_OK;
 }
 
 void _ITH_IPCC::wakeup()
