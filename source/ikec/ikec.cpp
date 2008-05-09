@@ -946,9 +946,10 @@ void _IKEC::run()
 				goto config_failed;
 			}
 
-			btext.set( PassData.password.ascii(), PassData.password.length() );
+			BDATA fpass;
+			fpass.set( PassData.password.ascii(), PassData.password.length() );
 
-			msg.set_cfgstr( CFGSTR_CRED_FILE_PASS, &btext );
+			msg.set_cfgstr( CFGSTR_CRED_FILE_PASS, &fpass );
 			result = ikei.send_message( msg, &msgres );
 
 			goto server_cert_rety;
@@ -993,9 +994,10 @@ void _IKEC::run()
 				goto config_failed;
 			}
 
-			btext.set( PassData.password.ascii(), PassData.password.length() );
+			BDATA fpass;
+			fpass.set( PassData.password.ascii(), PassData.password.length() );
 
-			msg.set_cfgstr( CFGSTR_CRED_FILE_PASS, &btext );
+			msg.set_cfgstr( CFGSTR_CRED_FILE_PASS, &fpass );
 			result = ikei.send_message( msg, &msgres );
 
 			goto client_cert_rety;
@@ -1036,9 +1038,10 @@ void _IKEC::run()
 				goto config_failed;
 			}
 
-			btext.set( PassData.password.ascii(), PassData.password.length() );
+			BDATA fpass;
+			fpass.set( PassData.password.ascii(), PassData.password.length() );
 
-			msg.set_cfgstr( CFGSTR_CRED_FILE_PASS, &btext );
+			msg.set_cfgstr( CFGSTR_CRED_FILE_PASS, &fpass );
 			result = ikei.send_message( msg, &msgres );
 
 			goto client_pkey_rety;

@@ -57,6 +57,9 @@
 #  include <signal.h>
 #  include <pthread.h>
 #  include <sys/time.h>
+#  include <sys/un.h>
+#  include <sys/stat.h>
+#  include <sys/socket.h>
 # else
 #  include <errno.h>
 #  include <unistd.h>
@@ -64,6 +67,10 @@
 #  include <assert.h>
 #  include <pthread.h>
 #  include <sys/time.h>
+#  include <sys/types.h>
+#  include <sys/un.h>
+#  include <sys/stat.h>
+#  include <sys/socket.h>
 # endif
 # include "compat/winstring.h"
 #endif

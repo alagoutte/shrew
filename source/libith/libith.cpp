@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2007
  *      Shrew Soft Inc.  All rights reserved.
@@ -1022,7 +1021,7 @@ void _ITH_IPCS::wakeup()
 
 _ITH_IPCC::_ITH_IPCC()
 {
-	sock = -1;
+	conn = -1;
 }
 
 _ITH_IPCC::~_ITH_IPCC()
@@ -1038,9 +1037,12 @@ void _ITH_IPCC::io_conf( IPCCONN sconn )
 
 long _ITH_IPCC::io_recv( void * data, size_t & size )
 {
-	long result = recv( sock, data, size, 0 );
+	long result = recv( conn, data, size, 0 );
 	if( result < 0 )
 		return IPCERR_FAILED;
+
+	if( result == 0 )
+		return IPCERR_CLOSED;
 
 	size = result;
 
@@ -1049,9 +1051,9 @@ long _ITH_IPCC::io_recv( void * data, size_t & size )
 
 long _ITH_IPCC::io_send( void * data, size_t & size )
 {
-	long result = send( sock, data, size, 0 );
+	long result = send( conn, data, size, 0 );
 	if( result < 0 )
-		return IKEI_FAILED;
+		return IPCERR_FAILED;
 
 	size = result;
 
@@ -1060,8 +1062,8 @@ long _ITH_IPCC::io_send( void * data, size_t & size )
 
 long _ITH_IPCC::attach( char * path, long timeout )
 {
-	sock = socket( AF_UNIX, SOCK_STREAM, 0 );
-	if( sock == -1 )
+	conn = socket( AF_UNIX, SOCK_STREAM, 0 );
+	if( conn == -1 )
 		return IPCERR_FAILED;
 
 	struct sockaddr_un saddr;
@@ -1076,7 +1078,7 @@ long _ITH_IPCC::attach( char * path, long timeout )
 
 	strcpy( saddr.sun_path, path );
 
-	if( connect( sock, ( struct sockaddr * ) &saddr, sun_len ) < 0 )
+	if( connect( conn, ( struct sockaddr * ) &saddr, sun_len ) < 0 )
 		return IPCERR_FAILED;
 
 	return IPCERR_OK;
@@ -1088,10 +1090,10 @@ void _ITH_IPCC::wakeup()
 
 void _ITH_IPCC::detach()
 {
-	if( sock != -1 )
+	if( conn != -1 )
 	{
-		close( sock );
-		sock = -1;
+		close( conn );
+		conn = -1;
 	}
 }
 
@@ -1101,7 +1103,7 @@ void _ITH_IPCC::detach()
 
 _ITH_IPCS::_ITH_IPCS()
 {
-	sock = -1;
+	conn = -1;
 }
 
 _ITH_IPCS::~_ITH_IPCS()
@@ -1111,10 +1113,10 @@ _ITH_IPCS::~_ITH_IPCS()
 
 long _ITH_IPCS::init( char * path, bool admin )
 {
-	unlink( IKEI_SOCK_NAME );
+	unlink( path );
 
-	sock = socket( AF_UNIX, SOCK_STREAM, 0 );
-	if( sock == -1 )
+	conn = socket( AF_UNIX, SOCK_STREAM, 0 );
+	if( conn == -1 )
 		return IPCERR_FAILED;
 
 	struct sockaddr_un saddr;
@@ -1129,13 +1131,13 @@ long _ITH_IPCS::init( char * path, bool admin )
 
 	strcpy( saddr.sun_path, path );
 
-	if( bind( sock, ( struct sockaddr * ) &saddr, sun_len ) < 0 )
+	if( bind( conn, ( struct sockaddr * ) &saddr, sun_len ) < 0 )
 		return IPCERR_FAILED;
 
-	if( chmod( IKEI_SOCK_NAME, S_IRWXU | S_IRWXG | S_IRWXO ) < 0 )
+	if( chmod( path, S_IRWXU | S_IRWXG | S_IRWXO ) < 0 )
 		return IPCERR_FAILED;
 
-	if( listen( sock, 5 ) < 0 )
+	if( listen( conn, 5 ) < 0 )
 		return IPCERR_FAILED;
 
 	return IPCERR_OK;
@@ -1143,24 +1145,22 @@ long _ITH_IPCS::init( char * path, bool admin )
 
 void _ITH_IPCS::done()
 {
-	if( sock != -1 )
-		close( sock );
+	if( conn != -1 )
+		close( conn );
 }
 
 long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 {
 	fd_set fdset;
 	FD_ZERO( &fdset );
-	FD_SET( sock, &fdset );
+	FD_SET( conn, &fdset );
 
-	if( select( sock + 1, &fdset, NULL, NULL, NULL ) <= 0 )
+	if( select( conn + 1, &fdset, NULL, NULL, NULL ) <= 0 )
 		return IPCERR_FAILED;
 
-	int csock = accept( sock, NULL, NULL );
-	if( csock < 0 )
+	ipcconn = accept( conn, NULL, NULL );
+	if( ipcconn < 0 )
 		return IPCERR_FAILED;
-
-	ipcconn = csock;
 
 	return IPCERR_OK;
 }

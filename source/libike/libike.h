@@ -67,9 +67,11 @@
 #include "ike.h"
 #include "export.h"
 
-#define IKEI_PIPE_NAME				"\\\\.\\pipe\\ikedi"
-#define IKEI_SOCK_NAME				"/var/run/ikedi"
-#define	IKEI_TIMEOUT				3000
+#ifdef WIN32
+# define IKEI_PIPE_NAME				"\\\\.\\pipe\\ikedi"
+#else
+# define IKEI_PIPE_NAME				"/var/run/ikedi"
+#endif
 
 #define IKEI_MSGID_RESULT			1
 #define IKEI_MSGID_ENABLE			2
