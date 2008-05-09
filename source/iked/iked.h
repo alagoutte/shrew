@@ -414,6 +414,7 @@ typedef class _IKED
 
 	short	ident;				// ip identity
 
+	ITH_LOCK	lock_run;
 	ITH_LOCK	lock_net;
 	ITH_LOCK	lock_idb;
 
@@ -750,7 +751,7 @@ typedef class _IKED
 	// admiministrative interface handlers
 	//
 
-	void	attach_ike_admin();
+	long	attach_ike_admin();
 
 	//
 	// execution thread loops

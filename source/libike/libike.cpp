@@ -226,7 +226,7 @@ long _IKEI_MSG::set_cfgstr( long type, BDATA * str )
 	return set_basic( type, str );
 }
 
-bool _IKEI::attach( long timeout )
+long _IKEI::attach( long timeout )
 {
 	return ITH_IPCC::attach( IKEI_PIPE_NAME, timeout );
 }
@@ -239,14 +239,6 @@ void _IKEI::wakeup()
 void _IKEI::detach()
 {
 	ITH_IPCC::detach();
-}
-
-long _IKEI::send_message( IKEI_MSG & msg )
-{
-	msg.header.size = msg.size() + sizeof( msg.header );
-	msg.ins( &msg.header, sizeof( msg.header ) );
-
-	return io_send( msg.buff(), msg.header.size );
 }
 
 long _IKEI::recv_message( IKEI_MSG & msg )
@@ -278,195 +270,60 @@ long _IKEI::recv_message( IKEI_MSG & msg )
 	return result;
 }
 
-long _IKEI::send_recv_message( IKEI_MSG & msg )
+long _IKEI::send_message( IKEI_MSG & msg )
 {
-	long result = send_message( msg );
+	msg.header.size = msg.size() + sizeof( msg.header );
+	msg.ins( &msg.header, sizeof( msg.header ) );
+
+	return io_send( msg.buff(), msg.header.size );
+}
+
+long _IKEI::send_message( IKEI_MSG & msg, long * rslt )
+{
+	long result;
+
+	result = send_message( msg );
 	if( result != IPCERR_OK )
 		return result;
 
-	return recv_message( msg );
+	IKEI_MSG msg_rslt;
+
+	result = recv_message( msg_rslt );
+	if( result != IPCERR_OK )
+		return result;
+
+	return msg_rslt.get_result( rslt );
 }
 
-bool _IKES::init()
+long _IKES::init()
 {
 	return ITH_IPCS::init( IKEI_PIPE_NAME, false );
 }
 
-IKEI * _IKES::inbound()
+void _IKES::done()
+{
+	ITH_IPCS::done();
+}
+
+long _IKES::inbound( IKEI ** ikei )
 {
 	IPCCONN ipcconn;
-	if( !ITH_IPCS::inbound( IKEI_PIPE_NAME, ipcconn ) )
-		return NULL;
 
-	IKEI * ikei = new IKEI;
-	if( ikei != NULL )
-		ikei->io_conf( ipcconn );
+	long result = ITH_IPCS::inbound( IKEI_PIPE_NAME, ipcconn );
 
-	return ikei;
-}
-
-#ifdef UNIX
-
-_IKEI::_IKEI()
-{
-	sock = -1;
-}
-
-_IKEI::~_IKEI()
-{
-	detach();
-}
-
-long _IKEI::attach( long timeout )
-{
-	sock = socket( AF_UNIX, SOCK_STREAM, 0 );
-	if( sock == -1 )
-		return IKEI_FAILED;
-
-	struct sockaddr_un saddr;
-	saddr.sun_family = AF_UNIX;
-
-	long sun_len =  strlen( IKEI_SOCK_NAME ) +
-			sizeof( saddr.sun_family );
-
-#ifndef __linux__
-	sun_len += sizeof( saddr.sun_len );
-	saddr.sun_len = sun_len;
-#endif
-
-	strcpy( saddr.sun_path, IKEI_SOCK_NAME );
-
-	if( connect( sock, ( struct sockaddr * ) &saddr, sun_len ) < 0 )
-		return IKEI_FAILED;
-
-	return IKEI_OK;
-}
-
-void _IKEI::detach()
-{
-	if( sock != -1 )
+	if( result == IPCERR_OK )
 	{
-		close( sock );
-		sock = -1;
+		*ikei = new IKEI;
+		if( *ikei == NULL )
+			return IPCERR_FAILED;
+	
+		(*ikei)->io_conf( ipcconn );
 	}
+
+	return result;
 }
 
-long _IKEI::wait_msg( IKEI_MSG & msg, long timeout )
+void _IKES::wakeup()
 {
-	fd_set fdset;
-	FD_ZERO( &fdset );
-	FD_SET( sock, &fdset );
-
-	struct timeval tv;
-	tv.tv_sec = timeout / 100;
-	tv.tv_usec = timeout % 100;
-
-	if( select( sock + 1, &fdset, NULL, NULL, &tv ) <= 0 )
-		return IKEI_NODATA;
-
-	ssize_t size = recv( sock, &msg, sizeof( msg ), MSG_PEEK );
-	if( size != sizeof( msg ) )
-		return IKEI_FAILED;
-
-	return IKEI_OK;
+	ITH_IPCS::wakeup();
 }
-
-long _IKEI::recv_msg( void * data, size_t & size )
-{
-	if( recv( sock, data, sizeof( IKEI_MSG ), 0 ) <= 0 )
-		return IKEI_FAILED;
-
-	IKEI_MSG * msg = ( IKEI_MSG * ) data;
-
-	unsigned char * buff = ( unsigned char * ) data;
-
-	long result = recv( sock,
-					buff + sizeof( IKEI_MSG ),
-					msg->size - sizeof( IKEI_MSG ),
-					0 );
-
-	if( result < 0 )
-		return IKEI_FAILED;
-
-	size = result + sizeof( IKEI_MSG );
-
-	return IKEI_OK;
-}
-
-long _IKEI::send_msg( void * data, size_t size )
-{
-	long result = send( sock, data, size, 0 );
-	if( result < 0 )
-		return IKEI_FAILED;
-
-	return IKEI_OK;
-}
-
-_IKES::_IKES()
-{
-	sock = -1;
-}
-
-_IKES::~_IKES()
-{
-	if( sock != -1 )
-		close( sock );
-}
-
-bool _IKES::init()
-{
-	unlink( IKEI_SOCK_NAME );
-
-	sock = socket( AF_UNIX, SOCK_STREAM, 0 );
-	if( sock == -1 )
-		return false;
-
-	struct sockaddr_un saddr;
-	saddr.sun_family = AF_UNIX;
-
-	long sun_len =  strlen( IKEI_SOCK_NAME ) +
-			sizeof( saddr.sun_family );
-
-#ifndef __linux__
-        sun_len += sizeof( saddr.sun_len );
-        saddr.sun_len = sun_len;
-#endif
-
-	strcpy( saddr.sun_path, IKEI_SOCK_NAME );
-
-	if( bind( sock, ( struct sockaddr * ) &saddr, sun_len ) < 0 )
-		return false;
-
-	if( chmod( IKEI_SOCK_NAME, S_IRWXU | S_IRWXG | S_IRWXO ) < 0 )
-		return false;
-
-	if( listen( sock, 5 ) < 0 )
-		return false;
-
-	return true;
-}
-
-IKEI * _IKES::inbound()
-{
-	fd_set fdset;
-	FD_ZERO( &fdset );
-	FD_SET( sock, &fdset );
-
-	struct timeval tv;
-	tv.tv_sec = 0;
-	tv.tv_usec = 10000;
-
-	if( select( sock + 1, &fdset, NULL, NULL, &tv ) <= 0 )
-		return NULL;
-
-	int csock = accept( sock, NULL, NULL );
-	if( csock < 0 )
-		return NULL;
-
-	IKEI * ikei = new IKEI;
-	ikei->sock = csock;
-
-	return ikei;
-}
-
-#endif

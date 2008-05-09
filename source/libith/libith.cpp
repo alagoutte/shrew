@@ -533,10 +533,9 @@ _ITH_IPCC::_ITH_IPCC()
 	hmutex_recv = CreateMutex( NULL, false, NULL );
 	hmutex_send = CreateMutex( NULL, false, NULL );
 
-	hevent_send = CreateEvent( NULL, true, false, NULL );
 	hevent_wake = CreateEvent( NULL, true, false, NULL );
+	hevent_send = CreateEvent( NULL, true, false, NULL );
 
-	serv = false;
 	conn = INVALID_HANDLE_VALUE;
 }
 
@@ -548,7 +547,6 @@ _ITH_IPCC::~_ITH_IPCC()
 
 void _ITH_IPCC::io_conf( IPCCONN sconn )
 {
-	serv = true;
 	conn = sconn;
 }
 
@@ -707,10 +705,10 @@ long _ITH_IPCC::io_send( void * data, size_t & size )
 	return IPCERR_OK;
 }
 
-bool _ITH_IPCC::attach( char * path, long timeout )
+long _ITH_IPCC::attach( char * path, long timeout )
 {
 	if( !WaitNamedPipe( path, timeout ) )
-		return false;
+		return IPCERR_FAILED;
 
 	conn = CreateFile(
 				path,
@@ -724,10 +722,10 @@ bool _ITH_IPCC::attach( char * path, long timeout )
 	if( conn == INVALID_HANDLE_VALUE )
 	{
 		long result = GetLastError();
-		return false;
+		return IPCERR_FAILED;
 	}
 
-	return true;
+	return IPCERR_OK;
 }
 
 void _ITH_IPCC::wakeup()
@@ -770,11 +768,7 @@ void _ITH_IPCC::detach()
 
 	if( conn != INVALID_HANDLE_VALUE )
 	{
-		if( serv )
-			DisconnectNamedPipe( conn );
-		else
-			CloseHandle( conn );
-
+		CloseHandle( conn );
 		conn = INVALID_HANDLE_VALUE;
 	}
 }
@@ -785,27 +779,22 @@ void _ITH_IPCC::detach()
 
 _ITH_IPCS::_ITH_IPCS()
 {
-	conn	= INVALID_HANDLE_VALUE;
+	hevent_wake = CreateEvent( NULL, true, false, NULL );
+	hevent_conn = CreateEvent( NULL, true, false, NULL );
+
 	sid		= NULL;
 	acl		= NULL;
 	psa		= NULL;
+
+	conn	= INVALID_HANDLE_VALUE;
 }
 
 _ITH_IPCS::~_ITH_IPCS()
 {
-	if( acl != NULL )
-		LocalFree( acl );
-
-	if( sid != NULL )
-		FreeSid( sid );
-
-	if( conn != INVALID_HANDLE_VALUE )
-		CloseHandle( conn );
-
-	conn = INVALID_HANDLE_VALUE;
+	done();
 }
 
-bool _ITH_IPCS::init( char * path, bool admin )
+long _ITH_IPCS::init( char * path, bool admin )
 {
 	// create the well-known world sid
 
@@ -822,7 +811,7 @@ bool _ITH_IPCS::init( char * path, bool admin )
 				DOMAIN_ALIAS_RID_ADMINS,
 				0, 0, 0, 0, 0, 0,
 				&sid ) )
-			return false;
+			return IPCERR_FAILED;
 	}
 	else
 	{
@@ -835,7 +824,7 @@ bool _ITH_IPCS::init( char * path, bool admin )
 				0,
 				0, 0, 0, 0, 0, 0,
 				&sid ) )
-			return false;
+			return IPCERR_FAILED;
 	}
 
 	// initialize the explicit access info
@@ -855,12 +844,12 @@ bool _ITH_IPCS::init( char * path, bool admin )
 	// create a new ACL that contains the new ACEs.
 
 	if( SetEntriesInAcl( 1, &ea, NULL, &acl ) != ERROR_SUCCESS )
-		return false;
+		return IPCERR_FAILED;
 
 	// Initialize a security descriptor
 
 	if( !InitializeSecurityDescriptor( &sd, SECURITY_DESCRIPTOR_REVISION ) ) 
-		return false;
+		return IPCERR_FAILED;
  
 	// Add the ACL to the security descriptor.
 
@@ -869,7 +858,7 @@ bool _ITH_IPCS::init( char * path, bool admin )
 			TRUE,		// bDaclPresent flag
 			acl,
 			FALSE ) )	// not a default DACL
-		return false;
+		return IPCERR_FAILED;
 
 	// Initialize a security attributes structure.
 
@@ -893,13 +882,41 @@ bool _ITH_IPCS::init( char * path, bool admin )
 //			&sa );
 
 	if( conn == INVALID_HANDLE_VALUE )
-		return false;
+		return IPCERR_FAILED;
 
-	return true;
+	return IPCERR_OK;
 }
 
-bool _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
+void _ITH_IPCS::done()
 {
+	if( acl != NULL )
+		LocalFree( acl );
+
+	if( sid != NULL )
+		FreeSid( sid );
+
+	if( hevent_conn != NULL )
+	{
+		CloseHandle( hevent_conn );
+		hevent_conn = NULL;
+	}
+
+	if( hevent_wake != NULL )
+	{
+		CloseHandle( hevent_wake );
+		hevent_wake = NULL;
+	}
+
+	if( conn != INVALID_HANDLE_VALUE )
+		CloseHandle( conn );
+
+	conn = INVALID_HANDLE_VALUE;
+}
+
+long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
+{
+	DWORD dwundef;
+
 	if( conn == INVALID_HANDLE_VALUE )
 		conn = CreateNamedPipe(
 				path,
@@ -917,18 +934,82 @@ bool _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 
 	ipcconn = INVALID_HANDLE_VALUE;
 
-	if( ConnectNamedPipe( conn, NULL ) )
-		ipcconn = conn;
-	else
-		if( GetLastError() == ERROR_PIPE_CONNECTED )
+	OVERLAPPED olapp;
+	memset( &olapp, 0, sizeof( olapp ) );
+	olapp.hEvent = hevent_conn;
+
+	SetLastError( ERROR_SUCCESS );
+
+	ConnectNamedPipe( conn, &olapp );
+
+	long result = GetLastError();
+
+	switch( result )
+	{
+		case ERROR_IO_PENDING:
+		{
+			HANDLE events[ 2 ];
+			events[ 0 ] = hevent_conn;
+			events[ 1 ] = hevent_wake;
+
+			result = WaitForMultipleObjects(
+						2,
+						events,
+						false,
+						INFINITE );
+
+			if( result == WAIT_OBJECT_0 + 1 )
+			{
+				// cancel the current overlaped
+				// request and give it a chance
+				// to complete in a wait state
+
+				CancelIo( conn );
+				SleepEx( 0, true );
+			}
+
+			result = GetOverlappedResult(
+						conn,
+						&olapp,
+						&dwundef,
+						true );
+
+			result = GetLastError();
+
+			break;
+		}
+	}
+
+	switch( result )
+	{
+		case ERROR_SUCCESS:
+		case ERROR_PIPE_CONNECTED:
 			ipcconn = conn;
+			conn = INVALID_HANDLE_VALUE;
+			result = IPCERR_OK;
+			break;
 
-	if( ipcconn == INVALID_HANDLE_VALUE )
-		return false;
+		case ERROR_OPERATION_ABORTED:
+			ResetEvent( hevent_wake );
+			result = IPCERR_WAKEUP;
+			break;
 
-	conn = INVALID_HANDLE_VALUE;
+		case ERROR_BROKEN_PIPE:
+		case ERROR_INVALID_HANDLE:
+			result = IPCERR_CLOSED;
+			break;
 
-	return true;
+		default:
+			result = IPCERR_NODATA;
+			break;
+	}
+
+	return IPCERR_OK;
+}
+
+void _ITH_IPCS::wakeup()
+{
+	SetEvent( hevent_wake );
 }
 
 #endif

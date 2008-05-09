@@ -367,7 +367,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						{
 							text.add( "", 1 );
 
-							log.txt( LLOG_INFO, "<A : remote cert \'%s\' message\n", text );
+							log.txt( LLOG_INFO, "<A : remote cert \'%s\' message\n", text.text() );
 
 							long loaded = cert_load( tunnel->peer->cert_r, text.text(), true, tunnel->peer->fpass );
 
@@ -376,18 +376,18 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 								case FILE_OK:
 									msg.set_result( IKEI_RESULT_OK );
 									ikei->send_message( msg );
-									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text );
+									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text.text() );
 									break;
 
 								case FILE_PATH:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text );
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text.text() );
 									msg.set_result( IKEI_RESULT_FAILED );
 									ikei->send_message( msg );
 									tunnel->close = XCH_FAILED_CLIENT;
 									break;
 
 								case FILE_FAIL:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text );
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text.text() );
 									msg.set_result( IKEI_RESULT_PASSWD );
 									ikei->send_message( msg );
 									break;
@@ -404,7 +404,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						{
 							text.add( "", 1 );
 
-							log.txt( LLOG_INFO, "<A : local cert \'%s\' message\n", text );
+							log.txt( LLOG_INFO, "<A : local cert \'%s\' message\n", text.text() );
 
 							long loaded = cert_load( tunnel->peer->cert_l, text.text(), false, tunnel->peer->fpass );
 
@@ -413,18 +413,18 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 								case FILE_OK:
 									msg.set_result( IKEI_RESULT_OK );
 									ikei->send_message( msg );
-									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text );
+									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text.text() );
 									break;
 
 								case FILE_PATH:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text );
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text.text() );
 									msg.set_result( IKEI_RESULT_FAILED );
 									ikei->send_message( msg );
 									tunnel->close = XCH_FAILED_CLIENT;
 									break;
 
 								case FILE_FAIL:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text );
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text.text() );
 									msg.set_result( IKEI_RESULT_PASSWD );
 									ikei->send_message( msg );
 									break;
@@ -441,7 +441,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 						{
 							text.add( "", 1 );
 
-							log.txt( LLOG_INFO, "<A : local key \'%s\' message\n", text );
+							log.txt( LLOG_INFO, "<A : local key \'%s\' message\n", text.text() );
 
 							long loaded = prvkey_rsa_load( &tunnel->peer->key, text.text(), tunnel->peer->fpass );
 
@@ -450,18 +450,18 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 								case FILE_OK:
 									msg.set_result( IKEI_RESULT_OK );
 									ikei->send_message( msg );
-									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text );
+									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text.text() );
 									break;
 
 								case FILE_PATH:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text );
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text.text() );
 									msg.set_result( IKEI_RESULT_FAILED );
 									ikei->send_message( msg );
 									tunnel->close = XCH_FAILED_CLIENT;
 									break;
 
 								case FILE_FAIL:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text );
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text.text() );
 									msg.set_result( IKEI_RESULT_PASSWD );
 									ikei->send_message( msg );
 									break;
@@ -914,10 +914,13 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 	return true;
 }
 
-void _IKED::attach_ike_admin()
+long _IKED::attach_ike_admin()
 {
-	IKEI * ikei = ikes.inbound();
+	IKEI * ikei;
+	long result = ikes.inbound( &ikei );
 
-	if( ikei != NULL )
+	if( result == IPCERR_OK )
 		ith_admin.exec( ikei );
+
+	return result;
 }

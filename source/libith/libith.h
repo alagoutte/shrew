@@ -241,8 +241,6 @@ typedef class DLX _ITH_IPCC
 	HANDLE	hevent_send;
 	HANDLE	hevent_wake;
 
-	bool	serv;
-
 #endif
 
 	protected:
@@ -258,7 +256,7 @@ typedef class DLX _ITH_IPCC
 	_ITH_IPCC();
 	~_ITH_IPCC();
 
-	bool	attach( char * path, long timeout );
+	long	attach( char * path, long timeout );
 	void	wakeup();
 	void	detach();
 
@@ -269,6 +267,9 @@ typedef class DLX _ITH_IPCS
 	private:
 
 #ifdef WIN32
+
+	HANDLE		hevent_conn;
+	HANDLE		hevent_wake;
 
 	PSID		sid;
 	PACL		acl;
@@ -289,10 +290,11 @@ typedef class DLX _ITH_IPCS
 	_ITH_IPCS();
 	~_ITH_IPCS();
 
-	bool	init( char * path, bool admin );
+	long	init( char * path, bool admin );
 	void	done();
 
-	bool	inbound( char * path, IPCCONN & ipcconn );
+	long	inbound( char * path, IPCCONN & ipcconn );
+	void	wakeup();
 
 }ITH_IPCS;
 

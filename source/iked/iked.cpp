@@ -58,7 +58,9 @@ _IKED::_IKED()
 
 	rand_bytes( &ident, 2 );
 
+	lock_run.setname( "run" );
 	lock_net.setname( "net" );
+	lock_idb.setname( "idb" );
 
 	unsigned char xauth[] = VEND_XAUTH;
 	vend_xauth.set( xauth, sizeof( xauth ) );
@@ -134,9 +136,9 @@ long _IKED::init( long setlevel )
 	// initialize ike service interface
 	//
 
-	if( !ikes.init() )
+	if( ikes.init() != IPCERR_OK )
 	{
-		printf( "one at a time please !!!\n" );
+		printf( "Another instance of iked was detected\n" );
 		return LIBIKE_FAILED;
 	}
 
@@ -296,23 +298,29 @@ void _IKED::loop()
 	ith_timer.run( 100 );
 
 	//
-	// give the threads a fair chance
-	// at starting up before return
-	//
-
-	Sleep( 500 );
-
-	//
 	// accept admin connections
 	//
 
+	while( true )
+		if( attach_ike_admin() != IPCERR_OK )
+			break;
+
+	//
+	// wait for threads to exit
+	//
+
 	while( refcount > 0 )
-	{
-		attach_ike_admin();
-		Sleep( 10 );
-	}
+		Sleep( 500 );
+
+	//
+	// cleanup
+	//
+
+	ith_timer.end();
 
 	socket_done();
+
+	ikes.done();
 
 	log.close();
 }
@@ -323,16 +331,20 @@ long _IKED::halt()
 		"ii : halt signal received, shutting down\n" );
 
 	//
-	// cleanup our peer object and
-	// wait for them to be removed
+	// remove all peer objects
 	//
 
 	idb_list_peer.clean();
-
 	while( idb_list_peer.count() )
 		Sleep( 1000 );
 
+	//
+	// set daemon state to terminate
+	//
+
 	state = DSTATE_TERMINATE;
+
+	ikes.wakeup();
 
 	return LIBIKE_OK;
 }

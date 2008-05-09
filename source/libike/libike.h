@@ -181,14 +181,13 @@ typedef class DLX _IKEI : private _ITH_IPCC
 
 	public:
 
-	bool	attach( long timeout );
+	long	attach( long timeout );
 	void	wakeup();
 	void	detach();
 
-	long	send_message( IKEI_MSG & msg );
 	long	recv_message( IKEI_MSG & msg );
-
-	long	send_recv_message( IKEI_MSG & msg );
+	long	send_message( IKEI_MSG & msg );
+	long	send_message( IKEI_MSG & msg, long * rslt );
 
 }IKEI;
 
@@ -196,8 +195,11 @@ typedef class DLX _IKES : private _ITH_IPCS
 {
 	public:
 
-	bool	init();
-	IKEI *	inbound();
+	long	init();
+	void	done();
+
+	long	inbound( IKEI ** ikei );
+	void	wakeup();
 
 }IKES;
 
