@@ -250,6 +250,11 @@ typedef class DLX _ITH_IPCC
 
 #endif
 
+#ifdef UNIX
+
+	int		conn_wake[ 2 ];
+
+#endif
 	protected:
 
 	IPCCONN		conn;
@@ -285,6 +290,12 @@ typedef class DLX _ITH_IPCS
 	SECURITY_DESCRIPTOR		sd;
 	SECURITY_ATTRIBUTES		sa;
 	PSECURITY_ATTRIBUTES	psa;
+
+#endif
+
+#ifdef UNIX
+
+	int		conn_wake[ 2 ];
 
 #endif
 

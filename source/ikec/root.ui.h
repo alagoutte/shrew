@@ -44,7 +44,9 @@
 void root::SiteConnect()
 {
 	if( ikec.active )
-		ikec.cancel = true;
+	{
+		ikec.pikei->wakeup();
+	}
 	else
 	{
 		// if enabled, verify that a valid
@@ -76,7 +78,7 @@ void root::SiteConnect()
 void root::SiteDisconnect()
 {
 	if( ikec.active )
-		ikec.cancel = true;
+		ikec.pikei->wakeup();
 	else
 		close();
 }

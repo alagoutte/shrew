@@ -50,6 +50,7 @@ _ITH_LOCK::_ITH_LOCK()
 {
 	memset( name, 0, 20 );
 	mutex = CreateMutex( NULL, false, NULL );
+	strcpy_s( name, 20, "unknown" );
 }
 
 _ITH_LOCK::~_ITH_LOCK()
@@ -132,19 +133,19 @@ bool _ITH_LOCK::lock()
 			return true;
 
 		case EINVAL:
-			printf( "XX : mutex lock failed, invalid parameter\n" );
+			printf( "XX : mutex %s lock failed, invalid parameter\n", name  );
 			break;
 
 		case ETIMEDOUT:
-			printf( "XX : mutex lock failed, timeout expired\n" );
+			printf( "XX : mutex %s lock failed, timeout expired\n", name );
 			break;
 
 		case EAGAIN:
-			printf( "XX : mutex lock failed, recursion error\n" );
+			printf( "XX : mutex %s lock failed, recursion error\n", name );
 			break;
 
 		case EDEADLK:
-			printf( "XX : mutex lock failed, mutex already owned\n" );
+			printf( "XX : mutex %s lock failed, mutex already owned\n", name );
 			break;
 	}
 
@@ -164,7 +165,7 @@ bool _ITH_LOCK::unlock()
 			return true;
 
 		case EINVAL:
-			printf( "XX : mutex unlock failed, mutex not owned\n" );
+			printf( "XX : mutex %s unlock failed, mutex not owned\n", name );
 			break;
 	}
 
@@ -1021,6 +1022,8 @@ void _ITH_IPCS::wakeup()
 
 _ITH_IPCC::_ITH_IPCC()
 {
+	socketpair( AF_UNIX, SOCK_STREAM, 0, conn_wake );
+
 	conn = -1;
 }
 
@@ -1037,16 +1040,41 @@ void _ITH_IPCC::io_conf( IPCCONN sconn )
 
 long _ITH_IPCC::io_recv( void * data, size_t & size )
 {
-	long result = recv( conn, data, size, 0 );
-	if( result < 0 )
+	fd_set fds;
+	FD_ZERO( &fds );
+	FD_SET( conn, &fds );
+	FD_SET( conn_wake[ 0 ], &fds );
+
+	int max = conn_wake[ 0 ];
+	if( max < conn )
+		max = conn;
+
+	if( select( max + 1, &fds, NULL, NULL, NULL ) <= 0 )
 		return IPCERR_FAILED;
 
-	if( result == 0 )
-		return IPCERR_CLOSED;
+	if( FD_ISSET( conn, &fds ) )
+	{
+		long result = recv( conn, data, size, 0 );
+		if( result < 0 )
+			return IPCERR_FAILED;
 
-	size = result;
+		if( result == 0 )
+			return IPCERR_CLOSED;
 
-	return IPCERR_OK;
+		size = result;
+
+		return IPCERR_OK;
+	}
+
+	if( FD_ISSET( conn_wake[ 0 ], &fds ) )
+	{
+		char c;
+		recv( conn_wake[ 0 ], &c, 1, 0 );
+
+		return IPCERR_WAKEUP;
+	}
+
+	return IPCERR_NODATA;
 }
 
 long _ITH_IPCC::io_send( void * data, size_t & size )
@@ -1064,6 +1092,9 @@ long _ITH_IPCC::attach( char * path, long timeout )
 {
 	conn = socket( AF_UNIX, SOCK_STREAM, 0 );
 	if( conn == -1 )
+		return IPCERR_FAILED;
+
+	if( socketpair( AF_UNIX, SOCK_STREAM, 0, conn_wake ) < 0 )
 		return IPCERR_FAILED;
 
 	struct sockaddr_un saddr;
@@ -1086,17 +1117,30 @@ long _ITH_IPCC::attach( char * path, long timeout )
 
 void _ITH_IPCC::wakeup()
 {
+	char c;
+	send( conn_wake[ 1 ], &c, 1, 0 );
 }
 
 void _ITH_IPCC::detach()
 {
+	if( conn_wake[ 0 ] != -1 )
+	{
+		close( conn_wake[ 0 ] );
+		conn_wake[ 0 ] = -1;
+	}
+
+	if( conn_wake[ 1 ] != -1 )
+	{
+		close( conn_wake[ 1 ] );
+		conn_wake[ 1 ] = -1;
+	}
+
 	if( conn != -1 )
 	{
 		close( conn );
 		conn = -1;
 	}
 }
-
 //
 // inter process communication server
 //
@@ -1104,6 +1148,8 @@ void _ITH_IPCC::detach()
 _ITH_IPCS::_ITH_IPCS()
 {
 	conn = -1;
+
+	socketpair( AF_UNIX, SOCK_STREAM, 0, conn_wake );
 }
 
 _ITH_IPCS::~_ITH_IPCS()
@@ -1145,28 +1191,64 @@ long _ITH_IPCS::init( char * path, bool admin )
 
 void _ITH_IPCS::done()
 {
+	if( conn_wake[ 0 ] != -1 )
+	{
+		close( conn_wake[ 0 ] );
+		conn_wake[ 0 ] = -1;
+	}
+
+	if( conn_wake[ 1 ] != -1 )
+	{
+		close( conn_wake[ 1 ] );
+		conn_wake[ 1 ] = -1;
+	}
+
 	if( conn != -1 )
 		close( conn );
 }
 
 long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 {
-	fd_set fdset;
-	FD_ZERO( &fdset );
-	FD_SET( conn, &fdset );
+	fd_set fds;
+	FD_ZERO( &fds );
+	FD_SET( conn, &fds );
+	FD_SET( conn_wake[ 0 ], &fds );
 
-	if( select( conn + 1, &fdset, NULL, NULL, NULL ) <= 0 )
+	int max = conn_wake[ 0 ];
+	if( max < conn )
+		max = conn;
+
+	if( select( max + 1, &fds, NULL, NULL, NULL ) <= 0 )
 		return IPCERR_FAILED;
 
-	ipcconn = accept( conn, NULL, NULL );
-	if( ipcconn < 0 )
-		return IPCERR_FAILED;
+	if( FD_ISSET( conn, &fds ) )
+	{
+		ipcconn = accept( conn, NULL, NULL );
+		if( ipcconn < 0 )
+			return IPCERR_FAILED;
 
-	return IPCERR_OK;
+		return IPCERR_OK;
+	}
+
+	if( FD_ISSET( conn_wake[ 0 ], &fds ) )
+	{
+		char c;
+		recv( conn_wake[ 0 ], &c, 1, 0 );
+
+		printf( "XX : IPCS RECV WAKEUP\n" );
+
+		return IPCERR_WAKEUP;
+	}
+
+	return IPCERR_NODATA;
 }
 
 void _ITH_IPCS::wakeup()
 {
+	printf( "XX : IPCS SEND WAKEUP\n" );
+
+	char c;
+	send( conn_wake[ 1 ], &c, 1, 0 );
 }
 
 #endif

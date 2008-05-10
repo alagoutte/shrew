@@ -153,6 +153,8 @@ class FilePassEvent : public QCustomEvent
 
 typedef class _IKEC : public QThread
 {
+	friend class root;
+	
 	protected:
 
 	char	fspec[ 255 ];
@@ -166,6 +168,7 @@ typedef class _IKEC : public QThread
 	IKE_PROPOSAL    proposal_isakmp;
 	IKE_PROPOSAL    proposal_esp;
 	IKE_PROPOSAL    proposal_ipcomp;
+	IKEI *		pikei;
 
 	void	run();
 
@@ -173,7 +176,6 @@ typedef class _IKEC : public QThread
 
 	CONFIG	config;
 	bool	active;
-	bool	cancel;
 
 	QString	username;
 	QString	password;

@@ -44,7 +44,6 @@
 _IKEC::_IKEC()
 {
 	active = false;
-	cancel = false;
 }
 
 _IKEC::~_IKEC()
@@ -746,9 +745,11 @@ void _IKEC::run()
 	// ---------- CONNECT TO IKED ----------
 	//
 
-	IKEI	ikei;
 	long	result;
 	long	msgres;
+
+	IKEI	ikei;
+	pikei = &ikei;
 
 	if( ikei.attach( 3000 ) != IPCERR_OK )
 	{
@@ -763,7 +764,6 @@ void _IKEC::run()
 	//
 
 	active = true;
-	cancel = false;
 
 	QApplication::postEvent( r, new RunningEvent( true, host ) );
 
@@ -1264,7 +1264,6 @@ void _IKEC::run()
 	//
 
 	active = false;
-	cancel = false;
 
 	QApplication::postEvent( r, new RunningEvent( false, "" ) );
 
