@@ -264,6 +264,7 @@ OPTION( DEBUG  "include Debug Symbol support" )
 OPTION( NATT   "include NAT Traversal support" )
 OPTION( LDAP   "include LDAP Authentication support" )
 OPTION( QTGUI  "include Client QT GUI support" )
+OPTION( TESTS  "include library test programs" )
 
 # Debug Symbols Option
 
@@ -393,5 +394,14 @@ if( QTGUI )
 	add_subdirectory( source/ikec )
 
 endif( QTGUI )
+
+# Library Test Programs
+
+if( QTGUI )
+
+	add_subdirectory( source/test_ith )
+
+endif( QTGUI )
+
 
 

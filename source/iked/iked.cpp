@@ -308,13 +308,14 @@ void _IKED::loop()
 	//
 
 	while( refcount > 0 )
-		Sleep( 500 );
+	{
+		printf( "XX : reference count = %i\n", refcount );
+		Sleep( 1000 );
+	}
 
 	//
 	// cleanup
 	//
-
-	ith_timer.end();
 
 	socket_done();
 
@@ -333,8 +334,12 @@ long _IKED::halt()
 	//
 
 	idb_list_peer.clean();
+
 	while( idb_list_peer.count() )
+	{
+		printf( "XX : peer count = %i\n", idb_list_peer.count() );
 		Sleep( 1000 );
+	}
 
 	//
 	// set daemon state to terminate
@@ -343,6 +348,11 @@ long _IKED::halt()
 	state = DSTATE_TERMINATE;
 
 	ikes.wakeup();
+
+	ith_timer.end();
+
+	log.txt( LLOG_INFO,
+		"ii : halt completed\n" );
 
 	return LIBIKE_OK;
 }

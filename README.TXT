@@ -216,6 +216,7 @@ LDAP	Enable LDAP Authentication Support
 ETCDIR	System etc configuration path
 MANDIR	System man page path
 KRNINC	Kernel include path
+TESTS	Build library test programs
 
 For example: enter the following to build and install the software with all
 options enabled ...

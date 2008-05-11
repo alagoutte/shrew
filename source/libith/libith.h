@@ -148,6 +148,12 @@ typedef class DLX _ITH_COND
 
 #endif
 
+#ifdef UNIX
+
+	int	conn_wake[ 2 ];
+
+#endif
+
 	char	obj_name[ 20 ];
 
 	public:

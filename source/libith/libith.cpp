@@ -92,8 +92,7 @@ bool _ITH_LOCK::unlock()
 
 _ITH_LOCK::_ITH_LOCK()
 {
-	count = 0;
-	memset( name, 0, 20 );
+	memset( obj_name, 0, 20 );
 	pthread_mutexattr_init( &attr );
 	pthread_mutexattr_settype( &attr, PTHREAD_MUTEX_ERRORCHECK );
 	pthread_mutex_init( &mutex, &attr );
@@ -105,9 +104,9 @@ _ITH_LOCK::~_ITH_LOCK()
 	pthread_mutexattr_destroy( &attr );
 }
 
-void _ITH_LOCK::setname( const char * lkname )
+void _ITH_LOCK::name( const char * set_name )
 {
-	strcpy_s( name, 20, lkname );
+	strcpy_s( obj_name, 20, set_name );
 }
 
 bool _ITH_LOCK::lock()
@@ -133,19 +132,19 @@ bool _ITH_LOCK::lock()
 			return true;
 
 		case EINVAL:
-			printf( "XX : mutex %s lock failed, invalid parameter\n", name  );
+			printf( "XX : mutex %s lock failed, invalid parameter\n", obj_name  );
 			break;
 
 		case ETIMEDOUT:
-			printf( "XX : mutex %s lock failed, timeout expired\n", name );
+			printf( "XX : mutex %s lock failed, timeout expired\n", obj_name );
 			break;
 
 		case EAGAIN:
-			printf( "XX : mutex %s lock failed, recursion error\n", name );
+			printf( "XX : mutex %s lock failed, recursion error\n", obj_name );
 			break;
 
 		case EDEADLK:
-			printf( "XX : mutex %s lock failed, mutex already owned\n", name );
+			printf( "XX : mutex %s lock failed, mutex already owned\n", obj_name );
 			break;
 	}
 
@@ -165,7 +164,7 @@ bool _ITH_LOCK::unlock()
 			return true;
 
 		case EINVAL:
-			printf( "XX : mutex %s unlock failed, mutex not owned\n", name );
+			printf( "XX : mutex %s unlock failed, mutex not owned\n", obj_name );
 			break;
 	}
 
@@ -216,6 +215,88 @@ void _ITH_COND::alert()
 void _ITH_COND::reset()
 {
 	ResetEvent( hevent );
+}
+
+#endif
+
+#ifdef UNIX
+
+_ITH_COND::_ITH_COND()
+{
+	socketpair( AF_UNIX, SOCK_STREAM, 0, conn_wake );
+}
+
+_ITH_COND::~_ITH_COND()
+{
+	if( conn_wake[ 0 ] != -1 )
+	{
+		close( conn_wake[ 0 ] );
+		conn_wake[ 0 ] = -1;
+	}
+
+	if( conn_wake[ 1 ] != -1 )
+	{
+		close( conn_wake[ 1 ] );
+		conn_wake[ 1 ] = -1;
+	}
+
+}
+
+void _ITH_COND::name( const char * set_name )
+{
+	strcpy_s( obj_name, 20, set_name );
+}
+
+bool _ITH_COND::wait( long msecs )
+{
+	// timeval expressed as seconds and microseconds
+
+	timeval tval;
+	if( msecs < 0 )
+	{
+		tval.tv_sec = 60;
+		tval.tv_usec = 0;
+	}
+	else
+	{
+		tval.tv_sec = msecs / 1000;
+		tval.tv_usec = msecs % 1000 * 1000;
+	}
+
+	fd_set fds;
+	FD_ZERO( &fds );
+	FD_SET( conn_wake[ 0 ], &fds );
+
+	printf( "XX : SELECT ENTER\n" );
+
+	select( conn_wake[ 0 ] + 1, &fds, NULL, NULL, &tval );
+
+	printf( "XX : SELECT EXIT\n" );
+
+	if( FD_ISSET( conn_wake[ 0 ], &fds ) )
+		return false;
+
+	return true;
+}
+
+void _ITH_COND::alert()
+{
+	printf( "XX : ALERT ENTER\n" );
+
+	char c;
+	long result = send( conn_wake[ 0 ], &c, 1, 0 );
+
+	printf( "XX : ALERT EXIT ( result = %i )\n", result );
+}
+
+void _ITH_COND::reset()
+{
+	printf( "XX : RESET ENTER\n" );
+
+	char c;
+	long result = recv( conn_wake[ 0 ], &c, 1, 0 );
+
+	printf( "XX : RESET EXIT ( result = %i )\n", result );
 }
 
 #endif
@@ -370,42 +451,33 @@ bool _ITH_TIMER::wait_time( long msecs )
 
 #ifdef UNIX
 
-void _ITH_TIMER::tval_set( ITH_TIMEVAL & tval, long delay )
+void _ITH_TIMER::tval_cur( ITH_TIMEVAL & tval )
 {
 	gettimeofday( &tval, NULL );
-
-	// timeval expressed as seconds and microseconds
-
-	while( delay > 1000 )
-	{
-		tval.tv_sec++;
-		delay -= 1000;
-	}
-
-	tval.tv_usec += delay * 1000;
-
-	while( tval.tv_usec > 1000000 )
-	{
-		tval.tv_sec++;
-		tval.tv_usec -= 1000000;
-	}
 }
 
-long _ITH_TIMER::tval_cmp( ITH_TIMEVAL & tval1, ITH_TIMEVAL & tval2 )
+void _ITH_TIMER::tval_add( ITH_TIMEVAL & tval, long delay )
 {
-	if( tval1.tv_sec > tval2.tv_sec )
-		return 1;
+	// timeval expressed as seconds and microseconds
 
-	if( tval1.tv_sec < tval2.tv_sec )
-		return -1;
+	tval.tv_sec += delay / 1000;
+	tval.tv_usec += delay % 1000 * 1000;
+}
 
-	if( tval1.tv_usec > tval2.tv_usec )
-		return 1;
+long _ITH_TIMER::tval_sub( ITH_TIMEVAL & tval1, ITH_TIMEVAL & tval2 )
+{
+	long sec = tval2.tv_sec - tval1.tv_sec;
+	sec *= 1000;
 
-	if( tval1.tv_usec < tval2.tv_usec )
-		return -1;
+	long usec = tval2.tv_usec - tval1.tv_usec;
+	usec /= 1000;
 
-	return 0;
+	return sec + usec;
+}
+
+bool _ITH_TIMER::wait_time( long msecs )
+{
+	return cond.wait( msecs );
 }
 
 #endif
@@ -1205,6 +1277,7 @@ void _ITH_IPCC::detach()
 		conn = -1;
 	}
 }
+
 //
 // inter process communication server
 //
@@ -1299,8 +1372,6 @@ long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 		char c;
 		recv( conn_wake[ 0 ], &c, 1, 0 );
 
-		printf( "XX : IPCS RECV WAKEUP\n" );
-
 		return IPCERR_WAKEUP;
 	}
 
@@ -1309,8 +1380,6 @@ long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 
 void _ITH_IPCS::wakeup()
 {
-	printf( "XX : IPCS SEND WAKEUP\n" );
-
 	char c;
 	send( conn_wake[ 1 ], &c, 1, 0 );
 }

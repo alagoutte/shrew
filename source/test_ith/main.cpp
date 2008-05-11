@@ -123,6 +123,8 @@ typedef class _TEST_EXEC : public ITH_EXEC
 
 long _TEST_EXEC::func( void * arg )
 {
+	printf( "--- THREAD BEGIN ---\n" );
+
 	Sleep( 1000 );
 
 	EVENT_TEST test1( 1 );
@@ -137,6 +139,8 @@ long _TEST_EXEC::func( void * arg )
 	Sleep( 11000 );
 
 	timer.end();
+
+	printf( "--- THREAD ENDED ---\n" );
 
 	return 0;
 }
