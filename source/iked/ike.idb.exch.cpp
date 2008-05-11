@@ -108,7 +108,7 @@ _IDB_XCH::_IDB_XCH()
 
 	hash_size = 0;
 
-	lock.setname( "xch" );
+	lock.name( "xch" );
 
 	//
 	// initialize event info

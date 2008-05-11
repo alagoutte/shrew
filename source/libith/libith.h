@@ -107,12 +107,9 @@ typedef class DLX _ITH_LOCK
 {
 	private:
 
-	char		name[ 20 ];
-	unsigned long	count;
-
 #ifdef WIN32
 
-	HANDLE	mutex;
+	HANDLE	hmutex;
 
 #endif
 
@@ -123,17 +120,49 @@ typedef class DLX _ITH_LOCK
 
 #endif
 
+	char	obj_name[ 20 ];
+
 	public:
 
 	_ITH_LOCK();
 	~_ITH_LOCK();
 
-	void	setname( const char * lkname );
+	void	name( const char * set_name );
 
 	bool	lock();
 	bool	unlock();
 
 }ITH_LOCK;
+
+//==============================================================================
+// alertable wait condition
+//==============================================================================
+
+typedef class DLX _ITH_COND
+{
+	private:
+
+#ifdef WIN32
+
+	HANDLE	hevent;
+
+#endif
+
+	char	obj_name[ 20 ];
+
+	public:
+
+	_ITH_COND();
+	~_ITH_COND();
+
+	void	name( const char * set_name );
+
+	bool	wait( long msecs );
+
+	void	alert();
+	void	reset();
+
+}ITH_COND;
 
 //==============================================================================
 // thread execution class
@@ -165,7 +194,7 @@ typedef class DLX _ITH_EVENT
 {
 	public:
 
-	long	delay;
+	long delay;
 
 	virtual	bool func() = 0;
 
@@ -180,29 +209,29 @@ typedef struct _ITH_ENRTY
 
 }ITH_ENTRY;
 
-typedef class DLX _ITH_TIMER : public _ITH_EXEC
+typedef class DLX _ITH_TIMER
 {
 	private:
 
 	ITH_ENTRY *	head;
-
 	ITH_LOCK	lock;
+	ITH_COND	cond;
 
-	long	tres;
 	bool	stop;
 	bool	exit;
 
-	void	tval_set( ITH_TIMEVAL & tval, long delay = 0 );
-	long	tval_cmp( ITH_TIMEVAL & tval1, ITH_TIMEVAL & tval2 );
+	void	tval_cur( ITH_TIMEVAL & tval );
+	void	tval_add( ITH_TIMEVAL & tval, long lval = 0 );
+	long	tval_sub( ITH_TIMEVAL & tval1, ITH_TIMEVAL & tval2 );
+
+	bool	wait_time( long msecs );
 
 	public:
 
 	_ITH_TIMER();
 	virtual	~_ITH_TIMER();
 
-	virtual long func( void * arg );
-
-	bool	run( long res );
+	void	run();
 	void	end();
 
 	bool	add( ITH_EVENT * event );

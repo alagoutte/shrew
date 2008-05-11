@@ -58,9 +58,9 @@ _IKED::_IKED()
 
 	rand_bytes( &ident, 2 );
 
-	lock_run.setname( "run" );
-	lock_net.setname( "net" );
-	lock_idb.setname( "idb" );
+	lock_run.name( "run" );
+	lock_net.name( "net" );
+	lock_idb.name( "idb" );
 
 	unsigned char xauth[] = VEND_XAUTH;
 	vend_xauth.set( xauth, sizeof( xauth ) );
@@ -292,18 +292,16 @@ void _IKED::loop()
 	ith_pfkey.exec( this );
 
 	//
-	// start our execution timer
+	// start our ike client / server thread
 	//
 
-	ith_timer.run( 100 );
+	ith_ikes.exec( this );
 
 	//
-	// accept admin connections
+	// handle all events
 	//
 
-	while( true )
-		if( attach_ike_admin() != IPCERR_OK )
-			break;
+	ith_timer.run();
 
 	//
 	// wait for threads to exit

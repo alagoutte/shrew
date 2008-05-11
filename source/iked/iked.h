@@ -316,11 +316,17 @@ typedef struct _VNET_ADAPTER
 
 #endif
 
-typedef class _ITH_ADMIN : public _ITH_EXEC
+typedef class _ITH_IKES : public _ITH_EXEC
 {
 	virtual long func( void * arg );
 
-}ITH_ADMIN;
+}ITH_IKES;
+
+typedef class _ITH_IKEC : public _ITH_EXEC
+{
+	virtual long func( void * arg );
+
+}ITH_IKEC;
 
 typedef class _ITH_NWORK : public _ITH_EXEC
 {
@@ -336,7 +342,8 @@ typedef class _ITH_PFKEY : public _ITH_EXEC
 
 typedef class _IKED
 {
-	friend class _ITH_ADMIN;
+	friend class _ITH_IKES;
+	friend class _ITH_IKEC;
 	friend class _ITH_NWORK;
 	friend class _ITH_PFKEY;
 
@@ -406,7 +413,8 @@ typedef class _IKED
 	IPROUTE		iproute;		// ip route config interface
 	IPFRAG		ipfrag;			// ip fragment handling interface
 
-	ITH_ADMIN	ith_admin;		// admin thread
+	ITH_IKES	ith_ikes;		// server ipc thread
+	ITH_IKEC	ith_ikec;		// client ipc thread
 	ITH_NWORK	ith_nwork;		// network thread
 	ITH_PFKEY	ith_pfkey;		// pfkey thread
 
@@ -748,16 +756,12 @@ typedef class _IKED
 	long	pfkey_send_spdel( PFKI_SPINFO * spinfo );
 
 	//
-	// admiministrative interface handlers
-	//
-
-	long	attach_ike_admin();
-
-	//
 	// execution thread loops
 	//
 
-	long	loop_ike_admin( IKEI * ikei );
+	long	loop_ipc_server();
+	long	loop_ipc_client( IKEI * ikei );
+
 	long	loop_ike_nwork();
 	long	loop_ike_pfkey();
 

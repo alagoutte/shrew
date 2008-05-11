@@ -42,19 +42,54 @@
 #include "iked.h"
 
 //
-// ike admin io thread
+// ike client io thread
 //
 
-long ITH_ADMIN::func( void * arg )
+long ITH_IKES::func( void * arg )
+{
+	IKED * iked = ( IKED * ) arg;
+	return iked->loop_ipc_server();
+}
+
+long _IKED::loop_ipc_server()
+{
+	//
+	// begin admin thread
+	//
+
+	log.txt( LLOG_INFO, "ii : server ipc process thread begin ...\n" );
+
+	refcount++;
+
+	while( true )
+	{
+		IKEI * ikei;
+		long result = ikes.inbound( &ikei );
+
+		if( result == IPCERR_OK )
+			ith_ikec.exec( ikei );
+
+		if( result == IPCERR_WAKEUP )
+			break;
+	}
+
+	refcount--;
+
+	log.txt( LLOG_INFO, "ii : server ipc process thread exit ...\n" );
+
+	return true;
+}
+
+long ITH_IKEC::func( void * arg )
 {
 	IKEI * ikei = ( IKEI * ) arg;
-	long result = iked.loop_ike_admin( ikei );
+	long result = iked.loop_ipc_client( ikei );
 	return result;
 }
 
-long _IKED::loop_ike_admin( IKEI * ikei )
+long _IKED::loop_ipc_client( IKEI * ikei )
 {
-	log.txt( LLOG_INFO, "ii : admin process thread begin ...\n" );
+	log.txt( LLOG_INFO, "ii : client ipc process thread begin ...\n" );
 
 	IDB_PEER *		peer = NULL;
 	IDB_TUNNEL *	tunnel = NULL;
@@ -909,18 +944,7 @@ long _IKED::loop_ike_admin( IKEI * ikei )
 
 	delete ikei;
 
-	log.txt( LLOG_INFO, "ii : admin process thread exit ...\n" );
+	log.txt( LLOG_INFO, "ii : client ipc process thread exit ...\n" );
 
 	return true;
-}
-
-long _IKED::attach_ike_admin()
-{
-	IKEI * ikei;
-	long result = ikes.inbound( &ikei );
-
-	if( result == IPCERR_OK )
-		ith_admin.exec( ikei );
-
-	return result;
 }

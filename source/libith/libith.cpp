@@ -48,24 +48,24 @@
 
 _ITH_LOCK::_ITH_LOCK()
 {
-	memset( name, 0, 20 );
-	mutex = CreateMutex( NULL, false, NULL );
-	strcpy_s( name, 20, "unknown" );
+	memset( obj_name, 0, 20 );
+	hmutex = CreateMutex( NULL, false, NULL );
+	strcpy_s( obj_name, 20, "unknown" );
 }
 
 _ITH_LOCK::~_ITH_LOCK()
 {
-	CloseHandle( mutex );
+	CloseHandle( hmutex );
 }
 
-void _ITH_LOCK::setname( const char * lkname )
+void _ITH_LOCK::name( const char * set_name )
 {
-	strcpy_s( name, 20, lkname );
+	strcpy_s( obj_name, 20, set_name );
 }
 
 bool _ITH_LOCK::lock()
 {
-	int result = WaitForSingleObject( mutex, 3000 );
+	int result = WaitForSingleObject( hmutex, 3000 );
 
 	assert( result != WAIT_FAILED );
 
@@ -81,7 +81,7 @@ bool _ITH_LOCK::lock()
 
 bool _ITH_LOCK::unlock()
 {
-	ReleaseMutex( mutex );
+	ReleaseMutex( hmutex );
 
 	return true;
 }
@@ -172,6 +172,50 @@ bool _ITH_LOCK::unlock()
 	assert( result == 0 );
 
 	return false;
+}
+
+#endif
+
+//==============================================================================
+// alertable wait condition
+//==============================================================================
+
+#ifdef WIN32
+
+_ITH_COND::_ITH_COND()
+{
+	hevent = CreateEvent( NULL, TRUE, FALSE, NULL );
+}
+
+_ITH_COND::~_ITH_COND()
+{
+	CloseHandle( hevent );
+}
+
+void _ITH_COND::name( const char * set_name )
+{
+	strcpy_s( obj_name, 20, set_name );
+}
+
+bool _ITH_COND::wait( long msecs )
+{
+	if( msecs < 0 )
+		msecs = INFINITE;
+
+	if( WaitForSingleObject( hevent, msecs ) == WAIT_OBJECT_0 )
+		return false;
+
+	return true;
+}
+
+void _ITH_COND::alert()
+{
+	SetEvent( hevent );
+}
+
+void _ITH_COND::reset()
+{
+	ResetEvent( hevent );
 }
 
 #endif
@@ -285,7 +329,7 @@ _ITH_TIMER::~_ITH_TIMER()
 
 #ifdef WIN32
 
-void _ITH_TIMER::tval_set( ITH_TIMEVAL & tval, long delay )
+void _ITH_TIMER::tval_cur( ITH_TIMEVAL & tval )
 {
 	SYSTEMTIME stime;
 	memset( &stime, 0, sizeof( stime ) );
@@ -296,25 +340,30 @@ void _ITH_TIMER::tval_set( ITH_TIMEVAL & tval, long delay )
 	SystemTimeToFileTime( &stime, &ftime );
 
 	memcpy( &tval, &ftime, sizeof( tval ) );
+}
 
+void _ITH_TIMER::tval_add( ITH_TIMEVAL & tval, long lval )
+{
 	// ftime expressed as 100 nanosecond units
 
 	ITH_TIMEVAL dval;
-	dval.QuadPart = delay;
+	dval.QuadPart = lval;
 	dval.QuadPart *= 10000;
 
 	tval.QuadPart += dval.QuadPart;
 }
 
-long _ITH_TIMER::tval_cmp( ITH_TIMEVAL & tval1, ITH_TIMEVAL & tval2 )
+long _ITH_TIMER::tval_sub( ITH_TIMEVAL & tval1, ITH_TIMEVAL & tval2 )
 {
-	if( tval1.QuadPart > tval2.QuadPart )
-		return 1;
+	ITH_TIMEVAL dval;
+	dval.QuadPart = tval2.QuadPart - tval1.QuadPart;
 
-	if( tval1.QuadPart < tval2.QuadPart )
-		return -1;
+	return long( dval.QuadPart / 10000 );
+}
 
-	return 0;
+bool _ITH_TIMER::wait_time( long msecs )
+{
+	return cond.wait( msecs );
 }
 
 #endif
@@ -361,89 +410,101 @@ long _ITH_TIMER::tval_cmp( ITH_TIMEVAL & tval1, ITH_TIMEVAL & tval2 )
 
 #endif
 
-long _ITH_TIMER::func( void * arg )
+void _ITH_TIMER::run()
 {
-	ITH_TIMEVAL current;
+	lock.lock();
 
 	while( !stop )
 	{
-		ITH_ENTRY * entry = NULL;
+		//
+		// determine the time we must
+		// wait before the next event
+		// should be executed
+		//
+
+		long delay = -1;
+
+		if( head != NULL )
+		{
+			ITH_TIMEVAL current;
+			tval_cur( current );
+			delay = tval_sub( current, head->sched );
+
+			if( delay < 0 )
+				delay = 0;
+		}
+
+		//
+		// wait for calculated delay
+		//
+
+		lock.unlock();
+
+		bool result = wait_time( delay );
+
+		lock.lock();
+
+		//
+		// if the wait returned false,
+		// it returned before the time
+		// period elapsed
+		//
+
+		if( !result )
+		{
+			cond.reset();
+			continue;
+		}
 
 		//
 		// check if we have an event
 		// that needs to be enabled
 		//
 
-		tval_set( current );
-
-		lock.lock();
-
 		if( head != NULL )
 		{
-			if( tval_cmp( head->sched, current ) <= 0 )
-			{
-				//
-				// remove the entry
-				//
-
-				entry = head;
-				head = entry->next;
-			}
-		}
-
-		lock.unlock();
-
-		//
-		// did we find an active event
-		//
-		
-		if( entry != NULL )
-		{
-//			printf( "XX : executing event\n" );
+			ITH_TIMEVAL current;
+			tval_cur( current );
 
 			//
-			// enable the event and
-			// reset if required
+			// make sure the head event
+			// is ready to execute
 			//
+
+			if( tval_sub( current, head->sched ) > 0 )
+				continue;
+
+			ITH_ENTRY * entry = head;
+			head = head->next;
+
+			//
+			// execute the event
+			//
+
+			lock.unlock();
 
 			if( entry->event->func() )
 				add( entry->event );
+			else
+				delete entry;
 
-			//
-			// free the entry
-			//
-
-			delete entry;
-
-			continue;
+			lock.lock();
 		}
-
-		//
-		// sleep for the configured
-		// resolution of our timer
-		//
-
-		Sleep( tres );
 	}
 
 	exit = true;
 
-	return 0;
-}
-
-bool _ITH_TIMER::run( long res )
-{
-	tres = res;
-
-	return exec( NULL );
+	lock.unlock();
 }
 
 void _ITH_TIMER::end()
 {
 	stop = true;
 
+	cond.alert();
+
 	while( !exit )
-		Sleep( tres );
+		Sleep( 100 );
 }
 
 bool _ITH_TIMER::add( ITH_EVENT * event )
@@ -453,7 +514,8 @@ bool _ITH_TIMER::add( ITH_EVENT * event )
 		return false;
 
 	entry->event = event;
-	tval_set( entry->sched, event->delay );
+	tval_cur( entry->sched );
+	tval_add( entry->sched, event->delay );
 
 	lock.lock();
 
@@ -462,7 +524,7 @@ bool _ITH_TIMER::add( ITH_EVENT * event )
 
 	while( next != NULL )
 	{
-		if( tval_cmp( entry->sched, next->sched ) <= 0 )
+		if( tval_sub( next->sched, entry->sched ) <= 0 )
 			break;
 
 		if( next == NULL )
@@ -478,6 +540,8 @@ bool _ITH_TIMER::add( ITH_EVENT * event )
 		head = entry;
 	else
 		prev->next = entry;
+
+	cond.alert();
 
 	lock.unlock();
 
