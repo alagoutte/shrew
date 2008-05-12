@@ -123,7 +123,8 @@ typedef class _TEST_EXEC : public ITH_EXEC
 
 long _TEST_EXEC::func( void * arg )
 {
-	printf( "--- THREAD BEGIN ---\n" );
+	char str[ 50 ];
+	printf( "%s : --- THREAD RUN ---\n", tstamp( str, 50 ) );
 
 	Sleep( 1000 );
 
@@ -140,7 +141,7 @@ long _TEST_EXEC::func( void * arg )
 
 	timer.end();
 
-	printf( "--- THREAD ENDED ---\n" );
+	printf( "%s : --- THREAD RUN ---\n", tstamp( str, 50 ) );
 
 	return 0;
 }
@@ -151,15 +152,15 @@ long _TEST_EXEC::func( void * arg )
 
 int main( int argc, char * argv[], char * envp[] )
 {
+	char str[ 50 ];
+	printf( "%s : ==== TEST RUN ====\n", tstamp( str, 50 ) );
+
 	TEST_EXEC exec;
 	exec.exec( NULL );
 
-	char str[ 50 ];
-	printf( "%s : --- TIMER TEST BEGIN ---\n", tstamp( str, 50 ) );
-
 	timer.run();
 
-	printf( "%s : --- TIMER TEST ENDED ---\n", tstamp( str, 50 ) );
+	printf( "%s : ==== TEST END ====\n", tstamp( str, 50 ) );
 	printf( "press <Enter> to continue ...\n", tstamp( str, 50 ) );
 
 	getchar();

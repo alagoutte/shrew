@@ -308,10 +308,7 @@ void _IKED::loop()
 	//
 
 	while( refcount > 0 )
-	{
-		printf( "XX : reference count = %i\n", refcount );
 		Sleep( 1000 );
-	}
 
 	//
 	// cleanup

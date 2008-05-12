@@ -397,11 +397,15 @@ endif( QTGUI )
 
 # Library Test Programs
 
-if( QTGUI )
+if( TESTS )
+
+	message(
+		STATUS 
+		"Building library test programs ..." )
 
 	add_subdirectory( source/test_ith )
 
-endif( QTGUI )
+endif( TESTS )
 
 
 

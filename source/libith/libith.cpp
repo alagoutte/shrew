@@ -251,27 +251,21 @@ bool _ITH_COND::wait( long msecs )
 {
 	// timeval expressed as seconds and microseconds
 
-	timeval tval;
-	if( msecs < 0 )
-	{
-		tval.tv_sec = 60;
-		tval.tv_usec = 0;
-	}
-	else
+	timeval	tval;
+	timeval * ptval = NULL;
+
+	if( msecs >= 0 )
 	{
 		tval.tv_sec = msecs / 1000;
 		tval.tv_usec = msecs % 1000 * 1000;
+		ptval = &tval;
 	}
 
 	fd_set fds;
 	FD_ZERO( &fds );
 	FD_SET( conn_wake[ 0 ], &fds );
 
-	printf( "XX : SELECT ENTER\n" );
-
-	select( conn_wake[ 0 ] + 1, &fds, NULL, NULL, &tval );
-
-	printf( "XX : SELECT EXIT\n" );
+	select( conn_wake[ 0 ] + 1, &fds, NULL, NULL, ptval );
 
 	if( FD_ISSET( conn_wake[ 0 ], &fds ) )
 		return false;
@@ -281,22 +275,14 @@ bool _ITH_COND::wait( long msecs )
 
 void _ITH_COND::alert()
 {
-	printf( "XX : ALERT ENTER\n" );
-
 	char c;
-	long result = send( conn_wake[ 0 ], &c, 1, 0 );
-
-	printf( "XX : ALERT EXIT ( result = %i )\n", result );
+	long result = send( conn_wake[ 1 ], &c, 1, 0 );
 }
 
 void _ITH_COND::reset()
 {
-	printf( "XX : RESET ENTER\n" );
-
 	char c;
 	long result = recv( conn_wake[ 0 ], &c, 1, 0 );
-
-	printf( "XX : RESET EXIT ( result = %i )\n", result );
 }
 
 #endif
@@ -574,9 +560,6 @@ void _ITH_TIMER::end()
 	stop = true;
 
 	cond.alert();
-
-	while( !exit )
-		Sleep( 100 );
 }
 
 bool _ITH_TIMER::add( ITH_EVENT * event )
