@@ -682,6 +682,7 @@ long _ITH_IPCC::io_recv( void * data, size_t & size )
 
 	OVERLAPPED olapp;
 	memset( &olapp, 0, sizeof( olapp ) );
+	olapp.hEvent = hevent_send;
 
 	WaitForSingleObject( hmutex_recv, INFINITE );
 
@@ -917,50 +918,56 @@ long _ITH_IPCS::init( char * path, bool admin )
 {
 	// create the well-known world sid
 
-	SID_IDENTIFIER_AUTHORITY basesid = SECURITY_NT_AUTHORITY;
+	SID_IDENTIFIER_AUTHORITY sia = SECURITY_NT_AUTHORITY;
 
 	if( admin )
 	{
-		// domain admin sid
+		// admin sid
 
 		if( !AllocateAndInitializeSid(
-				&basesid,
-				1,
+				&sia,
+				2,
 				SECURITY_BUILTIN_DOMAIN_RID,
 				DOMAIN_ALIAS_RID_ADMINS,
 				0, 0, 0, 0, 0, 0,
 				&sid ) )
 			return IPCERR_FAILED;
+
+		// initialize the explicit access info
+
+		memset( &ea, sizeof( ea ), 0 );
+		ea.grfAccessPermissions = GENERIC_READ | GENERIC_WRITE;
+		ea.grfAccessMode = SET_ACCESS;
+		ea.grfInheritance= NO_INHERITANCE;
+		ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+		ea.Trustee.ptstrName  = ( LPTSTR ) sid;
 	}
 	else
 	{
-		// domain user sid
+		// user sid
 
 		if( !AllocateAndInitializeSid(
-				&basesid,
-				1,
-				SECURITY_WORLD_RID,
-				0,
+				&sia,
+				2,
+				SECURITY_BUILTIN_DOMAIN_RID,
+				DOMAIN_ALIAS_RID_USERS,
 				0, 0, 0, 0, 0, 0,
 				&sid ) )
 			return IPCERR_FAILED;
+
+		// initialize the explicit access info
+
+		memset( &ea, sizeof( ea ), 0 );
+		ea.grfAccessPermissions = GENERIC_READ | GENERIC_WRITE;
+		ea.grfAccessMode = SET_ACCESS;
+		ea.grfInheritance= NO_INHERITANCE;
+		ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+		ea.Trustee.ptstrName  = ( LPTSTR ) sid;
 	}
 
-	// initialize the explicit access info
-
-	memset( &ea, sizeof( ea ), 0 );
-	ea.grfAccessPermissions = KEY_READ | KEY_WRITE;
-	ea.grfAccessMode = SET_ACCESS;
-	ea.grfInheritance= NO_INHERITANCE;
-	ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
-	ea.Trustee.ptstrName  = ( LPTSTR ) sid;
-
-	if( admin )
-		ea.Trustee.TrusteeType = TRUSTEE_IS_GROUP;
-	else
-		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
-
-	// create a new ACL that contains the new ACEs.
+	// create a new ACL for the access
 
 	if( SetEntriesInAcl( 1, &ea, NULL, &acl ) != ERROR_SUCCESS )
 		return IPCERR_FAILED;
@@ -974,9 +981,9 @@ long _ITH_IPCS::init( char * path, bool admin )
 
 	if( !SetSecurityDescriptorDacl(
 			&sd,
-			TRUE,		// bDaclPresent flag
+			TRUE,
 			acl,
-			FALSE ) )	// not a default DACL
+			FALSE ) )
 		return IPCERR_FAILED;
 
 	// Initialize a security attributes structure.
@@ -997,8 +1004,7 @@ long _ITH_IPCS::init( char * path, bool admin )
 			8192,
 			8192,
 		    10,
-			NULL );
-//			&sa );
+			&sa );
 
 	if( conn == INVALID_HANDLE_VALUE )
 		return IPCERR_FAILED;
@@ -1048,8 +1054,7 @@ long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 				8192,
 				8192,
 				10,
-				NULL );
-//				&sa );
+				&sa );
 
 	ipcconn = INVALID_HANDLE_VALUE;
 
@@ -1123,7 +1128,7 @@ long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 			break;
 	}
 
-	return IPCERR_OK;
+	return result;
 }
 
 void _ITH_IPCS::wakeup()
@@ -1300,8 +1305,9 @@ long _ITH_IPCS::init( char * path, bool admin )
 	if( bind( conn, ( struct sockaddr * ) &saddr, sun_len ) < 0 )
 		return IPCERR_FAILED;
 
-	if( chmod( path, S_IRWXU | S_IRWXG | S_IRWXO ) < 0 )
-		return IPCERR_FAILED;
+	if( !admin )
+		if( chmod( path, S_IRWXU | S_IRWXG | S_IRWXO ) < 0 )
+			return IPCERR_FAILED;
 
 	if( listen( conn, 5 ) < 0 )
 		return IPCERR_FAILED;

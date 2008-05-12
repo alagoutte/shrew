@@ -377,10 +377,10 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 					if( !auth_type )
 					{
-						log.txt( LLOG_ERROR, "!! : missing required xauth type attribute\n" );
+						log.txt( LLOG_INFO, "!! : warning, missing required xauth type attribute\n" );
 
-						cfg->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
-						ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
+//						cfg->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
+//						ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
 					}
 				}
 

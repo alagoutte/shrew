@@ -201,12 +201,15 @@ X Add checks for illegal site configuration names
 X Add site name and file conflict resolution dialogs
 X Fix any differences between unix and windows site configuration
 X Fix dissapearing DNS settings when the connection fails
-x Add a generic IPC class to avoid wakeups and reduce latency
-. Fix the event timer class to avoid wakeups
+X Fix the event timer class to avoid wakeups
+X Fix hangs on *nix targets during iked shutdown
+X Add work around for missing xauth type attribute
+X Add a generic IPC class to avoid wakeups and reduce latency
+X Port libdtp to use generic IPC class
+X Port libike to use generic IPC class
+. Port libpfk to use generic IPC class
 . Fix high number of select wakeups on socket calls
-. Add support for missing xauth type attribute
 . Fix MS dnscache problems the right way
-. Fix hangs on *nix targets during iked shutdown
 x Validate and document support for Cisco ASA gateways
 x Validate and document support for Juniper SSG gateways
 x Validate and document support for Fortigate gateways
