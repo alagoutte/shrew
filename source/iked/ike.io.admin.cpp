@@ -57,9 +57,7 @@ long _IKED::loop_ipc_server()
 	// begin admin thread
 	//
 
-	log.txt( LLOG_INFO, "ii : server ipc process thread begin ...\n" );
-
-	refcount++;
+	loop_ref_inc( "ipc server" );
 
 	while( true )
 	{
@@ -73,9 +71,7 @@ long _IKED::loop_ipc_server()
 			break;
 	}
 
-	refcount--;
-
-	log.txt( LLOG_INFO, "ii : server ipc process thread exit ...\n" );
+	loop_ref_dec( "ipc server" );
 
 	return true;
 }
@@ -89,7 +85,7 @@ long ITH_IKEC::func( void * arg )
 
 long _IKED::loop_ipc_client( IKEI * ikei )
 {
-	log.txt( LLOG_INFO, "ii : client ipc process thread begin ...\n" );
+	loop_ref_inc( "ipc client" );
 
 	IDB_PEER *		peer = NULL;
 	IDB_TUNNEL *	tunnel = NULL;
@@ -944,7 +940,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 	delete ikei;
 
-	log.txt( LLOG_INFO, "ii : client ipc process thread exit ...\n" );
+	loop_ref_dec( "ipc client" );
 
 	return true;
 }

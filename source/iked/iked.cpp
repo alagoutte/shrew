@@ -41,10 +41,41 @@
 
 #include "iked.h"
 
+bool _IKED::rand_bytes( void * buff, long size )
+{
+	RAND_pseudo_bytes( ( unsigned char * ) buff, size );
+	return true;
+}
+
+void _IKED::loop_ref_inc( char * name )
+{
+	log.txt( LLOG_INFO, "ii : %s process thread begin ...\n", name );
+
+	lock_run.lock();
+
+	if( ++loopcount > 0 )
+		cond_run.reset();
+
+	lock_run.unlock();
+}
+
+void _IKED::loop_ref_dec( char * name )
+{
+	lock_run.lock();
+
+	if( --loopcount == 0 )
+		cond_run.alert();
+
+	lock_run.unlock();
+
+	log.txt( LLOG_INFO, "ii : %s process thread begin ...\n", name );
+}
+
 _IKED::_IKED()
 {
 	state = DSTATE_ACTIVE;
-	refcount = 0;
+	peercount = 0;
+	loopcount = 0;
 	tunnelid = 2;
 	policyid = 1;
 	dnsgrpid = 0;
@@ -61,6 +92,9 @@ _IKED::_IKED()
 	lock_run.name( "run" );
 	lock_net.name( "net" );
 	lock_idb.name( "idb" );
+
+	cond_run.alert();
+	cond_idb.alert();
 
 	unsigned char xauth[] = VEND_XAUTH;
 	vend_xauth.set( xauth, sizeof( xauth ) );
@@ -122,12 +156,6 @@ _IKED::~_IKED()
 
 	idb_list_policy.clean();
 	idb_list_netgrp.clean();
-}
-
-bool _IKED::rand_bytes( void * buff, long size )
-{
-	RAND_pseudo_bytes( ( unsigned char * ) buff, size );
-	return true;
 }
 
 long _IKED::init( long setlevel )
@@ -298,17 +326,10 @@ void _IKED::loop()
 	ith_ikes.exec( this );
 
 	//
-	// handle all events
+	// enter event timer loop
 	//
 
 	ith_timer.run();
-
-	//
-	// wait for threads to exit
-	//
-
-	while( refcount > 0 )
-		Sleep( 500 );
 
 	//
 	// cleanup
@@ -327,21 +348,26 @@ long _IKED::halt()
 		"ii : halt signal received, shutting down\n" );
 
 	//
-	// remove all peer objects
+	// remove all top level db objects
 	//
 
 	idb_list_peer.clean();
 
-	while( idb_list_peer.count() )
-		Sleep( 1000 );
+	cond_idb.wait( -1 );
 
 	//
-	// set daemon state to terminate
+	// terminate all thread loops
 	//
 
 	state = DSTATE_TERMINATE;
 
 	ikes.wakeup();
+
+	cond_run.wait( -1 );
+
+	//
+	// exit event timer loop
+	//
 
 	ith_timer.end();
 

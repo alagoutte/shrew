@@ -57,9 +57,7 @@ long _IKED::loop_ike_pfkey()
 	// begin pfkey thread
 	//
 
-	log.txt( LLOG_INFO, "ii : pfkey process thread begin ...\n" );
-
-	refcount++;
+	loop_ref_inc( "pfkey" );
 
 	while( state == DSTATE_ACTIVE )
 	{
@@ -246,9 +244,7 @@ long _IKED::loop_ike_pfkey()
 
 	pfki.detach();
 
-	refcount--;
-
-	log.txt( LLOG_INFO, "ii : pfkey process thread exit ...\n" );
+	loop_ref_dec( "pfkey" );
 
 	return LIBIKE_OK;
 }

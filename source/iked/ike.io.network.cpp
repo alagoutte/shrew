@@ -57,9 +57,7 @@ long _IKED::loop_ike_nwork()
 	// begin network thread
 	//
 
-	log.txt( LLOG_INFO, "ii : network process thread begin ...\n" );
-
-	refcount++;
+	loop_ref_inc( "network" );
 
 	while( state == DSTATE_ACTIVE )
 	{
@@ -245,9 +243,7 @@ long _IKED::loop_ike_nwork()
 		}
 	}
 
-	refcount--;
-
-	log.txt( LLOG_INFO, "ii : network process thread exit ...\n" );
+	loop_ref_dec( "network" );
 
 	return LIBIKE_OK;
 }

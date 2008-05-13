@@ -106,6 +106,17 @@ bool _IDB_LIST_PEER::find( bool lock, IDB_PEER ** peer, IKE_SADDR * saddr )
 
 _IDB_PEER::_IDB_PEER( IKE_PEER * set_peer )
 {
+	// handle idb zero reference condition
+
+	iked.lock_run.lock();
+
+	if( ++iked.peercount > 0 )
+		iked.cond_idb.reset();
+
+	iked.lock_run.unlock();
+
+	// init peer data
+
 	key = NULL;
 
 	if( set_peer != NULL )
@@ -114,8 +125,19 @@ _IDB_PEER::_IDB_PEER( IKE_PEER * set_peer )
 
 _IDB_PEER::~_IDB_PEER()
 {
+	// free peer data
+
 	if( key != NULL )
 		EVP_PKEY_free( key );
+
+	// handle idb zero reference condition
+
+	iked.lock_run.lock();
+
+	if( --iked.peercount > 0 )
+		iked.cond_idb.alert();
+
+	iked.lock_run.unlock();
 }
 
 //------------------------------------------------------------------------------

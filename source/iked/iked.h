@@ -399,8 +399,10 @@ typedef class _IKED
 	long	level;				// logging level
 	long	logflags;			// logging options
 
+	long	peercount;			// peer reference count
+	long	loopcount;			// loop reference count
 	long	state;				// daemon run state
-	long	refcount;			// reference count
+
 	long	tunnelid;			// next tunnel id
 	short	policyid;			// next request id
 	long	dnsgrpid;			// next dns group id
@@ -421,6 +423,9 @@ typedef class _IKED
 	ITH_TIMER	ith_timer;		// execution timer
 
 	short	ident;				// ip identity
+
+	ITH_COND	cond_idb;		// idb null reference condition
+	ITH_COND	cond_run;		// daemon null reference condition
 
 	ITH_LOCK	lock_run;
 	ITH_LOCK	lock_net;
@@ -758,6 +763,9 @@ typedef class _IKED
 	//
 	// execution thread loops
 	//
+
+	void	loop_ref_inc( char * name );
+	void	loop_ref_dec( char * name );
 
 	long	loop_ipc_server();
 	long	loop_ipc_client( IKEI * ikei );
