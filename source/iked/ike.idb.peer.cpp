@@ -134,7 +134,7 @@ _IDB_PEER::~_IDB_PEER()
 
 	iked.lock_run.lock();
 
-	if( --iked.peercount > 0 )
+	if( --iked.peercount == 0 )
 		iked.cond_idb.alert();
 
 	iked.lock_run.unlock();
