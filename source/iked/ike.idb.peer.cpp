@@ -110,7 +110,7 @@ _IDB_PEER::_IDB_PEER( IKE_PEER * set_peer )
 
 	iked.lock_run.lock();
 
-	if( ++iked.peercount > 0 )
+	if( iked.peercount++ == 0 )
 		iked.cond_idb.reset();
 
 	iked.lock_run.unlock();

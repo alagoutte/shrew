@@ -1195,7 +1195,7 @@ void _IKEC::run()
 
 		if( result == IPCERR_WAKEUP )
 		{
-			msg.set_enable( true );
+			msg.set_enable( false );
 			if( ikei.send_message( msg ) != IPCERR_OK )
 				break;
 

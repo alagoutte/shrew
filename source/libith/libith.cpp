@@ -224,6 +224,7 @@ void _ITH_COND::reset()
 _ITH_COND::_ITH_COND()
 {
 	socketpair( AF_UNIX, SOCK_STREAM, 0, conn_wake );
+	fcntl( conn_wake[ 0 ], F_SETFL, O_NONBLOCK );
 }
 
 _ITH_COND::~_ITH_COND()

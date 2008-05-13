@@ -53,7 +53,7 @@ void _IKED::loop_ref_inc( char * name )
 
 	lock_run.lock();
 
-	if( ++loopcount > 0 )
+	if( loopcount++ == 0 )
 		cond_run.reset();
 
 	lock_run.unlock();
