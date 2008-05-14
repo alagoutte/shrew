@@ -729,11 +729,11 @@ long _ITH_IPCC::io_recv( void * data, size_t & size )
 				SleepEx( 0, true );
 			}
 
-			result = GetOverlappedResult(
-						conn,
-						&olapp,
-						&dwsize,
-						true );
+			GetOverlappedResult(
+				conn,
+				&olapp,
+				&dwsize,
+				false );
 
 			result = GetLastError();
 
@@ -903,11 +903,13 @@ _ITH_IPCS::_ITH_IPCS()
 	hevent_wake = CreateEvent( NULL, true, false, NULL );
 	hevent_conn = CreateEvent( NULL, true, false, NULL );
 
-	sid		= NULL;
-	acl		= NULL;
-	psa		= NULL;
+	sid_server = NULL;
+	sid_client = NULL;
 
-	conn	= INVALID_HANDLE_VALUE;
+	acl = NULL;
+	psa	= NULL;
+
+	conn = INVALID_HANDLE_VALUE;
 }
 
 _ITH_IPCS::~_ITH_IPCS()
@@ -917,60 +919,70 @@ _ITH_IPCS::~_ITH_IPCS()
 
 long _ITH_IPCS::init( char * path, bool admin )
 {
-	// create the well-known world sid
+	// when creating a named pipe with explicit access,
+	// you must specify FILE_CREATE_PIPE_INSTANCE for
+	// an SID that is appropriate for the account that
+	// owns your process. otherwise, after creating the
+	// initial pipe instance and assigning the access
+	// control, your process will loose its ability to
+	// create more than one pipe instance ... really.
 
-	SID_IDENTIFIER_AUTHORITY sia = SECURITY_NT_AUTHORITY;
+	long ea_count = 0;
 
-	if( admin )
-	{
-		// admin sid
+	// admin sid
 
-		if( !AllocateAndInitializeSid(
-				&sia,
-				2,
-				SECURITY_BUILTIN_DOMAIN_RID,
-				DOMAIN_ALIAS_RID_ADMINS,
-				0, 0, 0, 0, 0, 0,
-				&sid ) )
-			return IPCERR_FAILED;
+	SID_IDENTIFIER_AUTHORITY sia_nt = SECURITY_NT_AUTHORITY;
 
-		// initialize the explicit access info
+	if( !AllocateAndInitializeSid(
+			&sia_nt,
+			2,
+			SECURITY_BUILTIN_DOMAIN_RID,
+			DOMAIN_ALIAS_RID_ADMINS,
+			0, 0, 0, 0, 0, 0,
+			&sid_server ) )
+		return IPCERR_FAILED;
 
-		memset( &ea, sizeof( ea ), 0 );
-		ea.grfAccessPermissions = GENERIC_READ | GENERIC_WRITE;
-		ea.grfAccessMode = SET_ACCESS;
-		ea.grfInheritance= NO_INHERITANCE;
-		ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
-		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
-		ea.Trustee.ptstrName  = ( LPTSTR ) sid;
-	}
-	else
+	// initialize the explicit access info
+
+	memset( &ea[ 0 ], sizeof( EXPLICIT_ACCESS ), 0 );
+	ea[ 0 ].grfAccessPermissions = GENERIC_READ | GENERIC_WRITE | FILE_CREATE_PIPE_INSTANCE;
+	ea[ 0 ].grfAccessMode = SET_ACCESS;
+	ea[ 0 ].grfInheritance= NO_INHERITANCE;
+	ea[ 0 ].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+	ea[ 0 ].Trustee.TrusteeType = TRUSTEE_IS_GROUP;
+	ea[ 0 ].Trustee.ptstrName  = ( LPTSTR ) sid_server;
+
+	ea_count++;
+
+	if( !admin )
 	{
 		// user sid
 
 		if( !AllocateAndInitializeSid(
-				&sia,
+				&sia_nt,
 				2,
 				SECURITY_BUILTIN_DOMAIN_RID,
 				DOMAIN_ALIAS_RID_USERS,
 				0, 0, 0, 0, 0, 0,
-				&sid ) )
+				&sid_client ) )
 			return IPCERR_FAILED;
 
 		// initialize the explicit access info
 
-		memset( &ea, sizeof( ea ), 0 );
-		ea.grfAccessPermissions = GENERIC_READ | GENERIC_WRITE;
-		ea.grfAccessMode = SET_ACCESS;
-		ea.grfInheritance= NO_INHERITANCE;
-		ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
-		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
-		ea.Trustee.ptstrName  = ( LPTSTR ) sid;
+		memset( &ea[ 1 ], sizeof( EXPLICIT_ACCESS ), 0 );
+		ea[ 1 ].grfAccessPermissions = GENERIC_READ | GENERIC_WRITE;
+		ea[ 1 ].grfAccessMode = SET_ACCESS;
+		ea[ 1 ].grfInheritance= NO_INHERITANCE;
+		ea[ 1 ].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+		ea[ 1 ].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+		ea[ 1 ].Trustee.ptstrName  = ( LPTSTR ) sid_client;
+
+		ea_count++;
 	}
 
 	// create a new ACL for the access
 
-	if( SetEntriesInAcl( 1, &ea, NULL, &acl ) != ERROR_SUCCESS )
+	if( SetEntriesInAcl( ea_count, ea, NULL, &acl ) != ERROR_SUCCESS )
 		return IPCERR_FAILED;
 
 	// Initialize a security descriptor
@@ -1018,8 +1030,11 @@ void _ITH_IPCS::done()
 	if( acl != NULL )
 		LocalFree( acl );
 
-	if( sid != NULL )
-		FreeSid( sid );
+	if( sid_client != NULL )
+		FreeSid( sid_client );
+
+	if( sid_server != NULL )
+		FreeSid( sid_server );
 
 	if( hevent_conn != NULL )
 	{
@@ -1041,9 +1056,11 @@ void _ITH_IPCS::done()
 
 long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 {
-	DWORD dwundef;
+	DWORD	dwundef;
+	long	result;
 
 	if( conn == INVALID_HANDLE_VALUE )
+	{
 		conn = CreateNamedPipe(
 				path,
 				FILE_FLAG_OVERLAPPED |
@@ -1057,6 +1074,13 @@ long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 				10,
 				&sa );
 
+		if( conn == INVALID_HANDLE_VALUE )
+		{
+			result = GetLastError();
+			return IPCERR_FAILED;
+		}
+	}
+
 	ipcconn = INVALID_HANDLE_VALUE;
 
 	OVERLAPPED olapp;
@@ -1065,9 +1089,9 @@ long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 
 	SetLastError( ERROR_SUCCESS );
 
-	ConnectNamedPipe( conn, &olapp );
-
-	long result = GetLastError();
+	result = ConnectNamedPipe( conn, &olapp );
+	if( !result )
+		result = GetLastError();
 
 	switch( result )
 	{
@@ -1097,7 +1121,7 @@ long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
 						conn,
 						&olapp,
 						&dwundef,
-						true );
+						false );
 
 			result = GetLastError();
 

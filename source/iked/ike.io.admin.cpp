@@ -64,11 +64,17 @@ long _IKED::loop_ipc_server()
 		IKEI * ikei;
 		long result = ikes.inbound( &ikei );
 
-		if( result == IPCERR_OK )
-			ith_ikec.exec( ikei );
+		switch( result )
+		{
+			case IPCERR_OK:
+				ith_ikec.exec( ikei );
+				continue;
 
-		if( result == IPCERR_WAKEUP )
-			break;
+			case IPCERR_NODATA:
+				continue;
+		}
+
+		break;
 	}
 
 	loop_ref_dec( "ipc server" );

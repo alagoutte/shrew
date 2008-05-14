@@ -2191,6 +2191,19 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 							ph2id.addr2 = unity_net->mask;
 							ph2id.port = unity_net->port_rmt;
 
+							//
+							// FIXME : there is a bug in racoon
+							// that sends bogus protocol and port
+							// information. I have comitted a fix
+							// to ipsec-tools head and 0.7 but we
+							// need to wait for that to settle
+							// before we can remove the next two
+							// lines of code;
+							//
+
+							ph2id.prot = 0;
+							ph2id.port = 0;
+
 							char txtid[ LIBIKE_MAX_TEXTP2ID ];
 							text_ph2id( txtid, &ph2id );
 

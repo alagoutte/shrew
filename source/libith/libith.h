@@ -320,10 +320,11 @@ typedef class DLX _ITH_IPCS
 	HANDLE		hevent_conn;
 	HANDLE		hevent_wake;
 
-	PSID		sid;
+	PSID		sid_server;
+	PSID		sid_client;
 	PACL		acl;
 
-	EXPLICIT_ACCESS			ea;
+	EXPLICIT_ACCESS			ea[ 2 ];
 	SECURITY_DESCRIPTOR		sd;
 	SECURITY_ATTRIBUTES		sa;
 	PSECURITY_ATTRIBUTES	psa;
