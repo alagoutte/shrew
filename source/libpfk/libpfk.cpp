@@ -137,7 +137,7 @@ long _PFKI::wait_msg()
 
 	struct timeval tv;
 	tv.tv_sec = 0;
-	tv.tv_usec = 10000;
+	tv.tv_usec = 500000;
 
 	fd_set fdset;
 	FD_ZERO( &fdset ); 

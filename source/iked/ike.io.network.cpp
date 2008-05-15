@@ -65,7 +65,7 @@ long _IKED::loop_ike_nwork()
 		// wait for packet availablility
 		//
 
-		long result = socket_select( 10 );
+		long result = socket_select( 500 );
 
 		if( result == LIBIKE_SOCKET )
 		{
