@@ -362,6 +362,7 @@ long _IKED::halt()
 	state = DSTATE_TERMINATE;
 
 	ikes.wakeup();
+	pfki.wakeup();
 
 	cond_run.wait( -1 );
 

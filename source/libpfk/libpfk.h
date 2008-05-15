@@ -329,6 +329,7 @@ typedef class DLX _PFKI  : private _ITH_IPCC, public IDB_ENTRY
 	const char *	name( long type, long value );
 
 	long	attach( long timeout );
+	void	wakeup();
 	void	detach();
 
 	long recv_message( PFKI_MSG & msg );

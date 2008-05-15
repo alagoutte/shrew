@@ -153,6 +153,11 @@ long _PFKI::attach( long timeout )
 	return IPCERR_OK;
 }
 
+void _PFKI::wakeup()
+{
+	ITH_IPCC::wakeup();
+}
+
 void _PFKI::detach()
 {
 	if( conn != -1 )
@@ -207,6 +212,11 @@ long _PFKI::recv_message( PFKI_MSG & msg )
 long _PFKI::attach( long timeout )
 {
 	return ITH_IPCC::attach( PFKI_PIPE_NAME, timeout );
+}
+
+void _PFKI::wakeup()
+{
+	ITH_IPCC::wakeup();
 }
 
 void _PFKI::detach()
