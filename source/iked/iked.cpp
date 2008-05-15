@@ -68,7 +68,7 @@ void _IKED::loop_ref_dec( char * name )
 
 	lock_run.unlock();
 
-	log.txt( LLOG_INFO, "ii : %s process thread begin ...\n", name );
+	log.txt( LLOG_INFO, "ii : %s process thread exit ...\n", name );
 }
 
 _IKED::_IKED()
