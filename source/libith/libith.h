@@ -275,7 +275,7 @@ typedef class DLX _ITH_TIMER
 
 typedef class DLX _ITH_IPCC
 {
-	private:
+	protected:
 
 #ifdef WIN32
 

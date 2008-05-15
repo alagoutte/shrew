@@ -58,89 +58,72 @@ bool _PFKI_MSG::local()
 
 #ifdef UNIX
 
-// 
-// GCC has problems resolving these
-// functions due to c/c++ name space
-// collisions
-//
-
-inline int sockclose( int sock )
+long _PFKI::send_message( PFKI_MSG & msg )
 {
-	return close( sock );
+	if( conn == -1 )
+		return IPCERR_CLOSED;
+
+	size_t msg_size = msg.size() + sizeof( sadb_msg );
+	msg.header.sadb_msg_len = ( u_int16_t ) PFKEY_UNIT64( msg_size );
+	msg.ins( &msg.header, sizeof( msg.header ) );
+	msg.size( msg_size );
+
+	return io_send( msg.buff(), msg_size );
 }
 
-inline int sockselect( int nfds, fd_set * rfds, fd_set * wfds, fd_set * xfds, struct timeval *to )
+long _PFKI::recv_message( PFKI_MSG & msg )
 {
-	return select( nfds, rfds, wfds, xfds, to );
-}
+	if( conn == -1 )
+		return IPCERR_CLOSED;
 
-_PFKI::_PFKI()
-{
-	sock = -1;
-}
+	fd_set fds;
+	FD_ZERO( &fds );
+	FD_SET( conn, &fds );
+	FD_SET( conn_wake[ 0 ], &fds );
 
-_PFKI::~_PFKI()
-{
-	detach();
-}
+	int max = conn_wake[ 0 ];
+	if( max < conn )
+		max = conn;
 
-long _PFKI::wait_msg()
-{
-	if( sock == -1 )
+	if( select( max + 1, &fds, NULL, NULL, NULL ) <= 0 )
 		return IPCERR_FAILED;
 
-	struct timeval tv;
-	tv.tv_sec = 0;
-	tv.tv_usec = 500000;
+	if( FD_ISSET( conn, &fds ) )
+	{
+		msg.size( sizeof( sadb_msg ) );
+		size_t msg_size = msg.size();
 
-	fd_set fdset;
-	FD_ZERO( &fdset ); 
-	FD_SET( sock, &fdset );
+		long result = recv( conn, msg.buff(), msg_size, MSG_PEEK );
+		if( result < 0 )
+			return IPCERR_FAILED;
 
-	long result = sockselect( sock + 1, &fdset, NULL, NULL, &tv );
-	if( result > 0 )
-		return IPCERR_OK;
+		if( result == 0 )
+			return IPCERR_CLOSED;
 
-	return PFKI_NODATA;
+		msg.size( result );
+
+		msg.oset( 0 );
+		if( !msg.get( &msg.header, sizeof( sadb_msg ) ) )
+			return IPCERR_FAILED;
+
+		msg_size = PFKEY_UNUNIT64( msg.header.sadb_msg_len );
+		msg.size( msg_size );
+
+		return io_recv( msg.buff(), msg_size );
+        }
+
+        if( FD_ISSET( conn_wake[ 0 ], &fds ) )
+        {
+                char c;
+                recv( conn_wake[ 0 ], &c, 1, 0 );
+
+                return IPCERR_WAKEUP;
+        }
+
+	return IPCERR_NODATA;
 }
 
-long _PFKI::send_msg( PFKI_MSG & msg )
-{
-	if( sock == -1 )
-		return IPCERR_FAILED;
-
-	long result = send( sock, msg.msg_buff, msg.msg_size, 0 );
-
-	if( result < 1 )
-		printf( "!! : pfki send error ( %i )\n", errno );
-
-	if( result != msg.msg_size )
-		return IPCERR_FAILED;
-
-	return IPCERR_OK;
-}
-
-long _PFKI::recv_msg( PFKI_MSG & msg, bool peek )
-{
-	if( sock == -1 )
-		return IPCERR_FAILED;
-
-	long flags = 0;
-	if( peek )
-		flags = MSG_PEEK;
-
-	long result = recv( sock, msg.msg_buff, msg.msg_size, flags );
-
-	if( result < 1 )
-		printf( "!! : pfki recv error ( %i )\n", errno );
-
-	if( result != msg.msg_size )
-		return IPCERR_FAILED;
-
-	return IPCERR_OK;
-}
-
-long _PFKI::attach()
+long _PFKI::attach( long timeout )
 {
 	detach();
 
@@ -148,8 +131,8 @@ long _PFKI::attach()
 	// open our pfkey socket
 	//
 
-	sock = socket( PF_KEY, SOCK_RAW, PF_KEY_V2 );
-	if( sock < 0 )
+	conn = socket( PF_KEY, SOCK_RAW, PF_KEY_V2 );
+	if( conn < 0 )
 		return IPCERR_FAILED;
 
 	//
@@ -157,14 +140,14 @@ long _PFKI::attach()
 	//
 
 	const int buffsize = PFKEY_BUFFSIZE;
-	setsockopt( sock, SOL_SOCKET, SO_SNDBUF, &buffsize, sizeof( buffsize ) );
-	setsockopt( sock, SOL_SOCKET, SO_RCVBUF, &buffsize, sizeof( buffsize ) );
+	setsockopt( conn, SOL_SOCKET, SO_SNDBUF, &buffsize, sizeof( buffsize ) );
+	setsockopt( conn, SOL_SOCKET, SO_RCVBUF, &buffsize, sizeof( buffsize ) );
 
 	//
 	// set socket to non-blocking
 	//
 
-	if( fcntl( sock, F_SETFL, O_NONBLOCK ) == -1 )
+	if( fcntl( conn, F_SETFL, O_NONBLOCK ) == -1 )
 		return IPCERR_FAILED;
 
 	return IPCERR_OK;
@@ -172,8 +155,8 @@ long _PFKI::attach()
 
 void _PFKI::detach()
 {
-	if( sock != -1 )
-		sockclose( sock );
+	if( conn != -1 )
+		close( conn );
 }
 
 #endif
