@@ -662,6 +662,30 @@ _ITH_IPCC::_ITH_IPCC()
 _ITH_IPCC::~_ITH_IPCC()
 {
 	detach();
+
+	if( hevent_send != NULL )
+	{
+		CloseHandle( hevent_send );
+		hevent_send = NULL;
+	}
+
+	if( hevent_wake != NULL )
+	{
+		CloseHandle( hevent_wake );
+		hevent_wake = NULL;
+	}
+
+	if( hmutex_send != NULL )
+	{
+		CloseHandle( hmutex_send );
+		hmutex_send = NULL;
+	}
+
+	if( hmutex_recv != NULL )
+	{
+		CloseHandle( hmutex_recv );
+		hmutex_recv = NULL;
+	}
 }
 
 
@@ -679,6 +703,9 @@ VOID WINAPI io_recv_complete( DWORD result, DWORD size, LPOVERLAPPED olapp )
 
 long _ITH_IPCC::io_recv( void * data, size_t & size )
 {
+	if( conn == INVALID_HANDLE_VALUE )
+		return IPCERR_CLOSED;
+
 	DWORD dwsize = ( DWORD ) size;
 
 	OVERLAPPED olapp;
@@ -774,6 +801,9 @@ long _ITH_IPCC::io_recv( void * data, size_t & size )
 
 long _ITH_IPCC::io_send( void * data, size_t & size )
 {
+	if( conn == INVALID_HANDLE_VALUE )
+		return IPCERR_CLOSED;
+
 	OVERLAPPED olapp;
 	memset( &olapp, 0, sizeof( olapp ) );
 	olapp.hEvent = hevent_send;
@@ -861,34 +891,7 @@ void _ITH_IPCC::detach()
 	{
 		CancelIo( conn );
 		FlushFileBuffers( conn );
-	}
 
-	if( hevent_send != NULL )
-	{
-		CloseHandle( hevent_send );
-		hevent_send = NULL;
-	}
-
-	if( hevent_wake != NULL )
-	{
-		CloseHandle( hevent_wake );
-		hevent_wake = NULL;
-	}
-
-	if( hmutex_send != NULL )
-	{
-		CloseHandle( hmutex_send );
-		hmutex_send = NULL;
-	}
-
-	if( hmutex_recv != NULL )
-	{
-		CloseHandle( hmutex_recv );
-		hmutex_recv = NULL;
-	}
-
-	if( conn != INVALID_HANDLE_VALUE )
-	{
 		CloseHandle( conn );
 		conn = INVALID_HANDLE_VALUE;
 	}
@@ -915,6 +918,18 @@ _ITH_IPCS::_ITH_IPCS()
 _ITH_IPCS::~_ITH_IPCS()
 {
 	done();
+
+	if( hevent_conn != NULL )
+	{
+		CloseHandle( hevent_conn );
+		hevent_conn = NULL;
+	}
+
+	if( hevent_wake != NULL )
+	{
+		CloseHandle( hevent_wake );
+		hevent_wake = NULL;
+	}
 }
 
 long _ITH_IPCS::init( char * path, bool admin )
@@ -1035,18 +1050,6 @@ void _ITH_IPCS::done()
 
 	if( sid_server != NULL )
 		FreeSid( sid_server );
-
-	if( hevent_conn != NULL )
-	{
-		CloseHandle( hevent_conn );
-		hevent_conn = NULL;
-	}
-
-	if( hevent_wake != NULL )
-	{
-		CloseHandle( hevent_wake );
-		hevent_wake = NULL;
-	}
 
 	if( conn != INVALID_HANDLE_VALUE )
 		CloseHandle( conn );
@@ -1179,6 +1182,18 @@ _ITH_IPCC::_ITH_IPCC()
 _ITH_IPCC::~_ITH_IPCC()
 {
 	detach();
+
+	if( conn_wake[ 0 ] != -1 )
+	{
+		close( conn_wake[ 0 ] );
+		conn_wake[ 0 ] = -1;
+	}
+
+	if( conn_wake[ 1 ] != -1 )
+	{
+		close( conn_wake[ 1 ] );
+		conn_wake[ 1 ] = -1;
+	}
 }
 
 
@@ -1272,23 +1287,8 @@ void _ITH_IPCC::wakeup()
 
 void _ITH_IPCC::detach()
 {
-	if( conn_wake[ 0 ] != -1 )
-	{
-		close( conn_wake[ 0 ] );
-		conn_wake[ 0 ] = -1;
-	}
-
-	if( conn_wake[ 1 ] != -1 )
-	{
-		close( conn_wake[ 1 ] );
-		conn_wake[ 1 ] = -1;
-	}
-
 	if( conn != -1 )
-	{
 		close( conn );
-		conn = -1;
-	}
 }
 
 //
@@ -1305,6 +1305,18 @@ _ITH_IPCS::_ITH_IPCS()
 _ITH_IPCS::~_ITH_IPCS()
 {
 	done();
+
+	if( conn_wake[ 0 ] != -1 )
+	{
+		close( conn_wake[ 0 ] );
+		conn_wake[ 0 ] = -1;
+	}
+
+	if( conn_wake[ 1 ] != -1 )
+	{
+		close( conn_wake[ 1 ] );
+		conn_wake[ 1 ] = -1;
+	}
 }
 
 long _ITH_IPCS::init( char * path, bool admin )
@@ -1342,18 +1354,6 @@ long _ITH_IPCS::init( char * path, bool admin )
 
 void _ITH_IPCS::done()
 {
-	if( conn_wake[ 0 ] != -1 )
-	{
-		close( conn_wake[ 0 ] );
-		conn_wake[ 0 ] = -1;
-	}
-
-	if( conn_wake[ 1 ] != -1 )
-	{
-		close( conn_wake[ 1 ] );
-		conn_wake[ 1 ] = -1;
-	}
-
 	if( conn != -1 )
 		close( conn );
 }

@@ -153,10 +153,6 @@
 
 #define PFKI_WINDSIZE		4
 
-#define PFKI_OK				1
-#define PFKI_FAILED			2
-#define PFKI_NODATA			3
-
 typedef struct _PFKI_SA
 {
 	u_int32_t	spi;
@@ -278,55 +274,25 @@ typedef struct _PFKI_SPINFO
 
 }PFKI_SPINFO;
 
-typedef class DLX _PFKI_MSG
+typedef class DLX _PFKI_MSG : public BDATA
 {
 	friend class _PFKI;
 
-	private:
-
-	unsigned char *	msg_buff;
-	long			msg_size;
-
-	bool append( long size );
-
 	public:
 
-	_PFKI_MSG();
-	~_PFKI_MSG();
+	sadb_msg header;
 
-	sadb_msg *	hdr;
-
-	void reset();
 	bool local();
 
 }PFKI_MSG;
 
-typedef class DLX _PFKI : public IDB_ENTRY
+typedef class DLX _PFKI  : private _ITH_IPCC, public IDB_ENTRY
 {
 	friend class _PFKS;
 
 	private:
 
-#ifdef WIN32
-
-	HANDLE		hpipe;
-	OVERLAPPED	olapp;
-	sadb_msg	tmsg;
-	bool		wait;
-
-#endif
-
-#ifdef UNIX
-
-	int		sock;
-
-#endif
-
 	bool sockaddr_len( int safam, int & salen );
-
-	long wait_msg();
-	long send_msg( PFKI_MSG & msg );
-	long recv_msg( PFKI_MSG & msg, bool peek = false );
 
 	long buff_get_ext( PFKI_MSG & msg, sadb_ext ** ext, long type );
 	long buff_add_ext( PFKI_MSG & msg, sadb_ext ** ext, long xlen, bool unit64 = true );
@@ -345,9 +311,6 @@ typedef class DLX _PFKI : public IDB_ENTRY
 
 	public:
 
-	_PFKI();
-	~_PFKI();
-
 	// extention functions
 
 	long	read_sa( PFKI_MSG & msg, PFKI_SA & sa );
@@ -363,12 +326,13 @@ typedef class DLX _PFKI : public IDB_ENTRY
 	long	read_natt( PFKI_MSG & msg, PFKI_NATT & natt );
 	long	read_policy( PFKI_MSG & msg, PFKI_SPINFO & spinfo );
 
-	long	attach();
-	void	detach();
-
 	const char *	name( long type, long value );
 
-	long	next_msg( PFKI_MSG & msg );
+	long	attach( long timeout );
+	void	detach();
+
+	long recv_message( PFKI_MSG & msg );
+	long send_message( PFKI_MSG & msg );
 
 	// client functions
 
@@ -404,20 +368,15 @@ typedef class DLX _PFKI : public IDB_ENTRY
 
 #ifdef WIN32
 
-typedef class DLX _PFKS
+typedef class DLX _PFKS  : private _ITH_IPCS
 {
-	private:
-
-	HANDLE	hsrvc;
-	HANDLE	hpipe;
-
 	public:
 
-	_PFKS();
-	~_PFKS();
+	long	init();
+	void	done();
 
-	bool	init();
-	PFKI *	accept();
+	long	inbound( PFKI ** pfki );
+	void	wakeup();
 
 }PFKS;
 

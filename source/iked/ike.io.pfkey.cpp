@@ -59,32 +59,33 @@ long _IKED::loop_ike_pfkey()
 
 	loop_ref_inc( "pfkey" );
 
+	PFKI_MSG msg;
+
 	while( state == DSTATE_ACTIVE )
 	{
 		//
 		// read the next pfkey message
 		//
 
-		PFKI_MSG msg;
-		long result = pfki.next_msg( msg );
-		if( result == PFKI_NODATA )
+		long result = pfki.recv_message( msg );
+
+		if( result == IPCERR_NODATA )
 			continue;
 
-		if( result != PFKI_OK )
+		if( result == IPCERR_CLOSED )
 		{
-			if( pfki.attach() != PFKI_OK )
-			{
-				Sleep( 100 );
+			pfki.detach();
+
+			if( pfki.attach( 1000 ) != IPCERR_OK )
 				continue;
-			}
 
 			//
 			// register for certain protocol types
 			//
 
-			if( ( pfki.send_register( SADB_SATYPE_AH ) != PFKI_OK ) ||
-				( pfki.send_register( SADB_SATYPE_ESP ) != PFKI_OK ) ||
-				( pfki.send_register( SADB_X_SATYPE_IPCOMP ) != PFKI_OK ) )
+			if( ( pfki.send_register( SADB_SATYPE_AH ) != IPCERR_OK ) ||
+				( pfki.send_register( SADB_SATYPE_ESP ) != IPCERR_OK ) ||
+				( pfki.send_register( SADB_X_SATYPE_IPCOMP ) != IPCERR_OK ) )
 			{
 				log.txt( LLOG_ERROR, "!! : unable to send pfkey register message\n" );
 				return LIBIKE_FAILED;
@@ -94,7 +95,7 @@ long _IKED::loop_ike_pfkey()
 			// initiate an SPD dump
 			//
 
-			if( pfki.send_spdump() != PFKI_OK )
+			if( pfki.send_spdump() != IPCERR_OK )
 			{
 				log.txt( LLOG_ERROR, "!! : unable to send pfkey spd dump message\n" );
 				return LIBIKE_FAILED;
@@ -103,12 +104,12 @@ long _IKED::loop_ike_pfkey()
 			continue;
 		}
 
-		if( msg.hdr->sadb_msg_errno )
+		if( msg.header.sadb_msg_errno )
 		{
 			log.txt( LLOG_ERROR,
 				"K! : recv %s message failure ( errno = %i )\n",
-				pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-				msg.hdr->sadb_msg_errno );
+				pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+				msg.header.sadb_msg_errno );
 
 			continue;
 		}
@@ -117,20 +118,20 @@ long _IKED::loop_ike_pfkey()
 		// process the message by type
 		//
 
-		switch( msg.hdr->sadb_msg_type )
+		switch( msg.header.sadb_msg_type )
 		{
 			case SADB_REGISTER:
 
 				if( msg.local() )
 					log.txt( LLOG_DEBUG,
 						"K< : recv pfkey %s %s message\n",
-						pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-						pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+						pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+						pfki.name( NAME_SATYPE, msg.header.sadb_msg_satype ) );
 				else
 					log.txt( LLOG_DEBUG,
 						"K< : recv pfkey %s %s message ( ignored )\n",
-						pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-						pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+						pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+						pfki.name( NAME_SATYPE, msg.header.sadb_msg_satype ) );
 
 				break;
 
@@ -138,8 +139,8 @@ long _IKED::loop_ike_pfkey()
 
 				log.txt( LLOG_DEBUG,
 					"K< : recv pfkey %s %s message\n",
-					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+					pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+					pfki.name( NAME_SATYPE, msg.header.sadb_msg_satype ) );
 
 				pfkey_recv_flush( msg );
 
@@ -149,8 +150,8 @@ long _IKED::loop_ike_pfkey()
 
 				log.txt( LLOG_DEBUG,
 					"K< : recv pfkey %s %s message\n",
-					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+					pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+					pfki.name( NAME_SATYPE, msg.header.sadb_msg_satype ) );
 
 				pfkey_recv_acquire( msg );
 
@@ -160,8 +161,8 @@ long _IKED::loop_ike_pfkey()
 
 				log.txt( LLOG_DEBUG,
 					"K< : recv pfkey %s %s message\n",
-					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+					pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+					pfki.name( NAME_SATYPE, msg.header.sadb_msg_satype ) );
 
 				pfkey_recv_getspi( msg );
 
@@ -171,8 +172,8 @@ long _IKED::loop_ike_pfkey()
 
 				log.txt( LLOG_DEBUG,
 					"K< : recv pfkey %s %s message\n",
-					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+					pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+					pfki.name( NAME_SATYPE, msg.header.sadb_msg_satype ) );
 
 				break;
 
@@ -180,8 +181,8 @@ long _IKED::loop_ike_pfkey()
 
 				log.txt( LLOG_DEBUG,
 					"K< : recv pfkey %s %s message\n",
-					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+					pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+					pfki.name( NAME_SATYPE, msg.header.sadb_msg_satype ) );
 
 				break;
 
@@ -189,8 +190,8 @@ long _IKED::loop_ike_pfkey()
 
 				log.txt( LLOG_DEBUG,
 					"K< : recv pfkey %s %s message\n",
-					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+					pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+					pfki.name( NAME_SATYPE, msg.header.sadb_msg_satype ) );
 
 				pfkey_recv_spflush( msg );
 
@@ -201,8 +202,8 @@ long _IKED::loop_ike_pfkey()
 
 				log.txt( LLOG_DEBUG,
 					"K< : recv pfkey %s %s message\n",
-					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+					pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+					pfki.name( NAME_SATYPE, msg.header.sadb_msg_satype ) );
 
 				pfkey_recv_spadd( msg );
 
@@ -212,8 +213,8 @@ long _IKED::loop_ike_pfkey()
 
 				log.txt( LLOG_DEBUG,
 					"K< : recv pfkey %s %s message\n",
-					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+					pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+					pfki.name( NAME_SATYPE, msg.header.sadb_msg_satype ) );
 
 				pfkey_recv_spnew( msg );
 
@@ -223,8 +224,8 @@ long _IKED::loop_ike_pfkey()
 				
 				log.txt( LLOG_DEBUG,
 					"K< : recv pfkey %s %s message\n",
-					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-					pfki.name( NAME_SATYPE, msg.hdr->sadb_msg_satype ) );
+					pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+					pfki.name( NAME_SATYPE, msg.header.sadb_msg_satype ) );
 
 				pfkey_recv_spdel( msg );
 
@@ -235,8 +236,8 @@ long _IKED::loop_ike_pfkey()
 
 				log.txt( LLOG_ERROR,
 					"K! : unhandled pfkey message type %s ( %i )\n",
-					pfki.name( NAME_MSGTYPE, msg.hdr->sadb_msg_type ),
-					msg.hdr->sadb_msg_type );
+					pfki.name( NAME_MSGTYPE, msg.header.sadb_msg_type ),
+					msg.header.sadb_msg_type );
 
 				break;
 		}
@@ -568,7 +569,7 @@ long _IKED::pfkey_recv_spadd( PFKI_MSG & msg )
 	PFKI_SPINFO spinfo;
 	memset( &spinfo, 0, sizeof( spinfo ) );
 
-	if( pfki.read_policy( msg, spinfo ) != PFKI_OK )
+	if( pfki.read_policy( msg, spinfo ) != IPCERR_OK )
 	{
 		log.txt( LLOG_ERROR,
 			"K! : failed to read basic policy info\n" );
@@ -576,8 +577,8 @@ long _IKED::pfkey_recv_spadd( PFKI_MSG & msg )
 		return LIBIKE_FAILED;
 	}
 
-	if( ( pfki.read_address_src( msg, spinfo.paddr_src ) != PFKI_OK ) ||
-		( pfki.read_address_dst( msg, spinfo.paddr_dst ) != PFKI_OK ) )
+	if( ( pfki.read_address_src( msg, spinfo.paddr_src ) != IPCERR_OK ) ||
+		( pfki.read_address_dst( msg, spinfo.paddr_dst ) != IPCERR_OK ) )
 	{
 		log.txt( LLOG_ERROR,
 			"K! : failed to read policy address info\n" );
@@ -651,7 +652,7 @@ long _IKED::pfkey_recv_spadd( PFKI_MSG & msg )
 			&policy,
 			spinfo.sp.dir,
 			spinfo.sp.type,
-			&msg.hdr->sadb_msg_seq,
+			&msg.header.sadb_msg_seq,
 			NULL,
 			NULL,
 			NULL,
@@ -693,7 +694,7 @@ long _IKED::pfkey_recv_spnew( PFKI_MSG & msg )
 	PFKI_SPINFO spinfo;
 	memset( &spinfo, 0, sizeof( spinfo ) );
 
-	if( pfki.read_policy( msg, spinfo ) != PFKI_OK )
+	if( pfki.read_policy( msg, spinfo ) != IPCERR_OK )
 	{
 		log.txt( LLOG_ERROR,
 			"K! : failed to read basic policy info\n" );
@@ -701,8 +702,8 @@ long _IKED::pfkey_recv_spnew( PFKI_MSG & msg )
 		return LIBIKE_FAILED;
 	}
 
-	if( ( pfki.read_address_src( msg, spinfo.paddr_src ) != PFKI_OK ) ||
-		( pfki.read_address_dst( msg, spinfo.paddr_dst ) != PFKI_OK ) )
+	if( ( pfki.read_address_src( msg, spinfo.paddr_src ) != IPCERR_OK ) ||
+		( pfki.read_address_dst( msg, spinfo.paddr_dst ) != IPCERR_OK ) )
 	{
 		log.txt( LLOG_ERROR,
 			"K! : failed to read policy address info\n" );
@@ -788,7 +789,7 @@ long _IKED::pfkey_recv_acquire( PFKI_MSG & msg )
 	PFKI_SPINFO spinfo;
 	memset( &spinfo, 0, sizeof( spinfo ) );
 
-	if( pfki.read_policy( msg, spinfo ) != PFKI_OK )
+	if( pfki.read_policy( msg, spinfo ) != IPCERR_OK )
 	{
 		log.txt( LLOG_ERROR,
 			"K! : failed to read basic policy info\n" );
@@ -809,8 +810,8 @@ long _IKED::pfkey_recv_acquire( PFKI_MSG & msg )
 		return LIBIKE_OK;
 	}
 
-	if( ( pfki.read_address_src( msg, spinfo.paddr_src ) != PFKI_OK ) ||
-		( pfki.read_address_dst( msg, spinfo.paddr_dst ) != PFKI_OK ) )
+	if( ( pfki.read_address_src( msg, spinfo.paddr_src ) != IPCERR_OK ) ||
+		( pfki.read_address_dst( msg, spinfo.paddr_dst ) != IPCERR_OK ) )
 	{
 		log.txt( LLOG_ERROR,
 			"K! : failed to read policy address info\n" );
@@ -844,7 +845,7 @@ long _IKED::pfkey_recv_acquire( PFKI_MSG & msg )
 				false,
 				spinfo.sp.type,
 				spinfo.sp.id,
-				msg.hdr->sadb_msg_seq );
+				msg.header.sadb_msg_seq );
 }
 
 long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
@@ -860,7 +861,7 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 	PFKI_SA sa;
 	memset( &sa, 0, sizeof( sa ) );
 
-	if( pfki.read_sa( msg, sa ) != PFKI_OK )
+	if( pfki.read_sa( msg, sa ) != IPCERR_OK )
 	{
 		log.txt( LLOG_ERROR,
 			"K! : failed to read security association info\n" );
@@ -871,8 +872,8 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 	PFKI_ADDR paddr_src;
 	PFKI_ADDR paddr_dst;
 
-	if( ( pfki.read_address_src( msg, paddr_src ) != PFKI_OK ) ||
-		( pfki.read_address_dst( msg, paddr_dst ) != PFKI_OK ) )
+	if( ( pfki.read_address_src( msg, paddr_src ) != IPCERR_OK ) ||
+		( pfki.read_address_dst( msg, paddr_dst ) != IPCERR_OK ) )
 	{
 		log.txt( LLOG_ERROR,
 			"K! : failed to read policy address info\n" );
@@ -891,7 +892,7 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 		"ii : - spi  = 0x%08x\n"
 		"ii : - src  = %s\n"
 		"ii : - dst  = %s\n",
-		msg.hdr->sadb_msg_seq,
+		msg.header.sadb_msg_seq,
 		ntohl( sa.spi ),
 		txtid_src,
 		txtid_dst );
@@ -903,7 +904,7 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 
 	unsigned char proto;
 
-	switch( msg.hdr->sadb_msg_satype )
+	switch( msg.header.sadb_msg_satype )
 	{
 		case SADB_SATYPE_AH:
 			proto = ISAKMP_PROTO_IPSEC_AH;
@@ -921,7 +922,7 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 		{
 			log.txt( LLOG_ERROR,
 				"!! : unhandled pfkey spi protocol type %i\n",
-				msg.hdr->sadb_msg_satype );
+				msg.header.sadb_msg_satype );
 
 			return LIBIKE_FAILED;
 		}
@@ -939,14 +940,14 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 			NULL,
 			XCH_STATUS_ANY,
 			XCH_STATUS_ANY,
-			&msg.hdr->sadb_msg_seq,
+			&msg.header.sadb_msg_seq,
 			NULL,
 			NULL,
 			NULL ) )
 	{
 		log.txt( LLOG_ERROR,
 			"!! : unable to locate phase2 for getspi update ( msg seq = %u )\n",
-			msg.hdr->sadb_msg_seq );
+			msg.header.sadb_msg_seq );
 
 		return LIBIKE_FAILED;
 	}
@@ -957,7 +958,7 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 	// inbound sas.
 	//
 
-	if( msg.hdr->sadb_msg_seq == ph2->seqid_out )
+	if( msg.header.sadb_msg_seq == ph2->seqid_out )
 	{
 		ph2->dec( true );
 		return LIBIKE_OK;
@@ -1089,7 +1090,7 @@ long _IKED::pfkey_recv_spdel( PFKI_MSG & msg )
 	PFKI_SPINFO	spinfo;
 	memset( &spinfo, 0, sizeof( spinfo ) );
 
-	if( pfki.read_policy( msg, spinfo ) != PFKI_OK )
+	if( pfki.read_policy( msg, spinfo ) != IPCERR_OK )
 	{
 		log.txt( LLOG_ERROR,
 			"!! : failed to read spdel policy data\n" );
@@ -1819,7 +1820,7 @@ long _IKED::pfkey_send_spadd( PFKI_SPINFO * spinfo )
 		pfki.name( NAME_SATYPE, SADB_SATYPE_UNSPEC ) );
 
 	long result = pfki.send_spadd( *spinfo );
-	if( result != PFKI_OK )
+	if( result != IPCERR_OK )
 		return LIBIKE_FAILED;
 
 	return LIBIKE_OK;
@@ -1833,7 +1834,7 @@ long _IKED::pfkey_send_spdel( PFKI_SPINFO * spinfo )
 		pfki.name( NAME_SATYPE, SADB_SATYPE_UNSPEC ) );
 
 	long result = pfki.send_spdel( *spinfo );
-	if( result != PFKI_OK )
+	if( result != IPCERR_OK )
 		return LIBIKE_FAILED;
 
 	return LIBIKE_OK;
