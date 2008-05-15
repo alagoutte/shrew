@@ -207,8 +207,8 @@ X Add work around for missing xauth type attribute
 X Add a generic IPC class to avoid wakeups and reduce latency
 X Port libdtp to use generic IPC class
 X Port libike to use generic IPC class
-. Port libpfk to use generic IPC class
-. Fix high number of select wakeups on socket calls
+X Port libpfk to use generic IPC class
+X Fix high number of select wakeups on socket calls
 . Fix MS dnscache problems the right way
 x Validate and document support for Cisco ASA gateways
 x Validate and document support for Juniper SSG gateways
@@ -220,6 +220,7 @@ x Validate and document support for Sidewinder gateways
 
 2.1.1 release - Bug fix and fine tuning
 ----------------------------------------------------------------------
+. Cleanup libpfk, its really ugly
 . Import new logo and improved icon sets
 . Fix static buffer usage for temporary string data
 ? Improve DPD timeout algorithm
