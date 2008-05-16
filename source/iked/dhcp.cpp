@@ -586,6 +586,8 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			}
 
 			tunnel->tstate |= TSTATE_RECV_CONFIG;
+
+			tunnel->ikei->wakeup();
 		}
 	}
 
@@ -606,6 +608,8 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			tunnel->event_dhcp.renew += tunnel->event_dhcp.lease / 2;
 
 			tunnel->tstate |= TSTATE_RECV_ACK;
+
+			tunnel->ikei->wakeup();
 		}
 	}
 
