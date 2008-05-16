@@ -642,7 +642,9 @@ bool _ITH_TIMER::del( ITH_EVENT * event )
 // inter process communication classes
 //==============================================================================
 
-#ifdef WIN32
+//
+// shared platform functions
+//
 
 long _ITH_IPCC::io_recv( void *data, size_t size )
 {
@@ -698,6 +700,8 @@ long _ITH_IPCC::io_send( void *data, size_t size )
 
 	return IPCERR_OK;
 }
+
+#ifdef WIN32
 
 //
 // inter process communication client
