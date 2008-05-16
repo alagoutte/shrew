@@ -297,8 +297,12 @@ typedef class DLX _ITH_IPCC
 	IPCCONN		conn;
 
 	void	io_conf( IPCCONN sconn );
-	long	io_recv( void * data, size_t & size );
-	long	io_send( void * data, size_t & size );
+
+	long	io_recv( void * data, size_t size );
+	long	io_recv( void * data, size_t size, size_t & rcvd );
+
+	long	io_send( void * data, size_t size );
+	long	io_send( void * data, size_t size, size_t & sent );
 
 	public:
 

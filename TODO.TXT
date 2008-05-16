@@ -221,6 +221,7 @@ x Validate and document support for Sidewinder gateways
 
 2.1.1 release - Bug fix and fine tuning
 ----------------------------------------------------------------------
+. Use overlapped IO to interface with the windows filter driver
 . Cleanup libpfk, its really ugly
 . Import new logo and improved icon sets
 . Fix static buffer usage for temporary string data

@@ -199,15 +199,7 @@ long _PFKI::recv_message( PFKI_MSG & msg )
 		msg_size = PFKEY_UNUNIT64( msg.header.sadb_msg_len );
 		msg.size( msg_size );
 
-		while( msg_size > msg_read )
-		{
-			size_t msg_temp = msg_size - msg_read;
-			result = io_recv( msg.buff() + msg_read, msg_temp );
-			if( result != IPCERR_OK )
-				break;
-
-			msg_read += msg_temp;
-		}
+		result = io_recv( msg.buff() + msg_read, msg_size - msg_read );
 	}
 
 	return result;

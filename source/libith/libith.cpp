@@ -644,6 +644,61 @@ bool _ITH_TIMER::del( ITH_EVENT * event )
 
 #ifdef WIN32
 
+long _ITH_IPCC::io_recv( void *data, size_t size )
+{
+	char * buff = ( char * ) data;
+	size_t rcvd = 0;
+	size_t temp = 0;
+
+	while( size > rcvd )
+	{
+		temp = size - rcvd;
+		long result = io_recv( buff + rcvd, temp, temp );
+
+		switch( result )
+		{
+			case IPCERR_OK:
+			case IPCERR_BUFFER:
+				break;
+
+			default:
+				return result;
+		}
+
+		rcvd += temp;
+	}
+
+	return IPCERR_OK;
+}
+
+long _ITH_IPCC::io_send( void *data, size_t size )
+{
+	char * buff = ( char * ) data;
+	size_t sent = 0;
+	size_t temp = 0;
+
+	while( size > sent )
+	{
+		temp = size - sent;
+		long result = io_send( buff + sent, temp, temp );
+
+		switch( result )
+		{
+			case IPCERR_OK:
+			case IPCERR_BUFFER:
+				break;
+
+			default:
+				return result;
+		}
+
+
+		sent += temp;
+	}
+
+	return IPCERR_OK;
+}
+
 //
 // inter process communication client
 //
@@ -701,7 +756,7 @@ VOID WINAPI io_recv_complete( DWORD result, DWORD size, LPOVERLAPPED olapp )
 	// will wake on io completion
 }
 
-long _ITH_IPCC::io_recv( void * data, size_t & size )
+long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 {
 	if( conn == INVALID_HANDLE_VALUE )
 		return IPCERR_CLOSED;
@@ -793,14 +848,14 @@ long _ITH_IPCC::io_recv( void * data, size_t & size )
 			break;
 	}
 
-	size = dwsize;
+	rcvd = dwsize;
 
 	ReleaseMutex( hmutex_recv );
 
 	return result;
 }
 
-long _ITH_IPCC::io_send( void * data, size_t & size )
+long _ITH_IPCC::io_send( void * data, size_t size, size_t & sent )
 {
 	if( conn == INVALID_HANDLE_VALUE )
 		return IPCERR_CLOSED;
@@ -812,6 +867,12 @@ long _ITH_IPCC::io_send( void * data, size_t & size )
 	olapp.hEvent = hevent_send;
 
 	WaitForSingleObject( hmutex_send, INFINITE );
+
+	// windows does not always set
+	// the GetLastError value to
+	// success after WriteFileEx but
+	// the documentation says you
+	// should check it for errors
 
 	SetLastError( ERROR_SUCCESS );
 
@@ -865,7 +926,7 @@ long _ITH_IPCC::io_send( void * data, size_t & size )
 			break;
 	}
 
-	size = dwsize;
+	sent = dwsize;
 
 	ReleaseMutex( hmutex_send );
 	return IPCERR_OK;
@@ -1217,7 +1278,7 @@ void _ITH_IPCC::io_conf( IPCCONN sconn )
 	conn = sconn;
 }
 
-long _ITH_IPCC::io_recv( void * data, size_t & size )
+long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 {
 	fd_set fds;
 	FD_ZERO( &fds );
@@ -1240,7 +1301,7 @@ long _ITH_IPCC::io_recv( void * data, size_t & size )
 		if( result == 0 )
 			return IPCERR_CLOSED;
 
-		size = result;
+		rcvd = result;
 
 		return IPCERR_OK;
 	}
@@ -1256,13 +1317,13 @@ long _ITH_IPCC::io_recv( void * data, size_t & size )
 	return IPCERR_NODATA;
 }
 
-long _ITH_IPCC::io_send( void * data, size_t & size )
+long _ITH_IPCC::io_send( void * data, size_t size, size_t & sent )
 {
 	long result = send( conn, data, size, 0 );
 	if( result < 0 )
 		return IPCERR_FAILED;
 
-	size = result;
+	sent = result;
 
 	return IPCERR_OK;
 }
