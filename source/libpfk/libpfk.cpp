@@ -185,9 +185,10 @@ long _PFKI::send_message( PFKI_MSG & msg )
 long _PFKI::recv_message( PFKI_MSG & msg )
 {
 	msg.size( sizeof( sadb_msg ) );
-	size_t msg_size = msg.size();
+	size_t msg_read = msg.size();
+	size_t msg_size = 0;
 
-	long result = io_recv( msg.buff(), msg_size );
+	long result = io_recv( msg.buff(), msg_read );
 
 	if( ( result == IPCERR_OK ) || ( result == IPCERR_BUFFER ) )
 	{
@@ -196,14 +197,17 @@ long _PFKI::recv_message( PFKI_MSG & msg )
 			return IPCERR_FAILED;
 
 		msg_size = PFKEY_UNUNIT64( msg.header.sadb_msg_len );
-		if( msg_size > msg.size() )
-			result = IPCERR_BUFFER;
-	}
-
-	if( result == IPCERR_BUFFER )
-	{
 		msg.size( msg_size );
-		result = io_recv( msg.buff() + sizeof( sadb_msg ), msg_size );
+
+		while( msg_size > msg_read )
+		{
+			size_t msg_temp = msg_size - msg_read;
+			result = io_recv( msg.buff() + msg_read, msg_temp );
+			if( result != IPCERR_OK )
+				break;
+
+			msg_read += msg_temp;
+		}
 	}
 
 	return result;

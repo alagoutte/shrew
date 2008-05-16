@@ -767,11 +767,10 @@ long _ITH_IPCC::io_recv( void * data, size_t & size )
 			break;
 	}
 
-	size = dwsize;
-
 	switch( result )
 	{
 		case ERROR_SUCCESS:
+			assert( size == dwsize );
 			result = IPCERR_OK;
 			break;
 
@@ -794,6 +793,8 @@ long _ITH_IPCC::io_recv( void * data, size_t & size )
 			break;
 	}
 
+	size = dwsize;
+
 	ReleaseMutex( hmutex_recv );
 
 	return result;
@@ -804,53 +805,67 @@ long _ITH_IPCC::io_send( void * data, size_t & size )
 	if( conn == INVALID_HANDLE_VALUE )
 		return IPCERR_CLOSED;
 
+	DWORD dwsize = ( DWORD ) size;
+
 	OVERLAPPED olapp;
 	memset( &olapp, 0, sizeof( olapp ) );
 	olapp.hEvent = hevent_send;
 
 	WaitForSingleObject( hmutex_send, INFINITE );
 
-	DWORD dwsize = ( DWORD ) size;
+	SetLastError( ERROR_SUCCESS );
 
-	long result = WriteFile(
-					conn,
-					data,
-					dwsize,
-					&dwsize,
-					&olapp );
+	WriteFile(
+		conn,
+		data,
+		dwsize,
+		&dwsize,
+		&olapp );
 
-	if( !result && ( GetLastError() == ERROR_IO_PENDING ) )
+	long result = GetLastError();
+
+	switch( result )
 	{
-		WaitForSingleObjectEx(
-			hevent_send,
-			INFINITE,
-			true );
+		case ERROR_IO_PENDING:
 
-		result = GetOverlappedResult(
-					conn,
-					&olapp,
-					&dwsize,
-					true );
+			WaitForSingleObjectEx(
+				hevent_send,
+				INFINITE,
+				true );
+
+			GetOverlappedResult(
+				conn,
+				&olapp,
+				&dwsize,
+				true );
+
+			result = GetLastError();
+
+			break;
+	}
+
+	switch( result )
+	{
+		case ERROR_SUCCESS:
+			assert( size == dwsize );
+			result = IPCERR_OK;
+			break;
+
+		case ERROR_MORE_DATA:
+			result = IPCERR_BUFFER;
+			break;
+
+		case ERROR_BROKEN_PIPE:
+		case ERROR_INVALID_HANDLE:
+			result = IPCERR_CLOSED;
+			break;
+
+		default:
+			result = IPCERR_FAILED;
+			break;
 	}
 
 	size = dwsize;
-
-	if( !result )
-	{
-		result = GetLastError();
-
-		switch( result )
-		{
-			case ERROR_MORE_DATA:
-				ReleaseMutex( hmutex_send );
-				return IPCERR_BUFFER;
-
-			case ERROR_BROKEN_PIPE:
-				conn = INVALID_HANDLE_VALUE;
-				ReleaseMutex( hmutex_send );
-				return IPCERR_CLOSED;
-		}
-	}
 
 	ReleaseMutex( hmutex_send );
 	return IPCERR_OK;

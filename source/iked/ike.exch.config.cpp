@@ -989,6 +989,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 					cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
 					cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
+
+					cfg->tunnel->ikei->wakeup();
 				}
 			}
 		}
@@ -1072,6 +1074,8 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 
 			cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
 			cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
+
+			cfg->tunnel->ikei->wakeup();
 		}
 	}
 	else
