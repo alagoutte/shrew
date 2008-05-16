@@ -252,6 +252,7 @@ long _IKEI::recv_message( IKEI_MSG & msg )
 
 	if( ( result == IPCERR_OK ) || ( result == IPCERR_BUFFER ) )
 	{
+		msg.oset( 0 );
 		if( !msg.get( &msg.header, sizeof( IKEI_HEADER ) ) )
 			return IPCERR_FAILED;
 
