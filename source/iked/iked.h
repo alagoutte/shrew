@@ -366,6 +366,7 @@ typedef class _IKED
 	friend class _IDB_LIST_CFG;
 
 	friend class _ITH_EVENT_TUNDHCP;
+	friend class _ITH_EVENT_TUNSTATS;
 
 	friend class _ITH_EVENT_RESEND;
 

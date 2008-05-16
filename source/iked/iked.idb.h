@@ -264,6 +264,16 @@ typedef class _ITH_EVENT_TUNDHCP : public ITH_EVENT
 
 }ITH_EVENT_TUNDHCP;
 
+typedef class _ITH_EVENT_TUNSTATS : public ITH_EVENT
+{
+	public:
+
+	IDB_TUNNEL *	tunnel;
+
+	bool	func();
+
+}ITH_EVENT_TUNSTATS;
+
 //==============================================================================
 // exchange event classes
 //
@@ -423,11 +433,11 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 
 	long			natt_version;
 
+	IKEI_STATS		stats;
 	IKE_XAUTH		xauth;
 	IKE_XCONF		xconf;
 	IDB_LIST_DOMAIN	domains;
 	BDATA			banner;
-	IKEI_STATS		stats;
 	XCH_ERRORCODE	close;
 
 #ifdef WIN32
@@ -448,6 +458,7 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 	SOCKET		dhcp_sock;
 
 	ITH_EVENT_TUNDHCP	event_dhcp;
+	ITH_EVENT_TUNSTATS	event_stats;
 
 	virtual	char *			name();
 	virtual IDB_RC_LIST *	list();

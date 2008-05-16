@@ -101,8 +101,6 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 	DTPI dtpi;
 #endif
 
-	time_t stattick = 0;
-
 	//
 	// enter client ctrl loop
 	//
@@ -632,6 +630,14 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 								tunnel->xconf.addr = tunnel->saddr_l.saddr4.sin_addr;
 								tunnel->xconf.mask.s_addr = 0xffffffff;
 							}
+
+							//
+							// add the statistics event
+							//
+
+							tunnel->inc( true );
+							tunnel->event_stats.delay = 1000;
+							ith_timer.add( &tunnel->event_stats );
 						}
 					}
 					else
@@ -736,23 +742,6 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 				ikei->send_message( msg );
 
 				tunnel->tstate |= TSTATE_VNET_ENABLE;
-			}
-
-			//
-			// check tunnel status and send
-			// message once every second
-			//
-
-			if( !( tunnel->close ) &&
-			     ( tunnel->tstate & TSTATE_VNET_ENABLE ) )
-			{
-				if( stattick < time( NULL ) )
-				{
-					msg.set_stats( &tunnel->stats );
-					ikei->send_message( msg );
-
-					stattick = time( NULL );
-				}
 			}
 		}
 	}

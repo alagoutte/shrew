@@ -75,6 +75,23 @@ bool _ITH_EVENT_TUNDHCP::func()
 	return true;
 }
 
+bool _ITH_EVENT_TUNSTATS::func()
+{
+	//
+	// check tunnel status and send
+	// message once every second
+	//
+
+	if( !( tunnel->close ) && ( tunnel->tstate & TSTATE_VNET_ENABLE ) )
+	{
+		IKEI_MSG msg;
+		msg.set_stats( &tunnel->stats );
+		tunnel->ikei->send_message( msg );
+	}
+
+	return true;
+}
+
 //==============================================================================
 // tunnel list
 //==============================================================================
@@ -191,6 +208,8 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 	// initialize event info
 	//
 
+	event_stats.tunnel = this;
+
 	event_dhcp.tunnel = this;
 	event_dhcp.lease = 0;
 	event_dhcp.renew = 0;
@@ -265,6 +284,14 @@ void _IDB_TUNNEL::end()
 		idb_refcount--;
 		iked.log.txt( LLOG_DEBUG,
 			"DB : tunnel dhcp event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
+
+	if( iked.ith_timer.del( &event_stats ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : tunnel stats event canceled ( ref count = %i )\n",
 			idb_refcount );
 	}
 
