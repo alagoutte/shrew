@@ -581,7 +581,10 @@ bool site::Load( CONFIG & config )
 
 	BDATA psk;
 	if( config.get_binary( "auth-mutual-psk", psk ) )
+	{
+		psk.add( "", 1 );
 		lineEditPSK->setText( psk.text() );
+	}
 
 	// phase1 dh group ( default auto )
 
