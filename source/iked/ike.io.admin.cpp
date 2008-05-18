@@ -107,7 +107,9 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 	IKEI_MSG msg;
 
-	while( 1 )
+	bool failure = false;
+
+	while( !failure )
 	{
 		long result;
 
@@ -166,7 +168,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						msg.set_result( IKEI_RESULT_FAILED );
 						ikei->send_message( msg );
 
-						tunnel->close = XCH_FAILED_CLIENT;
+						failure = true;
 
 						break;
 					}
@@ -189,7 +191,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						msg.set_result( IKEI_RESULT_FAILED );
 						ikei->send_message( msg );
 
-						tunnel->close = XCH_FAILED_CLIENT;
+						failure = true;
 
 						break;
 					}
@@ -754,10 +756,19 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 		pcap_decrypt.flush();
 
 	//
-	// perform tunnel cleanup steps
+	// perform tunnel cleanup
 	//
 
-	if( tunnel != NULL )
+	if( tunnel == NULL )
+	{
+		//
+		// peer or tunnel setup failed
+		//
+
+		msg.set_status( STATUS_FAIL, "client configuration error\n" );
+		ikei->send_message( msg );
+	}
+	else
 	{
 		//
 		// cleaup our security policy lists
@@ -909,13 +920,14 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 		//
 
 		tunnel->dec( true, true );
-
-		//
-		// cleanup
-		//
-
-		peer->dec( true, true );
 	}
+
+	//
+	// perform peer cleanup
+	//
+
+	if( peer != NULL )
+		peer->dec( true, true );
 
 	//
 	// cleanup dns transparent proxy

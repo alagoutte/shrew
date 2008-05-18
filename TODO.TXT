@@ -232,8 +232,9 @@ x Validate and document support for Sidewinder gateways
 2.2.0 release - Feature Parity ...
 ----------------------------------------------------------------------
 . Finalized kernel drivers signed by Microsoft WHQL
-. Validate and document support for SonicWall gateways
+. Fix config mode packet retransmit issues
 . Add support for unattended installations ( needs signed drivers )
+. Validate and document support for SonicWall gateways
 ? Add support for client connect/disconnect script execution
 ? Add adaptive communications during connect ( Frag/NATT )
 ? Move to a purely primitive based tunnel confguration interface

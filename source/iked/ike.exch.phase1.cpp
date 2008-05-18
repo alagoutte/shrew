@@ -1387,39 +1387,53 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				policy_list_create( ph1->tunnel, ph1->initiator );
 
 		//
-		// determine if a config exchange
-		// is required at this time
+		// determine if client configurtaion
+		// processing should be initiated
 		//
 
-		if( !ph1->initiator && ph1->vendopts_l.flag.xauth )
+		switch( ph1->tunnel->peer->contact )
 		{
-			//
-			// initiate xauth to verify our peer
-			// when acting as a responder
-			//
-
-			IDB_CFG * cfg = new IDB_CFG( ph1->tunnel, true, 0 );
-			cfg->add( true );
-			process_config_send( ph1, cfg );
-			cfg->dec( true );
-		}
-
-		if( ph1->initiator && !ph1->vendopts_l.flag.xauth )
-		{
-			//
-			// initiate a pull config request or
-			// dhcp over ipsec processing when
-			// acting as an initiator and xauth
-			// is not required
-			//
-
-			if( ( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_PULL ) ||
-				( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_DHCP ) )
+			case IPSEC_CONTACT_RESP:
+			case IPSEC_CONTACT_BOTH:
 			{
-				IDB_CFG * cfg = new IDB_CFG( ph1->tunnel, true, 0 );
-				cfg->add( true );
-				process_config_send( ph1, cfg );
-				cfg->dec( true );
+				//
+				// inititate xauth operation if required
+				//
+
+				if( !ph1->initiator && ph1->vendopts_l.flag.xauth )
+				{
+					IDB_CFG * cfg = new IDB_CFG( ph1->tunnel, true, 0 );
+					cfg->add( true );
+					process_config_send( ph1, cfg );
+					cfg->dec( true );
+				}
+
+				break;
+			}
+
+			case IPSEC_CONTACT_CLIENT:
+			{
+				//
+				// peer will initiate xauth if required
+				//
+
+				if( ph1->initiator && !ph1->vendopts_l.flag.xauth )
+				{
+					//
+					// initiate the client configuration
+					// processing unless in push mode
+					//
+
+					if( ph1->tunnel->peer->xconf_mode != CONFIG_MODE_PUSH )
+					{
+						IDB_CFG * cfg = new IDB_CFG( ph1->tunnel, true, 0 );
+						cfg->add( true );
+						process_config_send( ph1, cfg );
+						cfg->dec( true );
+					}
+				}
+
+				break;
 			}
 		}
 
