@@ -347,25 +347,6 @@
                             <set>AlignHCenter</set>
                         </property>
                     </widget>
-                    <widget class="QLineEdit">
-                        <property name="name">
-                            <cstring>lineEditMTU</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>10</x>
-                                <y>90</y>
-                                <width>41</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>1500</string>
-                        </property>
-                        <property name="alignment">
-                            <set>AlignRight</set>
-                        </property>
-                    </widget>
                     <widget class="QComboBox">
                         <item>
                             <property name="text">
@@ -387,6 +368,25 @@
                                 <width>241</width>
                                 <height>21</height>
                             </rect>
+                        </property>
+                    </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditMTU</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>90</y>
+                                <width>41</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>1380</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignRight</set>
                         </property>
                     </widget>
                 </widget>
