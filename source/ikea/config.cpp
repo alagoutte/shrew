@@ -46,7 +46,7 @@
 //
 
 #define DELIM_NEW	','
-#define DELIM_OLD	char( 0x255 )
+#define DELIM_OLD	0x255
 
 inline char * text_delim( char * text )
 {
@@ -61,14 +61,25 @@ inline char * text_delim( char * text )
 
 inline size_t text_length( char * text )
 {
-	char chrset[] =
-	{
-		char( DELIM_NEW ),
-		char( DELIM_OLD ),
-		char( 0x00 )
-	};
+	size_t oset = 0;
 
-	return strcspn( text, chrset );
+	while( true )
+	{
+		int c = text[ oset ];
+
+		switch( c )
+		{
+			case 0:
+			case DELIM_OLD:
+			case DELIM_NEW:
+				return oset;
+
+			default:
+				oset++;
+		}
+	}
+
+	return 0;
 }
 
 //==============================================================================
