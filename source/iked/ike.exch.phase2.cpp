@@ -90,6 +90,13 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		//
 
 		phase2_gen_iv( ph1, ph2->msgid, ph2->iv );
+
+		//
+		// make sure we respond using the
+		// isakmp sa that was last seen
+		//
+
+		ph2->cookies = ph1->cookies;
 	}
 
 	//
@@ -122,13 +129,6 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		ph2->dec( true );
 		return LIBIKE_OK;
 	}
-
-	//
-	// make sure we respond using the
-	// isakmp sa that was last seen
-	//
-
-	ph2->cookies = ph1->cookies;
 
 	//
 	// if we are dumping decrypted packets,
