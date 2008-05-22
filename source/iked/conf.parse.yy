@@ -597,8 +597,8 @@ xconf_local_line
 		if( len >= CONF_STRLEN )
 			len = CONF_STRLEN - 1;
 
-		memcpy( iked.xconf_local.config.nscfg.suffix, $2->text(), len );
-		iked.xconf_local.config.nscfg.suffix[ len ] = 0;
+		memcpy( iked.xconf_local.config.nscfg.dnss_suffix, $2->text(), len );
+		iked.xconf_local.config.nscfg.dnss_suffix[ len ] = 0;
 		delete $2;
 	}
 	EOS

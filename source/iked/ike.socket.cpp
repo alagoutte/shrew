@@ -729,7 +729,7 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 		if( fp != NULL )
 		{
 			if( tunnel->xconf.opts & IPSEC_OPTS_DOMAIN )
-				fprintf( fp, "domain\t%s\n", tunnel->xconf.nscfg.suffix );
+				fprintf( fp, "domain\t%s\n", tunnel->xconf.nscfg.dnss_suffix );
 
 			if( tunnel->xconf.opts & IPSEC_OPTS_DNSS )
 				for( int i = 0; i < tunnel->xconf.nscfg.dnss_count; i++ )

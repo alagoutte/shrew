@@ -714,7 +714,7 @@ void _IKEC::run()
 					xconf.rqst &= ~IPSEC_OPTS_DOMAIN;
 				}
 				else
-					strncpy( xconf.nscfg.suffix, text, CONF_STRLEN );
+					strncpy( xconf.nscfg.dnss_suffix, text, CONF_STRLEN );
 			}
 		}
 	}
