@@ -124,6 +124,13 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	}
 
 	//
+	// make sure we respond using the
+	// isakmp sa that was last seen
+	//
+
+	ph2->cookies = ph1->cookies;
+
+	//
 	// if we are dumping decrypted packets,
 	// we need to rebuild a full packet to
 	// dump to pcap format 
@@ -1558,9 +1565,9 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	ph2->inc( true );
 	ph2->inc( true );
 
-	ph2->event_hard.delay = lifetime;
+	ph2->event_hard.delay = lifetime + 1;
 
-	ph2->event_soft.delay = lifetime;
+	ph2->event_soft.delay = lifetime + 1;
 	ph2->event_soft.delay *= PFKEY_SOFT_LIFETIME_RATE;
 	ph2->event_soft.delay /= 100;
 	ph2->event_soft.diff = ph2->event_hard.delay - ph2->event_soft.delay;

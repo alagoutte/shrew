@@ -520,9 +520,9 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 					tmp = 255;
 				if( len >= 1 )
 				{
-					packet.get( config.nscfg.suffix, tmp );
-					config.nscfg.suffix[ tmp ] = 0;
-					log.txt( LLOG_DEBUG, "ii : - DNS Suffix = %s\n", config.nscfg.suffix );
+					packet.get( config.nscfg.dnss_suffix, tmp );
+					config.nscfg.dnss_suffix[ tmp ] = 0;
+					log.txt( LLOG_DEBUG, "ii : - DNS Suffix = %s\n", config.nscfg.dnss_suffix );
 				}
 				packet.get_null( len - tmp );
 				break;
@@ -573,8 +573,8 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			}
 
 			if( tunnel->xconf.opts & IPSEC_OPTS_DOMAIN )
-				memcpy( tunnel->xconf.nscfg.suffix,
-					config.nscfg.suffix, CONF_STRLEN );
+				memcpy( tunnel->xconf.nscfg.dnss_suffix,
+					config.nscfg.dnss_suffix, CONF_STRLEN );
 
 			if( tunnel->xconf.opts & IPSEC_OPTS_NBNS )
 			{

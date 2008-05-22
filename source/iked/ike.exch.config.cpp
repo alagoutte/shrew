@@ -1620,12 +1620,12 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 			else
 			{
 				cfg->attr_add_v( UNITY_DEF_DOMAIN,
-					&cfg->tunnel->xconf.nscfg.suffix,
-					strlen( cfg->tunnel->xconf.nscfg.suffix ) );
+					&cfg->tunnel->xconf.nscfg.dnss_suffix,
+					strlen( cfg->tunnel->xconf.nscfg.dnss_suffix ) );
 
 				log.txt( LLOG_DEBUG,
 					"ii : - DNS Suffix = %s\n",
-					cfg->tunnel->xconf.nscfg.suffix );
+					cfg->tunnel->xconf.nscfg.dnss_suffix );
 			}
 		}
 
@@ -1830,12 +1830,12 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 			else
 			{
 				cfg->attr_add_v( CHKPT_DEF_DOMAIN,
-					&cfg->tunnel->xconf.nscfg.suffix,
-					strlen( cfg->tunnel->xconf.nscfg.suffix ) );
+					&cfg->tunnel->xconf.nscfg.dnss_suffix,
+					strlen( cfg->tunnel->xconf.nscfg.dnss_suffix ) );
 
 				log.txt( LLOG_DEBUG,
 					"ii : - DNS Suffix = %s\n",
-					cfg->tunnel->xconf.nscfg.suffix );
+					cfg->tunnel->xconf.nscfg.dnss_suffix );
 			}
 		}
 	}
@@ -2117,14 +2117,14 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 							nlen = ( CONF_STRLEN - 1 );
 
 						memcpy(
-							cfg->tunnel->xconf.nscfg.suffix,
+							cfg->tunnel->xconf.nscfg.dnss_suffix,
 							attr->vdata.buff(), nlen );
 
-						cfg->tunnel->xconf.nscfg.suffix[ nlen ] = 0;
+						cfg->tunnel->xconf.nscfg.dnss_suffix[ nlen ] = 0;
 
 						log.txt( LLOG_DEBUG,
 							"ii : - DNS Suffix = %s\n",
-							cfg->tunnel->xconf.nscfg.suffix );
+							cfg->tunnel->xconf.nscfg.dnss_suffix );
 					}
 					else
 						log.txt( LLOG_DEBUG, "ii : - DNS Suffix\n" );

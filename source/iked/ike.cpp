@@ -350,6 +350,13 @@ long _IKED::packet_ike_encap( PACKET_IKE & packet_ike, PACKET_IP & packet_ip, IK
 
 long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 {
+	log.txt( LLOG_INFO,
+		"=< : using ISAKMP SA %08x%08x:%08x%08x\n",
+		htonl( *( long * ) &sa->cookies.i[ 0 ] ),
+		htonl( *( long * ) &sa->cookies.i[ 4 ] ),
+		htonl( *( long * ) &sa->cookies.r[ 0 ] ),
+		htonl( *( long * ) &sa->cookies.r[ 4 ] ) );
+
 	//
 	// check if decrypt is required
 	//
@@ -517,6 +524,13 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 
 long _IKED::packet_ike_encrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 {
+	log.txt( LLOG_INFO,
+		"=< : using ISAKMP SA %08x%08x:%08x%08x\n",
+		htonl( *( long * ) &sa->cookies.i[ 0 ] ),
+		htonl( *( long * ) &sa->cookies.i[ 4 ] ),
+		htonl( *( long * ) &sa->cookies.r[ 0 ] ),
+		htonl( *( long * ) &sa->cookies.r[ 4 ] ) );
+
 	//
 	// check if encrypt is required
 	//

@@ -617,11 +617,11 @@ typedef struct _IKE_XAUTH
 
 typedef struct _IKE_NSCFG
 {
-	char		suffix[ CONF_STRLEN ];
-
+	bool		dhcp_dnss;						// dns server list from dhcp
 	in_addr		dnss_list[ IPSEC_DNSS_MAX ];	// dns server list
 	uint32_t	dnss_count;						// dns server count
 	uint32_t	dnss_nodyn;						// dns dynamic update disabled
+	char		dnss_suffix[ CONF_STRLEN ];
 
 	in_addr		nbns_list[ IPSEC_NBNS_MAX ];	// wins server list
 	uint32_t	nbns_count;						// wins server count

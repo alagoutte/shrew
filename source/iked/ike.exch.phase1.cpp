@@ -1449,7 +1449,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		//
 
 		ph1->inc( true );
-		ph1->event_soft.delay = proposal->life_sec;
+		ph1->event_soft.delay = proposal->life_sec + 1;
 		ph1->event_soft.delay *= PFKEY_SOFT_LIFETIME_RATE;
 		ph1->event_soft.delay /= 100;
 		ph1->event_soft.delay *= 1000;
@@ -1461,7 +1461,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		//
 
 		ph1->inc( true );
-		ph1->event_hard.delay = proposal->life_sec;
+		ph1->event_hard.delay = proposal->life_sec + 1;
 		ph1->event_hard.delay *= 1000;
 
 		ith_timer.add( &ph1->event_hard );

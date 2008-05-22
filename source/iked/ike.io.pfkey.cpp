@@ -1021,47 +1021,81 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 	{
 		ph2->lstate |= LSTATE_HASSPI;
 
-		//
-		// attempt to locate a phase1 sa
-		// for this tunnel
-		//
+		IDB_PH1 * ph1 = NULL;
 
-		IDB_PH1 * ph1;
-		if( !idb_list_ph1.find(
-				true,
-				&ph1,
-				ph2->tunnel,
-				XCH_STATUS_MATURE,
-				XCH_STATUS_DEAD,
-				NULL ) )
+		if( ph2->initiator )
 		{
 			//
-			// mark phase2 as pending
+			// phase2 initiator
 			//
 
-			ph2->status( XCH_STATUS_PENDING, XCH_NORMAL, 0 );
-
-			//
-			// initiate a new phase1
-			//
-
-			ph1 = new IDB_PH1( ph2->tunnel, true, NULL );
-
-			if( ph1 == NULL )
+			if( !idb_list_ph1.find(
+					true,
+					&ph1,
+					ph2->tunnel,
+					XCH_STATUS_MATURE,
+					XCH_STATUS_DEAD,
+					NULL ) )
 			{
-				ph2->dec( true );
-				return LIBIKE_FAILED;
-			}
+				//
+				// mark the phase2 as pending
+				//
 
-			if( !ph1->add( true ) )
-			{
-				delete ph1;
-				ph2->dec( true );
-				return LIBIKE_FAILED;
-			}
+				ph2->status( XCH_STATUS_PENDING, XCH_NORMAL, 0 );
 
-			process_phase1_send( ph1 );
+				//
+				// initiate a new phase1
+				//
+
+				ph1 = new IDB_PH1( ph2->tunnel, true, NULL );
+
+				if( ph1 == NULL )
+				{
+					ph2->dec( true );
+					return LIBIKE_FAILED;
+				}
+
+				if( !ph1->add( true ) )
+				{
+					delete ph1;
+					ph2->dec( true );
+					return LIBIKE_FAILED;
+				}
+
+				process_phase1_send( ph1 );
+			}
 		}
+		else
+		{
+			//
+			// phase2 responder
+			//
+
+			if( !idb_list_ph1.find(
+					true,
+					&ph1,
+					ph2->tunnel,
+					XCH_STATUS_MATURE,
+					XCH_STATUS_DEAD,
+					&ph2->cookies ) )
+			{
+				//
+				// some gateways expect a response to
+				// be protected using the same isakmp
+				// sa it was initiated with. best to
+				// ignore this and wait for another.
+				//
+
+				ph2->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
+				ph2->dec( true );
+				return LIBIKE_FAILED;
+			}
+		}
+
+		//
+		// if we have a mature phase1 sa,
+		// send the next phase2 message
+		//
 
 		if( ph1->status() >= XCH_STATUS_MATURE )
 			process_phase2_send( ph1, ph2 );

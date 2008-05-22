@@ -261,8 +261,8 @@ bool _IKED_XCONF_LOCAL::rslt( IDB_TUNNEL * tunnel )
 	}
 
 	if( tunnel->xconf.opts & IPSEC_OPTS_DOMAIN )
-		memcpy( tunnel->xconf.nscfg.suffix,
-			config.nscfg.suffix, CONF_STRLEN );
+		memcpy( tunnel->xconf.nscfg.dnss_suffix,
+			config.nscfg.dnss_suffix, CONF_STRLEN );
 
 	if( tunnel->xconf.opts & IPSEC_OPTS_SPLITDNS )
 	{

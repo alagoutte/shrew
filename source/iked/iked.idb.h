@@ -699,6 +699,7 @@ typedef class _IDB_PH2 : public IDB_XCH
 {
 	public:
 
+	IKE_COOKIES	cookies;
 	uint32_t	seqid_in;
 	uint32_t	seqid_out;
 	uint32_t	nailed_plcyid;
