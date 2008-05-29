@@ -1015,7 +1015,7 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 
 	ph2->spicount--;
 
-	if( ph2->spicount )
+	if( ph2->spicount > 0 )
 		log.txt( LLOG_DEBUG, "ii : waiting for %i spi updates\n", ph2->spicount );
 	else
 	{
