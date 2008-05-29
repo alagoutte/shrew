@@ -1310,7 +1310,6 @@ void site::Update()
 		switch( aconf )
 		{
 			case 0:	// autoconf disabled
-			case 3:	// dhcp over ipsec
 				checkBoxAddressAuto->setEnabled( false );
 				checkBoxAddressAuto->setChecked( false );
 				break;
@@ -1318,6 +1317,12 @@ void site::Update()
 			case 1: // ike config push
 			case 2: // ike config pull
 				checkBoxAddressAuto->setEnabled( true );
+				checkBoxAddressAuto->setChecked( true );
+				break;
+
+			case 3:	// dhcp over ipsec
+				checkBoxAddressAuto->setEnabled( false );
+				checkBoxAddressAuto->setChecked( true );
 				break;
 		}
 
