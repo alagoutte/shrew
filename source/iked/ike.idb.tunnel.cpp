@@ -55,6 +55,7 @@ bool _ITH_EVENT_TUNDHCP::func()
 	if( tunnel->close || ( retry > 6 ) )
 	{
 		tunnel->close = XCH_FAILED_DHCPCONFIG;
+		tunnel->ikei->wakeup();
 		tunnel->dec( true );
 
 		return false;

@@ -210,7 +210,7 @@ X Port libike to use generic IPC class
 X Port libpfk to use generic IPC class
 X Fix high number of select wakeups on socket calls
 X Fix the client statistics update
-. Fix MS dnscache problems the right way
+X Fix MS dnscache problems the right way
 x Validate and document support for Cisco ASA gateways
 x Validate and document support for Juniper SSG gateways
 x Validate and document support for Fortigate gateways
