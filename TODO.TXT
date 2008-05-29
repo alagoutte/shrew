@@ -213,7 +213,6 @@ X Fix the client statistics update
 X Fix MS dnscache problems the right way
 x Validate and document support for Cisco ASA gateways
 x Validate and document support for Juniper SSG gateways
-x Validate and document support for Fortigate gateways
 x Validate and document support for Zywall gateways
 x Validate and document support for Checkpoint gateways
 x Validate and document support for Sidewinder gateways
@@ -224,17 +223,23 @@ x Validate and document support for Sidewinder gateways
 . Use overlapped IO to interface with the windows filter driver
 . Cleanup libpfk, its really ugly
 . Import new logo and improved icon sets
+. Fix config mode packet retransmit issues
 . Fix static buffer usage for temporary string data
 ? Improve DPD timeout algorithm
+. !!! All reported bugs !!!
+
+2.1.2 release - Bug fix and fine tuning
+----------------------------------------------------------------------
+. Validate and document support for Fortigate gateways
+. Validate and document support for SonicWall gateways
 ? Add ability to drag site connections as shortcuts
 . !!! All reported bugs !!!
 
 2.2.0 release - Feature Parity ...
 ----------------------------------------------------------------------
+. Add support for Intel Mac OSX platforms
 . Finalized kernel drivers signed by Microsoft WHQL
-. Fix config mode packet retransmit issues
 . Add support for unattended installations ( needs signed drivers )
-. Validate and document support for SonicWall gateways
 ? Add support for client connect/disconnect script execution
 ? Add adaptive communications during connect ( Frag/NATT )
 ? Move to a purely primitive based tunnel confguration interface
