@@ -28,7 +28,8 @@ IMAGES	= png/policy_exc.png \
 	png/site_con.png \
 	png/site_del.png \
 	png/site_mod.png \
-	png/ikea.png
+	png/ikea.png \
+	png/logo_ssoft.png
 
 unix {
   UI_DIR = .ui

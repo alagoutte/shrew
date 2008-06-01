@@ -27,6 +27,7 @@ set(
 
 set(
 	IMG_FILES
+	png/logo_ssoft.png
 	png/policy_exc.png
 	png/policy_inc.png
 	png/site.png
