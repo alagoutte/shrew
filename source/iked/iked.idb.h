@@ -264,6 +264,29 @@ typedef class _ITH_EVENT_TUNDHCP : public ITH_EVENT
 
 }ITH_EVENT_TUNDHCP;
 
+typedef class _ITH_EVENT_TUNDPD : public ITH_EVENT
+{
+	public:
+
+	IDB_TUNNEL *	tunnel;
+
+	uint32_t	dpd_req;
+	uint32_t	dpd_res;
+
+	bool	func();
+
+}ITH_EVENT_TUNDPD;
+
+typedef class _ITH_EVENT_TUNNATT : public ITH_EVENT
+{
+	public:
+
+	IDB_TUNNEL *	tunnel;
+
+	bool	func();
+
+}ITH_EVENT_TUNNATT;
+
 typedef class _ITH_EVENT_TUNSTATS : public ITH_EVENT
 {
 	public:
@@ -294,26 +317,6 @@ typedef class _ITH_EVENT_RESEND : public ITH_EVENT, public IPQUEUE
 // phase1 event classes
 //
 
-typedef class _ITH_EVENT_PH1DPD : public ITH_EVENT
-{
-	public:
-
-	IDB_PH1 *	ph1;
-
-	bool	func();
-
-}ITH_EVENT_PH1DPD;
-
-typedef class _ITH_EVENT_PH1NATT : public ITH_EVENT
-{
-	public:
-
-	IDB_PH1 *	ph1;
-
-	bool	func();
-
-}ITH_EVENT_PH1NATT;
-
 typedef class _ITH_EVENT_PH1SOFT : public ITH_EVENT
 {
 	public:
@@ -333,6 +336,16 @@ typedef class _ITH_EVENT_PH1HARD : public ITH_EVENT
 	bool	func();
 
 }ITH_EVENT_PH1HARD;
+
+typedef class _ITH_EVENT_PH1DEAD : public ITH_EVENT
+{
+	public:
+
+	IDB_PH1 *	ph1;
+
+	bool	func();
+
+}ITH_EVENT_PH1DEAD;
 
 //==============================================================================
 // phase2 event classes
@@ -458,6 +471,8 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 	SOCKET		dhcp_sock;
 
 	ITH_EVENT_TUNDHCP	event_dhcp;
+	ITH_EVENT_TUNDPD	event_dpd;
+	ITH_EVENT_TUNNATT	event_natt;
 	ITH_EVENT_TUNSTATS	event_stats;
 
 	virtual	char *			name();
@@ -614,13 +629,6 @@ typedef class _IDB_PH1 : public IDB_XCH
 	bool	natted_l;	// local address is natted
 	bool	natted_r;	// remote address is natted
 
-	//
-	// FIXME : dpd sequences should be in tunnel
-	//
-
-	uint32_t	dpd_req;	// last dpd request sequence
-	uint32_t	dpd_res;	// last dpd response sequence
-
 	uint8_t		ctype_l;	// local certificate type
 	uint8_t		ctype_r;	// remote certificate type
 
@@ -646,8 +654,6 @@ typedef class _IDB_PH1 : public IDB_XCH
 	BDATA	skeyid_a;
 	BDATA	skeyid_e;
 
-	ITH_EVENT_PH1DPD	event_dpd;
-	ITH_EVENT_PH1NATT	event_natt;
 	ITH_EVENT_PH1SOFT	event_soft;
 	ITH_EVENT_PH1HARD	event_hard;
 

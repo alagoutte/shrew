@@ -212,7 +212,7 @@ X Fix high number of select wakeups on socket calls
 X Fix the client statistics update
 X Fix MS dnscache problems the right way
 X Import new logo and improved icon sets
-. Fix DPD problems while transitioning between ISAKMP SAs
+X Fix DPD problems while transitioning between ISAKMP SAs
 ? Fix Vista Wireless DHCP issues after reboot
 x Validate and document support for Cisco ASA gateways
 x Validate and document support for Juniper SSG gateways

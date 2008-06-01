@@ -76,6 +76,148 @@ bool _ITH_EVENT_TUNDHCP::func()
 	return true;
 }
 
+bool _ITH_EVENT_TUNDPD::func()
+{
+	long diff = dpd_req - dpd_res;
+
+	if( diff >= 2 )
+	{
+		char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
+		iked.text_addr( txtaddr_r, &tunnel->saddr_r, true );
+
+		iked.log.txt( LLOG_ERROR,
+				"!! : tunnel DPD timeout for peer %s\n",
+				txtaddr_r );
+
+		tunnel->close = XCH_FAILED_DHCPCONFIG;
+		tunnel->ikei->wakeup();
+		tunnel->dec( true );
+
+		return false;
+	}
+
+	//
+	// obtain next sequence number and
+	// convert to network byte order
+	//
+
+	uint32_t dpdseq = htonl( ++dpd_req );
+
+	//
+	// locate mature phase1 handle
+	//
+
+	IDB_PH1 * ph1 = NULL;
+	if( !iked.idb_list_ph1.find(
+			true,
+			&ph1,
+			tunnel,
+			XCH_STATUS_MATURE,
+			XCH_STATUS_DEAD,
+			NULL ) )
+	{
+		char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
+		iked.text_addr( txtaddr_r, &tunnel->saddr_r, true );
+
+		iked.log.txt( LLOG_ERROR,
+				"!! : unable to locate phase1 to process DPD for peer %s\n",
+				txtaddr_r );
+
+		return true;
+	}
+
+	//
+	// add sequence number and send
+	//
+
+	BDATA bdata;
+	bdata.add( &dpdseq, sizeof( dpdseq ) );
+
+	iked.inform_new_notify( ph1, NULL, ISAKMP_N_DPD_R_U_THERE, &bdata );
+
+	iked.log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE sequence %08x requested\n", dpd_req );
+
+	ph1->dec( true );
+
+	return true;
+}
+
+bool _ITH_EVENT_TUNNATT::func()
+{
+	//
+	// locate mature phase1 handle
+	//
+
+	IDB_PH1 * ph1 = NULL;
+	if( !iked.idb_list_ph1.find(
+			true,
+			&ph1,
+			tunnel,
+			XCH_STATUS_MATURE,
+			XCH_STATUS_DEAD,
+			NULL ) )
+	{
+		char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
+		iked.text_addr( txtaddr_r, &tunnel->saddr_r, true );
+
+		iked.log.txt( LLOG_ERROR,
+				"!! : unable to locate phase1 to process NAT-T for peer %s\n",
+				txtaddr_r );
+
+		return true;
+	}
+
+	//
+	// encapsulate natt keep alive
+	//
+
+	PACKET_UDP packet_udp;
+
+	packet_udp.write(
+		ph1->tunnel->saddr_l.saddr4.sin_port,
+		ph1->tunnel->saddr_r.saddr4.sin_port );
+
+	packet_udp.add_byte( 0xff );
+
+	packet_udp.done(
+		ph1->tunnel->saddr_l.saddr4.sin_addr,
+		ph1->tunnel->saddr_r.saddr4.sin_addr );
+
+	PACKET_IP packet_ip;
+
+	packet_ip.write(
+		ph1->tunnel->saddr_l.saddr4.sin_addr,
+		ph1->tunnel->saddr_r.saddr4.sin_addr,
+		iked.ident++,
+		PROTO_IP_UDP );
+
+	packet_ip.add( packet_udp );
+
+	packet_ip.done();
+
+	//
+	// send ike packet
+	//
+
+	char txtaddr_l[ LIBIKE_MAX_TEXTADDR ];
+	char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
+
+	iked.text_addr( txtaddr_l, &ph1->tunnel->saddr_l, true );
+	iked.text_addr( txtaddr_r, &ph1->tunnel->saddr_r, true );
+
+	iked.log.txt( LLOG_DEBUG,
+		"-> : send NAT-T:KEEP-ALIVE packet %s -> %s\n",
+		txtaddr_l, 
+		txtaddr_r );
+
+	iked.send_ip(
+		packet_ip );
+
+	ph1->dec( true );
+
+	return true;
+}
+
 bool _ITH_EVENT_TUNSTATS::func()
 {
 	//
@@ -211,10 +353,30 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 
 	event_stats.tunnel = this;
 
+	event_dpd.tunnel = this;
+	event_dpd.dpd_req = 0;
+	event_dpd.dpd_res = 0;
+
+	event_natt.tunnel = this;
+
 	event_dhcp.tunnel = this;
 	event_dhcp.lease = 0;
 	event_dhcp.renew = 0;
 	event_dhcp.retry = 0;
+
+	//
+	// determine dpd negotiation
+	//
+
+	if( peer->dpd_mode >= IPSEC_DPD_ENABLE )
+	{
+		long dpdseq;
+		iked.rand_bytes( &dpdseq, sizeof( dpdseq ) );
+		dpdseq >>= 2;
+
+		event_dpd.dpd_req = dpdseq;
+		event_dpd.dpd_res = dpdseq;
+	}
 
 	//
 	// setup our filter
@@ -285,6 +447,22 @@ void _IDB_TUNNEL::end()
 		idb_refcount--;
 		iked.log.txt( LLOG_DEBUG,
 			"DB : tunnel dhcp event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
+
+	if( iked.ith_timer.del( &event_dpd ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : tunnel dpd event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
+
+	if( iked.ith_timer.del( &event_natt ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : tunnel natt event canceled ( ref count = %i )\n",
 			idb_refcount );
 	}
 

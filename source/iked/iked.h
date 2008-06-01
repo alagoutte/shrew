@@ -366,14 +366,15 @@ typedef class _IKED
 	friend class _IDB_LIST_CFG;
 
 	friend class _ITH_EVENT_TUNDHCP;
+	friend class _ITH_EVENT_TUNDPD;
+	friend class _ITH_EVENT_TUNNATT;
 	friend class _ITH_EVENT_TUNSTATS;
 
 	friend class _ITH_EVENT_RESEND;
 
-	friend class _ITH_EVENT_PH1DPD;
-	friend class _ITH_EVENT_PH1NATT;
 	friend class _ITH_EVENT_PH1SOFT;
 	friend class _ITH_EVENT_PH1HARD;
+	friend class _ITH_EVENT_PH1DEAD;
 
 	friend class _ITH_EVENT_PH2SOFT;
 	friend class _ITH_EVENT_PH2HARD;

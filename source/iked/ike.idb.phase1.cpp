@@ -45,99 +45,6 @@
 // ike phase1 exchange events
 //==============================================================================
 
-bool _ITH_EVENT_PH1DPD::func()
-{
-	long diff = ph1->dpd_req - ph1->dpd_res;
-
-	if( diff >= 2 )
-	{
-		iked.log.txt( LLOG_ERROR,
-				"!! : phase1 sa dpd timeout\n"
-				"!! : %04x%04x:%04x%04x\n",
-				htonl( *( long * ) &ph1->cookies.i[ 0 ] ),
-				htonl( *( long * ) &ph1->cookies.i[ 4 ] ),
-				htonl( *( long * ) &ph1->cookies.r[ 0 ] ),
-				htonl( *( long * ) &ph1->cookies.r[ 4 ] ) );
-
-		ph1->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_DEAD, 0 );
-		ph1->dec( true );
-
-		return false;
-	}
-
-	//
-	// obtain next sequence number
-	// and convert to network byte
-	// order
-	//
-
-	uint32_t dpdseq = htonl( ++ph1->dpd_req );
-
-	//
-	// add sequence number and send
-	//
-
-	BDATA bdata;
-	bdata.add( &dpdseq, sizeof( dpdseq ) );
-
-	iked.inform_new_notify( ph1, NULL, ISAKMP_N_DPD_R_U_THERE, &bdata );
-
-	iked.log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE sequence %08x requested\n", ph1->dpd_req );
-
-	return true;
-}
-
-bool _ITH_EVENT_PH1NATT::func()
-{
-	//
-	// encapsulate natt keep alive
-	//
-
-	PACKET_UDP packet_udp;
-
-	packet_udp.write(
-		ph1->tunnel->saddr_l.saddr4.sin_port,
-		ph1->tunnel->saddr_r.saddr4.sin_port );
-
-	packet_udp.add_byte( 0xff );
-
-	packet_udp.done(
-		ph1->tunnel->saddr_l.saddr4.sin_addr,
-		ph1->tunnel->saddr_r.saddr4.sin_addr );
-
-	PACKET_IP packet_ip;
-
-	packet_ip.write(
-		ph1->tunnel->saddr_l.saddr4.sin_addr,
-		ph1->tunnel->saddr_r.saddr4.sin_addr,
-		iked.ident++,
-		PROTO_IP_UDP );
-
-	packet_ip.add( packet_udp );
-
-	packet_ip.done();
-
-	//
-	// send ike packet
-	//
-
-	char txtaddr_l[ LIBIKE_MAX_TEXTADDR ];
-	char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
-
-	iked.text_addr( txtaddr_l, &ph1->tunnel->saddr_l, true );
-	iked.text_addr( txtaddr_r, &ph1->tunnel->saddr_r, true );
-
-	iked.log.txt( LLOG_DEBUG,
-		"-> : send NAT-T:KEEP-ALIVE packet %s -> %s\n",
-		txtaddr_l, 
-		txtaddr_r );
-
-	iked.send_ip(
-		packet_ip );
-
-	return true;
-}
-
 bool _ITH_EVENT_PH1SOFT::func()
 {
 	iked.log.txt( LLOG_INFO,
@@ -377,9 +284,6 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	natted_l = false;
 	natted_r = false;
 
-	dpd_req = 0;
-	dpd_res = 0;
-
 	ctype_l = 0;
 	ctype_r = 0;
 
@@ -478,16 +382,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	//
 
 	if( tunnel->peer->dpd_mode >= IPSEC_DPD_ENABLE )
-	{
 		vendopts_l.flag.dpdv1 = true;
-
-		long dpdseq;
-		iked.rand_bytes( &dpdseq, sizeof( dpdseq ) );
-		dpdseq >>= 2;
-
-		dpd_req = dpdseq;
-		dpd_res = dpdseq;
-	}
 
 	if( tunnel->peer->dpd_mode == IPSEC_DPD_FORCE )
 		vendopts_r.flag.dpdv1 = true;
@@ -531,8 +426,6 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	// initialize event info
 	//
 
-	event_dpd.ph1 = this;
-	event_natt.ph1 = this;
 	event_soft.ph1 = this;
 	event_hard.ph1 = this;
 
@@ -606,22 +499,6 @@ void _IDB_PH1::end()
 	//
 	// remove scheduled events
 	//
-
-	if( iked.ith_timer.del( &event_dpd ) )
-	{
-		idb_refcount--;
-		iked.log.txt( LLOG_DEBUG,
-			"DB : phase1 dpd event canceled ( ref count = %i )\n",
-			idb_refcount );
-	}
-
-	if( iked.ith_timer.del( &event_natt ) )
-	{
-		idb_refcount--;
-		iked.log.txt( LLOG_DEBUG,
-			"DB : phase1 natt event canceled ( ref count = %i )\n",
-			idb_refcount );
-	}
 
 	if( iked.ith_timer.del( &event_soft ) )
 	{

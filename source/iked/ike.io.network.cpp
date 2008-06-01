@@ -297,10 +297,14 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		//
 
 		bool null_cookie = true;
-
 		for( long x = 0; x < ISAKMP_COOKIE_SIZE; x++ )
+		{
 			if( cookies.r[ x ] )
+			{
 				null_cookie = false;
+				break;
+			}
+		}
 
 		if( !null_cookie )
 		{

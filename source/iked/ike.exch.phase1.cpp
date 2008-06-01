@@ -1361,14 +1361,45 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 	if( ph1->status() == XCH_STATUS_MATURE )
 	{
 		//
-		// potentialy send our inital
-		// contact notification and
-		// send our modecfg request
+		// special handling for tunnel initialization
 		//
 
 		if( !( ph1->tunnel->tstate & TSTATE_INITIALIZED ) )
 		{
+			//
+			// send our inital contact notification
+			//
+
 			inform_new_notify( ph1, NULL, ISAKMP_N_INITIAL_CONTACT );
+
+			//
+			// add tunnel natt event
+			//
+
+			if( ph1->tunnel->natt_version != IPSEC_NATT_NONE )
+			{
+				ph1->tunnel->stats.natt = true;
+
+				ph1->tunnel->inc( true );
+				ph1->tunnel->event_natt.delay = ph1->tunnel->peer->natt_rate * 1000;
+
+				ith_timer.add( &ph1->tunnel->event_natt );
+			}
+
+			//
+			// add tunnel dpd event
+			//
+
+			if( ( ph1->tunnel->peer->dpd_mode == IPSEC_DPD_FORCE ) ||
+				( ph1->vendopts_l.flag.dpdv1 && ph1->vendopts_r.flag.dpdv1 ) )
+			{
+				ph1->tunnel->stats.dpd = true;
+
+				ph1->tunnel->inc( true );
+				ph1->tunnel->event_dpd.delay = ph1->tunnel->peer->dpd_rate * 1000;
+
+				ith_timer.add( &ph1->tunnel->event_dpd );
+			}
 
 			//
 			// flag ph1->tunnel as initialized
@@ -1467,33 +1498,8 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		ith_timer.add( &ph1->event_hard );
 
 		//
-		// add pahse1 natt event
+		// enable fragmentation support
 		//
-
-		if( ph1->tunnel->natt_version != IPSEC_NATT_NONE )
-		{
-			ph1->tunnel->stats.natt = true;
-
-			ph1->inc( true );
-			ph1->event_natt.delay = ph1->tunnel->peer->natt_rate * 1000;
-
-			ith_timer.add( &ph1->event_natt );
-		}
-
-		//
-		// add pahse1 dpd event
-		//
-
-		if( ( ph1->tunnel->peer->dpd_mode == IPSEC_DPD_FORCE ) ||
-			( ph1->vendopts_l.flag.dpdv1 && ph1->vendopts_r.flag.dpdv1 ) )
-		{
-			ph1->tunnel->stats.dpd = true;
-
-			ph1->inc( true );
-			ph1->event_dpd.delay = ph1->tunnel->peer->dpd_rate * 1000;
-
-			ith_timer.add( &ph1->event_dpd );
-		}
 
 		if( ph1->vendopts_l.flag.frag && ph1->vendopts_r.flag.frag )
 			ph1->tunnel->stats.frag = true;
