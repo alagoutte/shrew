@@ -1,0 +1,564 @@
+
+Internet Engineering Task Force             R. Pereira, TimeStep Corp.
+IP Security Working Group                    S. Anand, Microsoft Corp.
+Internet Draft                                   B. Patel, Intel Corp.
+Expires in six months
+                                                     February 12, 1998
+
+
+
+                   The ISAKMP Configuration Method
+               <draft-ietf-ipsec-isakmp-mode-cfg-02.txt>
+
+
+
+Status of this Memo
+
+   This document is a submission to the IETF Internet Protocol
+   Security (IPSECond) Working Group. Comments are solicited and
+   should be addressed to the working group mailing list
+   (ipsec@tis.com) or to the editor.
+
+   This document is an Internet-Draft.  Internet Drafts are working
+   documents of the Internet Engineering Task Force (IETF), its areas,
+   and its working Groups. Note that other groups may also distribute
+   working documents as Internet Drafts.
+
+   Internet-Drafts draft documents are valid for a maximum of six
+   months and may be updated, replaced, or obsoleted by other
+   documents at any time. It is inappropriate to use Internet-Drafts
+   as reference material or to cite them other than as "work in
+   progress."
+
+   To learn the current status of any Internet-Draft, please check the
+   "1id-abstracts.txt" listing contained in the Internet-Drafts Shadow
+   Directories on ftp.is.co.za (Africa), nic.nordu.net (Europe),
+   munnari.oz.au (Pacific Rim), ds.internic.net (US East Coast), or
+   ftp.isi.edu (US West Coast).
+
+   Distribution of this memo is unlimited.
+
+Abstract
+
+   This document describes a new ISAKMP method that allows information
+   like configuration items to be exchanged securely by using both
+   push/acknowledge or request/reply paradigms.
+
+
+
+
+
+
+
+
+
+R. Pereira, S. Anand, B. Patel                                [Page 1]
+
+Internet Draft     The ISAKMP Configuration Method       February, 98
+
+
+
+Table of Contents
+
+   1. Introduction...................................................2
+     1.1. Specification of Requirements..............................2
+   2. Configuration And Information Method...........................3
+   3. Configuration Transaction......................................3
+     3.1. Configuration NOTIFY Codes.................................4
+     3.2. Configuration NOTIFY Data And Attributes...................5
+     3.3. Retransmission.............................................6
+   4. Examples.......................................................6
+   5. Enterprise Management Considerations...........................8
+   6. Security Considerations........................................8
+   7. References.....................................................9
+   8. Acknowledgments................................................9
+   9. Editors' Addresses.............................................9
+
+
+
+1.   Introduction
+
+   ISAKMP provides a framework to negotiate and derive Security
+   Associations, but since it is used within the IPSec framework it
+   may also be used to configure or retrieve information from secure
+   hosts.  This configuration may take place between a gateway, an
+   end-host client, or a configuration manager.  For example, this can
+   be used to configure multi-protocol IP tunnels securely.
+
+   It is assumed that the reader is familiar with the terms and
+   concepts described in the "Security Architecture for the Internet
+   Protocol" [Atkinso95] and "IP Security Document Roadmap" [Thayer97]
+   documents.
+
+   Readers are advised to be familiar with both [Harkins97] and
+   [ISAKMP] because of the terminology used within this document and
+   the fact that this document is an extension of both of those
+   documents.
+
+
+1.1. Specification of Requirements
+
+   The keywords "MUST", "MUST NOT", "REQUIRED", "SHOULD", "SHOULD
+   NOT", and "MAY" that appear in this document are to be interpreted
+   as described in [Bradner97].
+
+
+
+
+
+
+
+
+R. Pereira, S. Anand, B. Patel                                [Page 2]
+
+Internet Draft     The ISAKMP Configuration Method       February, 98
+
+
+2.   Configuration And Information Method
+
+   The premise behind this method is to utilize the existing ISAKMP
+   protocol as much as possible to build more functionality.  The
+   Configuration and Information method described in this document
+   uses the ISAKMP NOTIFY payload to transfer information between two
+   hosts.  Within the ISAKMP NOTIFY payload are ISAKMP attributes that
+   relay the actual information.
+
+   Depending on the type of information relayed by the exchange, it
+   MIGHT have to be secured.  For example, if password information
+   were being exchanged, then the exchange would be REQUIRED to be
+   secured (both encrypted and authenticated).
+
+   The NOTIFY payload MAY be sent within an ISAKMP exchange (like Main
+   Mode or Aggressive Mode) or by itself.  When sent by itself, it
+   MUST be sent in an Info Mode exchange.
+
+   If security is required for the attributes being exchanged, and the
+   exchange is occurring in an Info Mode ISAKMP exchange, then
+   security is exactly as defined in [Harkins97] under the section
+   entitled "ISAKMP Information Exchanges".
+
+
+3.   Configuration Transaction
+
+   A "Configuration Transaction" is defined as two Configuration
+   Method exchanges, the first being either a Set or a Request and the
+   second being either a Acknowledge or a Reply respectively.  The SPI
+   within the ISAKMP NOTIFY payload header identifies the
+   configuration transaction.  A SPI length of 4 octets SHOULD be
+   sufficient, but any length greater than zero MUST be supported and
+   returned in the reply and acknowledgement.
+
+   There are two paradigms to follow for this method.
+
+   o "Set/Acknowledge" works on the push principle that allows a
+     configuration manager (a host that wishes to send information to
+     another) to start the configuration transaction.  This code
+     sends attributes that it wants the peer to alter.  The
+     Acknowledge code MUST return the zero length attributes that it
+     accepted.  Those attributes that it did not accept will NOT be
+     sent back in the acknowledgement.
+
+       Initiator              Responder
+       ---------------        -------------------
+       NOTIFY(SET)      -->
+                        <--   NOTIFY(ACKNOWLEDGE)
+
+
+
+
+R. Pereira, S. Anand, B. Patel                                [Page 3]
+
+Internet Draft     The ISAKMP Configuration Method       February, 98
+
+
+   o "Request/Reply" allows a host to request information from an
+     informed host (a configuration manager).  IF the attributes in
+     the Request message are not empty, then these attributes are
+     taken as suggestions for that attribute.  The Reply message MAY
+     wish to choose those values, or return new values.  It MAY also
+     add new attributes and not include some requested attributes.
+
+       Initiator              Responder
+       ---------------        --------------
+       NOTIFY(REQUEST)  -->
+                        <--   NOTIFY(REPLY)
+
+   Transactions are completed once the Reply or Acknowledge code is
+   received.  If one is not received, the implementation MAY wish to
+   retransmit the original exchange.
+
+   The initiator and responder MAY not be the same as the initiator
+   and responder of the ISAKMP exchange.
+
+   If a badly formatted exchange is received, the message SHOULD be
+   silently discarded and perhaps logged locally, as per local policy.
+   Badly formatted exchanges MIGHT also include those with unknown
+   codes or unknown attributes within the Configuration Method.
+
+
+3.1. Configuration NOTIFY Codes
+
+    Code                       Value
+   ========================== ===========
+    ISKAMP_CFG_REQUEST         101
+    ISKAMP_CFG_REPLY           102
+    ISKAMP_CFG_SET             103
+    ISKAMP_CFG_ACK             104
+
+   Since the Configuration Method uses NOTIFY codes for information
+   exchange, if the peer does not support this functionality, it will
+   quietly discard the message without breaking.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+R. Pereira, S. Anand, B. Patel                                [Page 4]
+
+Internet Draft     The ISAKMP Configuration Method       February, 98
+
+
+3.2. Configuration NOTIFY Data And Attributes
+
+   Zero or more ISAKMP attributes [ISAKMP] make up the NOTIFY
+   payload’s data.  The following attributes are defined to be valid
+   within the payload:
+
+    Attribute              Value   Type             Length
+   ====================== ======= ================ ===================
+    INTERNAL_ADDRESS         1     Variable         0 or 4 octets
+    INTERNAL_NETMASK         2     Variable         0 or 4 octets
+    INTERNAL_DNS             3     Variable         0 or 4 octets
+    INTERNAL_NBNS            4     Variable         0 or 4 octets
+    INTERNAL_ADDRESS_EXPIRY  5     Basic/Variable   0 or 2 or 4 octets
+    INTERNAL_DHCP            6     Variable         0 or 4 octets
+    APPLICATION_VERSION      7     Variable         variable
+
+    Reserved for future use    8-16383
+    Private use                16384-32767
+
+   o INTERNAL_ADDRESS - Specifies an IPv4 address within the internal
+     network.  This address is sometimes called a red node address or
+     a private address and MAY be an illegal address on the Internet.
+     Multiple internal addresses MAY be requested.  The responder MAY
+     only send up to the number of addresses requested.
+
+     The requested address is valid until the expiry time, or until
+     the ISAKMP SA that was used to secure the request, expires.  If
+     no ISAKMP SA was used to secure the request, then the response
+     MUST include an expiry.
+
+   o INTERNAL_NETMASK - The internal network's netmask. Only one
+     netmask is allowed in the request and reply messages. (eg.
+     255.255.255.0)
+
+   o INTERNAL_DNS - Specifies an IPv4 address of a DNS server within
+     the network.  Multiple DNS servers MAY be requested.  The
+     responder MAY respond with any number of DNS server attributes.
+
+   o INTERNAL_NBNS - Specifies an IPv4 address of a NetBios Name
+     Server (WINS) within the network.  Multiple NBNS servers MAY be
+     requested.  The responder MAY respond with any number of NBNS
+     server attributes.
+
+   o INTERNAL_ADDRESS_EXPIRY - Specifies the number of seconds that
+     the host can use the internal IP address.  The host MUST renew
+     the IP address before this expiry time.  Only one attribute MAY
+     be present in the reply.
+
+
+
+
+R. Pereira, S. Anand, B. Patel                                [Page 5]
+
+Internet Draft     The ISAKMP Configuration Method       February, 98
+
+
+   o INTERNAL_DHCP - Instructs the host to send any internal DHCP
+     requests to the address contained within the attribute.
+     Multiple DHCP servers MAY be requested.  The responder MAY
+     respond with any number of DHCP server attributes.
+
+   o APPLICATION_VERSION - The version or application information of
+     the IPSec host.  This is a string of printable ASCII characters
+     that MIGHT NOT be null delimited.  This attributed does NOT need
+     to be secured.
+
+   It is hoped that more attribute types will be defined in the
+   future.  Some suggestions would be to distribute local policy, or
+   even authenticate certificates.  Also, note that no recommendations
+   are made to how an implementation actually figures out what
+   information to send.  i.e. we do not recommend any specific method
+   of (a gateway) determining which DNS server should be returned to a
+   requesting host.
+
+
+3.3. Retransmission
+
+   Retransmission of Configuration messages SHOULD follow the same
+   retransmission rules used with standard ISAKMP messages.
+
+   While a response does not have to be sent in the next ISAKMP
+   message, it SHOULD be made within a time period.  If a response is
+   not received within that time period, the initiator MIGHT
+   retransmit the same request.
+
+
+4.   Examples
+
+   Some examples of positioning this configuration method follow.
+   These are meant only as examples and should not be thought of as
+   the only possibilities for this protocol.
+
+   Example 1: Initiator requesting his internal IP address during the
+   last exchange in Main Mode using the shared secret authentication
+   method.
+
+   Initiator                           Responder
+   -----------------------------      --------------------------------
+   HDR(Main), SA                  -->
+                                  <-- HDR(Main), SA
+   HDR(Main), KEY, Ni             -->
+                                  <-- HDR(Main), KEY, Nr
+   HDR(Main)*,ID,HASH,NOTIFY(REQUEST) -->
+                                  <-- HDR(Main)*,ID,HASH,NOTIFY(REPLY)
+
+
+
+
+R. Pereira, S. Anand, B. Patel                                [Page 6]
+
+Internet Draft     The ISAKMP Configuration Method       February, 98
+
+
+   REQUEST =
+     INTERNAL_ADDRESS(0.0.0.0),
+     INTERNAL_NETMASK(0.0.0.0),
+     INTERNAL_DNS(0.0.0.0)
+   REPLY =
+     INTERNAL_ADDRESS(192.168.219.202),
+     INTERNAL_NETMASK(255.255.255.0),
+     INTERNAL_DNS(291.168.219.4)
+
+   Please note that the responder MAY have sent the reply within the
+   Main Mode exchange as well as sending the reply by itself using
+   InfoMode;
+
+   HDR(Main)*,ID,HASH,NOTIFY(REQUEST) -->
+                                  <-- HDR(Main)*, ID, HASH
+                                  <-- HDR(Info)*, NOTIFY(REPLY)
+
+   Or the initiator could have sent the request in an InfoMode message
+   after MainMode completed.
+
+   If another tunneled SA is negotiated with this ISAKMP SA and an
+   internal IP address is required, then the initiator would perform
+   the request through a InfoMode request before the QuickMode
+   negotiation.
+
+   Initiator                           Responder
+   -----------------------------      --------------------------
+   HDR(Info)*, NOTIFY(REQUEST)    -->
+                                  <--  HDR(Info)*, NOTIFY(REPLY)
+
+
+   Example 2: A central configuration manager application sends out
+   some information to an IPSec host.
+
+   Initiator                           Responder
+   -----------------------------      --------------------------
+   HDR(Info)*, NOTIFY(SET)        -->
+                                  <--  HDR(Info)*, NOTIFY(ACK)
+
+
+
+
+
+
+
+
+
+
+
+
+R. Pereira, S. Anand, B. Patel                                [Page 7]
+
+Internet Draft     The ISAKMP Configuration Method       February, 98
+
+
+   Example 3: An IPSec host inquires about the peer's version
+   information (without security).
+
+   Initiator                           Responder
+   -----------------------------      --------------------------
+   HDR(Info), NOTIFY(REQUEST)     -->
+                                  <--  HDR(Info), NOTIFY(REPLY)
+
+   REQUEST = APPLICATION_VERSION("")
+   REPLY = APPLICATION_VERSION("foobar v1.3beta, (c) Foo Bar Inc.")
+
+
+   Example 4: Same as Example 1, but using Aggressive Mode (Aggr).
+   Notice how the replay comes back secured since Aggressive Mode has
+   completed and created an ISAKMP SA.
+
+   Initiator                            Responder
+   -------------------------------      --------------------------
+   HDR(Aggr), SA, KE, N, ID         -->
+                                    <-- HDR(Aggr), SA, KE, N, ID, HASH
+   HDR(Aggr), HASH, NOTIFY(REQUEST) -->
+                                    <-- HDR(Info)*, NOTIFY(REPLY)
+
+
+5.   Enterprise Management Considerations
+
+   The method defined in this document SHOULD NOT be used for wide
+   scale management.  Its main intent is to provide a bootstrap
+   mechanism to exchange information within IPSec.  While it MAY be
+   useful to use such a method of exchange information to some
+   outlying IPSec hosts or small networks, existing management
+   protocols such as DHCP [Droms97], RADIUS [Radius], SNMP or LDAP
+   [Ldap97] should be considered for enterprise management as well as
+   subsequent information exchanges.
+
+
+6.   Security Considerations
+
+  This entire draft discusses a new ISAKMP configuration method to
+  allow IPSec-enabled entities to acquire and share configuration
+  information.
+
+  The draft mandates that this exchange should normally occur after
+  the Phase I Security Association has been set up and that the
+  entire exchange be protected by that Phase I SA.  Thus the exchange
+  is as secure as any Phase II SA negotiation.
+
+  This exchange MAY be secured (encrypted and authenticated) by other
+  means as well, such as pre-configured ESP or data-link security.
+
+
+
+R. Pereira, S. Anand, B. Patel                                [Page 8]
+
+Internet Draft     The ISAKMP Configuration Method       February, 98
+
+
+7.   References
+
+   [Atkinso95] R. Atkinson, "Security Architecture for the Internet
+               Protocol", draft-ietf-ipsec-arch-sec-01
+
+   [Bradner97] S. Bradner, "Key words for use in RFCs to indicate
+               Requirement Levels", RFC2119
+
+   [ISAKMP]    D. Maughan, M. Schertler, M. Schneider, J. Turner,
+               "Internet Security Association and Key Management
+               Protocol", draft-ietf-ipsec-isakmp-08
+
+   [Harkins97] D. Harkins, "The Resolution of ISAKMP and Oakley",
+               draft-ietf-ipsec-isakmp-oakley-05
+
+   [Droms97]   R. Droms, "Dynamic Host Configuration Protocol",
+               RFC2131
+
+   [Radius97]  C. Rigney, A. Rubens, W. Simpson, S. Willens, "Remote
+               Authentication Dial In User Service (RADIUS)", RFC2138
+
+   [Ldap97]    M. Wahl, T. Howes, S. Kille., "Lightweight Directory
+               Access Protocol (v3)", RFC2251
+
+
+8.   Acknowledgments
+
+   The editors would like to thank Tim Jenkins, Peter Ford, Bob
+   Moskowitz and Shawn Mamros.
+
+
+9.   Editors' Addresses
+
+     Roy Pereira
+     rpereira@timestep.com
+     TimeStep Corporation
+     +1 (613) 599-3610 x 4808
+
+     Sanjay Anand
+     sanjayan@microsoft.com
+     Microsoft Corporation
+     +1 (206) 936-6367
+
+     Baiju V. Patel
+     baiju@mailbox.jf.intel.com
+     Intel Corporation
+     +1 (503) 264 2422
+
+
+
+
+
+
+R. Pereira, S. Anand, B. Patel                                [Page 9]
+
+Internet Draft     The ISAKMP Configuration Method       February, 98
+
+
+   The IPSec working group can be contacted via the IPSec working
+   group's mailing list (ipsec@tis.com) or through its chairs:
+
+     Robert Moskowitz
+     rgm@icsa.net
+     International Computer Security Association
+
+     Theodore Y. Ts'o
+     tytso@mit.edu
+     Massachusetts Institute of Technology
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+R. Pereira, S. Anand, B. Patel                               [Page 10]
+
