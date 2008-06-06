@@ -89,7 +89,7 @@ bool _ITH_EVENT_TUNDPD::func()
 				"!! : tunnel DPD timeout for peer %s\n",
 				txtaddr_r );
 
-		tunnel->close = XCH_FAILED_DHCPCONFIG;
+		tunnel->close = XCH_FAILED_PEER_DEAD;
 		tunnel->ikei->wakeup();
 		tunnel->dec( true );
 
