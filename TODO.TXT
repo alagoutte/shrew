@@ -213,9 +213,9 @@ X Fix the client statistics update
 X Fix MS dnscache problems the right way
 X Import new logo and improved icon sets
 X Fix DPD problems while transitioning between ISAKMP SAs
-? Fix Vista Wireless DHCP issues after reboot
-x Validate and document support for Cisco ASA gateways
-x Validate and document support for Juniper SSG gateways
+X Improve DPD timeout algorithm
+X Validate and document support for Cisco ASA gateways
+X Validate and document support for Juniper SSG gateways
 x Validate and document support for Zywall gateways
 x Validate and document support for Checkpoint gateways
 x Validate and document support for Sidewinder gateways
@@ -227,7 +227,6 @@ x Validate and document support for Sidewinder gateways
 . Fix config mode packet retransmit issues
 . Fix static buffer usage for temporary string data
 . Cleanup libpfk, its really ugly
-? Improve DPD timeout algorithm
 . !!! All reported bugs !!!
 
 2.1.2 release - Bug fix and fine tuning

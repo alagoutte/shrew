@@ -380,7 +380,7 @@ void _IDB_PH2::end()
 				&ph1,
 				tunnel,
 				XCH_STATUS_MATURE,
-				XCH_STATUS_DEAD,
+				XCH_STATUS_EXPIRED,
 				NULL ) )
 		{
 			iked.inform_new_delete( ph1, this );

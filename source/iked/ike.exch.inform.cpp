@@ -547,42 +547,47 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 			{
 				case ISAKMP_N_DPD_R_U_THERE:
 				{
-					uint32_t dpdseq;
-					notify->data.get( &dpdseq, sizeof( dpdseq ) );
-					dpdseq = ntohl( dpdseq );
+					uint32_t sequence;
+					notify->data.get( &sequence, sizeof( sequence ) );
+					sequence = ntohl( sequence );
 
 					inform_new_notify( ph1, NULL, ISAKMP_N_DPD_R_U_THERE_ACK, &notify->data );
 
-					log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE sequence %08x returned\n", dpdseq );
+					log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE sequence %08x returned\n", sequence );
 
 					break;
 				}
 
 				case ISAKMP_N_DPD_R_U_THERE_ACK:
 				{
-					if( notify->data.size() == sizeof( ph1->tunnel->event_dpd.dpd_res ) )
+					if( notify->data.size() == sizeof( ph1->tunnel->event_dpd.sequence ) )
 					{
 						//
 						// obtain sequence number and
 						// convert to host byte order
 						//
 
-						uint32_t dpdseq;
-						notify->data.get( &dpdseq, sizeof( dpdseq ) );
-						dpdseq = ntohl( dpdseq );
+						uint32_t sequence;
+						notify->data.get( &sequence, sizeof( sequence ) );
+						sequence = ntohl( sequence );
 
 						//
-						// check dpd sequence number. if accepted,
-						// set dpd response to current sequence
+						// check dpd sequence number
 						//
 
-						if( dpdseq <= ph1->tunnel->event_dpd.dpd_req )
+						if( sequence != ph1->tunnel->event_dpd.sequence )
 						{
-							log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE-ACK sequence %08x accepted\n", dpdseq );
-							ph1->tunnel->event_dpd.dpd_res = ph1->tunnel->event_dpd.dpd_req;
+							log.txt( LLOG_ERROR, "!! : DPD ARE-YOU-THERE-ACK sequence %08x rejected\n", sequence );
+							break;
 						}
-						else
-							log.txt( LLOG_ERROR, "!! : DPD ARE-YOU-THERE-ACK sequence %08x rejected\n", dpdseq );
+
+						//
+						// setup the next dpd cycle
+						//
+
+						log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE-ACK sequence %08x accepted\n", sequence );
+
+						ph1->tunnel->event_dpd.next();
 					}
 
 					break;

@@ -595,7 +595,8 @@ typedef struct _IKE_PEER
 	long			frag_esp_mode;
 	size_t			frag_esp_size;
 	long			dpd_mode;
-	long			dpd_rate;
+	long			dpd_delay;
+	long			dpd_retry;
 	long			life_check;
 
 	unsigned char	idtype_l;

@@ -1034,7 +1034,7 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 					&ph1,
 					ph2->tunnel,
 					XCH_STATUS_MATURE,
-					XCH_STATUS_DEAD,
+					XCH_STATUS_EXPIRING,
 					NULL ) )
 			{
 				//
@@ -1076,7 +1076,7 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 					&ph1,
 					ph2->tunnel,
 					XCH_STATUS_MATURE,
-					XCH_STATUS_DEAD,
+					XCH_STATUS_EXPIRING,
 					&ph2->cookies ) )
 			{
 				//

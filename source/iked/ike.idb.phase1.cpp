@@ -99,6 +99,22 @@ bool _ITH_EVENT_PH1SOFT::func()
 bool _ITH_EVENT_PH1HARD::func()
 {
 	iked.log.txt( LLOG_INFO,
+		"ii : phase1 sa is expired\n"
+		"ii : %04x%04x:%04x%04x\n",
+		htonl( *( long * ) &ph1->cookies.i[ 0 ] ),
+		htonl( *( long * ) &ph1->cookies.i[ 4 ] ),
+		htonl( *( long * ) &ph1->cookies.r[ 0 ] ),
+		htonl( *( long * ) &ph1->cookies.r[ 4 ] ) );
+
+	ph1->status( XCH_STATUS_EXPIRED, XCH_FAILED_EXPIRED, 0 );
+	ph1->dec( true );
+
+	return false;
+}
+
+bool _ITH_EVENT_PH1DEAD::func()
+{
+	iked.log.txt( LLOG_INFO,
 		"ii : phase1 sa is dead\n"
 		"ii : %04x%04x:%04x%04x\n",
 		htonl( *( long * ) &ph1->cookies.i[ 0 ] ),
@@ -428,6 +444,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 
 	event_soft.ph1 = this;
 	event_hard.ph1 = this;
+	event_dead.ph1 = this;
 
 	//
 	// build text strings for logging
@@ -513,6 +530,14 @@ void _IDB_PH1::end()
 		idb_refcount--;
 		iked.log.txt( LLOG_DEBUG,
 			"DB : phase1 hard event canceled ( ref count = %i )\n",
+			idb_refcount );
+	}
+
+	if( iked.ith_timer.del( &event_dead ) )
+	{
+		idb_refcount--;
+		iked.log.txt( LLOG_DEBUG,
+			"DB : phase1 dead event canceled ( ref count = %i )\n",
 			idb_refcount );
 	}
 

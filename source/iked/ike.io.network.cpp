@@ -291,7 +291,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 	{
 		//
 		// if we are acting as a responder
-		// and the packet has an sa as its
+		// and the packet has an SA as its
 		// first payload as well as a null
 		// value for the responder cookie
 		//
@@ -414,7 +414,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 
 		//
 		// looks like a valid initial contact attempt.
-		// allocate a new sa
+		// allocate a new SA
 		//
 
 		log.txt( LLOG_DEBUG,

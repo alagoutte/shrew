@@ -1312,17 +1312,12 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			if( ph1->xstate & XSTATE_RECV_HA )
 			{
 				if( phase1_chk_hash( ph1 ) == LIBIKE_OK )
-				{
 					ph1->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
-					ph1->clean();
-					ph1->resend_clear( true );
-				}
 				else
-				{
 					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_AUTH, ISAKMP_N_AUTHENTICATION_FAILED );
-					ph1->clean();
-					ph1->resend_clear( true );
-				}
+
+				ph1->clean();
+				ph1->resend_clear( true );
 			}
 		}
 
@@ -1337,17 +1332,12 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			if( ph1->xstate & XSTATE_RECV_SI )
 			{
 				if( phase1_chk_sign( ph1 ) == LIBIKE_OK )
-				{
 					ph1->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
-					ph1->clean();
-					ph1->resend_clear( true );
-				}
 				else
-				{
 					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_AUTH, ISAKMP_N_AUTHENTICATION_FAILED );
-					ph1->clean();
-					ph1->resend_clear( true );
-				}
+
+				ph1->clean();
+				ph1->resend_clear( true );
 			}
 		}
 	}
@@ -1396,7 +1386,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				ph1->tunnel->stats.dpd = true;
 
 				ph1->tunnel->inc( true );
-				ph1->tunnel->event_dpd.delay = ph1->tunnel->peer->dpd_rate * 1000;
+				ph1->tunnel->event_dpd.delay = ph1->tunnel->peer->dpd_delay * 1000;
 
 				ith_timer.add( &ph1->tunnel->event_dpd );
 			}
@@ -1480,7 +1470,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		//
 
 		ph1->inc( true );
-		ph1->event_soft.delay = proposal->life_sec + 1;
+		ph1->event_soft.delay = proposal->life_sec;
 		ph1->event_soft.delay *= PFKEY_SOFT_LIFETIME_RATE;
 		ph1->event_soft.delay /= 100;
 		ph1->event_soft.delay *= 1000;
@@ -1492,10 +1482,20 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		//
 
 		ph1->inc( true );
-		ph1->event_hard.delay = proposal->life_sec + 1;
+		ph1->event_hard.delay = proposal->life_sec;
 		ph1->event_hard.delay *= 1000;
 
 		ith_timer.add( &ph1->event_hard );
+
+		//
+		// add pahse1 dead event
+		//
+
+		ph1->inc( true );
+		ph1->event_dead.delay = proposal->life_sec + 6;
+		ph1->event_dead.delay *= 1000;
+
+		ith_timer.add( &ph1->event_dead );
 
 		//
 		// enable fragmentation support
@@ -2528,7 +2528,7 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 	// if we are rekeying, skip this
 	//
 
-	if( ph1->tunnel->lstate & LSTATE_NATT_FLOAT )
+	if( ph1->tunnel->lstate & TSTATE_NATT_FLOAT )
 		return true;
 
 	//
@@ -2653,9 +2653,10 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 	// switch to natt ports if required
 	//
 
-	ph1->tunnel->lstate |= LSTATE_NATT_FLOAT;
+	ph1->tunnel->lstate |= TSTATE_NATT_FLOAT;
 
 	if( ph1->tunnel->natt_version >= IPSEC_NATT_V02 )
+
 	{
 		//
 		// switch our port to natt
@@ -2698,39 +2699,30 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 	if( saddr_r->saddr4.sin_port != ph1->tunnel->saddr_r.saddr4.sin_port )
 	{
 
-		if( ph1->initiator )
+		if( !ph1->initiator )
 		{
-			log.txt( LLOG_ERROR, "!! : responder port values have changed\n" );
+			log.txt( LLOG_ERROR,
+				"!! : responder port values have floated\n" );
+
 			return false;
 		}
 		else
 		{
-			if( ph1->tunnel->peer->natt_mode <= IPSEC_NATT_V02 )
+			if( ph1->tunnel->peer->natt_mode == IPSEC_NATT_NONE )
 			{
-				if( !ph1->vendopts_l.flag.natt )
-				{
-					log.txt( LLOG_INFO,
-						"ii : local nat traversal is <= v02 but initiator port floated\n" );
+				log.txt( LLOG_INFO,
+					"ii : initiator port values floated but nat-t is disabled but \n" );
 
-					return false;
-				}
-
-				if( !ph1->vendopts_r.flag.natt )
-				{
-					log.txt( LLOG_INFO,
-						"ii : remote nat traversal is <= v02 but initiator port floated\n" );
-
-					return false;
-				}
+				return false;
 			}
-		}
 
-		if( ph1->tunnel->lstate & LSTATE_NATT_FLOAT )
-		{
-			log.txt( LLOG_ERROR,
-				"!! : remote port should only float once per session\n" );
+			if( ph1->tunnel->lstate & TSTATE_NATT_FLOAT )
+			{
+				log.txt( LLOG_ERROR,
+					"!! : initiator port values should only float once per session\n" );
 
-			return false;
+				return false;
+			}
 		}
 
 		//
@@ -2766,7 +2758,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 
 #endif
 
-		ph1->tunnel->lstate |= LSTATE_NATT_FLOAT;
+		ph1->tunnel->lstate |= TSTATE_NATT_FLOAT;
 	}
 
 	return true;

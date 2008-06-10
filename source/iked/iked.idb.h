@@ -184,6 +184,7 @@ enum XCH_STATUS
 	XCH_STATUS_LARVAL,
 	XCH_STATUS_MATURE,
 	XCH_STATUS_EXPIRING,
+	XCH_STATUS_EXPIRED,
 	XCH_STATUS_DEAD
 };
 
@@ -270,8 +271,10 @@ typedef class _ITH_EVENT_TUNDPD : public ITH_EVENT
 
 	IDB_TUNNEL *	tunnel;
 
-	uint32_t	dpd_req;
-	uint32_t	dpd_res;
+	uint32_t	sequence;
+	uint32_t	attempt;
+
+	void	next();
 
 	bool	func();
 
@@ -656,6 +659,7 @@ typedef class _IDB_PH1 : public IDB_XCH
 
 	ITH_EVENT_PH1SOFT	event_soft;
 	ITH_EVENT_PH1HARD	event_hard;
+	ITH_EVENT_PH1DEAD	event_dead;
 
 	// sub class functions
 

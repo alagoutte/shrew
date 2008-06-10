@@ -76,11 +76,46 @@ bool _ITH_EVENT_TUNDHCP::func()
 	return true;
 }
 
+void _ITH_EVENT_TUNDPD::next()
+{
+	//
+	// remove this event
+	//
+
+	if( iked.ith_timer.del( this ) )
+	{
+		//
+		// move to the next sequence
+		//
+
+		sequence++;
+		attempt = 0;
+
+		//
+		// readd this event
+		//
+
+		delay = tunnel->peer->dpd_delay * 1000;
+
+		iked.ith_timer.add( this );
+
+		char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
+		iked.text_addr( txtaddr_r, &tunnel->saddr_r, true );
+
+		iked.log.txt( LLOG_DEBUG,
+				"ii : next tunnel DPD request in %i secs for peer %s\n",
+				tunnel->peer->dpd_delay,
+				txtaddr_r );
+	}
+}
+
 bool _ITH_EVENT_TUNDPD::func()
 {
-	long diff = dpd_req - dpd_res;
+	//
+	// check our attempt counter
+	//
 
-	if( diff >= 2 )
+	if( attempt == tunnel->peer->dpd_retry )
 	{
 		char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
 		iked.text_addr( txtaddr_r, &tunnel->saddr_r, true );
@@ -97,13 +132,6 @@ bool _ITH_EVENT_TUNDPD::func()
 	}
 
 	//
-	// obtain next sequence number and
-	// convert to network byte order
-	//
-
-	uint32_t dpdseq = htonl( ++dpd_req );
-
-	//
 	// locate mature phase1 handle
 	//
 
@@ -113,7 +141,7 @@ bool _ITH_EVENT_TUNDPD::func()
 			&ph1,
 			tunnel,
 			XCH_STATUS_MATURE,
-			XCH_STATUS_DEAD,
+			XCH_STATUS_EXPIRING,
 			NULL ) )
 	{
 		char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
@@ -127,17 +155,42 @@ bool _ITH_EVENT_TUNDPD::func()
 	}
 
 	//
+	// determine the next dpd delay
+	//
+
+	if( !attempt )
+		delay = tunnel->peer->dpd_delay * 1000;
+	else
+	{
+		long retry_secs = tunnel->peer->dpd_retry - attempt;
+
+		delay = retry_secs * 1000;
+
+		char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
+		iked.text_addr( txtaddr_r, &tunnel->saddr_r, true );
+
+		iked.log.txt( LLOG_DEBUG,
+				"ii : next tunnel DPD retry in %i secs for peer %s\n",
+				retry_secs,
+				txtaddr_r );
+	}
+
+	//
 	// add sequence number and send
 	//
+
+	uint32_t dpdseq = htonl( sequence );
 
 	BDATA bdata;
 	bdata.add( &dpdseq, sizeof( dpdseq ) );
 
 	iked.inform_new_notify( ph1, NULL, ISAKMP_N_DPD_R_U_THERE, &bdata );
 
-	iked.log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE sequence %08x requested\n", dpd_req );
+	iked.log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE sequence %08x requested\n", sequence );
 
 	ph1->dec( true );
+
+	attempt++;
 
 	return true;
 }
@@ -154,7 +207,7 @@ bool _ITH_EVENT_TUNNATT::func()
 			&ph1,
 			tunnel,
 			XCH_STATUS_MATURE,
-			XCH_STATUS_DEAD,
+			XCH_STATUS_EXPIRING,
 			NULL ) )
 	{
 		char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
@@ -354,8 +407,8 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 	event_stats.tunnel = this;
 
 	event_dpd.tunnel = this;
-	event_dpd.dpd_req = 0;
-	event_dpd.dpd_res = 0;
+	event_dpd.sequence = 0;
+	event_dpd.attempt = 0;
 
 	event_natt.tunnel = this;
 
@@ -370,12 +423,8 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 
 	if( peer->dpd_mode >= IPSEC_DPD_ENABLE )
 	{
-		long dpdseq;
-		iked.rand_bytes( &dpdseq, sizeof( dpdseq ) );
-		dpdseq >>= 2;
-
-		event_dpd.dpd_req = dpdseq;
-		event_dpd.dpd_res = dpdseq;
+		iked.rand_bytes( &event_dpd.sequence, sizeof( event_dpd.sequence ) );
+		event_dpd.sequence >>= 2;
 	}
 
 	//
@@ -425,15 +474,6 @@ IDB_RC_LIST * _IDB_TUNNEL::list()
 
 void _IDB_TUNNEL::beg()
 {
-	//
-	// setup our filter
-	//
-
-#ifdef WIN32
-
-	iked.tunnel_filter_add( this, false );
-
-#endif
 }
 
 void _IDB_TUNNEL::end()
