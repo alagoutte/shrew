@@ -481,6 +481,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 								cfg->tunnel->xauth.user.text() );
 
 							cfg->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
+							ph1->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
 						}
 
 						cfg->tunnel->tstate |= TSTATE_RECV_XRSLT;
