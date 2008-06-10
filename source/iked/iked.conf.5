@@ -300,9 +300,12 @@ is used, the daemon will attempt to negotiate and use DPD when appropriate. If
 is used, the daemon will use DPD even if the peer does not negotiate support
 for this feature. The default value for this parameter is
 .Ic disable .
-.It Ic dpd_rate Ar number ;
+.It Ic dpd_delay Ar number ;
 Specifies the number of seconds between sending DPD are-you-there messages. The
-default value for this parameter is 30.
+default value for this parameter is 15.
+.It Ic dpd_retry Ar number ;
+Specifies the number times a DPD are-you-there message will be retransmitted
+when no response is received. The default value for this parameter is 5.
 .It Ic frag_ike_mode (disable | enable | force) ;
 Specifies the IKE Fragmentation mode to be used with a peer. If
 .Ic disable

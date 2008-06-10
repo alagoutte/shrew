@@ -175,7 +175,8 @@ if( yy_first_time )
 <SEC_PEER>natt_mode		{ return( token::NATT_MODE ); }
 <SEC_PEER>natt_rate		{ return( token::NATT_RATE ); }
 <SEC_PEER>dpd_mode		{ return( token::DPD_MODE ); }
-<SEC_PEER>dpd_rate		{ return( token::DPD_RATE ); }
+<SEC_PEER>dpd_delay		{ return( token::DPD_DELAY ); }
+<SEC_PEER>dpd_retry		{ return( token::DPD_RETRY ); }
 <SEC_PEER>frag_ike_mode		{ return( token::FRAG_IKE_MODE ); }
 <SEC_PEER>frag_ike_size		{ return( token::FRAG_IKE_SIZE ); }
 <SEC_PEER>frag_esp_mode		{ return( token::FRAG_ESP_MODE ); }

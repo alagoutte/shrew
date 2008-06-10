@@ -141,7 +141,8 @@ IDB_LIST_PH2ID *	idlist;
 %token		NATT_MODE	"natt mode"
 %token		NATT_RATE	"natt keepalive rate"
 %token		DPD_MODE	"dpd mode"
-%token		DPD_RATE	"dpd notifiy rate"
+%token		DPD_DELAY	"dpd notifiy delay"
+%token		DPD_RETRY	"dpd notifiy retries"
 %token		FRAG_IKE_MODE	"frag ike mode"
 %token		FRAG_IKE_SIZE	"frag ike size"
 %token		FRAG_ESP_MODE	"frag esp mode"
@@ -699,7 +700,8 @@ peer_section
 
 		peer->contact = IPSEC_CONTACT_BOTH;
 		peer->natt_rate = 30;
-		peer->dpd_rate = 15;
+		peer->dpd_delay = 15;
+		peer->dpd_retry = 5;
 		peer->frag_ike_size = 520;
 		peer->frag_esp_size = 520;
 		peer->life_check = LTIME_CLAIM;
@@ -733,7 +735,8 @@ peer_section
 
 		peer->contact = IPSEC_CONTACT_BOTH;
 		peer->natt_rate = 30;
-		peer->dpd_rate = 15;
+		peer->dpd_delay = 15;
+		peer->dpd_retry = 5;
 		peer->frag_ike_size = 520;
 		peer->frag_esp_size = 520;
 		peer->life_check = LTIME_CLAIM;
@@ -848,9 +851,14 @@ peer_line
 		peer->dpd_mode = IPSEC_DPD_FORCE;
 	}
 	EOS
-  |	DPD_RATE NUMBER
+  |	DPD_DELAY NUMBER
 	{
-		peer->dpd_rate = $2;
+		peer->dpd_delay = $2;
+	}
+	EOS
+  |	DPD_RETRY NUMBER
+	{
+		peer->dpd_retry = $2;
 	}
 	EOS
   |	FRAG_IKE_MODE ENABLE
