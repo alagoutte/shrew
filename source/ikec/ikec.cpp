@@ -668,13 +668,17 @@ void _IKEC::run()
 
 			if( !numb )
 			{
+				// wins server addresses
+
+//				xconf.nscfg.nbns_count = 0;
+
 				for( long index = 0; index < IPSEC_NBNS_MAX; index++ )
 				{
-					if( config.get_string( "client-wins-addr", text, MAX_CONFSTRING, index ) )
-					{
-						xconf.nscfg.nbns_list[ index ].s_addr = inet_addr( text );
-						xconf.nscfg.nbns_count++;
-					}
+					if( !config.get_string( "client-wins-addr", text, MAX_CONFSTRING, index ) )
+						break;
+
+					xconf.nscfg.nbns_list[ index ].s_addr = inet_addr( text );
+					xconf.nscfg.nbns_count++;
 				}
 
 				if( !xconf.nscfg.nbns_count )
@@ -702,15 +706,17 @@ void _IKEC::run()
 
 			if( !numb )
 			{
-				// dns server address
+				// dns server addresses
+
+//				xconf.nscfg.dnss_count = 0;
 
 				for( long index = 0; index < IPSEC_DNSS_MAX; index++ )
 				{
-					if( config.get_string( "client-dns-addr", text, MAX_CONFSTRING, index ) )
-					{
-						xconf.nscfg.dnss_list[ index ].s_addr = inet_addr( text );
-						xconf.nscfg.dnss_count++;
-					}
+					if( !config.get_string( "client-dns-addr", text, MAX_CONFSTRING, index ) )
+						break;
+
+					xconf.nscfg.dnss_list[ index ].s_addr = inet_addr( text );
+					xconf.nscfg.dnss_count++;
 				}
 
 				if( !xconf.nscfg.dnss_count )
