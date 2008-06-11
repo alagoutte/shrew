@@ -668,14 +668,21 @@ void _IKEC::run()
 
 			if( !numb )
 			{
-				if( !config.get_string( "client-wins-addr", text, MAX_CONFSTRING, 0 ) )
+				for( long index = 0; index < IPSEC_NBNS_MAX; index++ )
+				{
+					if( config.get_string( "client-wins-addr", text, MAX_CONFSTRING, index ) )
+					{
+						xconf.nscfg.nbns_list[ index ].s_addr = inet_addr( text );
+						xconf.nscfg.nbns_count++;
+					}
+				}
+
+				if( !xconf.nscfg.nbns_count )
 				{
 					log( STATUS_FAIL, "config error : client-wins-addr undefined\n" );
 					return;
 				}
 
-				xconf.nscfg.nbns_list[ 0 ].s_addr = inet_addr( text );
-				xconf.nscfg.nbns_count = 1;
 				xconf.rqst &= ~IPSEC_OPTS_NBNS;
 			}
 		}
@@ -697,14 +704,21 @@ void _IKEC::run()
 			{
 				// dns server address
 
-				if( !config.get_string( "client-dns-addr", text, MAX_CONFSTRING, 0 ) )
+				for( long index = 0; index < IPSEC_DNSS_MAX; index++ )
+				{
+					if( config.get_string( "client-dns-addr", text, MAX_CONFSTRING, index ) )
+					{
+						xconf.nscfg.dnss_list[ index ].s_addr = inet_addr( text );
+						xconf.nscfg.dnss_count++;
+					}
+				}
+
+				if( !xconf.nscfg.dnss_count )
 				{
 					log( STATUS_FAIL, "config error : client-dns-addr undefined\n" );
 					return;
 				}
 
-				xconf.nscfg.dnss_list[ 0 ].s_addr = inet_addr( text );
-				xconf.nscfg.dnss_count = 1;
 				xconf.rqst &= ~IPSEC_OPTS_DNSS;
 
 				// domain name suffix
