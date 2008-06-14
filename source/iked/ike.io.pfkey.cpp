@@ -77,7 +77,11 @@ long _IKED::loop_ike_pfkey()
 			pfki.detach();
 
 			if( pfki.attach( 1000 ) != IPCERR_OK )
+			{
+				log.txt( LLOG_ERROR, "!! : unable to connect to pfkey interface\n" );
+				Sleep( 1000 );
 				continue;
+			}
 
 			//
 			// register for certain protocol types
