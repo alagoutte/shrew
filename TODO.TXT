@@ -214,9 +214,11 @@ X Fix MS dnscache problems the right way
 X Import new logo and improved icon sets
 X Fix DPD problems while transitioning between ISAKMP SAs
 X Improve DPD timeout algorithm
+X Provide non WHQL signed Vista drivers
+X Correct NDIS 6 miniport compatibility issue with filter driver
 X Validate and document support for Cisco ASA gateways
 X Validate and document support for Juniper SSG gateways
-x Validate and document support for Zywall gateways
+X Validate and document support for Zywall gateways
 x Validate and document support for Checkpoint gateways
 x Validate and document support for Sidewinder gateways
 . !!! All reported bugs !!!

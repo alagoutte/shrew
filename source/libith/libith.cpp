@@ -933,7 +933,7 @@ long _ITH_IPCC::io_send( void * data, size_t size, size_t & sent )
 	sent = dwsize;
 
 	ReleaseMutex( hmutex_send );
-	return IPCERR_OK;
+	return result;
 }
 
 long _ITH_IPCC::attach( char * path, long timeout )
