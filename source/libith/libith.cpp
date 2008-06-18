@@ -904,6 +904,8 @@ long _ITH_IPCC::io_send( void * data, size_t size, size_t & sent )
 				&dwsize,
 				true );
 
+			SetLastError( ERROR_SUCCESS );
+
 			result = GetLastError();
 
 			break;
