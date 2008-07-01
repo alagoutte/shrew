@@ -58,7 +58,6 @@ X Test non-admin user operation
 X Correct loss of default route
 X Correct the VNET MTU dropping to 175
 X Update VProt Interface to handle Dialup Adapters
-. !!! All reported bugs !!!
 
 1.1.0 release - Bug fixes and fine tuning
 ----------------------------------------------------------------------
@@ -93,7 +92,6 @@ X Correct p12 related problems
 X Add support for encrypted p12 and pem files
 X Correct problems with local ID checking
 X Test kernel drivers with multi-core systems
-. !!! All reported bugs !!!
 
 2.0.0 release - Interface below TCPIP and friends
 ----------------------------------------------------------------------
@@ -147,7 +145,6 @@ X Fix the vpn trace sdb output tabs
 X Update the client gui network tab
 X Test all client features against racoon and iked
 X Update the documentation
-. !!! All reported bugs !!!
 
 2.0.1 release - Improve platform support
 ----------------------------------------------------------------------
@@ -155,15 +152,14 @@ X Add support for Windows XP amd64 platform
 X Add support for x86/amd64 FreBSD platforms
 X Add support for x86/amd64 NetBSD platforms
 X Add support for x86/amd64 Linux platforms
-. !!! All reported bugs !!!
 
 2.0.2 release - Bug fix and fine tuning
 ----------------------------------------------------------------------
-. !!! All reported bugs !!!
+X Various bug fixes
 
 2.0.3 release - Bug fix and fine tuning
 ----------------------------------------------------------------------
-. !!! All reported bugs !!!
+X various bug fixes
 
 2.1.0 release - Improve platform and gateway support
 ----------------------------------------------------------------------
@@ -181,7 +177,7 @@ X Fix IM driver conflicts with the Cisco VPN Client ( DNE driver )
 X Use exchange specific re-send timeout handlers for better logging
 X Fix iked to work with any udp service port
 X Add site connection support using the access manager system tray
-x Add support for multiple DNS/WINS server addresses
+X Add iked support for multiple DNS/WINS server addresses
 X Add support for NAT-T draft 00 and 01 versions
 X Fix IM driver issues with Windows 2K and Virtualization Software
 X Add support for specifying the virtual network adapter MTU
@@ -219,49 +215,48 @@ X Correct NDIS 6 miniport compatibility issue with filter driver
 X Validate and document support for Cisco ASA gateways
 X Validate and document support for Juniper SSG gateways
 X Validate and document support for Zywall gateways
-x Validate and document support for Checkpoint gateways
-x Validate and document support for Sidewinder gateways
-. !!! All reported bugs !!!
+X Validate and document support for Fortigate gateways
 
 2.1.1 release - Bug fix and fine tuning
 ----------------------------------------------------------------------
+X Fix NDIS 6 miniport problems with filter driver
+X Fix VPN Trace problems on 64 bit Windows targets 
+
+Near Term Goals
+----------------------------------------------------------------------
+x Validate and document support for Checkpoint gateways
+x Validate and document support for Sidewinder gateways
 . Use overlapped IO to interface with the windows filter driver
 . Fix config mode packet retransmit issues
-. Fix static buffer usage for temporary string data
+. Add GUI support for multiple DNS/WINS server addresses
 . Cleanup libpfk, its really ugly
-. !!! All reported bugs !!!
-
-2.1.2 release - Bug fix and fine tuning
-----------------------------------------------------------------------
-. Validate and document support for Fortigate gateways
+. Fix static buffer usage for temporary string data
+. Add support for encrypted configuration storage
 . Validate and document support for SonicWall gateways
+? Use QT4 to build unified cross platform GUI components
 ? Add ability to drag site connections as shortcuts
-. !!! All reported bugs !!!
-
-2.2.0 release - Feature Parity ...
-----------------------------------------------------------------------
-. Add support for Intel Mac OSX platforms
-. Finalized kernel drivers signed by Microsoft WHQL
-. Add support for unattended installations ( needs signed drivers )
 ? Add support for client connect/disconnect script execution
 ? Add adaptive communications during connect ( Frag/NATT )
 ? Move to a purely primitive based tunnel confguration interface
 ? Add support for lzs compression ( patent encumbered )
 ? Add support for microsoft certificate and key storage api
-. !!! All reported bugs !!!
 
-2.3.0 release - Feature Parity ...
+Long Term Goals
 ----------------------------------------------------------------------
-. Use QT to build unified cross platform GUI components
+. Finalized kernel drivers signed by Microsoft WHQL
+. Add support for unattended installations ( needs signed drivers )
+. Add support for Intel Mac OSX platforms
 . Secure Domain Login
-. !!! All reported bugs !!!
-
-3.0.0 release - High Performance
-----------------------------------------------------------------------
 . Stateful client side firewall
 . Create lightweight kernel or userland buildable crypto library
 . Move ip security processing into the kernel
-. !!! All reported bugs !!!
+
+----------------------------------------------------------------------
+pfSense
+----------------------------------------------------------------------
+. Add support for modecfg
+. Add support for Xauth
+. Add support for fine grained network access control
 
 ----------------------------------------------------------------------
 IPSEC-TOOLS
@@ -274,4 +269,5 @@ X sainfo debug improvements
 X responder ignores inital fragment
 X clientaddr
 . review sa cleanup after client disconnect
+. cleanup mode confgig and introduce ike push mode
 . negotiate unity firewall rulesets via modecfg
