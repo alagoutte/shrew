@@ -160,21 +160,28 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 		return LIBIKE_SOCKET;
 	}
 
-	if( encap )
-	{
-
 #ifdef OPT_NATT
 
+	if( encap )
+	{
 		optval = UDP_ENCAP_ESPINUDP;
 		if( setsockopt( sock_info->sock, SOL_UDP, UDP_ENCAP, &optval, sizeof( optval ) ) < 0)
 		{
-			log.txt( LLOG_ERROR, "!! : socket set udp-encap option failed\n" );
+			log.txt( LLOG_ERROR, "!! : socket set udp-encap non-esp option failed\n" );
 			return LIBIKE_SOCKET;
 		}
+	}
+	else
+	{
+		optval = UDP_ENCAP_ESPINUDP_NON_IKE;
+		if( setsockopt( sock_info->sock, SOL_UDP, UDP_ENCAP, &optval, sizeof( optval ) ) < 0)
+		{
+			log.txt( LLOG_ERROR, "!! : socket set udp-encap non-ike option failed\n" );
+			return LIBIKE_SOCKET;
+		}
+	}
 
 #endif
-
-	}
 
 	lock_net.lock();
 
@@ -694,6 +701,19 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 		if( ioctl( sock, SIOCSIFNETMASK, &ifr ) != 0 )
 		{
 			log.txt( LLOG_ERROR, "!! : failed to configure netmask for %s ( %s )\n",
+				adapter->name, strerror( errno ) );
+
+			close( sock );
+			return false;
+		}
+
+		addr->sin_addr.s_addr = tunnel->xconf.addr.s_addr;
+		addr->sin_addr.s_addr &= tunnel->xconf.mask.s_addr;
+		addr->sin_addr.s_addr |= ~tunnel->xconf.mask.s_addr;
+
+		if( ioctl( sock, SIOCSIFBRDADDR, &ifr ) != 0 )
+		{
+			log.txt( LLOG_ERROR, "!! : failed to configure broadcast address for %s ( %s )\n",
 				adapter->name, strerror( errno ) );
 
 			close( sock );
