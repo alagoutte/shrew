@@ -254,8 +254,8 @@ Long Term Goals
 ----------------------------------------------------------------------
 pfSense
 ----------------------------------------------------------------------
-. Add support for modecfg
-. Add support for Xauth
+X Add support for modecfg
+X Add support for Xauth
 . Add support for fine grained network access control
 
 ----------------------------------------------------------------------
@@ -269,5 +269,5 @@ X sainfo debug improvements
 X responder ignores inital fragment
 X clientaddr
 . review sa cleanup after client disconnect
-. cleanup mode confgig and introduce ike push mode
+. cleanup modeconfg and introduce ike push mode
 . negotiate unity firewall rulesets via modecfg
