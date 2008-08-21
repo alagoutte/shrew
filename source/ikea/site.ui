@@ -130,39 +130,6 @@
                             <enum>Sunken</enum>
                         </property>
                     </widget>
-                    <widget class="QComboBox">
-                        <item>
-                            <property name="text">
-                                <string>disabled</string>
-                            </property>
-                        </item>
-                        <item>
-                            <property name="text">
-                                <string>ike config pull</string>
-                            </property>
-                        </item>
-                        <item>
-                            <property name="text">
-                                <string>ike config push</string>
-                            </property>
-                        </item>
-                        <item>
-                            <property name="text">
-                                <string>dhcp over ipsec</string>
-                            </property>
-                        </item>
-                        <property name="name">
-                            <cstring>comboBoxConfigMethod</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>121</x>
-                                <y>70</y>
-                                <width>130</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                    </widget>
                     <widget class="QLabel">
                         <property name="name">
                             <cstring>textLabelConfigMethod</cstring>
@@ -196,6 +163,39 @@
                         </property>
                         <property name="alignment">
                             <set>AlignRight</set>
+                        </property>
+                    </widget>
+                    <widget class="QComboBox">
+                        <item>
+                            <property name="text">
+                                <string>disabled</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>ike config pull</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>ike config push</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>dhcp over ipsec</string>
+                            </property>
+                        </item>
+                        <property name="name">
+                            <cstring>comboBoxConfigMethod</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>121</x>
+                                <y>70</y>
+                                <width>130</width>
+                                <height>21</height>
+                            </rect>
                         </property>
                     </widget>
                 </widget>
@@ -347,6 +347,25 @@
                             <set>AlignHCenter</set>
                         </property>
                     </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditMTU</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>90</y>
+                                <width>41</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>1380</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignRight</set>
+                        </property>
+                    </widget>
                     <widget class="QComboBox">
                         <item>
                             <property name="text">
@@ -368,25 +387,6 @@
                                 <width>241</width>
                                 <height>21</height>
                             </rect>
-                        </property>
-                    </widget>
-                    <widget class="QLineEdit">
-                        <property name="name">
-                            <cstring>lineEditMTU</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>10</x>
-                                <y>90</y>
-                                <width>41</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>1380</string>
-                        </property>
-                        <property name="alignment">
-                            <set>AlignRight</set>
                         </property>
                     </widget>
                 </widget>
@@ -1793,12 +1793,12 @@
                     <widget class="QComboBox">
                         <item>
                             <property name="text">
-                                <string>main</string>
+                                <string>aggressive</string>
                             </property>
                         </item>
                         <item>
                             <property name="text">
-                                <string>aggressive</string>
+                                <string>main</string>
                             </property>
                         </item>
                         <property name="name">
@@ -2544,73 +2544,73 @@
         <sender>comboBoxAddressMethod</sender>
         <signal>activated(int)</signal>
         <receiver>site</receiver>
-        <slot>Update()</slot>
+        <slot>UpdateGeneral()</slot>
     </connection>
     <connection>
         <sender>checkBoxAddressAuto</sender>
         <signal>stateChanged(int)</signal>
         <receiver>site</receiver>
-        <slot>Update()</slot>
+        <slot>UpdateGeneral()</slot>
     </connection>
     <connection>
         <sender>comboBoxNATTMode</sender>
         <signal>activated(int)</signal>
         <receiver>site</receiver>
-        <slot>Update()</slot>
+        <slot>UpdateClient()</slot>
     </connection>
     <connection>
         <sender>comboBoxFragMode</sender>
         <signal>activated(int)</signal>
         <receiver>site</receiver>
-        <slot>Update()</slot>
+        <slot>UpdateClient()</slot>
     </connection>
     <connection>
         <sender>checkBoxDNSEnable</sender>
         <signal>stateChanged(int)</signal>
         <receiver>site</receiver>
-        <slot>Update()</slot>
+        <slot>UpdateNameResolution()</slot>
     </connection>
     <connection>
         <sender>checkBoxDNSAuto</sender>
         <signal>stateChanged(int)</signal>
         <receiver>site</receiver>
-        <slot>Update()</slot>
+        <slot>UpdateNameResolution()</slot>
     </connection>
     <connection>
         <sender>checkBoxPolicyAuto</sender>
         <signal>stateChanged(int)</signal>
         <receiver>site</receiver>
-        <slot>Update()</slot>
+        <slot>UpdatePolicy()</slot>
     </connection>
     <connection>
         <sender>comboBoxP1Exchange</sender>
         <signal>activated(int)</signal>
         <receiver>site</receiver>
-        <slot>UpdateExchange()</slot>
+        <slot>UpdatePhase1()</slot>
     </connection>
     <connection>
         <sender>comboBoxP1Cipher</sender>
         <signal>activated(int)</signal>
         <receiver>site</receiver>
-        <slot>UpdateCipher()</slot>
+        <slot>UpdatePhase1()</slot>
     </connection>
     <connection>
         <sender>comboBoxP2Transform</sender>
         <signal>activated(int)</signal>
         <receiver>site</receiver>
-        <slot>UpdateTransform()</slot>
+        <slot>UpdatePhase2()</slot>
     </connection>
     <connection>
         <sender>listViewPolicies</sender>
         <signal>selectionChanged()</signal>
         <receiver>site</receiver>
-        <slot>Update()</slot>
+        <slot>UpdatePolicy()</slot>
     </connection>
     <connection>
         <sender>comboBoxAuthMethod</sender>
         <signal>activated(int)</signal>
         <receiver>site</receiver>
-        <slot>UpdateAuth()</slot>
+        <slot>UpdateAuthentication()</slot>
     </connection>
     <connection>
         <sender>comboBoxLocalIDType</sender>
@@ -2664,7 +2664,7 @@
         <sender>comboBoxConfigMethod</sender>
         <signal>activated(const QString&amp;)</signal>
         <receiver>site</receiver>
-        <slot>Update()</slot>
+        <slot>UpdateGeneral()</slot>
     </connection>
 </connections>
 <tabstops>
@@ -2731,15 +2731,17 @@
     <slot access="private">init()</slot>
     <slot>ModPolicy()</slot>
     <slot>DelPolicy()</slot>
-    <slot>Update()</slot>
-    <slot>UpdateExchange()</slot>
-    <slot>UpdateCipher()</slot>
-    <slot>UpdateTransform()</slot>
-    <slot>UpdateAuth()</slot>
+    <slot>UpdateGeneral()</slot>
+    <slot>UpdateClient()</slot>
+    <slot>UpdateNameResolution()</slot>
+    <slot>UpdateAuthentication()</slot>
     <slot>UpdateLocalID()</slot>
     <slot>UpdateRemoteID()</slot>
     <slot>SelectLocalID()</slot>
     <slot>SelectRemoteID()</slot>
+    <slot>UpdatePhase1()</slot>
+    <slot>UpdatePhase2()</slot>
+    <slot>UpdatePolicy()</slot>
     <slot>InputCAFile()</slot>
     <slot>InputCertFile()</slot>
     <slot>InputPKeyFile()</slot>

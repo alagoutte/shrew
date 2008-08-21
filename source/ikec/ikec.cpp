@@ -101,7 +101,7 @@ bool _IKEC::log( long code, const char * format, ... )
 	memset( buff, 0, sizeof( buff ) );
 	va_list list;
 	va_start( list, format );
-	vsprintf( buff, format, list );
+	vsnprintf( buff, sizeof( buff ), format, list );
 
 	QApplication::postEvent( r, new StatusEvent( buff, code ) );
 

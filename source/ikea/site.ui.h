@@ -41,6 +41,9 @@
 
 #include "ikea.h"
 
+#define EXCH_AGGR_MODE		0
+#define EXCH_MAIN_MODE		1
+
 #define AUTH_HYBRID_RSA_XAUTH	0
 #define AUTH_MUTUAL_RSA_XAUTH	1
 #define AUTH_MUTUAL_PSK_XAUTH	2
@@ -203,11 +206,11 @@ void site::init()
 
 	// update dialog
 
-	Update();
-	UpdateAuth();
-	UpdateExchange();
-	UpdateCipher();
-	UpdateTransform();
+	UpdateGeneral();
+	UpdateAuthentication();
+	UpdatePhase1();
+	UpdatePhase2();
+	UpdatePolicy();
 }
 
 void site::ModPolicy()
@@ -470,11 +473,11 @@ bool site::Load( CONFIG & config )
 	if( config.get_string( "phase1-exchange",
 		text, MAX_CONFSTRING, 0 ) )
 	{
-		if( !strcmp( text, "main" ) )
-			comboBoxP1Exchange->setCurrentItem( 0 );
-
 		if( !strcmp( text, "aggressive" ) )
-			comboBoxP1Exchange->setCurrentItem( 1 );
+			comboBoxP1Exchange->setCurrentItem( EXCH_AGGR_MODE );
+
+		if( !strcmp( text, "main" ) )
+			comboBoxP1Exchange->setCurrentItem( EXCH_MAIN_MODE );
 	}
 
 	// authentication mode ( default hybrid rsa xauth )
@@ -497,8 +500,6 @@ bool site::Load( CONFIG & config )
 		if( !strcmp( "mutual-psk", text ) )
 			comboBoxAuthMethod->setCurrentItem( 4 );
 	}
-
-	UpdateAuth();
 
 	// local identity type
 	//
@@ -714,10 +715,11 @@ bool site::Load( CONFIG & config )
 
 	// update dialog
 
-	Update();
-	UpdateExchange();
-	UpdateCipher();
-	UpdateTransform();
+	UpdateGeneral();
+	UpdateAuthentication();
+	UpdatePhase1();
+	UpdatePhase2();
+	UpdatePolicy();
 
 	return true;
 }
@@ -1060,22 +1062,13 @@ bool site::Save( CONFIG & config )
 
 	// phase1 exchange type
 
-	if( !comboBoxP1Exchange->currentItem() )
-	{
-		// main mode
-
+	if( comboBoxP1Exchange->currentItem() == EXCH_AGGR_MODE )
 		config.set_string( "phase1-exchange",
-			"main",
-			strlen( "main" ) );
-	}
-	else
-	{
-		// aggressive mode
+			"aggressive", strlen( "aggressive" ) );
 
+	if( comboBoxP1Exchange->currentItem() == EXCH_MAIN_MODE )
 		config.set_string( "phase1-exchange",
-			"aggressive",
-			strlen( "aggressive" ) );
-	}
+			"main",	strlen( "main" ) );
 
 	// phase1 dh group
 
@@ -1276,9 +1269,10 @@ bool site::Verify()
 	return true;
 }
 
-
-void site::Update()
+void site::UpdateGeneral()
 {
+	QString addrmeth = comboBoxAddressMethod->currentText();
+
 	// auto configuration
 
 	long aconf = comboBoxConfigMethod->currentItem();
@@ -1301,7 +1295,13 @@ void site::Update()
 		comboBoxAddressMethod->insertItem( "Use existing adapter and current address" );
 	}
 
-	// local adapter mode
+	// adapter mode
+
+	combobox_setbytext( ( char * ) addrmeth.ascii(), comboBoxAddressMethod );
+
+	bool addrmeth_changed = false;
+	if( addrmeth != comboBoxAddressMethod->currentText() )
+		addrmeth_changed = true;
 
 	if( !comboBoxAddressMethod->currentItem() )
 	{
@@ -1317,7 +1317,8 @@ void site::Update()
 			case 1: // ike config push
 			case 2: // ike config pull
 				checkBoxAddressAuto->setEnabled( true );
-				checkBoxAddressAuto->setChecked( true );
+				if( addrmeth_changed )
+					checkBoxAddressAuto->setChecked( true );
 				break;
 
 			case 3:	// dhcp over ipsec
@@ -1351,6 +1352,14 @@ void site::Update()
 		lineEditAddress->setEnabled( false );
 		lineEditNetmask->setEnabled( false );
 	}
+
+	UpdateClient();
+	UpdateNameResolution();
+}
+
+void site::UpdateClient()
+{
+	long aconf = comboBoxConfigMethod->currentItem();
 
 	// nat traversal mode
 
@@ -1394,7 +1403,7 @@ void site::Update()
 		lineEditFragSize->setEnabled( true );
 	}
 
-	// client long banner
+	// login banner
 
 	if( aconf == 0 )
 	{
@@ -1403,6 +1412,11 @@ void site::Update()
 	}
 	else
 		checkBoxBanner->setEnabled( true );
+}
+
+void site::UpdateNameResolution()
+{
+	long aconf = comboBoxConfigMethod->currentItem();
 
 	// dns enabled
 
@@ -1444,174 +1458,9 @@ void site::Update()
 		textLabelDNSSuffix->setEnabled( false );
 		lineEditDNSSuffix->setEnabled( false );
 	}
-
-	// policy configuration
-
-	if( checkBoxPolicyAuto->isChecked() )
-	{
-		// automatic
-
-		listViewPolicies->setEnabled( false );
-
-		pushButtonPolicyAdd->setEnabled( false );
-		pushButtonPolicyMod->setEnabled( false );
-		pushButtonPolicyDel->setEnabled( false );
-	}
-	else
-	{
-		// manual
-
-		listViewPolicies->setEnabled( true );
-
-		pushButtonPolicyAdd->setEnabled( true );
-
-		// policy item selection
-
-		if( listViewPolicies->selectedItem() != NULL )
-		{
-			// have selection
-
-			pushButtonPolicyMod->setEnabled( true );
-			pushButtonPolicyDel->setEnabled( true );
-		}
-		else
-		{
-			// no selection
-
-			pushButtonPolicyMod->setEnabled( false );
-			pushButtonPolicyDel->setEnabled( false );
-		}
-	}
 }
 
-void site::UpdateExchange()
-{
-	// exchange mode
-
-	if( !comboBoxP1Exchange->currentItem() )
-	{
-		// main mode ( auto allowed )
-
-		QString text = comboBoxP1DHGroup->currentText();
-
-		comboBoxP1DHGroup->clear();
-		comboBoxP1DHGroup->insertItem( "auto" );
-		comboBoxP1DHGroup->insertItem( "group 1" );
-		comboBoxP1DHGroup->insertItem( "group 2" );
-		comboBoxP1DHGroup->insertItem( "group 5" );
-		comboBoxP1DHGroup->insertItem( "group 14" );
-		comboBoxP1DHGroup->insertItem( "group 15" );
-
-		combobox_setbytext( ( char * ) text.ascii(), comboBoxP1DHGroup );
-	}
-	else
-	{
-		// aggressive mode ( auto not allowed )
-
-		QString text = comboBoxP1DHGroup->currentText();
-
-		comboBoxP1DHGroup->clear();
-		comboBoxP1DHGroup->insertItem( "group 1" );
-		comboBoxP1DHGroup->insertItem( "group 2" );
-		comboBoxP1DHGroup->insertItem( "group 5" );
-		comboBoxP1DHGroup->insertItem( "group 14" );
-		comboBoxP1DHGroup->insertItem( "group 15" );
-
-		combobox_setbytext( ( char * ) text.ascii(), comboBoxP1DHGroup );
-	}
-
-	UpdateAuth();
-}
-
-void site::UpdateCipher()
-{
-	// chipher type
-
-	QString text = comboBoxP1Keylen->currentText();
-
-	switch( comboBoxP1Cipher->currentItem() )
-	{
-		case 1: // aes
-		{
-			comboBoxP1Keylen->setEnabled( true );
-			comboBoxP1Keylen->clear();
-			comboBoxP1Keylen->insertItem( "auto" );
-			comboBoxP1Keylen->insertItem( "128" );
-			comboBoxP1Keylen->insertItem( "192" );
-			comboBoxP1Keylen->insertItem( "256" );
-			break;
-		}
-
-		case 2: // blowfish
-		{
-			comboBoxP1Keylen->setEnabled( true );
-			comboBoxP1Keylen->clear();
-			comboBoxP1Keylen->insertItem( "auto" );
-			for( long b = 128; b <= 256; b += 8 )
-				comboBoxP1Keylen->insertItem(
-					QString::number( b, 10 ) );
-			break;
-		}
-
-		default: // all others
-		{
-			comboBoxP1Keylen->setCurrentItem( 0 );
-			comboBoxP1Keylen->setEnabled( false );
-			break;
-		}
-	}
-
-	if( !comboBoxP1Cipher->currentItem() )
-		comboBoxP1Keylen->setCurrentItem( 0 );
-	else
-		combobox_setbytext( ( char * ) text.ascii(), comboBoxP1Keylen );
-}
-         
-void site::UpdateTransform()
-{
-	// chipher type
-
-	QString text = comboBoxP2Keylen->currentText();
-
-	switch( comboBoxP2Transform->currentItem() )
-	{
-		case 1: // aes
-		{
-			comboBoxP2Keylen->setEnabled( true );
-			comboBoxP2Keylen->clear();
-			comboBoxP2Keylen->insertItem( "auto" );
-			comboBoxP2Keylen->insertItem( "128" );
-			comboBoxP2Keylen->insertItem( "192" );
-			comboBoxP2Keylen->insertItem( "256" );
-			break;
-		}
-
-		case 2: // blowfish
-		{
-			comboBoxP2Keylen->setEnabled( true );
-			comboBoxP2Keylen->clear();
-			comboBoxP2Keylen->insertItem( "auto" );
-			for( long b = 128; b <= 256; b += 8 )
-				comboBoxP2Keylen->insertItem(
-					QString::number( b, 10 ) );
-			break;
-		}
-
-		default: // all others
-		{
-			comboBoxP2Keylen->setCurrentItem( 0 );
-			comboBoxP2Keylen->setEnabled( false );
-			break;
-		}
-	}
-
-	if( !comboBoxP2Transform->currentItem() )
-		comboBoxP2Keylen->setCurrentItem( 0 );
-	else
-		combobox_setbytext( ( char * ) text.ascii(), comboBoxP2Keylen );
-}
-
-void site::UpdateAuth()
+void site::UpdateAuthentication()
 {
 	// authentication method
 
@@ -1643,14 +1492,7 @@ void site::UpdateAuth()
 		{
 			comboBoxLocalIDType->clear();
 
-			if( !comboBoxP1Exchange->currentItem() )
-			{
-				// main mode
-
-				comboBoxLocalIDType->insertItem( IDTXT_ASN1 );
-				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
-			}
-			else
+			if( comboBoxP1Exchange->currentItem() == EXCH_AGGR_MODE )
 			{
 				// aggressive mode
 
@@ -1659,6 +1501,14 @@ void site::UpdateAuth()
 				comboBoxLocalIDType->insertItem( IDTXT_UFQDN );
 				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
 				comboBoxLocalIDType->insertItem( IDTXT_KEYID );
+			}
+
+			if( comboBoxP1Exchange->currentItem() == EXCH_MAIN_MODE )
+			{
+				// main mode
+
+				comboBoxLocalIDType->insertItem( IDTXT_ASN1 );
+				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
 			}
 
 			break;
@@ -1669,13 +1519,7 @@ void site::UpdateAuth()
 		{
 			comboBoxLocalIDType->clear();
 
-			if( !comboBoxP1Exchange->currentItem() )
-			{
-				// main mode
-
-				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
-			}
-			else
+			if( comboBoxP1Exchange->currentItem() == EXCH_AGGR_MODE )
 			{
 				// aggressive mode
 
@@ -1683,6 +1527,13 @@ void site::UpdateAuth()
 				comboBoxLocalIDType->insertItem( IDTXT_UFQDN );
 				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
 				comboBoxLocalIDType->insertItem( IDTXT_KEYID );
+			}
+
+			if( comboBoxP1Exchange->currentItem() == EXCH_MAIN_MODE )
+			{
+				// main mode
+
+				comboBoxLocalIDType->insertItem( IDTXT_ADDR );
 			}
 
 			break;
@@ -1709,14 +1560,7 @@ void site::UpdateAuth()
 		{
 			comboBoxRemoteIDType->clear();
 
-			if( !comboBoxP1Exchange->currentItem() )
-			{
-				// main mode
-
-				comboBoxRemoteIDType->insertItem( IDTXT_ASN1 );
-				comboBoxRemoteIDType->insertItem( IDTXT_ADDR );
-			}
-			else
+			if( comboBoxP1Exchange->currentItem() == EXCH_AGGR_MODE )
 			{
 				// aggressive mode
 
@@ -1725,6 +1569,14 @@ void site::UpdateAuth()
 				comboBoxRemoteIDType->insertItem( IDTXT_UFQDN );
 				comboBoxRemoteIDType->insertItem( IDTXT_ADDR );
 				comboBoxRemoteIDType->insertItem( IDTXT_KEYID );
+			}
+
+			if( comboBoxP1Exchange->currentItem() == EXCH_MAIN_MODE )
+			{
+				// main mode
+
+				comboBoxRemoteIDType->insertItem( IDTXT_ASN1 );
+				comboBoxRemoteIDType->insertItem( IDTXT_ADDR );
 			}
 
 			break;
@@ -1735,13 +1587,7 @@ void site::UpdateAuth()
 		{
 			comboBoxRemoteIDType->clear();
 
-			if( !comboBoxP1Exchange->currentItem() )
-			{
-				// main mode
-
-				comboBoxRemoteIDType->insertItem( IDTXT_ADDR );
-			}
-			else
+			if( comboBoxP1Exchange->currentItem() == EXCH_AGGR_MODE )
 			{
 				// aggressive mode
 
@@ -1749,6 +1595,13 @@ void site::UpdateAuth()
 				comboBoxRemoteIDType->insertItem( IDTXT_UFQDN );
 				comboBoxRemoteIDType->insertItem( IDTXT_ADDR );
 				comboBoxRemoteIDType->insertItem( IDTXT_KEYID );
+			}
+
+			if( comboBoxP1Exchange->currentItem() == EXCH_MAIN_MODE )
+			{
+				// main mode
+
+				comboBoxRemoteIDType->insertItem( IDTXT_ADDR );
 			}
 
 			break;
@@ -1930,6 +1783,171 @@ void site::SelectRemoteID()
 	UpdateRemoteID();
 }
 
+void site::UpdatePhase1()
+{
+	// exchange mode
+
+	if( comboBoxP1Exchange->currentItem() == EXCH_AGGR_MODE )
+	{
+		// aggressive mode ( auto not allowed )
+
+		QString text = comboBoxP1DHGroup->currentText();
+
+		comboBoxP1DHGroup->clear();
+		comboBoxP1DHGroup->insertItem( "group 1" );
+		comboBoxP1DHGroup->insertItem( "group 2" );
+		comboBoxP1DHGroup->insertItem( "group 5" );
+		comboBoxP1DHGroup->insertItem( "group 14" );
+		comboBoxP1DHGroup->insertItem( "group 15" );
+
+		combobox_setbytext( ( char * ) text.ascii(), comboBoxP1DHGroup );
+	}
+
+	if( comboBoxP1Exchange->currentItem() == EXCH_MAIN_MODE )
+	{
+		// main mode ( auto allowed )
+
+		QString text = comboBoxP1DHGroup->currentText();
+
+		comboBoxP1DHGroup->clear();
+		comboBoxP1DHGroup->insertItem( "auto" );
+		comboBoxP1DHGroup->insertItem( "group 1" );
+		comboBoxP1DHGroup->insertItem( "group 2" );
+		comboBoxP1DHGroup->insertItem( "group 5" );
+		comboBoxP1DHGroup->insertItem( "group 14" );
+		comboBoxP1DHGroup->insertItem( "group 15" );
+
+		combobox_setbytext( ( char * ) text.ascii(), comboBoxP1DHGroup );
+	}
+
+	// chipher type
+
+	QString text = comboBoxP1Keylen->currentText();
+
+	switch( comboBoxP1Cipher->currentItem() )
+	{
+		case 1: // aes
+		{
+			comboBoxP1Keylen->setEnabled( true );
+			comboBoxP1Keylen->clear();
+			comboBoxP1Keylen->insertItem( "auto" );
+			comboBoxP1Keylen->insertItem( "128" );
+			comboBoxP1Keylen->insertItem( "192" );
+			comboBoxP1Keylen->insertItem( "256" );
+			break;
+		}
+
+		case 2: // blowfish
+		{
+			comboBoxP1Keylen->setEnabled( true );
+			comboBoxP1Keylen->clear();
+			comboBoxP1Keylen->insertItem( "auto" );
+			for( long b = 128; b <= 256; b += 8 )
+				comboBoxP1Keylen->insertItem(
+					QString::number( b, 10 ) );
+			break;
+		}
+
+		default: // all others
+		{
+			comboBoxP1Keylen->setCurrentItem( 0 );
+			comboBoxP1Keylen->setEnabled( false );
+			break;
+		}
+	}
+
+	if( !comboBoxP1Cipher->currentItem() )
+		comboBoxP1Keylen->setCurrentItem( 0 );
+	else
+		combobox_setbytext( ( char * ) text.ascii(), comboBoxP1Keylen );
+
+	UpdateAuthentication();
+}
+
+void site::UpdatePhase2()
+{
+	// transform type
+
+	QString text = comboBoxP2Keylen->currentText();
+
+	switch( comboBoxP2Transform->currentItem() )
+	{
+		case 1: // aes
+		{
+			comboBoxP2Keylen->setEnabled( true );
+			comboBoxP2Keylen->clear();
+			comboBoxP2Keylen->insertItem( "auto" );
+			comboBoxP2Keylen->insertItem( "128" );
+			comboBoxP2Keylen->insertItem( "192" );
+			comboBoxP2Keylen->insertItem( "256" );
+			break;
+		}
+
+		case 2: // blowfish
+		{
+			comboBoxP2Keylen->setEnabled( true );
+			comboBoxP2Keylen->clear();
+			comboBoxP2Keylen->insertItem( "auto" );
+			for( long b = 128; b <= 256; b += 8 )
+				comboBoxP2Keylen->insertItem(
+					QString::number( b, 10 ) );
+			break;
+		}
+
+		default: // all others
+		{
+			comboBoxP2Keylen->setCurrentItem( 0 );
+			comboBoxP2Keylen->setEnabled( false );
+			break;
+		}
+	}
+
+	if( !comboBoxP2Transform->currentItem() )
+		comboBoxP2Keylen->setCurrentItem( 0 );
+	else
+		combobox_setbytext( ( char * ) text.ascii(), comboBoxP2Keylen );
+}
+
+void site::UpdatePolicy()
+{
+	// policy configuration
+
+	if( checkBoxPolicyAuto->isChecked() )
+	{
+		// automatic
+
+		listViewPolicies->setEnabled( false );
+
+		pushButtonPolicyAdd->setEnabled( false );
+		pushButtonPolicyMod->setEnabled( false );
+		pushButtonPolicyDel->setEnabled( false );
+	}
+	else
+	{
+		// manual
+
+		listViewPolicies->setEnabled( true );
+
+		pushButtonPolicyAdd->setEnabled( true );
+
+		// policy item selection
+
+		if( listViewPolicies->selectedItem() != NULL )
+		{
+			// have selection
+
+			pushButtonPolicyMod->setEnabled( true );
+			pushButtonPolicyDel->setEnabled( true );
+		}
+		else
+		{
+			// no selection
+
+			pushButtonPolicyMod->setEnabled( false );
+			pushButtonPolicyDel->setEnabled( false );
+		}
+	}
+}
 
 void site::InputCAFile()
 {
@@ -1986,3 +2004,4 @@ void site::VerifyAccept()
 
 	return;
 }
+
