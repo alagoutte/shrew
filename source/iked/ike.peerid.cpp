@@ -194,6 +194,11 @@ bool _IKED::gen_ph1id_r( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 
 bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 {
+	static char * expl_natt = "( natt prevents ip match )";
+	static char * expl_cert = "( cert check only )";
+	static char * expl_none = "";
+	const char * expl = expl_none;
+
 	//
 	// compare the peer id received
 	// with our generated peer id
@@ -202,7 +207,7 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 	if( ids.type != idt.type )
 	{
 		log.txt( LLOG_ERROR, 
-			"!! : phase1 id type mismatch ( %s != %s )\n",
+			"!! : phase1 id type mismatch ( received %s but expected %s )\n",
 			find_name( NAME_IDENT, ids.type ),
 			find_name( NAME_IDENT, idt.type ) );
 
@@ -223,15 +228,10 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 		case ISAKMP_ID_IPV4_ADDR:
 		{
 			if( natt )
-			{
-				log.txt( LLOG_INFO, 
-					"ii : phase1 id match ( natt prevents ip match )\n" );
-			}
+				expl = expl_natt;
 			else
-			{
 				if( ids.addr.s_addr != idt.addr.s_addr )
 					match = false;
-			}
 
 			break;
 		}
@@ -291,10 +291,7 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 				}
 			}
 			else
-			{
-				log.txt( LLOG_INFO, 
-					"ii : phase1 id match ( cert check only )\n" );
-			}
+				expl = expl_cert;
 
 			break;
 		}
@@ -304,9 +301,7 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 			log.txt( LLOG_ERROR, 
 				"!! : phase1 id mismatch ( internal error )\n" );
 
-			match = false;
-
-			break;
+			return false;
 		}
 	}
 
@@ -319,8 +314,10 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 		char txtid[ LIBIKE_MAX_TEXTP1ID ];
 		text_ph1id( txtid, &ids );
 
-		log.txt( LLOG_INFO, 
-			"ii : phase1 id match ( %s )\n",
+		log.txt( LLOG_INFO,
+			"ii : phase1 id match %s\n"
+			"ii : received = %s\n",
+			expl,
 			txtid );
 	}
 	else
@@ -337,9 +334,10 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 
 
 		log.txt( LLOG_ERROR, 
-			"!! : phase1 id mismatch ( src != trg )\n"
-			"!! : src = %s\n"
-			"!! : trg = %s\n",
+			"!! : phase1 id mismatch %s\n"
+			"!! : received = %s\n"
+			"!! : expected = %s\n",
+			expl,
 			txtid_s,
 			txtid_t );
 	}
