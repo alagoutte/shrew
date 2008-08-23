@@ -157,6 +157,20 @@ long _IKED::loop_ike_nwork()
 			unsigned short port_dst = htons( saddr_dst.saddr4.sin_port );
 
 			//
+			// check for NAT-T keep alive
+			//
+
+			if( packet_udp.size() < sizeof( IKE_HEADER ) )
+			{
+				log.txt( LLOG_DEBUG,
+					"<- : recv NAT-T:KEEP-ALIVE packet %s:%u -> %s:%u\n",
+					txtaddr_src, port_src,
+					txtaddr_dst, port_dst );
+
+				continue;
+			}
+
+			//
 			// examine the packet contents
 			// for a NAT-T non-ESP marker
 			//
@@ -208,20 +222,6 @@ long _IKED::loop_ike_nwork()
 				packet_udp.get( packet_ike );
 
 				//
-				// check for NAT-T keep alive
-				//
-
-				if( packet_ike.size() < sizeof( IKE_HEADER ) )
-				{
-					log.txt( LLOG_DEBUG,
-						"<- : recv NAT-T:KEEP-ALIVE packet %s:%u -> %s:%u\n",
-						txtaddr_src, port_src,
-						txtaddr_dst, port_dst );
-
-					continue;
-				}
-
-				//
 				// process the ike packet
 				//
 
@@ -262,11 +262,17 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 	uint8_t		exchange;
 	uint8_t		flags;
 
-	packet.read(
-		cookies,
-		payload,
-		exchange,
-		flags );
+	if( !packet.read(
+			cookies,
+			payload,
+			exchange,
+			flags ) )
+	{
+		log.txt( LLOG_ERROR,
+			"!! : invalid ISAKMP header\n" );
+
+		return LIBIKE_OK;
+	}
 
 	char txtaddr_src[ LIBIKE_MAX_TEXTADDR ];
 	text_addr( txtaddr_src, &saddr_src, false );
