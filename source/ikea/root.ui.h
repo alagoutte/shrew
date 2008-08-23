@@ -74,6 +74,7 @@ void root::AddSite()
 		// save site config
 
 		CONFIG config;
+		config.set_number( "version", CLIENT_VER_CFG );
 		s.Save( config );
 
 		// mangle name if duplicate
