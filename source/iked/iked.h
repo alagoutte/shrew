@@ -766,8 +766,8 @@ typedef class _IKED
 	// execution thread loops
 	//
 
-	void	loop_ref_inc( char * name );
-	void	loop_ref_dec( char * name );
+	void	loop_ref_inc( const char * name );
+	void	loop_ref_dec( const char * name );
 
 	long	loop_ipc_server();
 	long	loop_ipc_client( IKEI * ikei );

@@ -186,7 +186,7 @@ typedef class DLX _IDB_RC_ENTRY : public IDB_ENTRY
 	_IDB_RC_ENTRY();
 	virtual ~_IDB_RC_ENTRY();
 
-	virtual char *			name() = 0;
+	virtual const char *	name() = 0;
 	virtual _IDB_RC_LIST *	list() = 0;
 
 	bool add( bool lock );

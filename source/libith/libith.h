@@ -309,7 +309,7 @@ typedef class DLX _ITH_IPCC
 	_ITH_IPCC();
 	~_ITH_IPCC();
 
-	long	attach( char * path, long timeout );
+	long	attach( const char * path, long timeout );
 	void	wakeup();
 	void	detach();
 
@@ -350,10 +350,10 @@ typedef class DLX _ITH_IPCS
 	_ITH_IPCS();
 	~_ITH_IPCS();
 
-	long	init( char * path, bool admin );
+	long	init( const char * path, bool admin );
 	void	done();
 
-	long	inbound( char * path, IPCCONN & ipcconn );
+	long	inbound( const char * path, IPCCONN & ipcconn );
 	void	wakeup();
 
 }ITH_IPCS;

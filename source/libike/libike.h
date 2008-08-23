@@ -152,7 +152,7 @@ typedef class DLX _IKEI_MSG : public BDATA
 
 	long	get_status( long * status, BDATA * str );
 	long	set_status( long status, BDATA * str );
-	long	set_status( long status, char * str );
+	long	set_status( long status, const char * str );
 
 	long	get_stats( IKEI_STATS * stats );
 	long	set_stats( IKEI_STATS * stats );

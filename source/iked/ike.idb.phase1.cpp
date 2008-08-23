@@ -490,9 +490,9 @@ _IDB_PH1::~_IDB_PH1()
 // abstract functions from parent class
 //
 
-char * _IDB_PH1::name()
+const char * _IDB_PH1::name()
 {
-	static char * xname = "phase1";
+	static const char * xname = "phase1";
 	return xname;
 }
 

@@ -45,9 +45,9 @@
 // IDB subclass list section
 //
 
-char * _IDB_INF::name()
+const char * _IDB_INF::name()
 {
-	static char * xname = "informational";
+	static const char * xname = "informational";
 	return xname;
 }
 

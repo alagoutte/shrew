@@ -204,9 +204,9 @@ _IDB_POLICY::~_IDB_POLICY()
 // abstract functions from parent class
 //
 
-char * _IDB_POLICY::name()
+const char * _IDB_POLICY::name()
 {
-	static char * xname = "policy";
+	static const char * xname = "policy";
 	return xname;
 }
 

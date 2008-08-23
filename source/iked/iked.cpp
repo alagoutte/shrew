@@ -47,7 +47,7 @@ bool _IKED::rand_bytes( void * buff, long size )
 	return true;
 }
 
-void _IKED::loop_ref_inc( char * name )
+void _IKED::loop_ref_inc( const char * name )
 {
 	log.txt( LLOG_INFO, "ii : %s process thread begin ...\n", name );
 
@@ -59,7 +59,7 @@ void _IKED::loop_ref_inc( char * name )
 	lock_run.unlock();
 }
 
-void _IKED::loop_ref_dec( char * name )
+void _IKED::loop_ref_dec( const char * name )
 {
 	lock_run.lock();
 

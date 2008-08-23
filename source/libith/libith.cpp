@@ -1334,7 +1334,7 @@ long _ITH_IPCC::io_send( void * data, size_t size, size_t & sent )
 	return IPCERR_OK;
 }
 
-long _ITH_IPCC::attach( char * path, long timeout )
+long _ITH_IPCC::attach( const char * path, long timeout )
 {
 	conn = socket( AF_UNIX, SOCK_STREAM, 0 );
 	if( conn == -1 )
@@ -1401,7 +1401,7 @@ _ITH_IPCS::~_ITH_IPCS()
 	}
 }
 
-long _ITH_IPCS::init( char * path, bool admin )
+long _ITH_IPCS::init( const char * path, bool admin )
 {
 	unlink( path );
 
@@ -1440,7 +1440,7 @@ void _ITH_IPCS::done()
 		close( conn );
 }
 
-long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
+long _ITH_IPCS::inbound( const char * path, IPCCONN & ipcconn )
 {
 	fd_set fds;
 	FD_ZERO( &fds );

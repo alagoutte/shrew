@@ -144,9 +144,9 @@ _IDB_PEER::~_IDB_PEER()
 // abstract functions from parent class
 //
 
-char * _IDB_PEER::name()
+const char * _IDB_PEER::name()
 {
-	static char * xname = "peer";
+	static const char * xname = "peer";
 	return xname;
 }
 

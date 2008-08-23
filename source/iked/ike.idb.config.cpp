@@ -153,9 +153,9 @@ _IDB_CFG::~_IDB_CFG()
 // abstract functions from parent class
 //
 
-char * _IDB_CFG::name()
+const char * _IDB_CFG::name()
 {
-	static char * xname = "config";
+	static const char * xname = "config";
 	return xname;
 }
 

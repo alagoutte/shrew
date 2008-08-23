@@ -194,9 +194,9 @@ bool _IKED::gen_ph1id_r( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 
 bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 {
-	static char * expl_natt = "( natt prevents ip match )";
-	static char * expl_cert = "( cert check only )";
-	static char * expl_none = "";
+	static const char * expl_natt = "( natt prevents ip match )";
+	static const char * expl_cert = "( cert check only )";
+	static const char * expl_none = "";
 	const char * expl = expl_none;
 
 	//

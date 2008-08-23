@@ -47,16 +47,16 @@
 
 void _IKED::text_prot( char * text, int prot )
 {
-	static char * prot_00 = "ANY";
-	static char * prot_01 = "ICMP";
-	static char * prot_04 = "IPIP";
-	static char * prot_06 = "TCP";
-	static char * prot_17 = "UDP";
-	static char * prot_47 = "GRE";
-	static char * prot_50 = "ESP";
-	static char * prot_51 = "AH";
+	static const char * prot_00 = "ANY";
+	static const char * prot_01 = "ICMP";
+	static const char * prot_04 = "IPIP";
+	static const char * prot_06 = "TCP";
+	static const char * prot_17 = "UDP";
+	static const char * prot_47 = "GRE";
+	static const char * prot_50 = "ESP";
+	static const char * prot_51 = "AH";
 
-	char * temp = NULL;
+	const char * temp = NULL;
 
 	switch( prot )
 	{

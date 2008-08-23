@@ -141,7 +141,7 @@ long _IKEI_MSG::set_status( long status, BDATA * str )
 	return set_basic( status, str );
 }
 
-long _IKEI_MSG::set_status( long status, char * str )
+long _IKEI_MSG::set_status( long status, const char * str )
 {
 	BDATA text;
 	text.set( str, strlen( str ) + 1 );

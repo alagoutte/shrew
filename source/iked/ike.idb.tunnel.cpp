@@ -461,9 +461,9 @@ _IDB_TUNNEL::~_IDB_TUNNEL()
 // abstract functions from parent class
 //
 
-char * _IDB_TUNNEL::name()
+const char * _IDB_TUNNEL::name()
 {
-	static char * xname = "tunnel";
+	static const char * xname = "tunnel";
 	return xname;
 }
 

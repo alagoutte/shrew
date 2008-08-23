@@ -412,7 +412,7 @@ typedef class _IDB_PEER : public IDB_RC_ENTRY, public IKE_PEER
 	IDB_LIST_PROPOSAL	proposals;
 	IDB_LIST_NETMAP		netmaps;
 
-	virtual	char *			name();
+	virtual	const char *	name();
 	virtual IDB_RC_LIST *	list();
 
 	_IDB_PEER( IKE_PEER * set_peer );
@@ -478,7 +478,7 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 	ITH_EVENT_TUNNATT	event_natt;
 	ITH_EVENT_TUNSTATS	event_stats;
 
-	virtual	char *			name();
+	virtual	const char *	name();
 	virtual IDB_RC_LIST *	list();
 
 	virtual void	beg();
@@ -511,7 +511,7 @@ typedef class _IDB_POLICY : public IDB_RC_ENTRY, public PFKI_SPINFO
 	bool		route;
 	bool		nailed;
 
-	virtual	char *			name();
+	virtual	const char *	name();
 	virtual IDB_RC_LIST *	list();
 
 	virtual void	beg();
@@ -663,7 +663,7 @@ typedef class _IDB_PH1 : public IDB_XCH
 
 	// sub class functions
 
-	virtual	char *			name();
+	virtual	const char *	name();
 	virtual IDB_RC_LIST *	list();
 
 	// class functions
@@ -727,7 +727,7 @@ typedef class _IDB_PH2 : public IDB_XCH
 
 	// sub class functions
 
-	virtual	char *			name();
+	virtual	const char *	name();
 	virtual IDB_RC_LIST *	list();
 
 	virtual void	beg();
@@ -780,7 +780,7 @@ typedef class _IDB_CFG : public IDB_XCH
 
 	// sub class functions
 
-	virtual	char *			name();
+	virtual	const char *	name();
 	virtual IDB_RC_LIST *	list();
 
 	virtual void	beg();
@@ -837,7 +837,7 @@ typedef class _IDB_INF : public IDB_XCH
 
 	// sub class functions
 
-	virtual	char *			name();
+	virtual	const char *	name();
 	virtual IDB_RC_LIST *	list();
 
 	virtual void	beg();
