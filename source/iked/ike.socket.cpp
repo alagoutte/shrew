@@ -596,50 +596,6 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 		return false;
 	}
 
-	//
-	// bring up the interface
-	//
-
-	int efd = socket( PF_PACKET, SOCK_RAW, htons( ETH_P_ALL ) );
-	if( efd < 0 )
-	{
-		log.txt( LLOG_ERROR, "!! : failed to open raw packet handle\n" );
-
-		close( (*adapter)->fn );
-		delete *adapter;
-		*adapter = NULL;
-
-		return false;
-	}
-
-	if( ioctl( efd, SIOCGIFFLAGS, (void*) &ifr ) < 0 )
-	{
-		log.txt( LLOG_ERROR, "!! : failed to get tap interface flags\n" );
-
-		close( efd );
-		close( (*adapter)->fn );
-		delete *adapter;
-		*adapter = NULL;
-
-		return false;
-	}
-
-	ifr.ifr_flags |= IFF_UP;
-
-	if( ioctl( efd, SIOCSIFFLAGS, (void*) &ifr ) < 0 )
-	{
-		log.txt( LLOG_ERROR, "!! : failed to set tap interface flags\n" );
-
-		close( efd );
-		close( (*adapter)->fn );
-		delete *adapter;
-		*adapter = NULL;
-
-		return false;
-	}
-
-	close( efd );
-
 	strcpy( (*adapter)->name, ifr.ifr_name );
 #endif
 
@@ -668,23 +624,55 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 {
 	if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
 	{
-		struct ifreq ifr;
-		memset( &ifr, 0, sizeof( struct ifreq ) );
-
-		struct sockaddr_in * addr = ( struct sockaddr_in * ) &( ifr.ifr_addr );
-		SET_SALEN( addr, sizeof( struct sockaddr_in ) );
-		addr->sin_family = AF_INET;
+		//
+		// open socket for configuration
+		//
 
 		int sock = socket( PF_INET, SOCK_DGRAM, 0 );
 		if( sock == -1 )
 		{
 			log.txt( LLOG_ERROR, "!! : failed to create adapter socket ( %s )\n",
 				strerror( errno ) );
+
 			return false;
 		}
 
+		//
+		// bring interface down
+		//
+
+		struct ifreq ifr;
+		memset( &ifr, 0, sizeof( struct ifreq ) );
 		strncpy( ifr.ifr_name, adapter->name, IFNAMSIZ );
 
+		if( ioctl( sock, SIOCGIFFLAGS, &ifr ) < 0 )
+		{
+			log.txt( LLOG_ERROR, "!! : failed to get interface flags %s for ( %s )\n",
+				adapter->name, strerror( errno ) );
+
+			close( sock );
+			return false;
+		}
+
+		ifr.ifr_flags &= IFF_UP;
+
+		if( ioctl( sock, SIOCSIFFLAGS, &ifr ) < 0 )
+		{
+			log.txt( LLOG_ERROR, "!! : failed to set interface flags %s for ( %s )\n",
+				adapter->name, strerror( errno ) );
+
+			close( sock );
+			return false;
+		}
+
+#ifdef __linux__
+
+		//
+		// configure internet addresses
+		//
+
+		struct sockaddr_in * addr = ( struct sockaddr_in * ) &( ifr.ifr_addr );
+		addr->sin_family = AF_INET;
 		addr->sin_addr = tunnel->xconf.addr;
 
 		if( ioctl( sock, SIOCSIFADDR, &ifr ) != 0 )
@@ -696,6 +684,10 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 			return false;
 		}
 
+		//
+		// configure netmask addresses
+		//
+
 		addr->sin_addr = tunnel->xconf.mask;
 
 		if( ioctl( sock, SIOCSIFNETMASK, &ifr ) != 0 )
@@ -706,6 +698,10 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 			close( sock );
 			return false;
 		}
+
+		//
+		// configure broadcast addresses
+		//
 
 		addr->sin_addr.s_addr = tunnel->xconf.addr.s_addr;
 		addr->sin_addr.s_addr &= tunnel->xconf.mask.s_addr;
@@ -720,6 +716,48 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 			return false;
 		}
 
+#else
+
+		//
+		// configure internet, netmask and broadcast addresses
+		//
+
+		struct ifaliasreq ifra;
+		memset( &ifra, 0, sizeof( struct ifaliasreq ) );
+		strncpy( ifra.ifra_name, adapter->name, IFNAMSIZ );
+
+		struct sockaddr_in * addr = ( struct sockaddr_in * ) &( ifra.ifra_addr );
+		addr->sin_family = AF_INET;
+		SET_SALEN( addr, sizeof( struct sockaddr_in ) );
+		addr->sin_addr = tunnel->xconf.addr;
+
+		struct sockaddr_in * mask = ( struct sockaddr_in * ) &( ifra.ifra_mask );
+		mask->sin_family = AF_INET;
+		SET_SALEN( mask, sizeof( struct sockaddr_in ) );
+		mask->sin_addr = tunnel->xconf.mask;
+
+		struct sockaddr_in * bcst = ( struct sockaddr_in * ) &( ifra.ifra_broadaddr );
+		bcst->sin_family = AF_INET;
+		SET_SALEN( bcst, sizeof( struct sockaddr_in ) );
+		bcst->sin_addr.s_addr = tunnel->xconf.addr.s_addr;
+		bcst->sin_addr.s_addr &= tunnel->xconf.mask.s_addr;
+		bcst->sin_addr.s_addr |= ~tunnel->xconf.mask.s_addr;
+
+		if( ioctl( sock, SIOCAIFADDR, &ifra ) < 0 )
+		{
+			log.txt( LLOG_ERROR, "!! : failed to configure address for %s ( %s )\n",
+				adapter->name, strerror( errno ) );
+
+			close( sock );
+			return false;
+		}
+
+#endif
+
+		//
+		// configure mtu
+		//
+
 		ifr.ifr_mtu = tunnel->xconf.vmtu;
 
 		if( ioctl( sock, SIOCSIFMTU, &ifr ) != 0 )
@@ -731,12 +769,33 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 			return false;
 		}
 
-		printf( "XX : adapter MTU set to %i\n", tunnel->xconf.vmtu );
+		//
+		// bring interface up
+		//
 
+		if( ioctl( sock, SIOCGIFFLAGS, &ifr ) < 0 )
+		{
+			log.txt( LLOG_ERROR, "!! : failed to get interface flags for %s ( %s )\n",
+				adapter->name, strerror( errno ) );
 
-		log.txt( LLOG_INFO, "ii : configured adapter %s\n", adapter->name );
+			close( sock );
+			return false;
+		}
+
+	        ifr.ifr_flags |= IFF_UP;
+
+	        if( ioctl( sock, SIOCSIFFLAGS, &ifr ) < 0 )
+		{
+			log.txt( LLOG_ERROR, "!! : failed to set interface flags for %s ( %s )\n",
+				adapter->name, strerror( errno ) );
+
+			close( sock );
+			return false;
+		}
 
 		close( sock );
+
+		log.txt( LLOG_INFO, "ii : configured adapter %s\n", adapter->name );
 	}
 
 	if( tunnel->xconf.opts & ( IPSEC_OPTS_DNSS | IPSEC_OPTS_DOMAIN ) )
