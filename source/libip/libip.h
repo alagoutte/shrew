@@ -491,6 +491,34 @@ typedef class DLX _IPQUEUE : private IDB_LIST
 
 }IPQUEUE;
 
+#ifndef WIN32
+
+typedef struct _IPROUTE_ENTRY : public IDB_ENTRY
+{
+	in_addr	iface;
+	in_addr	addr;
+	in_addr mask;
+	in_addr next;
+	
+}IPROUTE_ENTRY;
+
+typedef class DLX _IPROUTE_LIST : private IDB_LIST
+{
+	public:
+
+	_IPROUTE_LIST();
+	virtual ~_IPROUTE_LIST();
+
+	bool	add( in_addr & iface, in_addr & addr, in_addr & mask, in_addr & next );
+	bool	get( in_addr & iface, in_addr & addr, in_addr & mask, in_addr & next );
+
+	long	count();
+	void	clean();
+
+}IPROUTE_LIST;
+
+#endif
+
 typedef class DLX _IPROUTE
 {
 	private:
@@ -498,6 +526,10 @@ typedef class DLX _IPROUTE
 	int				seq;
 	unsigned long	osver_maj;
 	unsigned long	osver_min;
+
+#ifndef WIN32
+	IPROUTE_LIST	route_list;
+#endif
 
 	public:
 

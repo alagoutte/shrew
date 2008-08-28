@@ -41,6 +41,77 @@
 
 #include "libip.h"
 
+//==============================================================================
+// Route list class
+//==============================================================================
+
+_IPROUTE_LIST::_IPROUTE_LIST()
+{
+}
+
+_IPROUTE_LIST::~_IPROUTE_LIST()
+{
+	clean();
+}
+
+bool _IPROUTE_LIST::add( in_addr & iface, in_addr & addr, in_addr & mask, in_addr & next )
+{
+	IPROUTE_ENTRY * route = new IPROUTE_ENTRY;
+	if( route == NULL )
+		return false;
+
+	route->iface = iface;
+	route->addr = addr;
+	route->mask = mask;
+	route->next = next;
+
+	add_entry( route );
+
+    return true;
+}
+
+bool _IPROUTE_LIST::get( in_addr & iface, in_addr & addr, in_addr & mask, in_addr & next )
+{
+	long index = 0;
+	for( ; index < count(); index++ )
+	{
+		IPROUTE_ENTRY * route = static_cast<IPROUTE_ENTRY*>( get_entry( index ) );
+		assert( route != NULL );
+
+		if( route->addr.s_addr != addr.s_addr )
+			continue;
+
+		if( route->mask.s_addr != mask.s_addr )
+			continue;
+
+		iface = route->iface;
+		addr = route->addr;
+		mask = route->mask;
+		next = route->next;
+
+		del_entry( route );
+		delete route;
+
+		return true;
+	}
+
+	return false;
+}
+
+long _IPROUTE_LIST::count()
+{
+    return IDB_LIST::count();
+}
+
+void _IPROUTE_LIST::clean()
+{
+    IDB_LIST::clean();
+}
+
+//==============================================================================
+// BSD specific route handling
+//==============================================================================
+
 #ifndef __linux__
 
 //
@@ -140,10 +211,7 @@ bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 	rtmsg.hdr.rtm_flags = RTF_UP | RTF_STATIC | RTF_GATEWAY;
 	rtmsg.hdr.rtm_addrs = RTA_DST | RTA_GATEWAY;
 
-//	if( mask.s_addr == 0xffffffff )
-//		rtmsg.hdr.rtm_flags |= RTF_HOST;
-//	else
-		rtmsg.hdr.rtm_addrs |= RTA_NETMASK;
+	rtmsg.hdr.rtm_addrs |= RTA_NETMASK;
 		
 	// add route destination
 
@@ -167,16 +235,13 @@ bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 	// add route netmask
 
-//	if( mask.s_addr != 0xffffffff )
-	{
-		sockaddr_in * msk = ( sockaddr_in * )( rtmsg.msg + rtmsg.hdr.rtm_msglen );
+	sockaddr_in * msk = ( sockaddr_in * )( rtmsg.msg + rtmsg.hdr.rtm_msglen );
 
-		msk->sin_family = AF_INET;
-		msk->sin_len = sizeof( sockaddr_in );
-		msk->sin_addr = mask;
+	msk->sin_family = AF_INET;
+	msk->sin_len = sizeof( sockaddr_in );
+	msk->sin_addr = mask;
 
-		rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
-	}
+	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
 
 	// send route add message
 
@@ -212,10 +277,7 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 	rtmsg.hdr.rtm_flags = RTF_UP | RTF_STATIC | RTF_GATEWAY;
 	rtmsg.hdr.rtm_addrs = RTA_DST | RTA_GATEWAY;
 
-//	if( mask.s_addr == 0xffffffff )
-//		rtmsg.hdr.rtm_flags |= RTF_HOST;
-//	else
-		rtmsg.hdr.rtm_addrs |= RTA_NETMASK;
+	rtmsg.hdr.rtm_addrs |= RTA_NETMASK;
 		
 	// add route destination
 
@@ -239,16 +301,13 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 	// add route netmask
 
-//	if( mask.s_addr != 0xffffffff )
-	{
-		sockaddr_in * msk = ( sockaddr_in * )( rtmsg.msg + rtmsg.hdr.rtm_msglen );
+	sockaddr_in * msk = ( sockaddr_in * )( rtmsg.msg + rtmsg.hdr.rtm_msglen );
 
-		msk->sin_family = AF_INET;
-		msk->sin_len = sizeof( sockaddr_in );
-		msk->sin_addr = mask;
+	msk->sin_family = AF_INET;
+	msk->sin_len = sizeof( sockaddr_in );
+	msk->sin_addr = mask;
 
-		rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
-	}
+	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
 
 	// send route delete message
 
@@ -269,7 +328,75 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
 {
-	return true;
+	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
+	if( s == -1 )
+		return false;
+
+	// set route message header
+
+	RTMSG rtmsg;
+	memset( &rtmsg, 0, sizeof( rtmsg ) );
+
+	rtmsg.hdr.rtm_version = RTM_VERSION;
+	rtmsg.hdr.rtm_type = RTM_GET;
+	rtmsg.hdr.rtm_seq = ++seq;
+	rtmsg.hdr.rtm_flags = RTF_UP | RTF_STATIC | RTF_STATIC;
+	rtmsg.hdr.rtm_addrs = RTA_DST;
+
+	// add route destination
+
+	sockaddr_in * dst = ( sockaddr_in * ) rtmsg.msg;
+
+	dst->sin_family = AF_INET;
+	dst->sin_len = sizeof( sockaddr_in );
+	dst->sin_addr = addr;
+
+	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
+
+	// add route netmask
+
+	sockaddr_in * msk = ( sockaddr_in * )( rtmsg.msg + rtmsg.hdr.rtm_msglen );
+
+	msk->sin_family = AF_INET;
+	msk->sin_len = sizeof( sockaddr_in );
+	msk->sin_addr = mask;
+
+	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
+
+	// send route get message
+
+	long l = rtmsg.hdr.rtm_msglen += sizeof( rtmsg.hdr );
+
+	if( write( s, ( char * ) &rtmsg, l ) < 0 )
+	{
+		close( s );
+		return false;
+	}
+
+	int pid = getpid();
+
+	// read route result message
+
+	do
+	{
+		l = read( s, ( char * ) &rtmsg, sizeof( rtmsg ) );
+		if( l < 0 )
+		{
+			close( s );
+			return false;
+		}
+	}
+	while( ( rtmsg.hdr.rtm_seq != seq ) ||
+		   ( rtmsg.hdr.rtm_pid != pid ) );
+
+	close( s );
+
+	if( ( rtmsg.hdr.rtm_errno ) ||
+		( rtmsg.hdr.rtm_msglen > l ) ||
+		( rtmsg.hdr.rtm_version != RTM_VERSION ) )
+		return false;
+
+	return rtmsg_result( &rtmsg, &addr, &next, &mask, &iface );
 }
 
 // get best route ( by address )
@@ -346,31 +473,14 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	return rtmsg_result( &rtmsg, &addr, &next, &mask, &iface );
 }
 
-// decrement route costs
-
-bool _IPROUTE::increment( in_addr addr, in_addr mask )
-{
-	return true;
-}
-
-// increment route costs
-
-bool _IPROUTE::decrement( in_addr addr, in_addr mask )
-{
-	return true;
-}
-
-// flush arp table
-
-bool _IPROUTE::flusharp( in_addr & iface )
-{
-	return true;
-}
-
 #else
 
+//==============================================================================
+// Linux specific route handling
+//==============================================================================
+
 //
-// Linux netlink message wrapper struct
+// netlink message wrapper struct
 //
 
 typedef struct _NLMSG
@@ -658,7 +768,45 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
 {
-	return true;
+	// set route message header
+
+	NLMSG nlmsg;
+	memset( &nlmsg, 0, sizeof( nlmsg ) );
+
+	nlmsg.hdr.nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP;
+	nlmsg.hdr.nlmsg_type = RTM_GETROUTE;
+
+	nlmsg.msg.rtm_family = AF_INET;
+	nlmsg.msg.rtm_table = RT_TABLE_MAIN;
+
+	// add route destination
+
+	struct rtattr * rta = ( struct rtattr * ) nlmsg.buff;
+
+	rta->rta_type = RTA_DST;
+	rta->rta_len = sizeof( struct rtattr ) + sizeof( addr );
+	memcpy( ( ( char * ) rta ) + sizeof( struct rtattr ), &addr, sizeof( addr ) );
+
+	nlmsg.hdr.nlmsg_len += rta->rta_len;
+
+	// set route network mask
+
+	nlmsg.msg.rtm_dst_len = mask_to_prefix( mask );
+
+	// set final message length
+
+	nlmsg.hdr.nlmsg_len += sizeof( struct rtmsg );
+	nlmsg.hdr.nlmsg_len = NLMSG_LENGTH( nlmsg.hdr.nlmsg_len );
+
+	int s = rtmsg_send( &nlmsg );
+	if( s < 0 )
+		return false;
+
+	int r = rtmsg_recv( s, &addr, &next, &mask, &iface );
+
+	close( s );
+
+	return ( r >= 0 );
 }
 
 // get best route ( by address )
@@ -706,18 +854,84 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	return ( r >= 0 );
 }
 
-// decrement route metrics
+#endif
+
+//==============================================================================
+// Shared unix route functions
+//==============================================================================
+//
+
+//
+// Most unix systems don't support multiple routes
+// to the same destination network. We go for the
+// lowest common denominator. Cache the existing
+// route information and delete the existing route
+// on increment. Retrieve and restore the previous
+// route on decrement. 
+//
+
+// decrement route costs
 
 bool _IPROUTE::increment( in_addr addr, in_addr mask )
 {
-	return true;
+	//
+	// locate the most specific route for the destination
+	//
+
+	in_addr	del_iface;
+	bool	del_local;
+	in_addr	del_addr;
+	in_addr	del_mask;
+	in_addr	del_next;
+
+	if( !get( del_iface, del_local, del_addr, del_mask, del_next ) )
+		return true;
+
+	//
+	// does this route match the destination exactly
+	//
+
+	if( del_addr.s_addr != addr.s_addr )
+		return true;
+
+	if( del_mask.s_addr != mask.s_addr )
+		return true;
+
+	//
+	// add a route entry to our route list
+	//
+
+	route_list.add( del_iface, del_addr, del_mask, del_next );
+
+	//
+	// delete the existing route
+	//
+
+	return del( del_iface, del_local, del_addr, del_mask, del_next );
 }
 
-// increment route metrics
+// decrement route costs
 
 bool _IPROUTE::decrement( in_addr addr, in_addr mask )
 {
-	return true;
+	//
+	// locate the cached route info for the destination
+	//
+
+	in_addr add_iface;
+	bool	add_local;
+	in_addr	add_addr = addr;
+	in_addr	add_mask = mask;
+	in_addr	add_next;
+
+	if( !route_list.get( add_iface, add_addr, add_mask, add_next ) )
+		return true;
+
+	//
+	// delete the restore the route for the destination
+	//
+
+	return add( add_iface, add_local, add_addr, add_mask, add_next );
 }
 
 // flush arp table
@@ -726,5 +940,3 @@ bool _IPROUTE::flusharp( in_addr & iface )
 {
 	return true;
 }
-
-#endif
