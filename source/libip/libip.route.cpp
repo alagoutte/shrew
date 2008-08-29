@@ -473,6 +473,96 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	return rtmsg_result( &rtmsg, &addr, &next, &mask, &iface );
 }
 
+//
+// BSD unix systems don't support multiple routes
+// to the same destination network. We go for the
+// lowest common denominator. Cache the existing
+// route information and delete the existing route
+// on increment. Retrieve and restore the previous
+// route on decrement. 
+//
+
+// decrement route costs
+
+bool _IPROUTE::increment( in_addr addr, in_addr mask )
+{
+	//
+	// locate the most specific route for the destination
+	//
+
+	in_addr	del_iface;
+	bool	del_local;
+	in_addr	del_addr;
+	in_addr	del_mask;
+	in_addr	del_next;
+
+	char txt_iface[ 24 ];
+	char txt_addr[ 24 ];
+	char txt_mask[ 24 ];
+	char txt_next[ 24 ];
+	strcpy( txt_addr, inet_ntoa( addr ));
+	strcpy( txt_mask, inet_ntoa( mask ));
+
+	printf( "XX : locating route for %s/%s\n", txt_addr, txt_mask );
+
+	if( !get( del_iface, del_local, del_addr, del_mask, del_next ) )
+		return true;
+
+	strcpy( txt_addr, inet_ntoa( del_addr ));
+	strcpy( txt_mask, inet_ntoa( del_mask ));
+	strcpy( txt_next, inet_ntoa( del_next ));
+	strcpy( txt_iface, inet_ntoa( del_iface ));
+
+	printf( "XX : route = %s/%s gw %s iface %s\n",
+		txt_addr, txt_mask, txt_next, txt_iface );
+
+	//
+	// does this route match the destination exactly
+	//
+
+	if( del_addr.s_addr != addr.s_addr )
+		return true;
+
+	if( del_mask.s_addr != mask.s_addr )
+		return true;
+
+	//
+	// add a route entry to our route list
+	//
+
+	route_list.add( del_iface, del_addr, del_mask, del_next );
+
+	//
+	// delete the existing route
+	//
+
+	return del( del_iface, del_local, del_addr, del_mask, del_next );
+}
+
+// decrement route costs
+
+bool _IPROUTE::decrement( in_addr addr, in_addr mask )
+{
+	//
+	// locate the cached route info for the destination
+	//
+
+	in_addr add_iface;
+	bool	add_local;
+	in_addr	add_addr = addr;
+	in_addr	add_mask = mask;
+	in_addr	add_next;
+
+	if( !route_list.get( add_iface, add_addr, add_mask, add_next ) )
+		return true;
+
+	//
+	// delete the restore the route for the destination
+	//
+
+	return add( add_iface, add_local, add_addr, add_mask, add_next );
+}
+
 #else
 
 //==============================================================================
@@ -773,11 +863,14 @@ bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mas
 	NLMSG nlmsg;
 	memset( &nlmsg, 0, sizeof( nlmsg ) );
 
-	nlmsg.hdr.nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP;
+	nlmsg.hdr.nlmsg_flags = NLM_F_REQUEST | NLM_F_MATCH;
 	nlmsg.hdr.nlmsg_type = RTM_GETROUTE;
 
 	nlmsg.msg.rtm_family = AF_INET;
 	nlmsg.msg.rtm_table = RT_TABLE_MAIN;
+	nlmsg.msg.rtm_protocol = RTPROT_STATIC;
+	nlmsg.msg.rtm_scope = RT_SCOPE_UNIVERSE;
+	nlmsg.msg.rtm_type = RTN_UNICAST;
 
 	// add route destination
 
@@ -791,7 +884,7 @@ bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mas
 
 	// set route network mask
 
-	nlmsg.msg.rtm_dst_len = mask_to_prefix( mask );
+	nlmsg.msg.rtm_dst_len = 32; //mask_to_prefix( mask );
 
 	// set final message length
 
@@ -818,11 +911,14 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	NLMSG nlmsg;
 	memset( &nlmsg, 0, sizeof( nlmsg ) );
 
-	nlmsg.hdr.nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP;
+	nlmsg.hdr.nlmsg_flags = NLM_F_REQUEST | NLM_F_MATCH;
 	nlmsg.hdr.nlmsg_type = RTM_GETROUTE;
 
 	nlmsg.msg.rtm_family = AF_INET;
 	nlmsg.msg.rtm_table = RT_TABLE_MAIN;
+	nlmsg.msg.rtm_protocol = RTPROT_STATIC;
+	nlmsg.msg.rtm_scope = RT_SCOPE_UNIVERSE;
+	nlmsg.msg.rtm_type = RTN_UNICAST;
 
 	// add route destination
 
@@ -854,85 +950,29 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	return ( r >= 0 );
 }
 
-#endif
-
-//==============================================================================
-// Shared unix route functions
-//==============================================================================
 //
-
-//
-// Most unix systems don't support multiple routes
-// to the same destination network. We go for the
-// lowest common denominator. Cache the existing
-// route information and delete the existing route
-// on increment. Retrieve and restore the previous
-// route on decrement. 
+// Linux systems appear to give priority to newer
+// routes so this is a no-op for now.
 //
 
 // decrement route costs
 
 bool _IPROUTE::increment( in_addr addr, in_addr mask )
 {
-	//
-	// locate the most specific route for the destination
-	//
-
-	in_addr	del_iface;
-	bool	del_local;
-	in_addr	del_addr;
-	in_addr	del_mask;
-	in_addr	del_next;
-
-	if( !get( del_iface, del_local, del_addr, del_mask, del_next ) )
-		return true;
-
-	//
-	// does this route match the destination exactly
-	//
-
-	if( del_addr.s_addr != addr.s_addr )
-		return true;
-
-	if( del_mask.s_addr != mask.s_addr )
-		return true;
-
-	//
-	// add a route entry to our route list
-	//
-
-	route_list.add( del_iface, del_addr, del_mask, del_next );
-
-	//
-	// delete the existing route
-	//
-
-	return del( del_iface, del_local, del_addr, del_mask, del_next );
 }
 
 // decrement route costs
 
 bool _IPROUTE::decrement( in_addr addr, in_addr mask )
 {
-	//
-	// locate the cached route info for the destination
-	//
-
-	in_addr add_iface;
-	bool	add_local;
-	in_addr	add_addr = addr;
-	in_addr	add_mask = mask;
-	in_addr	add_next;
-
-	if( !route_list.get( add_iface, add_addr, add_mask, add_next ) )
-		return true;
-
-	//
-	// delete the restore the route for the destination
-	//
-
-	return add( add_iface, add_local, add_addr, add_mask, add_next );
 }
+
+#endif
+
+//==============================================================================
+// Shared unix route functions
+//==============================================================================
+//
 
 // flush arp table
 
