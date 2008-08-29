@@ -503,18 +503,8 @@ bool _IPROUTE::increment( in_addr addr, in_addr mask )
 	strcpy( txt_addr, inet_ntoa( addr ));
 	strcpy( txt_mask, inet_ntoa( mask ));
 
-	printf( "XX : locating route for %s/%s\n", txt_addr, txt_mask );
-
 	if( !get( del_iface, del_local, del_addr, del_mask, del_next ) )
 		return true;
-
-	strcpy( txt_addr, inet_ntoa( del_addr ));
-	strcpy( txt_mask, inet_ntoa( del_mask ));
-	strcpy( txt_next, inet_ntoa( del_next ));
-	strcpy( txt_iface, inet_ntoa( del_iface ));
-
-	printf( "XX : route = %s/%s gw %s iface %s\n",
-		txt_addr, txt_mask, txt_next, txt_iface );
 
 	//
 	// does this route match the destination exactly
