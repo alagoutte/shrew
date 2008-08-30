@@ -938,7 +938,7 @@ long _ITH_IPCC::io_send( void * data, size_t size, size_t & sent )
 	return result;
 }
 
-long _ITH_IPCC::attach( char * path, long timeout )
+long _ITH_IPCC::attach( const char * path, long timeout )
 {
 	if( !WaitNamedPipe( path, timeout ) )
 		return IPCERR_FAILED;
@@ -1014,7 +1014,7 @@ _ITH_IPCS::~_ITH_IPCS()
 	}
 }
 
-long _ITH_IPCS::init( char * path, bool admin )
+long _ITH_IPCS::init( const char * path, bool admin )
 {
 	// when creating a named pipe with explicit access,
 	// you must specify FILE_CREATE_PIPE_INSTANCE for
@@ -1139,7 +1139,7 @@ void _ITH_IPCS::done()
 	conn = INVALID_HANDLE_VALUE;
 }
 
-long _ITH_IPCS::inbound( char * path, IPCCONN & ipcconn )
+long _ITH_IPCS::inbound( const char * path, IPCCONN & ipcconn )
 {
 	DWORD	dwundef;
 	long	result;
