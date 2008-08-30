@@ -900,28 +900,32 @@ void _IKEC::run()
 
 	// client id data
 
-	config.get_string( "ident-client-data", btext, 0 );
-	msg.set_cfgstr( CFGSTR_CRED_LID, &btext );
-	result = ikei.send_message( msg, &msgres );
-
-	if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
+	if( config.get_string( "ident-client-data", btext, 0 ) )
 	{
-		log( STATUS_FAIL, "local id config failed\n" );
-		goto config_failed;
+		msg.set_cfgstr( CFGSTR_CRED_LID, &btext );
+		result = ikei.send_message( msg, &msgres );
+
+		if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
+		{
+			log( STATUS_FAIL, "local id config failed\n" );
+			goto config_failed;
+		}
 	}
 
 	log( STATUS_INFO, "local id configured\n" );
 
 	// server id data
 
-	config.get_string( "ident-server-data", btext, 0 );
-	msg.set_cfgstr( CFGSTR_CRED_RID, &btext );
-	result = ikei.send_message( msg, &msgres );
-
-	if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
+	if( config.get_string( "ident-server-data", btext, 0 ) )
 	{
-		log( STATUS_FAIL, "remote id config failed\n" );
-		goto config_failed;
+		msg.set_cfgstr( CFGSTR_CRED_RID, &btext );
+		result = ikei.send_message( msg, &msgres );
+
+		if( ( result != IPCERR_OK ) || ( msgres != IKEI_RESULT_OK ) )
+		{
+			log( STATUS_FAIL, "remote id config failed\n" );
+			goto config_failed;
+		}
 	}
 
 	log( STATUS_INFO, "remote id configured\n" );
