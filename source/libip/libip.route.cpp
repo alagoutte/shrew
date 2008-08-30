@@ -54,43 +54,37 @@ _IPROUTE_LIST::~_IPROUTE_LIST()
 	clean();
 }
 
-bool _IPROUTE_LIST::add( in_addr & iface, in_addr & addr, in_addr & mask, in_addr & next )
+bool _IPROUTE_LIST::add( IPROUTE_ENTRY & route )
 {
-	IPROUTE_ENTRY * route = new IPROUTE_ENTRY;
-	if( route == NULL )
+	IPROUTE_ENTRY * tmp_route = new IPROUTE_ENTRY;
+	if( tmp_route == NULL )
 		return false;
 
-	route->iface = iface;
-	route->addr = addr;
-	route->mask = mask;
-	route->next = next;
+	*tmp_route = route;
 
-	add_entry( route );
+	add_entry( tmp_route );
 
     return true;
 }
 
-bool _IPROUTE_LIST::get( in_addr & iface, in_addr & addr, in_addr & mask, in_addr & next )
+bool _IPROUTE_LIST::get( IPROUTE_ENTRY & route )
 {
 	long index = 0;
 	for( ; index < count(); index++ )
 	{
-		IPROUTE_ENTRY * route = static_cast<IPROUTE_ENTRY*>( get_entry( index ) );
-		assert( route != NULL );
+		IPROUTE_ENTRY * tmp_route = static_cast<IPROUTE_ENTRY*>( get_entry( index ) );
+		assert( tmp_route != NULL );
 
-		if( route->addr.s_addr != addr.s_addr )
+		if( tmp_route->addr.s_addr != route.addr.s_addr )
 			continue;
 
-		if( route->mask.s_addr != mask.s_addr )
+		if( tmp_route->mask.s_addr != route.mask.s_addr )
 			continue;
 
-		iface = route->iface;
-		addr = route->addr;
-		mask = route->mask;
-		next = route->next;
+		route = *tmp_route;
 
-		del_entry( route );
-		delete route;
+		del_entry( tmp_route );
+		delete tmp_route;
 
 		return true;
 	}
@@ -140,7 +134,7 @@ typedef struct _RTMSG
 // BSD route message result function
 //
 
-bool rtmsg_result( RTMSG * rtmsg, in_addr * dst, in_addr * gwy, in_addr * msk, in_addr * ifa )
+bool rtmsg_result( RTMSG * rtmsg, IPROUTE_ENTRY * route )
 {
 	char *	cp = rtmsg->msg;
 
@@ -153,26 +147,22 @@ bool rtmsg_result( RTMSG * rtmsg, in_addr * dst, in_addr * gwy, in_addr * msk, i
 			switch( i )
 			{
 				case RTA_DST:
-					if( dst != NULL )
-						*dst = ( ( sockaddr_in * ) cp )->sin_addr;
+					route->addr = ( ( sockaddr_in * ) cp )->sin_addr;
 					break;
 
 				case RTA_GATEWAY:
-					if( gwy != NULL )
-						*gwy = ( ( sockaddr_in * ) cp )->sin_addr;
+					route->next = ( ( sockaddr_in * ) cp )->sin_addr;
 					break;
 
 				case RTA_NETMASK:
-					if( msk != NULL )
-						*msk = ( ( sockaddr_in * ) cp )->sin_addr;
+					route->mask = ( ( sockaddr_in * ) cp )->sin_addr;
 					break;
 
 				case RTA_IFP:
 					break;
 
 				case RTA_IFA:
-					if( ifa != NULL )
-						*ifa = ( ( sockaddr_in * ) cp )->sin_addr;
+					route->iface = ( ( sockaddr_in * ) cp )->sin_addr;
 					break;
 			}
 
@@ -194,7 +184,7 @@ _IPROUTE::_IPROUTE()
 
 // add a route
 
-bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
+bool _IPROUTE::add( IPROUTE_ENTRY & route )
 {
 	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
 	if( s == -1 )
@@ -219,7 +209,7 @@ bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 	dst->sin_family = AF_INET;
 	dst->sin_len = sizeof( sockaddr_in );
-	dst->sin_addr = addr;
+	dst->sin_addr = route.addr;
 
 	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
 
@@ -229,7 +219,7 @@ bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 	gwy->sin_family = AF_INET;
 	gwy->sin_len = sizeof( sockaddr_in );
-	gwy->sin_addr = next;
+	gwy->sin_addr = route.next;
 
 	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
 
@@ -239,7 +229,7 @@ bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 	msk->sin_family = AF_INET;
 	msk->sin_len = sizeof( sockaddr_in );
-	msk->sin_addr = mask;
+	msk->sin_addr = route.mask;
 
 	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
 
@@ -260,7 +250,7 @@ bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 // delete a route 
 
-bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
+bool _IPROUTE::del( IPROUTE_ENTRY & route )
 {
 	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
 	if( s == -1 )
@@ -285,7 +275,7 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 	dst->sin_family = AF_INET;
 	dst->sin_len = sizeof( sockaddr_in );
-	dst->sin_addr = addr;
+	dst->sin_addr = route.addr;
 
 	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
 
@@ -295,7 +285,7 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 	gwy->sin_family = AF_INET;
 	gwy->sin_len = sizeof( sockaddr_in );
-	gwy->sin_addr = next;
+	gwy->sin_addr = route.next;
 
 	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
 
@@ -305,7 +295,7 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 	msk->sin_family = AF_INET;
 	msk->sin_len = sizeof( sockaddr_in );
-	msk->sin_addr = mask;
+	msk->sin_addr = route.mask;
 
 	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
 
@@ -326,7 +316,7 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 // get a route ( by addr and mask )
 
-bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
+bool _IPROUTE::get( IPROUTE_ENTRY & route )
 {
 	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
 	if( s == -1 )
@@ -349,7 +339,7 @@ bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mas
 
 	dst->sin_family = AF_INET;
 	dst->sin_len = sizeof( sockaddr_in );
-	dst->sin_addr = addr;
+	dst->sin_addr = route.addr;
 
 	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
 
@@ -359,7 +349,7 @@ bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mas
 
 	msk->sin_family = AF_INET;
 	msk->sin_len = sizeof( sockaddr_in );
-	msk->sin_addr = mask;
+	msk->sin_addr = route.mask;
 
 	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
 
@@ -396,12 +386,12 @@ bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mas
 		( rtmsg.hdr.rtm_version != RTM_VERSION ) )
 		return false;
 
-	return rtmsg_result( &rtmsg, &addr, &next, &mask, &iface );
+	return rtmsg_result( &rtmsg, &route );
 }
 
 // get best route ( by address )
 
-bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
+bool _IPROUTE::best( IPROUTE_ENTRY & route )
 {
 	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
 	if( s == -1 )
@@ -424,7 +414,7 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 
 	dst->sin_family = AF_INET;
 	dst->sin_len = sizeof( sockaddr_in );
-	dst->sin_addr = addr;
+	dst->sin_addr = route.addr;
 
 	rtmsg.hdr.rtm_msglen += sizeof( sockaddr_in );
 
@@ -470,7 +460,7 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 		( rtmsg.hdr.rtm_version != RTM_VERSION ) )
 		return false;
 
-	return rtmsg_result( &rtmsg, &addr, &next, &mask, &iface );
+	return rtmsg_result( &rtmsg, &route );
 }
 
 //
@@ -490,43 +480,53 @@ bool _IPROUTE::increment( in_addr addr, in_addr mask )
 	// locate the most specific route for the destination
 	//
 
-	in_addr	del_iface;
-	bool	del_local;
-	in_addr	del_addr;
-	in_addr	del_mask;
-	in_addr	del_next;
+	IPROUTE_ENTRY route;
+	memset( &route, 0, sizeof( route ) );
+	route.addr = addr;
+	route.mask = mask;
 
 	char txt_iface[ 24 ];
 	char txt_addr[ 24 ];
 	char txt_mask[ 24 ];
 	char txt_next[ 24 ];
-	strcpy( txt_addr, inet_ntoa( addr ));
-	strcpy( txt_mask, inet_ntoa( mask ));
+	strcpy( txt_addr, inet_ntoa( route.addr ));
+	strcpy( txt_mask, inet_ntoa( route.mask ));
 
-	if( !get( del_iface, del_local, del_addr, del_mask, del_next ) )
+	printf( "XX : locating route %s/%s\n",
+		txt_addr, txt_mask );
+
+	if( !get( route ) )
 		return true;
+
+	strcpy( txt_iface, inet_ntoa( route.iface ));
+	strcpy( txt_addr, inet_ntoa( route.addr ));
+	strcpy( txt_mask, inet_ntoa( route.mask ));
+	strcpy( txt_next, inet_ntoa( route.next ));
+
+	printf( "XX : found route %s/%s gw %s if %s\n",
+		txt_addr, txt_mask, txt_next, txt_iface );
 
 	//
 	// does this route match the destination exactly
 	//
 
-	if( del_addr.s_addr != addr.s_addr )
+	if( route.addr.s_addr != addr.s_addr )
 		return true;
 
-	if( del_mask.s_addr != mask.s_addr )
+	if( route.mask.s_addr != mask.s_addr )
 		return true;
 
 	//
 	// add a route entry to our route list
 	//
 
-	route_list.add( del_iface, del_addr, del_mask, del_next );
+	route_list.add( route );
 
 	//
 	// delete the existing route
 	//
 
-	return del( del_iface, del_local, del_addr, del_mask, del_next );
+	return del( route );
 }
 
 // decrement route costs
@@ -537,20 +537,19 @@ bool _IPROUTE::decrement( in_addr addr, in_addr mask )
 	// locate the cached route info for the destination
 	//
 
-	in_addr add_iface;
-	bool	add_local;
-	in_addr	add_addr = addr;
-	in_addr	add_mask = mask;
-	in_addr	add_next;
+	IPROUTE_ENTRY route;
+	memset( &route, 0, sizeof( route ) );
+	route.addr = addr;
+	route.mask = mask;
 
-	if( !route_list.get( add_iface, add_addr, add_mask, add_next ) )
+	if( !route_list.get( route ) )
 		return true;
 
 	//
 	// delete the restore the route for the destination
 	//
 
-	return add( add_iface, add_local, add_addr, add_mask, add_next );
+	return add( route );
 }
 
 #else

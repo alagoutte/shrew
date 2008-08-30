@@ -510,8 +510,8 @@ typedef class DLX _IPROUTE_LIST : private IDB_LIST
 	_IPROUTE_LIST();
 	virtual ~_IPROUTE_LIST();
 
-	bool	add( in_addr & iface, in_addr & addr, in_addr & mask, in_addr & next );
-	bool	get( in_addr & iface, in_addr & addr, in_addr & mask, in_addr & next );
+	bool	add( IPROUTE_ENTRY & route );
+	bool	get( IPROUTE_ENTRY & route );
 
 	long	count();
 	void	clean();
