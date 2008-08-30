@@ -491,16 +491,17 @@ typedef class DLX _IPQUEUE : private IDB_LIST
 
 }IPQUEUE;
 
-#ifndef WIN32
-
 typedef struct _IPROUTE_ENTRY : public IDB_ENTRY
 {
+	bool	local;
 	in_addr	iface;
 	in_addr	addr;
-	in_addr mask;
-	in_addr next;
+	in_addr	mask;
+	in_addr	next;
 	
 }IPROUTE_ENTRY;
+
+#ifndef WIN32
 
 typedef class DLX _IPROUTE_LIST : private IDB_LIST
 {
@@ -540,11 +541,11 @@ typedef class DLX _IPROUTE
 
 	_IPROUTE();
 
-	bool add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next );
-	bool del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next );
-	bool get( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next );
+	bool add( IPROUTE_ENTRY & route );
+	bool del( IPROUTE_ENTRY & route );
+	bool get( IPROUTE_ENTRY & route );
 
-	bool best( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next );
+	bool best( IPROUTE_ENTRY & route );
 
 	bool increment( in_addr addr, in_addr mask );
 	bool decrement( in_addr addr, in_addr mask );

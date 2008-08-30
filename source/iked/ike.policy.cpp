@@ -519,66 +519,50 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 
 	if( route && ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) )
 	{
+		IPROUTE_ENTRY & route_entry = policy->route_entry;
+
 		switch( type )
 		{
 			case IPSEC_POLICY_IPSEC:
 			{
-				in_addr addr = id2.addr1;
-				in_addr mask = id2.addr2;
+				route_entry.local = true;
+				route_entry.iface = tunnel->xconf.addr;
+				route_entry.addr = id2.addr1;
+				route_entry.mask = id2.addr2;
+				route_entry.next = tunnel->xconf.addr;
 
 				if( id2.type == ISAKMP_ID_IPV4_ADDR )
-					mask.s_addr = 0xffffffff;
+					route_entry.mask.s_addr = 0xffffffff;
 
 				iproute.increment(
-					addr,
-					mask );
+					route_entry.addr,
+					route_entry.mask );
 
-				policy->route = iproute.add(
-									tunnel->xconf.addr,
-									true,
-									addr,
-									mask,
-									tunnel->xconf.addr );
+				policy->route_added = iproute.add( route_entry );
 
 				break;
 			}
 
 			case IPSEC_POLICY_NONE:
 			{
-				in_addr	cur_iaddr;
-				bool	cur_local;
-				in_addr	cur_addr = id2.addr1;
-				in_addr	cur_mask;
-				in_addr	cur_next;
+				route_entry.addr = id2.addr1;
 
-				policy->route = iproute.best(
-									cur_iaddr,
-									cur_local,
-									cur_addr,
-									cur_mask,
-									cur_next );
-
-				if( policy->route )
+				if( iproute.best( route_entry ) )
 				{
-					in_addr addr = id2.addr1;
-					in_addr mask = id2.addr2;
+					route_entry.addr = id2.addr1;
+					route_entry.mask = id2.addr2;
 
 					if( id2.type == ISAKMP_ID_IPV4_ADDR )
-						mask.s_addr = 0xffffffff;
+						route_entry.mask.s_addr = 0xffffffff;
 
-					policy->route = iproute.add(
-										cur_iaddr,
-										cur_local,
-										addr,
-										mask,
-										cur_next );
+					policy->route_added = iproute.add( route_entry );
 				}
 
 				break;
 			}
 		}
 
-		if( policy->route )
+		if( policy->route_added )
 		{
 			log.txt( LLOG_INFO,
 				"ii : created %s policy route for %s\n",
@@ -613,7 +597,9 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 
 	IDB_POLICY * policy;
 
-	bool policy_route = false;
+	bool route_added = false;
+	bool route_deleted = false;
+	IPROUTE_ENTRY route_entry;
 
 	IKE_SADDR * src;
 	IKE_SADDR * dst;
@@ -683,7 +669,8 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 			&id1,
 			&id2 ) )
 	{
-		policy_route = policy->route;
+		route_added = policy->route_added;
+		route_entry = policy->route_entry;
 
 		text_ph2id( txtid_src, &id1 );
 		text_ph2id( txtid_dst, &id2 );
@@ -706,74 +693,30 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	// remove client policy route
 	//
 
-	if( route && policy_route && ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) )
+	if( route && route_added && ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) )
 	{
-		bool removed = false;
-
 		switch( type )
 		{
 			case IPSEC_POLICY_IPSEC:
 			{
-				in_addr addr = id2.addr1;
-				in_addr mask = id2.addr2;
-
-				if( id2.type == ISAKMP_ID_IPV4_ADDR )
-					mask.s_addr = 0xffffffff;
-
-				removed = iproute.del(
-							tunnel->xconf.addr,
-							true,
-							addr,
-							mask,
-							tunnel->xconf.addr );
+				route_deleted = iproute.del( route_entry );
 
 				iproute.decrement(
-					addr,
-					mask );
+					route_entry.addr,
+					route_entry.mask );
 
 				break;
 			}
 
 			case IPSEC_POLICY_NONE:
 			{
-				in_addr	cur_iaddr;
-				bool	cur_local;
-				in_addr	cur_addr = id2.addr1;
-				in_addr	cur_mask;
-				in_addr	cur_next;
-
-				removed = iproute.best(
-							cur_iaddr,
-							cur_local,
-							cur_addr,
-							cur_mask,
-							cur_next );
-
-				if( removed )
-				{
-					in_addr addr = id2.addr1;
-					in_addr mask = id2.addr2;
-
-					if( id2.type == ISAKMP_ID_IPV4_ADDR )
-						mask.s_addr = 0xffffffff;
-
-					if( ( cur_addr.s_addr == addr.s_addr ) &&
-						( cur_mask.s_addr == mask.s_addr ) )
-					{
-						removed = iproute.del(
-									cur_iaddr,
-									cur_local,
-									addr,
-									mask,
-									cur_next );
-					}
-				}
+				route_deleted = iproute.del( route_entry );
 
 				break;
 			}
 		}
 
-		if( removed )
+		if( route_deleted )
 		{
 			text_ph2id( txtid_dst, &id2 );
 

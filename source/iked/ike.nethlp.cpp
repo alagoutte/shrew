@@ -439,20 +439,11 @@ bool _IKED::find_addr_l( IKE_SADDR & saddr_r, IKE_SADDR & saddr_l, unsigned shor
 	// reach the remote host address
 	//
 
-	bool	local;
-	in_addr	addr = saddr_r.saddr4.sin_addr;
-	in_addr	mask;
-	in_addr	next;
+	IPROUTE_ENTRY entry;
+	memset( &entry, 0, sizeof( entry ) );
+	entry.addr = saddr_r.saddr4.sin_addr;
 
-	bool found = iproute.best(
-					saddr_l.saddr4.sin_addr,
-					local,
-					addr,
-					mask,
-					next );
-
-	saddr_l.saddr4.sin_family = AF_INET;
-	saddr_l.saddr4.sin_port	= htons( lport );
+	bool found = iproute.best( entry );
 
 	//
 	// log the result
@@ -460,6 +451,10 @@ bool _IKED::find_addr_l( IKE_SADDR & saddr_r, IKE_SADDR & saddr_l, unsigned shor
 
 	if( found )
 	{
+		saddr_l.saddr4.sin_family = AF_INET;
+		saddr_l.saddr4.sin_port	= htons( lport );
+		saddr_l.saddr4.sin_addr = entry.iface;
+
 		char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 		text_addr( txtaddr, &saddr_l, true );
 
