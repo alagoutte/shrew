@@ -41,6 +41,33 @@
 
 #include "libip.h"
 
+void text_route( IPROUTE_ENTRY & route, char * text, bool dstonly = false )
+{
+	char txt_iface[ 24 ];
+	char txt_addr[ 24 ];
+	char txt_mask[ 24 ];
+	char txt_next[ 24 ];
+
+	if( dstonly )
+	{
+		strcpy( txt_addr, inet_ntoa( route.addr ));
+		strcpy( txt_mask, inet_ntoa( route.mask ));
+
+		sprintf( text, "%s/%s",
+			txt_addr, txt_mask );
+	}
+	else
+	{
+		strcpy( txt_iface, inet_ntoa( route.iface ));
+		strcpy( txt_addr, inet_ntoa( route.addr ));
+		strcpy( txt_mask, inet_ntoa( route.mask ));
+		strcpy( txt_next, inet_ntoa( route.next ));
+
+		sprintf( text, "%s/%s gw %s if %s",
+			txt_addr, txt_mask, txt_next, txt_iface );
+	}
+}
+
 //==============================================================================
 // Route list class
 //==============================================================================
@@ -472,7 +499,7 @@ bool _IPROUTE::best( IPROUTE_ENTRY & route )
 // route on decrement. 
 //
 
-// decrement route costs
+// increment route costs
 
 bool _IPROUTE::increment( in_addr addr, in_addr mask )
 {
@@ -485,26 +512,8 @@ bool _IPROUTE::increment( in_addr addr, in_addr mask )
 	route.addr = addr;
 	route.mask = mask;
 
-	char txt_iface[ 24 ];
-	char txt_addr[ 24 ];
-	char txt_mask[ 24 ];
-	char txt_next[ 24 ];
-	strcpy( txt_addr, inet_ntoa( route.addr ));
-	strcpy( txt_mask, inet_ntoa( route.mask ));
-
-	printf( "XX : locating route %s/%s\n",
-		txt_addr, txt_mask );
-
 	if( !get( route ) )
 		return true;
-
-	strcpy( txt_iface, inet_ntoa( route.iface ));
-	strcpy( txt_addr, inet_ntoa( route.addr ));
-	strcpy( txt_mask, inet_ntoa( route.mask ));
-	strcpy( txt_next, inet_ntoa( route.next ));
-
-	printf( "XX : found route %s/%s gw %s if %s\n",
-		txt_addr, txt_mask, txt_next, txt_iface );
 
 	//
 	// does this route match the destination exactly
@@ -564,9 +573,9 @@ bool _IPROUTE::decrement( in_addr addr, in_addr mask )
 
 typedef struct _NLMSG
 {
-    struct nlmsghdr	hdr;
-    struct rtmsg	msg;
-    char		buff[ 1024 ];
+	struct nlmsghdr hdr;
+	struct rtmsg msg;
+	char buff[ 1024 ];
 
 }NLMSG;
 
@@ -606,7 +615,7 @@ unsigned int prefix_to_mask( int plen )
 	for( int i = 0; i < plen; i++ )
 	{
 		mask >>= 1;
-                mask |= 0x80000000;
+		mask |= 0x80000000;
 	}
 
 	return htonl( mask );
@@ -638,102 +647,126 @@ int rtmsg_send( NLMSG * nlmsg )
 	return s;
 }
 
-int rtmsg_recv( int s, in_addr * dst, in_addr * gwy, in_addr * msk, in_addr * ifa )
+int rtmsg_recv( int s, IPROUTE_ENTRY & route )
 {
-	char	buf[ sizeof( NLMSG ) ];
-	memset( buf, 0, sizeof( buf ) );
+	char	buff[ sizeof( NLMSG ) ];
+	memset( &buff, 0, sizeof( NLMSG ) );
 
-	char *	p = buf;
-	int	nll = 0;
-	int	rtl = 0;
+	int rslt = recv( s, buff, sizeof( NLMSG ), 0 );
+	if( rslt <= 0 )
+		return -1;
 
-	struct nlmsghdr * nlp;
-	struct rtmsg * rtp;
-	struct rtattr * rtap;
+	struct nlmsghdr * nlmsg = ( struct nlmsghdr * ) buff;
+	int nllen = rslt;
 
-	int	rtn;
+	int rtrn = -1;
 
-	while( true )
+	while( NLMSG_OK( nlmsg, nllen ) )
 	{
-		rtn = recv( s, p, sizeof( buf ) - nll, 0 );
-		if( !rtn )
-			break;
+		// printf( "XX : netlink msg type = %i\n", nlmsg->nlmsg_type );
 
-		nlp = ( struct nlmsghdr * ) p;
-
-		if( nlp->nlmsg_type == NLMSG_ERROR )
-			return -1;
-
-		if( nlp->nlmsg_type == NLMSG_DONE )
-			break;
-
-		// increment the buffer pointer to place
-		// next message
-		p += rtn;
-
-		// increment the total size by the size of
-		// the last received message
-		nll += rtn;
-
-		printf( "XX : RTMSG %d RECEIVED ( %d BYTES )\n", nlp->nlmsg_type, rtn );
-	}
-
-	nlp = ( struct nlmsghdr * ) buf;
-
-	for( ; NLMSG_OK( nlp, nll ); nlp = NLMSG_NEXT( nlp, nll ) )
-	{
-		rtp = ( struct rtmsg * ) NLMSG_DATA( nlp );
-
-		if( rtp->rtm_table != RT_TABLE_MAIN )
-			continue;
-
-		rtap = ( struct rtattr * ) RTM_RTA( rtp );
-		rtl = RTM_PAYLOAD( nlp );
-
-		for( ; RTA_OK( rtap, rtl) ; rtap = RTA_NEXT( rtap, rtl ) )
+		if( nlmsg->nlmsg_type == RTM_NEWROUTE )
 		{
-			switch( rtap->rta_type )
+			// printf( "XX : netlink msg type = NLMSG_NEWROUTE\n" );
+
+			struct rtmsg * rtmsg = ( struct rtmsg * ) NLMSG_DATA( nlmsg );
+			int rtlen = RTM_PAYLOAD( nlmsg );
+
+			struct rtattr * rta = ( struct rtattr * ) RTM_RTA( rtmsg );
+
+			while( RTA_OK( rta, rtlen ) )
 			{
-				case RTA_DST:
+				switch( rta->rta_type )
 				{
-					memcpy( dst, RTA_DATA( rtap ), sizeof( *dst ) );
-					msk->s_addr = prefix_to_mask( rtp->rtm_dst_len );
-					break;
+					case RTA_DST:
+						// printf( "XX : netlink attribute = RTA_DST\n" );
+						memcpy( &route.addr, RTA_DATA( rta ), sizeof( route.addr ) );
+						route.mask.s_addr = prefix_to_mask( rtmsg->rtm_dst_len );
+						break;
+
+					case RTA_GATEWAY:
+						// printf( "XX : netlink attribute = RTA_GATEWAY\n" );
+						memcpy( &route.next, RTA_DATA( rta ), sizeof( route.next ) );
+						break;
+
+					case RTA_OIF:
+					{
+						// printf( "XX : netlink attribute = RTA_OIF\n" );
+
+						struct ifreq ifr;
+						int r = socket( PF_PACKET, SOCK_RAW, 0 );
+						if( r > 0 )
+						{
+							ifr.ifr_ifindex = *( ( int * ) RTA_DATA( rta ) );
+							ioctl( r, SIOCGIFNAME, &ifr );
+
+							ifr.ifr_addr.sa_family = AF_INET;
+							ioctl( r, SIOCGIFADDR, &ifr );
+
+							route.iface = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
+							close( r );
+						}
+						break;
+					}
+
+					case RTA_PREFSRC:
+						// printf( "XX : netlink attribute = RTA_PREFSRC\n" );
+						break;
+
+					case RTA_METRICS:
+						// printf( "XX : netlink attribute = RTA_METRICS\n" );
+						break;
+
+					case RTA_TABLE:
+						// printf( "XX : netlink attribute = RTA_TABLE\n" );
+						break;
+
+					case RTA_CACHEINFO:
+						// printf( "XX : netlink attribute = RTA_CACHEINFO\n" );
+						break;
+
+					default:
+						// printf( "XX : unhandled route attribute %i\n", rta->rta_type );
+						break;
 				}
 
-				case RTA_GATEWAY:
-					memcpy( gwy, RTA_DATA( rtap ), sizeof( *gwy ) );
-					break;
-
-				case RTA_OIF:
-				{
-					struct ifreq ifr;
-
-					int sock = socket( PF_PACKET, SOCK_RAW, 0 );
-
-					ifr.ifr_ifindex = *( ( int * ) RTA_DATA( rtap ) );
-					ioctl( sock, SIOCGIFNAME, &ifr );
-
-					ifr.ifr_addr.sa_family = AF_INET;
-					ioctl( sock, SIOCGIFADDR, &ifr );
-
-					memcpy( ifa, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, sizeof( *ifa ) );
-
-					close( sock );
-				}
-
-				default:
-					break;
+				rta = RTA_NEXT( rta, rtlen );
 			}
+
+			rtrn = 0;
 		}
+
+		if( nlmsg->nlmsg_type == RTM_DELROUTE )
+		{
+			// printf( "XX : netlink msg type = NLMSG_DELROUTE\n" );
+		}
+
+		if( nlmsg->nlmsg_type == RTM_GETROUTE )
+		{
+			// printf( "XX : netlink msg type = NLMSG_GETROUTE\n" );
+		}
+
+		if( nlmsg->nlmsg_type == NLMSG_ERROR )
+		{
+			// printf( "XX : netlink msg type = NLMSG_ERROR\n" );
+			break;
+		}
+
+		if( nlmsg->nlmsg_type == NLMSG_DONE )
+		{
+			// printf( "XX : netlink msg type = NLMSG_DONE\n" );
+			break;
+		}
+
+		nlmsg = NLMSG_NEXT( nlmsg, nllen );
 	}
 
-	return 0;
+	return rtrn;
 }
 
 // add a route
 
-bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
+bool _IPROUTE::add( IPROUTE_ENTRY & route )
 {
 	// set route message header
 
@@ -752,26 +785,30 @@ bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 	// add route destination
 
 	struct rtattr * rta = ( struct rtattr * ) nlmsg.buff;
-
 	rta->rta_type = RTA_DST;
-	rta->rta_len = sizeof( struct rtattr ) + sizeof( addr );
-	memcpy( ( ( char * ) rta ) + sizeof( struct rtattr ), &addr, sizeof( addr ) );
+	rta->rta_len = sizeof( struct rtattr );
+
+	struct in_addr * dst = ( in_addr * )( ( ( char * ) rta ) +  sizeof( struct rtattr ) );
+	*dst = route.addr;
+	rta->rta_len += sizeof( route.addr );
 
 	nlmsg.hdr.nlmsg_len += rta->rta_len;
 
 	// add route gateway
 
 	rta = ( struct rtattr * )( nlmsg.buff + nlmsg.hdr.nlmsg_len );
-
 	rta->rta_type = RTA_GATEWAY;
-	rta->rta_len = sizeof( struct rtattr ) + sizeof( next );
-	memcpy( ( ( char * ) rta ) + sizeof( struct rtattr ), &next, sizeof( next ) );
+	rta->rta_len = sizeof( struct rtattr );
+
+	struct in_addr * gwy = ( in_addr * )( ( ( char * ) rta ) +  sizeof( struct rtattr ) );
+	*gwy = route.next;
+	rta->rta_len += sizeof( route.next );
 
 	nlmsg.hdr.nlmsg_len += rta->rta_len;
 
 	// set route network mask
 
-	nlmsg.msg.rtm_dst_len = mask_to_prefix( mask );
+	nlmsg.msg.rtm_dst_len = mask_to_prefix( route.mask );
 
 	// set final message length
 
@@ -789,7 +826,7 @@ bool _IPROUTE::add( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 // delete a route
 
-bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_addr next )
+bool _IPROUTE::del( IPROUTE_ENTRY & route )
 {
 	// set route message header
 
@@ -808,26 +845,30 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 	// add route destination
 
 	struct rtattr * rta = ( struct rtattr * ) nlmsg.buff;
-
 	rta->rta_type = RTA_DST;
-	rta->rta_len = sizeof( struct rtattr ) + sizeof( addr );
-	memcpy( ( ( char * ) rta ) + sizeof( struct rtattr ), &addr, sizeof( addr ) );
+	rta->rta_len = sizeof( struct rtattr );
+
+	struct in_addr * dst = ( in_addr * )( ( ( char * ) rta ) +  sizeof( struct rtattr ) );
+	*dst = route.addr;
+	rta->rta_len += sizeof( route.addr );
 
 	nlmsg.hdr.nlmsg_len += rta->rta_len;
 
 	// add route gateway
 
 	rta = ( struct rtattr * )( nlmsg.buff + nlmsg.hdr.nlmsg_len );
-
 	rta->rta_type = RTA_GATEWAY;
-	rta->rta_len = sizeof( struct rtattr ) + sizeof( next );
-	memcpy( ( ( char * ) rta ) + sizeof( struct rtattr ), &next, sizeof( next ) );
+	rta->rta_len = sizeof( struct rtattr );
+
+	struct in_addr * gwy = ( in_addr * )( ( ( char * ) rta ) +  sizeof( struct rtattr ) );
+	*gwy = route.next;
+	rta->rta_len += sizeof( route.next );
 
 	nlmsg.hdr.nlmsg_len += rta->rta_len;
 
 	// set route network mask
 
-	nlmsg.msg.rtm_dst_len = mask_to_prefix( mask );
+	nlmsg.msg.rtm_dst_len = mask_to_prefix( route.mask );
 
 	// set final message length
 
@@ -845,14 +886,14 @@ bool _IPROUTE::del( in_addr & iface, bool local, in_addr addr, in_addr mask, in_
 
 // get a route ( by addr and mask )
 
-bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
+bool _IPROUTE::get( IPROUTE_ENTRY & route )
 {
 	// set route message header
 
 	NLMSG nlmsg;
 	memset( &nlmsg, 0, sizeof( nlmsg ) );
 
-	nlmsg.hdr.nlmsg_flags = NLM_F_REQUEST | NLM_F_MATCH;
+	nlmsg.hdr.nlmsg_flags = NLM_F_REQUEST;
 	nlmsg.hdr.nlmsg_type = RTM_GETROUTE;
 
 	nlmsg.msg.rtm_family = AF_INET;
@@ -864,16 +905,18 @@ bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mas
 	// add route destination
 
 	struct rtattr * rta = ( struct rtattr * ) nlmsg.buff;
-
 	rta->rta_type = RTA_DST;
-	rta->rta_len = sizeof( struct rtattr ) + sizeof( addr );
-	memcpy( ( ( char * ) rta ) + sizeof( struct rtattr ), &addr, sizeof( addr ) );
+	rta->rta_len = sizeof( struct rtattr );
+
+	struct in_addr * dst = ( in_addr * )( ( ( char * ) rta ) +  sizeof( struct rtattr ) );
+	*dst = route.addr;
+	rta->rta_len += sizeof( route.addr );
 
 	nlmsg.hdr.nlmsg_len += rta->rta_len;
 
 	// set route network mask
 
-	nlmsg.msg.rtm_dst_len = 32; //mask_to_prefix( mask );
+	nlmsg.msg.rtm_dst_len = mask_to_prefix( route.mask );
 
 	// set final message length
 
@@ -884,7 +927,7 @@ bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mas
 	if( s < 0 )
 		return false;
 
-	int r = rtmsg_recv( s, &addr, &next, &mask, &iface );
+	int r = rtmsg_recv( s, route );
 
 	close( s );
 
@@ -893,29 +936,31 @@ bool _IPROUTE::get( in_addr & iface, bool & local, in_addr & addr, in_addr & mas
 
 // get best route ( by address )
 
-bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & mask, in_addr & next )
+bool _IPROUTE::best( IPROUTE_ENTRY & route )
 {
 	// set route message header
 
 	NLMSG nlmsg;
 	memset( &nlmsg, 0, sizeof( nlmsg ) );
 
-	nlmsg.hdr.nlmsg_flags = NLM_F_REQUEST | NLM_F_MATCH;
+	nlmsg.hdr.nlmsg_flags = NLM_F_REQUEST;
 	nlmsg.hdr.nlmsg_type = RTM_GETROUTE;
 
 	nlmsg.msg.rtm_family = AF_INET;
-	nlmsg.msg.rtm_table = RT_TABLE_MAIN;
-	nlmsg.msg.rtm_protocol = RTPROT_STATIC;
+	nlmsg.msg.rtm_table = RT_TABLE_UNSPEC;
+	nlmsg.msg.rtm_protocol = RTPROT_UNSPEC;
 	nlmsg.msg.rtm_scope = RT_SCOPE_UNIVERSE;
-	nlmsg.msg.rtm_type = RTN_UNICAST;
+	nlmsg.msg.rtm_type = RTN_UNSPEC;
 
 	// add route destination
 
 	struct rtattr * rta = ( struct rtattr * ) nlmsg.buff;
-
 	rta->rta_type = RTA_DST;
-	rta->rta_len = sizeof( struct rtattr ) + sizeof( addr );
-	memcpy( ( ( char * ) rta ) + sizeof( struct rtattr ), &addr, sizeof( addr ) );
+	rta->rta_len = sizeof( struct rtattr );
+
+	struct in_addr * dst = ( in_addr * )( ( ( char * ) rta ) +  sizeof( struct rtattr ) );
+	*dst = route.addr;
+	rta->rta_len += sizeof( route.addr );
 
 	nlmsg.hdr.nlmsg_len += rta->rta_len;
 
@@ -932,7 +977,7 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 	if( s < 0 )
 		return false;
 
-	int r = rtmsg_recv( s, &addr, &next, &mask, &iface );
+	int r = rtmsg_recv( s, route );
 
 	close( s );
 
@@ -948,12 +993,14 @@ bool _IPROUTE::best( in_addr & iface, bool & local, in_addr & addr, in_addr & ma
 
 bool _IPROUTE::increment( in_addr addr, in_addr mask )
 {
+	return true;
 }
 
 // decrement route costs
 
 bool _IPROUTE::decrement( in_addr addr, in_addr mask )
 {
+	return true;
 }
 
 #endif
