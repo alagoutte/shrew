@@ -158,16 +158,62 @@ typedef struct _RTMSG
 }RTMSG;
 
 //
-// BSD route message result function
+// BSD route message send request function
 //
 
-bool rtmsg_result( RTMSG * rtmsg, IPROUTE_ENTRY * route )
+int rtmsg_send( RTMSG * rtmsg )
 {
-	char *	cp = rtmsg->msg;
+	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
+	if( s < 0 )
+		return -1;
+
+	long l = rtmsg->hdr.rtm_msglen += sizeof( rtmsg->hdr );
+
+	if( write( s, rtmsg, l ) < 0 )
+	{
+		close( s );
+		return -2;
+	}
+
+	return s;
+}
+
+//
+// BSD route message receive result function
+//
+
+bool rtmsg_recv( int s, int seq, IPROUTE_ENTRY * route )
+{
+	RTMSG rtmsg;
+	memset( &rtmsg, 0, sizeof( rtmsg ) );
+
+	// read route result message
+
+	pid_t pid = getpid();
+	long l;
+
+	do
+	{
+		l = read( s, &rtmsg, sizeof( rtmsg ) );
+		if( l < 0 )
+		{
+			close( s );
+			return false;
+		}
+	}
+	while( ( rtmsg.hdr.rtm_seq != seq ) || ( rtmsg.hdr.rtm_pid != pid ) );
+
+	close( s );
+
+	if( ( rtmsg.hdr.rtm_errno ) || ( rtmsg.hdr.rtm_msglen > l ) ||
+		( rtmsg.hdr.rtm_version != RTM_VERSION ) )
+		return false;
+
+	char *	cp = rtmsg.msg;
 
 	for( int i = 1; i; i <<= 1 )
 	{
-		if( i & rtmsg->hdr.rtm_addrs )
+		if( i & rtmsg.hdr.rtm_addrs )
 		{
 			struct sockaddr * sa = ( struct sockaddr * ) cp;
 
@@ -213,10 +259,6 @@ _IPROUTE::_IPROUTE()
 
 bool _IPROUTE::add( IPROUTE_ENTRY & route )
 {
-	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
-	if( s == -1 )
-		return false;
-
 	// set route message header
 
 	RTMSG rtmsg;
@@ -262,13 +304,9 @@ bool _IPROUTE::add( IPROUTE_ENTRY & route )
 
 	// send route add message
 
-	long l = rtmsg.hdr.rtm_msglen += sizeof( rtmsg.hdr );
-
-	if( write( s, ( char * ) &rtmsg, l ) < 0 )
-	{
-		close( s );
+	int s = rtmsg_send( &rtmsg );
+	if( s < 0 )
 		return false;
-	}
 
 	close( s );
 
@@ -279,10 +317,6 @@ bool _IPROUTE::add( IPROUTE_ENTRY & route )
 
 bool _IPROUTE::del( IPROUTE_ENTRY & route )
 {
-	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
-	if( s == -1 )
-		return false;
-
 	// set route message header
 
 	RTMSG rtmsg;
@@ -328,13 +362,9 @@ bool _IPROUTE::del( IPROUTE_ENTRY & route )
 
 	// send route delete message
 
-	long l = rtmsg.hdr.rtm_msglen += sizeof( rtmsg.hdr );
-
-	if( write( s, ( char * ) &rtmsg, l ) < 0 )
-	{
-		close( s );
+	int s = rtmsg_send( &rtmsg );
+	if( s < 0 )
 		return false;
-	}
 
 	close( s );
 
@@ -345,10 +375,6 @@ bool _IPROUTE::del( IPROUTE_ENTRY & route )
 
 bool _IPROUTE::get( IPROUTE_ENTRY & route )
 {
-	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
-	if( s == -1 )
-		return false;
-
 	// set route message header
 
 	RTMSG rtmsg;
@@ -382,48 +408,19 @@ bool _IPROUTE::get( IPROUTE_ENTRY & route )
 
 	// send route get message
 
-	long l = rtmsg.hdr.rtm_msglen += sizeof( rtmsg.hdr );
-
-	if( write( s, ( char * ) &rtmsg, l ) < 0 )
-	{
-		close( s );
+	int s = rtmsg_send( &rtmsg );
+	if( s < 0 )
 		return false;
-	}
-
-	int pid = getpid();
 
 	// read route result message
 
-	do
-	{
-		l = read( s, ( char * ) &rtmsg, sizeof( rtmsg ) );
-		if( l < 0 )
-		{
-			close( s );
-			return false;
-		}
-	}
-	while( ( rtmsg.hdr.rtm_seq != seq ) ||
-		   ( rtmsg.hdr.rtm_pid != pid ) );
-
-	close( s );
-
-	if( ( rtmsg.hdr.rtm_errno ) ||
-		( rtmsg.hdr.rtm_msglen > l ) ||
-		( rtmsg.hdr.rtm_version != RTM_VERSION ) )
-		return false;
-
-	return rtmsg_result( &rtmsg, &route );
+	return rtmsg_recv( s, seq, &route );
 }
 
 // get best route ( by address )
 
 bool _IPROUTE::best( IPROUTE_ENTRY & route )
 {
-	int s = socket( PF_ROUTE, SOCK_RAW, 0 );
-	if( s == -1 )
-		return false;
-
 	// set route message header
 
 	RTMSG rtmsg;
@@ -456,38 +453,13 @@ bool _IPROUTE::best( IPROUTE_ENTRY & route )
 
 	// send route get message
 
-	long l = rtmsg.hdr.rtm_msglen += sizeof( rtmsg.hdr );
-
-	if( write( s, ( char * ) &rtmsg, l ) < 0 )
-	{
-		close( s );
+	int s = rtmsg_send( &rtmsg );
+	if( s < 0 )
 		return false;
-	}
-
-	int pid = getpid();
 
 	// read route result message
 
-	do
-	{
-		l = read( s, ( char * ) &rtmsg, sizeof( rtmsg ) );
-		if( l < 0 )
-		{
-			close( s );
-			return false;
-		}
-	}
-	while( ( rtmsg.hdr.rtm_seq != seq ) ||
-		   ( rtmsg.hdr.rtm_pid != pid ) );
-
-	close( s );
-
-	if( ( rtmsg.hdr.rtm_errno ) ||
-		( rtmsg.hdr.rtm_msglen > l ) ||
-		( rtmsg.hdr.rtm_version != RTM_VERSION ) )
-		return false;
-
-	return rtmsg_result( &rtmsg, &route );
+	return rtmsg_recv( s, seq, &route );
 }
 
 //
@@ -647,19 +619,20 @@ int rtmsg_send( NLMSG * nlmsg )
 	return s;
 }
 
-int rtmsg_recv( int s, IPROUTE_ENTRY & route )
+bool rtmsg_recv( int s, IPROUTE_ENTRY & route )
 {
 	char	buff[ sizeof( NLMSG ) ];
 	memset( &buff, 0, sizeof( NLMSG ) );
 
 	int rslt = recv( s, buff, sizeof( NLMSG ), 0 );
+
+	close( s );
+
 	if( rslt <= 0 )
-		return -1;
+		return false;
 
 	struct nlmsghdr * nlmsg = ( struct nlmsghdr * ) buff;
 	int nllen = rslt;
-
-	int rtrn = -1;
 
 	while( NLMSG_OK( nlmsg, nllen ) )
 	{
@@ -733,7 +706,7 @@ int rtmsg_recv( int s, IPROUTE_ENTRY & route )
 				rta = RTA_NEXT( rta, rtlen );
 			}
 
-			rtrn = 0;
+			return true;
 		}
 
 		if( nlmsg->nlmsg_type == RTM_DELROUTE )
@@ -761,7 +734,7 @@ int rtmsg_recv( int s, IPROUTE_ENTRY & route )
 		nlmsg = NLMSG_NEXT( nlmsg, nllen );
 	}
 
-	return rtrn;
+	return false;
 }
 
 // add a route
@@ -927,11 +900,7 @@ bool _IPROUTE::get( IPROUTE_ENTRY & route )
 	if( s < 0 )
 		return false;
 
-	int r = rtmsg_recv( s, route );
-
-	close( s );
-
-	return ( r >= 0 );
+	return rtmsg_recv( s, route );
 }
 
 // get best route ( by address )
@@ -977,11 +946,7 @@ bool _IPROUTE::best( IPROUTE_ENTRY & route )
 	if( s < 0 )
 		return false;
 
-	int r = rtmsg_recv( s, route );
-
-	close( s );
-
-	return ( r >= 0 );
+	return rtmsg_recv( s, route );
 }
 
 //
