@@ -45,7 +45,7 @@
 #ifdef WIN32
 # define MPR50 1
 # include <winsock2.h>
-# include <windows.h>
+# include <ws2ipdef.h>
 # include <iphlpapi.h>
 # include <routprot.h>
 # include <inttypes.h>
@@ -534,8 +534,11 @@ typedef class DLX _IPROUTE
 
 	public:
 
-	bool	iface_2_addr( in_addr & iface, unsigned long & index );
-	bool	addr_2_iface( unsigned long & index, in_addr & iface );
+#ifdef WIN32
+	bool	iface_metric( unsigned long & metric, unsigned long index );
+	bool	iface_2_addr( in_addr & iface, unsigned long index );
+	bool	addr_2_iface( unsigned long & index, in_addr iface );
+#endif	
 
 	public:
 
