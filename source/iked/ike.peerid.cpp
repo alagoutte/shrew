@@ -43,10 +43,6 @@
 
 bool _IKED::gen_ph1id_l( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 {
-	//
-	// initialize local id
-	//
-
 	ph1id.type = ph1->tunnel->peer->idtype_l;
 
 	switch( ph1id.type )
@@ -62,16 +58,14 @@ bool _IKED::gen_ph1id_l( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 						ph1->tunnel->peer->iddata_l,
 						ph1id.varid ) )
 				{
-					char temp[ 512 ];
-					size_t size = ph1->tunnel->peer->iddata_l.size();
-					if( size > 511 )
-						size = 511;
-
-					memcpy( temp, ph1->tunnel->peer->iddata_l.buff(), size );
-					temp[ size ] = 0;
+					BDATA temp;
+					temp = ph1->tunnel->peer->iddata_l;
+					temp.add( "", 1 );
 
 					log.txt( LLOG_ERROR,
-						"!! : gen_ph1id_l failed. invalid initiator id data \'%s\'\n", temp );
+						"!! : failed to generate local %s id from \'%s\'\n",
+							find_name( NAME_IDENT, ph1id.type ),
+							temp.text() );
 
 					return false;
 				}
@@ -90,8 +84,21 @@ bool _IKED::gen_ph1id_l( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 		{
 			if( ph1->tunnel->peer->iddata_l.size() )
 			{
-				ph1id.addr.s_addr =
-					inet_addr( ( char * ) ph1->tunnel->peer->iddata_l.buff() );
+				BDATA temp;
+				temp = ph1->tunnel->peer->iddata_l;
+				temp.add( "", 1 );
+
+				ph1id.addr.s_addr = inet_addr( temp.text() );
+
+				if( ph1id.addr.s_addr == INADDR_NONE )
+				{
+					log.txt( LLOG_ERROR,
+						"!! : failed to generate local %s id from \'%s\'\n",
+							find_name( NAME_IDENT, ph1id.type ),
+							temp.text() );
+
+					return false;
+				}
 			}
 			else
 			{
@@ -114,7 +121,8 @@ bool _IKED::gen_ph1id_l( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 		default:
 		{
 			log.txt( LLOG_ERROR,
-				"!! : gen_ph1id_l failed. unhandled id type %i\n", ph1id.type );
+				"!! : failed to generate local id for unknown type %i\n",
+				ph1id.type );
 
 			return false;
 		}
@@ -137,16 +145,14 @@ bool _IKED::gen_ph1id_r( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 						ph1->tunnel->peer->iddata_r,
 						ph1id.varid ) )
 				{
-					char temp[ 512 ];
-					size_t size = ph1->tunnel->peer->iddata_r.size();
-					if( size > 511 )
-						size = 511;
-
-					memcpy( temp, ph1->tunnel->peer->iddata_r.buff(), size );
-					temp[ size ] = 0;
+					BDATA temp;
+					temp = ph1->tunnel->peer->iddata_r;
+					temp.add( "", 1 );
 
 					log.txt( LLOG_ERROR,
-						"!! : gen_ph1id failed. invalid responder id data \'%s\'\n", temp );
+						"!! : failed to generate remote %s id from \'%s\'\n",
+							find_name( NAME_IDENT, ph1id.type ),
+							temp.text() );
 
 					return false;
 				}
@@ -159,8 +165,21 @@ bool _IKED::gen_ph1id_r( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 		{
 			if( ph1->tunnel->peer->iddata_r.size() )
 			{
-				ph1id.addr.s_addr =
-					inet_addr( ( char * ) ph1->tunnel->peer->iddata_r.buff() );
+				BDATA temp;
+				temp = ph1->tunnel->peer->iddata_r;
+				temp.add( "", 1 );
+
+				ph1id.addr.s_addr = inet_addr( temp.text() );
+
+				if( ph1id.addr.s_addr == INADDR_NONE )
+				{
+					log.txt( LLOG_ERROR,
+						"!! : failed to generate remote %s id from \'%s\'\n",
+							find_name( NAME_IDENT, ph1id.type ),
+							temp.text() );
+
+					return false;
+				}
 			}
 			else
 			{
@@ -183,7 +202,8 @@ bool _IKED::gen_ph1id_r( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 		default:
 		{
 			log.txt( LLOG_ERROR,
-				"!! : gen_ph1id_r failed. unhandled id type %i\n", ph1id.type );
+				"!! : failed to generate remote id for unknown type %i\n",
+				ph1id.type );
 
 			return false;
 		}
