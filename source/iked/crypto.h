@@ -50,7 +50,6 @@
 #include "openssl/err.h"
 #include "openssl/rand.h"
 
-DH *	dh_setup_group( long group );
-bool	dh_create_e( DH * dh, int nbits );
+bool dh_init( long group, DH ** dh_data, long * dh_size );
 
 #endif

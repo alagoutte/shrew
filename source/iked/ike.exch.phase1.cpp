@@ -1561,6 +1561,7 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 			ph1->xr.size(),
 			ph1->dh_size );
 
+		ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
 		return LIBIKE_FAILED;
 	}
 
@@ -1572,9 +1573,18 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	BN_bin2bn( ph1->xr.buff(), ph1->dh_size, gx );
 
 	BDATA shared;
-	shared.size( ph1->dh_size );
-	DH_compute_key( shared.buff(), gx, ph1->dh );
+	shared.set( 0, ph1->dh_size );
+	long result = DH_compute_key( shared.buff(), gx, ph1->dh );
 	BN_free( gx );
+
+	if( result < 0 )
+	{
+		log.txt( LLOG_ERROR,
+			"!! : failed to compute DH shared secret\n" );
+
+		ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_CRYPTO, 0 );
+		return LIBIKE_FAILED;
+	}
 
 	log.bin(
 		LLOG_DEBUG,

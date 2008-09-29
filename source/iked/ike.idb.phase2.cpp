@@ -429,11 +429,13 @@ bool _IDB_PH2::setup_dhgrp()
 
 	if( dhgr_id )
 	{
-		dh = dh_setup_group( dhgr_id );
-		dh_size = BN_num_bytes( dh->p );
-		dh_create_e( dh, dh_size );
+		if( !dh_init( dhgr_id, &dh, &dh_size ) )
+		{
+			iked.log.txt( LLOG_ERROR, "ii : failed to init phase2 dh group\n" );
+			return false;
+		}
 
-		xl.size( dh_size );
+		xl.set( 0, dh_size );
 		BN_bn2bin( dh->pub_key, xl.buff() );
 	}
 

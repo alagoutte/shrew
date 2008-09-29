@@ -198,105 +198,89 @@ static unsigned char group16[] =
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
 };
 
-static unsigned char generator[] = { 2 };
-
-DH * dh_setup_group( long group )
+bool dh_init( long group, DH ** dh_data, long * dh_size )
 {
 	DH * dh = DH_new();
-	if( dh )
+	if( dh == NULL )
+		return false;
+
+	dh->p = NULL;
+	dh->g = NULL;
+
+	//
+	// set p ( prime ) value
+	//
+
+	dh->p = BN_new();
+	if( dh->p == NULL )
+		goto dh_failed;
+
+	unsigned char * p_data = NULL;
+	size_t			p_size = 0;
+
+	switch( group )
 	{
-		dh->p = BN_new();
-		dh->g = BN_new();
+		case 1:
+			if( !BN_bin2bn( group1, sizeof( group1 ), dh->p ) )
+				goto dh_failed;
+			break;
 
-		switch( group )
-		{
-			case 1:
+		case 2:
+			if( !BN_bin2bn( group2, sizeof( group2 ), dh->p ) )
+				goto dh_failed;
+			break;
 
-				BN_bin2bn( group1, sizeof( group1 ), dh->p );
+		case 5:
+			if( !BN_bin2bn( group5, sizeof( group5 ), dh->p ) )
+				goto dh_failed;
+			break;
 
-				break;
+		case 14:
+			if( !BN_bin2bn( group14, sizeof( group14 ), dh->p ) )
+				goto dh_failed;
+			break;
 
-			case 2:
+		case 15:
+			if( !BN_bin2bn( group15, sizeof( group15 ), dh->p ) )
+				goto dh_failed;
+			break;
 
-				BN_bin2bn( group2, sizeof( group2 ), dh->p );
+		case 16:
+			if( !BN_bin2bn( group16, sizeof( group16 ), dh->p ) )
+				goto dh_failed;
+			break;
 
-				break;
-
-			case 5:
-
-				BN_bin2bn( group5, sizeof( group5 ), dh->p );
-
-				break;
-
-			case 14:
-
-				BN_bin2bn( group14, sizeof( group14 ), dh->p );
-
-				break;
-
-			case 15:
-
-				BN_bin2bn( group15, sizeof( group15 ), dh->p );
-
-				break;
-
-			case 16:
-
-				BN_bin2bn( group16, sizeof( group16 ), dh->p );
-
-				break;
-		}
-
-		BN_bin2bn( generator, sizeof( generator ), dh->g );
-
-		return dh;
+		default:
+			goto dh_failed;
 	}
 
-	return NULL;
-}
+	//
+	// set g ( generator ) value
+	//
 
-bool dh_pub_is_valid( DH * dh, BIGNUM * dh_pub )
-{
-	int i;
-	int n = BN_num_bits( dh_pub );
-	int bits_set = 0;
+	dh->g = BN_new();
+	if( dh->g == NULL )
+		goto dh_failed;
 
-	if( dh_pub->neg )
-		return 0;
+	if( !BN_set_word( dh->g, 2 ) )
+		goto dh_failed;
 
-	for( i = 0; i <= n; i++ )
-		if( BN_is_bit_set( dh_pub, i ) )
-			bits_set++;
+	//
+	// generate private and public DH values
+	//
 
-	if( ( bits_set > 1 ) &&	( BN_cmp( dh_pub, dh->p ) == -1 ) )
-		return true;
+	dh->length = BN_num_bytes( dh->p );
+	if( !DH_generate_key( dh ) )
+		goto dh_failed;
 
-	return false;
-}
-
-bool dh_create_e( DH * dh, int nbits )
-{
-	int tries = 0;
-
-	do
-	{
-		if( dh->priv_key != NULL )
-			BN_clear_free( dh->priv_key );
-
-		if( ( dh->priv_key = BN_new() ) == NULL )
-			return false;
-			
-		if( !BN_rand( dh->priv_key, nbits, 0, 0 ) )
-			return false;
-
-		if( DH_generate_key( dh ) == 0 )
-			return false;
-
-		if( tries++ > 10 )
-			return false;
-
-	}
-	while( !dh_pub_is_valid( dh, dh->pub_key ) );
+	*dh_data = dh;
+	*dh_size = dh->length;
 
 	return true;
+
+	dh_failed:
+
+	DH_free( dh );
+
+	return false;
 }

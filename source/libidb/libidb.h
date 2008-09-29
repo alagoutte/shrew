@@ -81,7 +81,7 @@ typedef class DLX _BDATA
 	bool	base64_decode();
 
 	bool set( _BDATA & bdata, size_t oset = 0 );
-	bool set( char value, size_t size, size_t oset = 0 );
+	bool set( int value, size_t size, size_t oset = 0 );
 	bool set( void * buff, size_t size, size_t oset = 0 );
 	bool set( char * buff, size_t size, size_t oset = 0 );
 	bool set( const char * buff, size_t size, size_t oset = 0 );

@@ -576,7 +576,6 @@ typedef class _IDB_XCH : public IDB_RC_ENTRY
 	BDATA		xl;
 	BDATA		xr;
 
-	long		hash_size;
 	BDATA		hash_l;
 	BDATA		hash_r;
 
@@ -618,6 +617,7 @@ typedef class _IDB_PH1 : public IDB_XCH
 
 	const EVP_CIPHER *	evp_cipher;
 	const EVP_MD *		evp_hash;
+	long				hash_size;
 
 	IKE_COOKIES	cookies;
 

@@ -106,8 +106,6 @@ _IDB_XCH::_IDB_XCH()
 	dh = NULL;
 	dh_size = 0;
 
-	hash_size = 0;
-
 	lock.name( "xch" );
 
 	//

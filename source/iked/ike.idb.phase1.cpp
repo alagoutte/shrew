@@ -288,6 +288,7 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 {
 	evp_cipher = NULL;
 	evp_hash = NULL;
+	hash_size = 0;
 
 	memset( &cookies, 0, sizeof( cookies ) );
 
@@ -644,11 +645,13 @@ bool _IDB_PH1::setup_dhgrp( IKE_PROPOSAL * proposal )
 	// initialize dh group
 	//
 
-	dh = dh_setup_group( proposal->dhgr_id );
-	dh_size = BN_num_bytes( dh->p );
-	dh_create_e( dh, dh_size );
+	if( !dh_init( proposal->dhgr_id, &dh, &dh_size ) )
+	{
+		iked.log.txt( LLOG_ERROR, "ii : failed to init phase1 dh group\n" );
+		return false;
+	}
 
-	xl.size( dh_size );
+	xl.set( 0, dh_size );
 	BN_bn2bin( dh->pub_key, xl.buff() );
 
 	return true;

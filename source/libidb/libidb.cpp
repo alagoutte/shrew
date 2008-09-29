@@ -181,7 +181,7 @@ bool _BDATA::set( _BDATA & bdata, size_t oset )
 	return set( ( char * ) bdata.buff(), bdata.size(), oset );
 }
 
-bool _BDATA::set( char value, size_t size, size_t oset )
+bool _BDATA::set( int value, size_t size, size_t oset )
 {
 	if( !set( ( void * ) NULL, size ) )
 		return false;
