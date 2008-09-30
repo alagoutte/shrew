@@ -211,12 +211,12 @@ bool dh_init( long group, DH ** dh_data, long * dh_size )
 	// set p ( prime ) value
 	//
 
+	unsigned char * p_data = NULL;
+	size_t			p_size = 0;
+
 	dh->p = BN_new();
 	if( dh->p == NULL )
 		goto dh_failed;
-
-	unsigned char * p_data = NULL;
-	size_t			p_size = 0;
 
 	switch( group )
 	{
