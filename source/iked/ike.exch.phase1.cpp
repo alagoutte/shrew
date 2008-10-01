@@ -1551,13 +1551,45 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	ph1->plist_l.get( &proposal, 0 );
 
 	//
+	// determine shared secret
+	//
+
+	if( level >= LLOG_DECODE )
+	{
+		BDATA prv;
+		prv.size( ph1->dh_size );
+		BN_bn2bin( ph1->dh->priv_key, prv.buff() );
+
+		log.bin(
+			LLOG_DECODE,
+			LLOG_DECODE,
+			prv.buff(),
+			prv.size(),
+			"ii : computed DH private key" );
+
+		log.bin(
+			LLOG_DECODE,
+			LLOG_DECODE,
+			ph1->xl.buff(),
+			ph1->xl.size(),
+			"ii : computed DH public key" );
+
+		log.bin(
+			LLOG_DECODE,
+			LLOG_DECODE,
+			ph1->xr.buff(),
+			ph1->xr.size(),
+			"ii : received DH public key" );
+	}
+
+	//
 	// validate the dh group size
 	//
 
 	if( ph1->xr.size() != ph1->dh_size )
 	{
 		log.txt( LLOG_ERROR,
-			"!! : dh group size mismatch ( %d != %d )\n",
+			"!! : DH group size mismatch ( %d != %d )\n",
 			ph1->xr.size(),
 			ph1->dh_size );
 
@@ -1566,7 +1598,7 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	}
 
 	//
-	// compute shared secret
+	// determine shared secret
 	//
 
 	BIGNUM * gx = BN_new();
@@ -1584,6 +1616,16 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 
 		ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_CRYPTO, 0 );
 		return LIBIKE_FAILED;
+	}
+
+	//
+	// fixup shared secret buffer alignment
+	//
+
+	if( ph1->dh_size > result )
+	{
+		shared.size( result );
+		shared.ins( 0, ph1->dh_size - result );
 	}
 
 	log.bin(
@@ -1782,11 +1824,9 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 
 		for( long size = skeyid_size; size < key_size; size += skeyid_size )
 		{
-			unsigned int temp;
-
 			HMAC_Init( &ctx_prf, skeyid_data, skeyid_size, ph1->evp_hash );
 			HMAC_Update( &ctx_prf, key_data + size - skeyid_size, skeyid_size );
-			HMAC_Final( &ctx_prf, key_data + size, &temp );
+			HMAC_Final( &ctx_prf, key_data + size, NULL );
 		}
 
 		HMAC_cleanup( &ctx_prf );

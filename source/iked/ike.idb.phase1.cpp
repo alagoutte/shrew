@@ -651,7 +651,7 @@ bool _IDB_PH1::setup_dhgrp( IKE_PROPOSAL * proposal )
 		return false;
 	}
 
-	xl.set( 0, dh_size );
+	xl.size( dh_size );
 	BN_bn2bin( dh->pub_key, xl.buff() );
 
 	return true;

@@ -1502,6 +1502,34 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 
 	if( ph2->dhgr_id )
 	{
+		if( level >= LLOG_DECODE )
+		{
+			BDATA prv;
+			prv.size( ph2->dh_size );
+			BN_bn2bin( ph2->dh->priv_key, prv.buff() );
+
+			log.bin(
+				LLOG_DECODE,
+				LLOG_DECODE,
+				prv.buff(),
+				prv.size(),
+				"ii : computed PFS DH private key" );
+
+			log.bin(
+				LLOG_DECODE,
+				LLOG_DECODE,
+				ph2->xl.buff(),
+				ph2->xl.size(),
+				"ii : computed PFS DH public key" );
+
+			log.bin(
+				LLOG_DECODE,
+				LLOG_DECODE,
+				ph2->xr.buff(),
+				ph2->xr.size(),
+				"ii : received PFS DH public key" );
+		}
+
 		//
 		// validate the dh group size
 		//
@@ -1509,26 +1537,50 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 		if( ph2->xr.size() != ph2->dh_size )
 		{
 			log.txt( LLOG_ERROR,
-				"!! : dh group size mismatch ( %d != %d )\n",
+				"!! : PFS DH group size mismatch ( %d != %d )\n",
 				ph2->xr.size(),
 				ph2->dh_size );
 
+			ph2->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
 			return LIBIKE_FAILED;
 		}
+
+		//
+		// determine shared secret
+		//
 
 		BIGNUM * gx = BN_new();
 		BN_bin2bn( ph2->xr.buff(), ph2->dh_size, gx );
 
 		shared.size( ph2->dh_size );
-		DH_compute_key( shared.buff(), gx, ph2->dh );
+		long result = DH_compute_key( shared.buff(), gx, ph2->dh );
 		BN_free( gx );
+
+		if( result < 0 )
+		{
+			log.txt( LLOG_ERROR,
+				"!! : failed to compute PFS DH shared secret\n" );
+
+			ph2->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_CRYPTO, 0 );
+			return LIBIKE_FAILED;
+		}
+
+		//
+		// fixup shared secret buffer alignment
+		//
+
+		if( ph2->dh_size > result )
+		{
+			shared.size( result );
+			shared.ins( 0, ph2->dh_size - result );
+		}
 
 		log.bin(
 			LLOG_DEBUG,
 			LLOG_DECODE,
 			shared.buff(),
 			shared.size(),
-			"== : pfs dh shared secret" );
+			"== : PFS DH shared secret" );
 	}
 
 	//

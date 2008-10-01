@@ -435,7 +435,7 @@ bool _IDB_PH2::setup_dhgrp()
 			return false;
 		}
 
-		xl.set( 0, dh_size );
+		xl.size( dh_size );
 		BN_bn2bin( dh->pub_key, xl.buff() );
 	}
 

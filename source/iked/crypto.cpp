@@ -206,6 +206,7 @@ bool dh_init( long group, DH ** dh_data, long * dh_size )
 
 	dh->p = NULL;
 	dh->g = NULL;
+	dh->length = 0;
 
 	//
 	// set p ( prime ) value
@@ -269,12 +270,11 @@ bool dh_init( long group, DH ** dh_data, long * dh_size )
 	// generate private and public DH values
 	//
 
-	dh->length = BN_num_bytes( dh->p );
 	if( !DH_generate_key( dh ) )
 		goto dh_failed;
 
 	*dh_data = dh;
-	*dh_size = dh->length;
+	*dh_size = BN_num_bytes( dh->p );
 
 	return true;
 
