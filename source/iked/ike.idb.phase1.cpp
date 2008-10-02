@@ -647,12 +647,23 @@ bool _IDB_PH1::setup_dhgrp( IKE_PROPOSAL * proposal )
 
 	if( !dh_init( proposal->dhgr_id, &dh, &dh_size ) )
 	{
-		iked.log.txt( LLOG_ERROR, "ii : failed to init phase1 dh group\n" );
+		iked.log.txt( LLOG_ERROR, "ii : failed to setup DH group\n" );
 		return false;
 	}
 
 	xl.size( dh_size );
-	BN_bn2bin( dh->pub_key, xl.buff() );
+	long result = BN_bn2bin( dh->pub_key, xl.buff() );
+
+	//
+	// fixup public buffer alignment
+	//
+
+	if( dh_size > result )
+	{
+		iked.log.txt( LLOG_DEBUG, "XX : warning, short DH public value\n" );
+		xl.size( result );
+		xl.ins( 0, dh_size - result );
+	}
 
 	return true;
 }

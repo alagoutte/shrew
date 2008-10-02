@@ -431,12 +431,23 @@ bool _IDB_PH2::setup_dhgrp()
 	{
 		if( !dh_init( dhgr_id, &dh, &dh_size ) )
 		{
-			iked.log.txt( LLOG_ERROR, "ii : failed to init phase2 dh group\n" );
+			iked.log.txt( LLOG_ERROR, "ii : failed to setup PFS DH group\n" );
 			return false;
 		}
 
 		xl.size( dh_size );
-		BN_bn2bin( dh->pub_key, xl.buff() );
+		long result = BN_bn2bin( dh->pub_key, xl.buff() );
+
+		//
+		// fixup public buffer alignment
+		//
+
+		if( dh_size > result )
+		{
+			iked.log.txt( LLOG_DEBUG, "XX : warning, short PFS DH public value\n" );
+			xl.size( result );
+			xl.ins( 0, dh_size - result );
+		}
 	}
 
 	return true;

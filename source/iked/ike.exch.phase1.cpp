@@ -1624,6 +1624,9 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 
 	if( ph1->dh_size > result )
 	{
+		log.txt( LLOG_DEBUG,
+			"XX : warning, short DH shared secret computed\n" );
+
 		shared.size( result );
 		shared.ins( 0, ph1->dh_size - result );
 	}
