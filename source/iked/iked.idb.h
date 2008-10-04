@@ -567,27 +567,12 @@ typedef class _IDB_XCH : public IDB_RC_ENTRY
 	long		lstate;
 	long		xstate;
 
-	DH *		dh;
-	long		dh_size;
-
-	BDATA		nonce_l;
-	BDATA		nonce_r;
-
-	BDATA		xl;
-	BDATA		xr;
-
 	BDATA		hash_l;
 	BDATA		hash_r;
 
 	BDATA		hda;		// hash data accumulator
 	BDATA		iv;
 
-	//
-	// FIXME : only use lists in classes that need them
-	//
-
-	IDB_LIST_PROPOSAL	plist_l;
-	IDB_LIST_PROPOSAL	plist_r;
 	IDB_LIST_NOTIFY		notifications;
 
 	ITH_EVENT_RESEND	event_resend;
@@ -605,10 +590,35 @@ typedef class _IDB_XCH : public IDB_RC_ENTRY
 }IDB_XCH;
 
 //==============================================================================
+// ike generic sa exchange handle class
+//
+
+typedef class _IDB_XCH_SA : public IDB_XCH
+{
+	public:
+
+	DH *		dh;
+	long		dh_size;
+
+	BDATA		xl;
+	BDATA		xr;
+
+	BDATA		nonce_l;
+	BDATA		nonce_r;
+
+	IDB_LIST_PROPOSAL	plist_l;
+	IDB_LIST_PROPOSAL	plist_r;
+
+	_IDB_XCH_SA();
+	virtual ~_IDB_XCH_SA();
+
+}IDB_XCH_SA;
+
+//==============================================================================
 // ike phase1 exchange handle class
 //
 
-typedef class _IDB_PH1 : public IDB_XCH
+typedef class _IDB_PH1 : public IDB_XCH_SA
 {
 	virtual void	beg();
 	virtual void	end();
@@ -706,7 +716,7 @@ typedef class _IDB_LIST_PH1 : public IDB_LIST_IKED
 // ike phase2 exchange handle class
 //
 
-typedef class _IDB_PH2 : public IDB_XCH
+typedef class _IDB_PH2 : public IDB_XCH_SA
 {
 	public:
 

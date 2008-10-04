@@ -41,9 +41,9 @@
 
 #include "iked.h"
 
-//
-// generic exchange handle event functions
-//
+//==============================================================================
+// generic exchange events
+//==============================================================================
 
 bool _ITH_EVENT_RESEND::func()
 {
@@ -85,9 +85,9 @@ bool _ITH_EVENT_RESEND::func()
 	return true;
 }
 
-//
-// generic exchange handle class
-//
+//==============================================================================
+// generic exchange handle list entry
+//==============================================================================
 
 _IDB_XCH::_IDB_XCH()
 {
@@ -102,9 +102,6 @@ _IDB_XCH::_IDB_XCH()
 
 	lstate = 0;
 	xstate = 0;
-
-	dh = NULL;
-	dh_size = 0;
 
 	lock.name( "xch" );
 
@@ -228,3 +225,16 @@ void _IDB_XCH::resend_clear( bool lock )
 		iked.lock_idb.unlock();
 }
 
+//==============================================================================
+// generic sa exchange handle list entry
+//==============================================================================
+
+_IDB_XCH_SA::_IDB_XCH_SA()
+{
+	dh = NULL;
+	dh_size = 0;
+}
+
+_IDB_XCH_SA::~_IDB_XCH_SA()
+{
+}
