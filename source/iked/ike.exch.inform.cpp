@@ -194,7 +194,7 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// informational exchange
 	//
 
-	packet.get_msgid( inform.msgid );
+	inform.msgid = packet.get_msgid();
 
 	phase2_gen_iv( ph1, inform.msgid, inform.iv );
 

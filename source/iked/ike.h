@@ -749,8 +749,8 @@ typedef class _PACKET_IKE : public _PACKET
 
 	void	reset();
 
-	void	set_msgid( uint32_t msgid );
-	void	get_msgid( uint32_t & msgid );
+	void		set_msgid( uint32_t msgid );
+	uint32_t	get_msgid();
 
 	bool	add_payload( bool encap, uint8_t next );
 	bool	get_payload( bool encap, uint8_t & next );

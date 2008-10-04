@@ -224,12 +224,6 @@ void _IDB_XCH::resend_clear( bool lock )
 			idb_refcount );
 	}
 
-	_IDB_XCH::lock.lock();
-
-	event_resend.ipqueue.clean();
-
-	_IDB_XCH::lock.unlock();
-
 	if( lock )
 		iked.lock_idb.unlock();
 }

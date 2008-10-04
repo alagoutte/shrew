@@ -682,7 +682,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 			//
 
 			if( !( tunnel->close ) &&
-				 ( tunnel->tstate & TSTATE_RECV_CONFIG ) &&
+				 ( tunnel->tstate & TSTATE_VNET_CONFIG ) &&
 				!( tunnel->tstate & TSTATE_VNET_ENABLE ) )
 			{
 				//

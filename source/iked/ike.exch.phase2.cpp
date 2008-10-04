@@ -58,23 +58,20 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// sa for this message id
 	//
 
+	uint32_t msgid = packet.get_msgid();
+
 	IDB_PH2 * ph2 = NULL;
-
-	uint32_t msgid;
-	packet.get_msgid( msgid );
-
-	idb_list_ph2.find(
-		true,
-		&ph2,
-		ph1->tunnel,
-		XCH_STATUS_ANY,
-		XCH_STATUS_ANY,
-		NULL,
-		&msgid,
-		NULL,
-		NULL );
-
-	if( ph2 == NULL )
+	
+	if( !idb_list_ph2.find(
+			true,
+			&ph2,
+			ph1->tunnel,
+			XCH_STATUS_ANY,
+			XCH_STATUS_ANY,
+			NULL,
+			&msgid,
+			NULL,
+			NULL ) )
 	{
 		//
 		// looks like a unique phase 2
@@ -101,7 +98,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	//
 	// make sure we are not dealing
-	// whith a mature or dead sa
+	// with an sa marked for delete
 	//
 
 	if( ( ph1->status() == XCH_STATUS_DEAD ) ||
@@ -111,6 +108,11 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		ph2->dec( true );
 		return LIBIKE_OK;
 	}
+
+	//
+	// make sure we are not dealing
+	// with a mature sa
+	//
 
 	if( ph2->status() >= XCH_STATUS_MATURE )
 	{

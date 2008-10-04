@@ -64,9 +64,9 @@ void _PACKET_IKE::set_msgid( uint32_t msgid )
 	header.msgid = msgid;
 }
 
-void _PACKET_IKE::get_msgid( uint32_t & msgid )
+uint32_t _PACKET_IKE::get_msgid()
 {
-	msgid = header.msgid;
+	return header.msgid;
 }
 
 bool _PACKET_IKE::write( IKE_COOKIES & cookies, uint8_t payload, uint8_t exchange, uint8_t flags )

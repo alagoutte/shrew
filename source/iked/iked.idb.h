@@ -779,6 +779,11 @@ typedef class _IDB_CFG : public IDB_XCH
 
 	public:
 
+	// this should never be accessed
+	// directly, only for comparison
+
+	IDB_PH1 *	ph1ref;
+
 	// sub class functions
 
 	virtual	const char *	name();
@@ -789,7 +794,7 @@ typedef class _IDB_CFG : public IDB_XCH
 
 	// class functions
 
-	_IDB_CFG( IDB_TUNNEL * tunnel, bool set_initiator, unsigned long set_msgid );
+	_IDB_CFG( IDB_PH1 * set_ph1ref, bool set_initiator, unsigned long set_msgid );
 	virtual ~_IDB_CFG();
 
 	BDATA		hash;
@@ -823,8 +828,7 @@ typedef class _IDB_LIST_CFG : public IDB_LIST_IKED
 	bool find(
 			bool lock,
 			IDB_CFG ** cfg,
-			IDB_TUNNEL * tunnel,
-			unsigned long msgid );
+			IDB_PH1 * ph1 );
 
 }IDB_LIST_CFG;
 

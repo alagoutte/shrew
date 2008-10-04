@@ -55,36 +55,42 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	//
 	// attempt to locate a known
-	// config for this message id
+	// config for this phase1
 	//
 
+	uint32_t msgid = packet.get_msgid();
+
 	IDB_CFG * cfg = NULL;
-
-	uint32_t msgid;
-	packet.get_msgid( msgid );
-
-	idb_list_cfg.find( true, &cfg, ph1->tunnel, msgid );
-
-	if( cfg == NULL )
+	if( !idb_list_cfg.find(	true, &cfg, ph1 ) )
 	{
 		//
-		// looks like a unique config
-		// exchange, create new object
+		// create new object config object
 		//
 
-		cfg = new IDB_CFG( ph1->tunnel, false, msgid );
+		cfg = new IDB_CFG( ph1, false, msgid );
 		cfg->add( true );
 
 		//
-		// calculate iv for this config
+		// calculate the iv for this config
 		//
 
 		phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
 	}
 
 	//
+	// if the msgid has changed, reset the
+	// config msgid value and the iv
+	//
+
+	if( cfg->msgid != msgid )
+	{
+		cfg->msgid = msgid;
+		phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
+	}
+
+	//
 	// make sure we are not dealing
-	// whith a sa marked for delete
+	// with an sa marked for delete
 	//
 
 	if( ( ph1->status() == XCH_STATUS_DEAD ) ||
@@ -146,8 +152,6 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 		//
 		// obtain ethernet header
-		// and swap the src and
-		// dst mac addresses
 		//
 
 		ETH_HEADER ethhdr;
@@ -167,6 +171,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	//
 
 	cfg->hda.del();
+	cfg->attr_reset();
 
 	while( payload != ISAKMP_PAYLOAD_NONE )
 	{
@@ -244,7 +249,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			// flag sa for removal
 			//
 
-			cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
+			ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, packet.notify );
 			cfg->dec( true );
 
 			return result;
@@ -264,468 +269,55 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( config_chk_hash( ph1, cfg, msgid ) != LIBIKE_OK )
 	{
-		if( !ph1->vendopts_r.flag.zwall )
-		{
-			//
-			// update status and release
-			//
+		//
+		// update status and release
+		//
 
-			cfg->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_AUTH, 0 );
-			cfg->dec( true );
+		ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_AUTH, ISAKMP_N_INVALID_HASH_INFORMATION );
+		cfg->dec( true );
 
-			return LIBIKE_FAILED;
-		}
-		else
-		{
-			//
-			// the zywall 5 xauth set response
-			// always includes an invalid hash
-			//
-
-			log.txt( LLOG_ERROR,
-				"!! : zywall sent a bad config hash value, ignored\n" );
-		}
+		return LIBIKE_FAILED;
 	}
 
 	//
-	// are we the initiator or responder
+	// hanlde server to client messages
 	//
 
-	if( ph1->initiator )
+	while( ph1->initiator )
 	{
 		//
-		// evaluate config transaction
+		// handle xauth messages
 		//
 
-		switch( cfg->mtype )
-		{
-			case ISAKMP_CFG_REQUEST:
-			{
-				//
-				// check for gateway xauth request
-				//
-
-				BDATA message;
-
-				long count = cfg->attr_count();
-				long index = 0;
-
-				bool auth_type = false;
-
-				for( ; index < count; index++ )
-				{
-					IKE_ATTR * attr = cfg->attr_get( index );
-
-					switch( attr->atype )
-					{
-						case XAUTH_TYPE:
-						case CHKPT_TYPE:
-							auth_type = true;
-							break;
-
-						case XAUTH_USER_NAME:
-						case CHKPT_USER_NAME:
-							cfg->tunnel->tstate |= TSTATE_RECV_XUSER;
-							if( attr->basic )
-								log.txt( LLOG_INFO, "!! : warning, basic xauth username attribute type\n" );
-							break;
-
-						case XAUTH_USER_PASSWORD:
-						case CHKPT_USER_PASSWORD:
-							cfg->tunnel->tstate |= TSTATE_RECV_XPASS;
-							if( attr->basic )
-								log.txt( LLOG_INFO, "!! : warning, basic xauth password attribute type\n" );
-							break;
-
-						case XAUTH_MESSAGE:
-						case CHKPT_MESSAGE:
-							if( !attr->basic )
-								message.add( attr->vdata );
-							break;
-
-						default:
-							log.txt( LLOG_INFO, "!! : warning, unhandled xauth attribute %i\n", attr->atype );
-							break;
-					}
-				}
-
-				//
-				// examine the xauth request
-				//
-
-				if( message.size() )
-				{
-					if( message.text()[ message.size() - 1 ] != '\n' )
-						message.add( '\n', 1 );
-
-					message.add( 0, 1 );
-
-					log.txt( LLOG_INFO, "ii : received xauth request - %s", message.text() );
-				}
-				else
-					log.txt( LLOG_INFO, "ii : received xauth request\n" );
-
-				//
-				// if this is the first request
-				//
-
-				if( ( cfg->tunnel->tstate & TSTATE_RECV_XAUTH ) != TSTATE_RECV_XAUTH )
-				{
-					//
-					// make sure we received a xauth type attribute
-					//
-
-					if( !auth_type )
-					{
-						log.txt( LLOG_INFO, "!! : warning, missing required xauth type attribute\n" );
-
-//						cfg->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
-//						ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
-					}
-				}
-
-				//
-				// if this is a duplicate request
-				//
-
-				if( ( cfg->tunnel->tstate & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
-				{
-					//
-					// looks like we already sent an
-					// xauth response. this means we
-					// failed to authenticate
-					//
-
-					log.txt( LLOG_ERROR, "!! : duplicate xauth request, authentication failed\n" );
-
-					cfg->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
-					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
-				}
-
-				cfg->attr_reset();
-
-				break;
-			}
-
-			case ISAKMP_CFG_SET:
-			{
-				//
-				// gateway xauth server result
-				//
-
-				if( !( cfg->tunnel->tstate & TSTATE_RECV_XRSLT ) )
-				{
-					//
-					// we should have an xauth status
-					// attribute that shows the result
-					//
-
-					BDATA message;
-
-					long count = cfg->attr_count();
-					long index = 0;
-					long status = -1;
-
-					for( ; index < count; index++ )
-					{
-						IKE_ATTR * attr = cfg->attr_get( index );
-
-						switch( attr->atype )
-						{
-							case XAUTH_STATUS:
-							case CHKPT_STATUS:
-								if( attr->basic )
-									status = attr->bdata;
-								break;
-
-							case XAUTH_MESSAGE:
-							case CHKPT_MESSAGE:
-								if( !attr->basic )
-									message.add( attr->vdata );
-								break;
-						}
-					}
-
-					//
-					// process xauth status if present
-					//
-
-					if( status != -1 )
-					{
-						//
-						// check xauth result
-						//
-
-						if( message.size() )
-						{
-							if( message.text()[ message.size() - 1 ] != '\n' )
-								message.add( '\n', 1 );
-
-							message.add( 0, 1 );
-
-							log.txt( LLOG_INFO, "ii : received xauth result - %s", message.text() );
-						}
-						else
-							log.txt( LLOG_INFO, "ii : received xauth result\n" );
-
-						if( status == 1 )
-						{
-							log.txt( LLOG_INFO,
-								"ii : user %s authentication succeeded\n",
-								cfg->tunnel->xauth.user.text() );
-						}
-						else
-						{
-							log.txt( LLOG_ERROR,
-								"!! : user %s authentication failed\n",
-								cfg->tunnel->xauth.user.text() );
-
-							cfg->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
-							ph1->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
-						}
-
-						cfg->tunnel->tstate |= TSTATE_RECV_XRSLT;
-
-						break;
-					}
-
-					//
-					// unfortunately, not all gateways
-					// are compliant. a config push can
-					// be sent before sending the xauth
-					// status. in this case, we resort
-					// to processing the push request
-					//
-
-					if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_PUSH )
-					{
-						log.txt( LLOG_ERROR,
-							"!! : no xauth status received and config mode is not push\n" );
-
-							cfg->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
-
-						break;
-					}
-				}
-
-				//
-				// gateway config push request
-				//
-
-				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
-				{
-					if( !( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) )
-					{
-						//
-						// get xconf attributes
-						//
-
-						log.txt( LLOG_INFO, "ii : received config push request\n" );
-
-						long getmask = 0;
-
-						config_xconf_get( cfg,
-							getmask,
-							cfg->tunnel->xconf.rqst,
-							ph1->vendopts_r );
-
-						//
-						// update state and flag for removal
-						//
-
-						cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
-
-						cfg->tunnel->ikei->wakeup();
-					}
-
+		if( ph1->vendopts_l.flag.xauth )
+			if( !( cfg->xstate & CSTATE_RECV_XRSLT ) )
+				if( !config_client_xauth_recv( cfg, ph1 ) )
 					break;
-				}
 
-				break;
-			}
+		//
+		// handle modecfg pull messages
+		//
 
-			case ISAKMP_CFG_REPLY:
-			{
-				//
-				// gateway config pull response
-				//
+		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
+			if( !( cfg->xstate & CSTATE_RECV_XCONF ) )
+				if( !config_client_xconf_pull_recv( cfg, ph1 ) )
+					break;
 
-				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
-				{
-					if(  ( cfg->tunnel->tstate & TSTATE_SENT_CONFIG ) &&
-						!( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) )
-					{
-						//
-						// get xconf attributes
-						//
+		//
+		// handle modecfg push messages
+		//
 
-						log.txt( LLOG_INFO, "ii : received config pull response\n" );
+		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
+			if( !( cfg->xstate & CSTATE_RECV_XCONF ) )
+				if( !config_client_xconf_pull_recv( cfg, ph1 ) )
+					break;
 
-						long getmask = 0;
+		//
+		// unexpected message
+		//
 
-						config_xconf_get( cfg,
-							getmask,
-							cfg->tunnel->xconf.rqst,
-							ph1->vendopts_r );
-
-						//
-						// update state and flag for removal
-						//
-
-						cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
-
-						cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
-
-						cfg->tunnel->ikei->wakeup();
-					}
-				}
-
-				break;
-			}
-		}
+		break;
 	}
-	else
-	{
-		//
-		// evaluate config transaction
-		//
-
-		switch( cfg->mtype )
-		{
-			case ISAKMP_CFG_REQUEST:
-			{
-				//
-				// client config pull request
-				//
-
-				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
-				{
-					if( !( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) )
-					{
-						//
-						// get xconf attributes
-						//
-
-						log.txt( LLOG_INFO, "ii : received config pull request\n" );
-
-						config_xconf_get( cfg,
-							cfg->tunnel->xconf.rqst,
-							0,
-							ph1->vendopts_r );
-
-						cfg->attr_reset();
-
-						cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
-					}
-				}
-
-				break;
-			}
-
-			case ISAKMP_CFG_REPLY:
-			{
-				//
-				// client xauth response
-				//
-
-				if(  ( cfg->tunnel->tstate & TSTATE_SENT_XAUTH ) &&
-					!( cfg->tunnel->tstate & TSTATE_RECV_XRSLT ) )
-				{
-					log.txt( LLOG_INFO, "ii : received xauth response\n" );
-
-					//
-					// make sure we at least have
-					// user and password attribs
-					//
-
-					long count = cfg->attr_count();
-					long index = 0;
-
-					for( ; index < count; index++ )
-					{
-						IKE_ATTR * attr = cfg->attr_get( index );
-
-						switch( attr->atype )
-						{
-							case XAUTH_USER_NAME:
-								cfg->tunnel->xauth.user.set( attr->vdata );
-								break;
-
-							case XAUTH_USER_PASSWORD:
-								cfg->tunnel->xauth.pass.set( attr->vdata );
-								break;
-						}
-					}
-
-					if( !cfg->tunnel->xauth.user.size() )
-						log.txt( LLOG_ERROR, "!! : missing required username attribute\n" );
-
-					if( !cfg->tunnel->xauth.pass.size() )
-						log.txt( LLOG_ERROR, "!! : missing required password attribute\n" );
-
-					cfg->tunnel->tstate |= TSTATE_RECV_XAUTH;
-				}
-
-				break;
-			}
-
-			case ISAKMP_CFG_ACK:
-			{
-				//
-				// client xauth acknowledge
-				//
-
-				if( !( cfg->tunnel->tstate & TSTATE_RECV_XRSLT ) )
-				{
-					log.txt( LLOG_INFO, "ii : received xauth ack\n" );
-
-					cfg->tunnel->tstate |= TSTATE_RECV_XRSLT;
-
-					//
-					// if the config mode is not push, we
-					// can flag this handle for deletion
-					//
-
-					if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_PUSH )
-						cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
-
-					break;
-				}
-
-				//
-				// client config push acknowledge
-				//
-
-				if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
-				{
-					if( !( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) )
-					{
-						//
-						// get xconf attributes
-						//
-
-						log.txt( LLOG_INFO, "ii : received config push acknowledge\n" );
-
-						long readmask = 0;
-
-						config_xconf_get( cfg,
-							readmask,
-							0,
-							ph1->vendopts_r );
-
-						cfg->attr_reset();
-
-						cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
-					}
-
-					break;
-				}
-
-				break;
-			}
-		}
-	}
-
 
 	//
 	// now build and send any response
@@ -733,7 +325,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	//
 
 	if( ( ph1->status() != XCH_STATUS_DEAD ) &&
-		( cfg->status() != XCH_STATUS_DEAD ) )
+		( cfg->status() != XCH_STATUS_MATURE ) )
 		process_config_send( ph1, cfg );
 
 	//
@@ -747,663 +339,1009 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 {
+	cfg->attr_reset();
+
 	//
-	// are we the initiator or responder
+	// hanlde server to client messages
 	//
 
-	if( ph1->initiator )
+	while( ph1->initiator )
 	{
 		//
-		// determine xauth operation
+		// handle xauth messages
 		//
 
 		if( ph1->vendopts_l.flag.xauth )
-		{
-			//
-			// client xauth response
-			//
-
-			if( ( cfg->tunnel->tstate & TSTATE_RECV_XAUTH ) &&
-				( cfg->tunnel->tstate & TSTATE_SENT_XAUTH ) != TSTATE_SENT_XAUTH )
-			{
-				//
-				// set attributes
-				//
-
-				cfg->mtype = ISAKMP_CFG_REPLY;
-				cfg->attr_reset();
-
-				//
-				// check for special case processing
-				//
-
-				if( !ph1->vendopts_r.flag.chkpt )
-				{
-					//
-					// standard xauth processing
-					//
-
-					cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
-
-					if(  ( cfg->tunnel->tstate & TSTATE_RECV_XUSER ) &&
-						!( cfg->tunnel->tstate & TSTATE_SENT_XUSER ) )
-					{
-						cfg->attr_add_v( XAUTH_USER_NAME,
-							cfg->tunnel->xauth.user.buff(),
-							cfg->tunnel->xauth.user.size() );
-
-						cfg->tunnel->tstate |= TSTATE_SENT_XUSER;
-
-						log.txt( LLOG_INFO,
-							"ii : added standard xauth username attribute\n" );
-					}
-
-					if(  ( cfg->tunnel->tstate & TSTATE_RECV_XPASS ) &&
-						!( cfg->tunnel->tstate & TSTATE_SENT_XPASS ) )
-					{
-						cfg->attr_add_v( XAUTH_USER_PASSWORD,
-							cfg->tunnel->xauth.pass.buff(),
-							cfg->tunnel->xauth.pass.size() );
-
-						cfg->tunnel->tstate |= TSTATE_SENT_XPASS;
-
-						log.txt( LLOG_INFO,
-							"ii : added standard xauth password attribute\n" );
-					}
-
-					//
-					// remove this handle unless communicating
-					// with a zywall or sidewinder which use
-					// the same msgid and iv from xauth through
-					// modecfg
-					//
-
-					if( ( cfg->tunnel->tstate & TSTATE_SENT_XAUTH ) == TSTATE_SENT_XAUTH )
-						if( !ph1->vendopts_r.flag.zwall &&
-							!ph1->vendopts_r.flag.swind )
-							cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
-				}
-				else
-				{
-					//
-					// checkpoint xauth processing
-					//
-
-					cfg->attr_add_b( CHKPT_TYPE, XAUTH_TYPE_GENERIC );
-
-					if(  ( cfg->tunnel->tstate & TSTATE_RECV_XUSER ) &&
-						!( cfg->tunnel->tstate & TSTATE_SENT_XUSER ) )
-					{
-						cfg->attr_add_v( CHKPT_USER_NAME,
-							cfg->tunnel->xauth.user.buff(),
-							cfg->tunnel->xauth.user.size() );
-
-						cfg->tunnel->tstate |= TSTATE_SENT_XUSER;
-
-						log.txt( LLOG_INFO,
-							"ii : added checkpoint xauth username attribute\n" );
-					}
-
-					if(  ( cfg->tunnel->tstate & TSTATE_RECV_XPASS ) &&
-						!( cfg->tunnel->tstate & TSTATE_SENT_XPASS ) )
-					{
-						cfg->attr_add_v( CHKPT_USER_PASSWORD,
-							cfg->tunnel->xauth.pass.buff(),
-							cfg->tunnel->xauth.pass.size() );
-
-						cfg->tunnel->tstate |= TSTATE_SENT_XPASS;
-
-						log.txt( LLOG_INFO,
-							"ii : added checkpoint xauth password attribute\n" );
-					}
-				}
-
-				//
-				// send config packet
-				//
-
-				config_message_send( ph1, cfg );
-
-				cfg->tunnel->xauth.user.add( 0, 1 );
-
-				log.txt( LLOG_INFO,
-					"ii : sent xauth response for %s\n",
-					cfg->tunnel->xauth.user.buff() );
-			}
-
-			//
-			// client xauth acknowledge
-			//
-
-			if(  ( cfg->tunnel->tstate & TSTATE_RECV_XRSLT ) &&
-				!( cfg->tunnel->tstate & TSTATE_SENT_XRSLT ) )
-			{
-				//
-				// reset ack attributes
-				//
-
-				cfg->mtype = ISAKMP_CFG_ACK;
-				cfg->attr_reset();
-
-				//
-				// send config packet
-				//
-
-				config_message_send( ph1, cfg );
-
-				log.txt( LLOG_INFO, "ii : sent xauth acknowledge\n" );
-
-				//
-				// update state and flag for removal
-				//
-
-				cfg->tunnel->tstate |= TSTATE_SENT_XRSLT;
-
-				//
-				// if the config mode is not pull, we
-				// can flag this handle for deletion
-				//
-
-				if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_PULL )
-					cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
-			}
-		}
-		else
-		{
-			//
-			// xauth not required
-			//
-
-			log.txt( LLOG_INFO, "ii : xauth is not required\n" );
-
-			cfg->tunnel->tstate |= TSTATE_RECV_XAUTH;
-			cfg->tunnel->tstate |= TSTATE_SENT_XAUTH;
-			cfg->tunnel->tstate |= TSTATE_RECV_XRSLT;
-			cfg->tunnel->tstate |= TSTATE_SENT_XRSLT;
-		}
+			if( !( cfg->xstate & CSTATE_SENT_XRSLT ) )
+				if( !config_client_xauth_send( cfg, ph1 ) )
+					break;
 
 		//
-		// client config pull request
+		// handle modecfg pull messages
 		//
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
-		{
-			if(  ( cfg->tunnel->tstate & TSTATE_SENT_XRSLT ) &&
-				!( cfg->tunnel->tstate & TSTATE_SENT_CONFIG ) )
-			{
-				//
-				// set attributes
-				//
-
-				log.txt( LLOG_INFO, "ii : building config attribute list\n" );
-
-				cfg->mtype = ISAKMP_CFG_REQUEST;
-				cfg->attr_reset();
-
-				if( ph1->vendopts_r.flag.chkpt )
-					iked.rand_bytes( &cfg->ident, sizeof( cfg->ident ) );
-
-				config_xconf_set( cfg,
-					cfg->tunnel->xconf.rqst,
-					0xffffffff,
-					ph1->vendopts_r );
-
-				//
-				// flag as sent and release
-				//
-
-				if( cfg->attr_count() )
-				{
-					log.txt( LLOG_INFO, "ii : sending config pull request\n" );
-
-					//
-					// make sure the msgid is unique
-					//
-
-					rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
-
-					//
-					// calculate iv for this config
-					//
-
-					phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
-
-					//
-					// send config packet
-					//
-
-					config_message_send( ph1, cfg );
-
-					cfg->attr_reset();
-
-					//
-					// flag as sent
-					//
-
-					cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
-				}
-				else
-				{
-					//
-					// config not required
-					//
-
-					log.txt( LLOG_INFO, "ii : config is not required\n" );
-
-					cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
-					cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
-
-					cfg->tunnel->ikei->wakeup();
-				}
-			}
-		}
+			if( !( cfg->xstate & CSTATE_SENT_ACK ) )
+				if( !config_client_xconf_pull_send( cfg, ph1 ) )
+					break;
 
 		//
-		// client config push acknowledge
+		// handle modecfg push messages
 		//
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
+			if( !( cfg->xstate & CSTATE_SENT_ACK ) )
+				if( !config_client_xconf_push_send( cfg, ph1 ) )
+					break;
+
+		//
+		// handle dhcp over ipsec
+		//
+
+		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_DHCP )
 		{
-			if(  ( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) &&
-				!( cfg->tunnel->tstate & TSTATE_SENT_CONFIG ) )
-			{
-				//
-				// set attributes
-				//
-
-				log.txt( LLOG_INFO, "ii : building config attribute list\n" );
-
-				cfg->mtype = ISAKMP_CFG_ACK;
-				cfg->attr_reset();
-
-				config_xconf_set( cfg,
-					cfg->tunnel->xconf.rqst,
-					0xffffffff,
-					ph1->vendopts_r );
-
-				//
-				// flag as sent and release
-				//
-
-				log.txt( LLOG_INFO, "ii : sending config push acknowledge\n" );
-
-				//
-				// send config packet
-				//
-
-				config_message_send( ph1, cfg );
-
-				cfg->attr_reset();
-
-				//
-				// flag as sent
-				//
-
-				cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
-
-				cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
-			}
+			log.txt( LLOG_INFO, "ii : configuration method is DHCP over IPsec \n" );
+			socket_dhcp_create( ph1->tunnel );
+			break;
 		}
 
 		//
-		// other configuration methods
+		// handle manual config
 		//
-
-		if( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_DHCP )
-		{
-			//
-			// begin after xauth
-			//
-
-			if( cfg->tunnel->tstate & TSTATE_RECV_XRSLT )
-			{
-				//
-				// begin our DHCP over IPsec processing
-				//
-
-				socket_dhcp_create( ph1->tunnel );
-
-				cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
-			}
-		}
 
 		if( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_NONE )
 		{
-			//
-			// config not required
-			//
-
-			log.txt( LLOG_INFO, "ii : config method is manual\n" );
-
-			cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
-			cfg->tunnel->tstate |= TSTATE_RECV_CONFIG;
-
-			cfg->tunnel->ikei->wakeup();
-		}
-	}
-	else
-	{
-		//
-		// determine xauth operation
-		//
-
-		if( ph1->vendopts_l.flag.xauth )
-		{
-			//
-			// gateway xauth request
-			//
-
-			if( !( cfg->tunnel->tstate & TSTATE_SENT_XAUTH ) )
-			{
-				//
-				// set request attributes
-				//
-
-				cfg->mtype = ISAKMP_CFG_REQUEST;
-
-				cfg->attr_reset();
-
-				cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
-				cfg->attr_add_v( XAUTH_USER_NAME, NULL, 0 );
-				cfg->attr_add_v( XAUTH_USER_PASSWORD, NULL, 0 );
-
-				//
-				// generate message iv
-				//
-
-				phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
-
-				//
-				// send config packet
-				//
-
-				config_message_send( ph1, cfg );
-
-				cfg->attr_reset();
-
-				//
-				// flag as sent
-				//
-
-				cfg->tunnel->tstate |= TSTATE_SENT_XAUTH;
-
-				log.txt( LLOG_INFO, "ii : sent xauth request\n" );
-			}
-
-			//
-			// gateway xauth result
-			//
-
-			if(  ( cfg->tunnel->tstate & TSTATE_RECV_XAUTH ) &&
-				!( cfg->tunnel->tstate & TSTATE_SENT_XRSLT ) )
-			{
-				bool allow = false;
-				if( cfg->tunnel->xauth.user.size() &&
-					cfg->tunnel->xauth.pass.size() )
-					allow = true;
-
-				//
-				// check user password
-				//
-
-				if( allow )
-				{
-					cfg->tunnel->xauth.user.add( 0, 1 );
-					cfg->tunnel->xauth.pass.add( 0, 1 );
-
-					allow = cfg->tunnel->peer->xauth_source->auth_pwd(
-								cfg->tunnel->xauth );
-
-					if( allow )
-						iked.log.txt( LLOG_INFO,
-							"ii : xauth user %s password accepted ( %s )\n",
-							cfg->tunnel->xauth.user.text(),
-							cfg->tunnel->peer->xauth_source->name() );
-					else
-						iked.log.txt( LLOG_ERROR,
-							"!! : xauth user %s password rejected ( %s )\n",
-							cfg->tunnel->xauth.user.text(),
-							cfg->tunnel->peer->xauth_source->name() );
-				}
-
-				//
-				// check user group membership
-				//
-
-				if( allow && cfg->tunnel->peer->xauth_group.size() )
-				{
-					allow = cfg->tunnel->peer->xauth_source->auth_grp(
-								cfg->tunnel->xauth,
-								cfg->tunnel->peer->xauth_group );
-
-					if( allow )
-						log.txt( LLOG_INFO,
-							"ii : xauth user %s group %s membership accepted ( %s )\n",
-							cfg->tunnel->xauth.user.text(),
-							cfg->tunnel->peer->xauth_group.text(),
-							cfg->tunnel->peer->xauth_source->name() );
-					else
-						log.txt( LLOG_ERROR,
-							"!! : xauth user %s group %s membership rejected ( %s )\n",
-							cfg->tunnel->xauth.user.text(),
-							cfg->tunnel->peer->xauth_group.text(),
-							cfg->tunnel->peer->xauth_source->name() );
-				}
-
-				//
-				// set result attributes
-				//
-
-				cfg->mtype = ISAKMP_CFG_SET;
-
-				cfg->attr_reset();
-
-				if( allow )
-					cfg->attr_add_b( XAUTH_STATUS, 1 );
-				else
-					cfg->attr_add_b( XAUTH_STATUS, 0 );
-
-				//
-				// make sure the msgid is unique
-				//
-
-				rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
-
-				//
-				// generate message iv
-				//
-
-				phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
-
-				//
-				// send config packet
-				//
-
-				config_message_send( ph1, cfg );
-
-				cfg->attr_reset();
-
-				//
-				// flag as sent and release
-				//
-
-				cfg->tunnel->tstate |= TSTATE_SENT_XRSLT;
-
-				log.txt( LLOG_INFO, "ii : sent xauth result\n" );
-
-				if( !allow )
-				{
-					cfg->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
-					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
-				}
-			}
-		}
-		else
-		{
-			//
-			// xauth not required
-			//
-
-			log.txt( LLOG_INFO, "ii : xauth is not required\n" );
-
-			cfg->tunnel->tstate |= TSTATE_RECV_XAUTH;
-			cfg->tunnel->tstate |= TSTATE_SENT_XAUTH;
-			cfg->tunnel->tstate |= TSTATE_RECV_XRSLT;
-			cfg->tunnel->tstate |= TSTATE_SENT_XRSLT;
+			log.txt( LLOG_INFO, "ii : configuration method is manual\n" );
+			break;
 		}
 
 		//
-		// gateway config pull response
+		// unexpected message
 		//
 
-		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
-		{
-			if(  ( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) &&
-				!( cfg->tunnel->tstate & TSTATE_SENT_CONFIG ) )
-			{
-				//
-				// obtain the client xconf config
-				//
-
-				cfg->tunnel->peer->xconf_source->rslt(
-					cfg->tunnel );
-
-				//
-				// if we are to generate a policy
-				// list during config, do this now
-				//
-
-				if( cfg->tunnel->peer->plcy_mode == POLICY_MODE_CONFIG )
-					policy_list_create( cfg->tunnel, false );
-
-				if( cfg->tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
-					cfg->tunnel->xconf.opts |= IPSEC_OPTS_SPLITNET;
-
-				//
-				// set result attributes
-				//
-
-				cfg->mtype = ISAKMP_CFG_REPLY;
-
-				log.txt( LLOG_INFO, "ii : building config attribute list\n" );
-
-				config_xconf_set( cfg,
-					cfg->tunnel->xconf.opts,
-					0,
-					ph1->vendopts_r );
-
-				//
-				// send config packet
-				//
-
-				log.txt( LLOG_INFO, "ii : sending config pull response\n" );
-
-				config_message_send( ph1, cfg );
-
-				cfg->attr_reset();
-
-				//
-				// flag as sent
-				//
-
-				cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
-
-				cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
-			}
-		}
-
-		//
-		// gateway config push request
-		//
-
-		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
-		{
-			if(  ( cfg->tunnel->tstate & TSTATE_RECV_XRSLT ) &&
-				!( cfg->tunnel->tstate & TSTATE_SENT_CONFIG ) )
-			{
-				//
-				// in push mode the client doesnt
-				// request its desired attributes
-				//
-
-				cfg->tunnel->xconf.rqst = cfg->tunnel->peer->xconf_source->config.opts;
-
-				//
-				// obtain the client xconf config
-				//
-
-				cfg->tunnel->peer->xconf_source->rslt(
-					cfg->tunnel );
-
-				//
-				// if we are to generate a policy
-				// list during config, do this now
-				//
-
-				if( cfg->tunnel->peer->plcy_mode == POLICY_MODE_CONFIG )
-					policy_list_create( cfg->tunnel, false );
-
-				if( cfg->tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
-					cfg->tunnel->xconf.opts |= IPSEC_OPTS_SPLITNET;
-
-				//
-				// set attributes
-				//
-
-				cfg->mtype = ISAKMP_CFG_SET;
-
-				log.txt( LLOG_INFO, "ii : building config attribute list\n" );
-
-				config_xconf_set( cfg,
-					cfg->tunnel->xconf.opts,
-					0,
-					ph1->vendopts_r );
-
-				//
-				// make sure the msgid is unique
-				//
-
-				rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
-
-				//
-				// generate message iv
-				//
-
-				phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
-
-				//
-				// send config packet
-				//
-
-				log.txt( LLOG_INFO, "ii : sending config push request\n" );
-
-				config_message_send( ph1, cfg );
-
-				cfg->attr_reset();
-
-				//
-				// flag as sent
-				//
-
-				cfg->tunnel->tstate |= TSTATE_SENT_CONFIG;
-			}
-		}
+		break;
 	}
 
 	//
 	// if all required operations are
 	// complete, make sure the config
-	// handle is flagged for deletion
+	// handle is flagged as mature
 	//
 
-	if( ( cfg->tunnel->tstate & TSTATE_RECV_XRSLT ) &&
-		( cfg->tunnel->tstate & TSTATE_SENT_XRSLT ) &&
-		( cfg->tunnel->tstate & TSTATE_SENT_CONFIG ) &&
-		( cfg->tunnel->tstate & TSTATE_RECV_CONFIG ) )
-		cfg->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
+	if( ( cfg->xstate & CSTATE_RECV_XRSLT ) &&
+		( cfg->xstate & CSTATE_SENT_XRSLT ) &&
+		( cfg->xstate & CSTATE_RECV_XCONF ) &&
+		( cfg->xstate & CSTATE_SENT_XCONF ) )
+	{
+		if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_DHCP )
+		{
+			cfg->tunnel->tstate |= TSTATE_VNET_CONFIG;
+			cfg->tunnel->ikei->wakeup();
+		}
+
+		cfg->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
+		cfg->resend_clear( true );
+	}
 
 	return LIBIKE_OK;
 }
+
+bool _IKED::config_client_xauth_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
+{
+	//
+	// expecting xauth request
+	//
+
+	if( cfg->mtype == ISAKMP_CFG_REQUEST )
+	{
+		//
+		// if we have have previously received a
+		// comlete xauth request, authentication
+		// failed and the gateway is prompting
+		// us for an alternate user & password
+		//
+
+		if( ( cfg->xstate & CSTATE_RECV_XUSER ) &&
+			( cfg->xstate & CSTATE_RECV_XPASS ) )
+		{
+			log.txt( LLOG_ERROR, "!! : duplicate xauth request, authentication failed\n" );
+			ph1->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
+
+			return false;
+		}
+
+		//
+		// read the request attributes
+		//
+
+		BDATA message;
+
+		long count = cfg->attr_count();
+		long index = 0;
+
+		bool auth_type = false;
+
+		for( ; index < count; index++ )
+		{
+			IKE_ATTR * attr = cfg->attr_get( index );
+
+			switch( attr->atype )
+			{
+				case XAUTH_TYPE:
+				case CHKPT_TYPE:
+					auth_type = true;
+					break;
+
+				case XAUTH_USER_NAME:
+				case CHKPT_USER_NAME:
+					cfg->xstate |= CSTATE_RECV_XUSER;
+					if( attr->basic )
+						log.txt( LLOG_INFO, "!! : warning, basic xauth username attribute type\n" );
+					break;
+
+				case XAUTH_USER_PASSWORD:
+				case CHKPT_USER_PASSWORD:
+					cfg->xstate |= CSTATE_RECV_XPASS;
+					if( attr->basic )
+						log.txt( LLOG_INFO, "!! : warning, basic xauth password attribute type\n" );
+					break;
+
+				case XAUTH_MESSAGE:
+				case CHKPT_MESSAGE:
+					if( !attr->basic )
+						message.add( attr->vdata );
+					break;
+
+				default:
+					log.txt( LLOG_INFO, "!! : warning, unhandled xauth attribute %i\n", attr->atype );
+					break;
+			}
+		}
+
+		message.add( 0, 1 );
+
+		//
+		// examine the xauth request
+		//
+
+		if( !auth_type )
+			log.txt( LLOG_INFO, "!! : warning, missing required xauth type attribute\n" );
+
+		log.txt( LLOG_INFO, "ii : received xauth request - %s\n", message.text() );
+
+		return false;
+	}
+
+	//
+	// expecting xauth response
+	//
+
+	if( cfg->mtype == ISAKMP_CFG_SET )
+	{
+		//
+		// read the result attributes
+		//
+
+		BDATA message;
+
+		long count = cfg->attr_count();
+		long index = 0;
+		long status = -1;
+
+		for( ; index < count; index++ )
+		{
+			IKE_ATTR * attr = cfg->attr_get( index );
+
+			switch( attr->atype )
+			{
+				case XAUTH_STATUS:
+				case CHKPT_STATUS:
+					if( attr->basic )
+						status = attr->bdata;
+						break;
+
+				case XAUTH_MESSAGE:
+				case CHKPT_MESSAGE:
+					if( !attr->basic )
+						message.add( attr->vdata );
+					break;
+			}
+		}
+
+		message.add( 0, 1 );
+
+		//
+		// make sure we received a status value
+		//
+
+		if( status == -1 )
+		{
+			//
+			// some gateways will send a config push
+			// message before an xauth response. in
+			// this case, call the correct handler
+			//
+
+			if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
+				return config_client_xconf_push_recv( cfg, ph1 );
+
+			log.txt( LLOG_ERROR,
+				"!! : no xauth status received and config mode is not push\n" );
+
+			ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
+
+			return false;
+		}
+
+		//
+		// examine the xauth result
+		//
+
+		log.txt( LLOG_INFO, "ii : received xauth result - %s\n", message.text() );
+
+		BDATA user;
+		user = cfg->tunnel->xauth.user;
+		user.add( 0, 1 );
+
+		if( status == 1 )
+		{
+			log.txt( LLOG_INFO,
+				"ii : user %s authentication succeeded\n", user.text() );
+		}
+		else
+		{
+			log.txt( LLOG_ERROR,
+				"!! : user %s authentication failed\n", user.text() );
+
+			ph1->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
+		}
+
+		//
+		// NOTE : we set the username and password
+		// as already sent and received in case the
+		// gateway bypasses xauth on rekey
+		//
+
+		cfg->xstate |= CSTATE_SENT_XUSER;
+		cfg->xstate |= CSTATE_SENT_XPASS;
+		cfg->xstate |= CSTATE_RECV_XUSER;
+		cfg->xstate |= CSTATE_RECV_XPASS;
+		cfg->xstate |= CSTATE_RECV_XRSLT;
+
+		return false;
+	}
+
+	//
+	// unhandled message type
+	//
+
+	log.txt( LLOG_ERROR, "!! : config message type is invalid for xauth\n" );
+	ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
+
+	return false;
+}
+
+bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
+{
+	if( !( cfg->xstate & CSTATE_SENT_XUSER ) ||
+		!( cfg->xstate & CSTATE_SENT_XPASS ) )
+	{
+		cfg->mtype = ISAKMP_CFG_REPLY;
+
+		if( !ph1->vendopts_r.flag.chkpt )
+		{
+			//
+			// standard xauth processing
+			//
+
+			cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
+
+			if(  ( cfg->xstate & CSTATE_RECV_XUSER ) &&
+				!( cfg->xstate & CSTATE_SENT_XUSER ) )
+			{
+				cfg->attr_add_v( XAUTH_USER_NAME,
+					cfg->tunnel->xauth.user.buff(),
+					cfg->tunnel->xauth.user.size() );
+
+				cfg->xstate |= CSTATE_SENT_XUSER;
+
+				log.txt( LLOG_INFO,
+					"ii : added standard xauth username attribute\n" );
+			}
+
+			if(  ( cfg->xstate & CSTATE_RECV_XPASS ) &&
+				!( cfg->xstate & CSTATE_SENT_XPASS ) )
+			{
+				cfg->attr_add_v( XAUTH_USER_PASSWORD,
+					cfg->tunnel->xauth.pass.buff(),
+					cfg->tunnel->xauth.pass.size() );
+
+				cfg->xstate |= CSTATE_SENT_XPASS;
+
+				log.txt( LLOG_INFO,
+					"ii : added standard xauth password attribute\n" );
+			}
+		}
+		else
+		{
+			//
+			// checkpoint xauth processing
+			//
+
+			cfg->attr_add_b( CHKPT_TYPE, XAUTH_TYPE_GENERIC );
+
+			if(  ( cfg->xstate & CSTATE_RECV_XUSER ) &&
+				!( cfg->xstate & CSTATE_SENT_XUSER ) )
+			{
+				cfg->attr_add_v( CHKPT_USER_NAME,
+					cfg->tunnel->xauth.user.buff(),
+					cfg->tunnel->xauth.user.size() );
+
+				cfg->xstate |= CSTATE_SENT_XUSER;
+
+				log.txt( LLOG_INFO,
+					"ii : added checkpoint xauth username attribute\n" );
+			}
+
+			if(  ( cfg->xstate & CSTATE_RECV_XPASS ) &&
+				!( cfg->xstate & CSTATE_SENT_XPASS ) )
+			{
+				cfg->attr_add_v( CHKPT_USER_PASSWORD,
+					cfg->tunnel->xauth.pass.buff(),
+					cfg->tunnel->xauth.pass.size() );
+
+				cfg->xstate |= CSTATE_SENT_XPASS;
+
+				log.txt( LLOG_INFO,
+					"ii : added checkpoint xauth password attribute\n" );
+			}
+		}
+
+		//
+		// send config packet
+		//
+
+		BDATA user;
+		user = cfg->tunnel->xauth.user;
+		user.add( 0, 1 );
+
+		log.txt( LLOG_INFO,	"ii : sending xauth response for %s\n", user.buff() );
+		config_message_send( ph1, cfg );
+
+		return false;
+	}
+
+	if( !( cfg->xstate & CSTATE_SENT_XRSLT ) )
+	{
+		//
+		// if we have have not yet received an
+		// xauth result message, postpone this
+		// ack until later
+
+		if( !( cfg->xstate & CSTATE_RECV_XRSLT ) )
+			return true;
+
+		cfg->mtype = ISAKMP_CFG_ACK;
+
+		//
+		// send config packet
+		//
+
+		log.txt( LLOG_INFO, "ii : sending xauth acknowledge\n" );
+		config_message_send( ph1, cfg );
+
+		cfg->xstate |= CSTATE_SENT_XRSLT;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool _IKED::config_client_xconf_pull_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
+{
+	//
+	// expecting configuration pull reply
+	//
+
+	if( cfg->mtype == ISAKMP_CFG_REPLY )
+	{
+		//
+		// get configuration attributes
+		//
+
+		log.txt( LLOG_INFO, "ii : received config pull response\n" );
+
+		long getmask = 0;
+		config_xconf_get( cfg,
+			getmask,
+			cfg->tunnel->xconf.rqst,
+			ph1->vendopts_r );
+
+		cfg->xstate |= CSTATE_RECV_XCONF;
+
+		return false;
+	}
+
+	//
+	// unhandled message type
+	//
+
+	log.txt( LLOG_ERROR, "!! : config message type is invalid for pull config\n" );
+	ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
+
+	return false;
+}
+
+bool _IKED::config_client_xconf_pull_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
+{
+	if( !( cfg->xstate & CSTATE_SENT_XCONF ) )
+	{
+		//
+		// set configuration attributes
+		//
+
+		log.txt( LLOG_INFO, "ii : building config attribute list\n" );
+
+		cfg->mtype = ISAKMP_CFG_REQUEST;
+
+		if( ph1->vendopts_r.flag.chkpt )
+			iked.rand_bytes( &cfg->ident, sizeof( cfg->ident ) );
+
+		config_xconf_set( cfg,
+			cfg->tunnel->xconf.rqst,
+			0xffffffff,
+			ph1->vendopts_r );
+
+		if( cfg->attr_count() )
+		{
+			//
+			// create new msgid and iv
+			//
+
+			rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
+			phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
+
+			//
+			// send config packet
+			//
+
+			log.txt( LLOG_INFO, "ii : sending config pull request\n" );
+			config_message_send( ph1, cfg );
+
+			cfg->xstate |= CSTATE_SENT_XCONF;
+		}
+		else
+		{
+			//
+			// config not required
+			//
+
+			log.txt( LLOG_INFO, "ii : config pull is not required\n" );
+
+			cfg->xstate |= CSTATE_SENT_XCONF;
+			cfg->xstate |= CSTATE_RECV_XCONF;
+		}
+
+		return false;
+	}
+
+	return false;
+}
+
+bool _IKED::config_client_xconf_push_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
+{
+	//
+	// expecting configuration push request
+	//
+
+	if( cfg->mtype == ISAKMP_CFG_SET )
+	{
+		//
+		// get xconf attributes
+		//
+
+		log.txt( LLOG_INFO, "ii : received config push request\n" );
+
+		long getmask = 0;
+		config_xconf_get( cfg,
+			getmask,
+			cfg->tunnel->xconf.rqst,
+			ph1->vendopts_r );
+
+		//
+		// config is now mature
+		//
+
+		cfg->xstate |= CSTATE_RECV_XCONF;
+
+		return false;
+	}
+
+	//
+	// unhandled message type
+	//
+
+	log.txt( LLOG_ERROR, "!! : config message type is invalid for push config\n" );
+	ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
+
+	return false;
+}
+
+bool _IKED::config_client_xconf_push_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
+{
+	if( !( cfg->xstate & CSTATE_SENT_XCONF ) )
+	{
+		//
+		// in push mode the client doesnt
+		// request its desired attributes
+		//
+
+		cfg->tunnel->xconf.rqst = cfg->tunnel->peer->xconf_source->config.opts;
+
+		//
+		// obtain the client xconf config
+		//
+
+		cfg->tunnel->peer->xconf_source->rslt(
+			cfg->tunnel );
+
+		//
+		// if we are to generate a policy
+		// list during config, do this now
+		//
+
+		if( cfg->tunnel->peer->plcy_mode == POLICY_MODE_CONFIG )
+			policy_list_create( cfg->tunnel, false );
+
+		if( cfg->tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
+			cfg->tunnel->xconf.opts |= IPSEC_OPTS_SPLITNET;
+
+		//
+		// set attributes
+		//
+
+		cfg->mtype = ISAKMP_CFG_SET;
+
+		log.txt( LLOG_INFO, "ii : building config attribute list\n" );
+
+		config_xconf_set( cfg,
+			cfg->tunnel->xconf.opts,
+			0,
+			ph1->vendopts_r );
+
+		//
+		// make sure the msgid is unique
+		//
+
+		rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
+
+		//
+		// generate message iv
+		//
+
+		phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
+
+		//
+		// send config packet
+		//
+
+		log.txt( LLOG_INFO, "ii : sending config push request\n" );
+
+		config_message_send( ph1, cfg );
+
+		//
+		// flag as sent
+		//
+
+		cfg->xstate |= CSTATE_SENT_XCONF;
+
+		return false;
+	}
+
+	if( !( cfg->xstate & CSTATE_SENT_XCONF ) )
+	{
+		//
+		// set xconf attributes
+		//
+
+		log.txt( LLOG_INFO, "ii : building config attribute list\n" );
+
+		cfg->mtype = ISAKMP_CFG_ACK;
+
+		config_xconf_set( cfg,
+			cfg->tunnel->xconf.rqst,
+			0xffffffff,
+			ph1->vendopts_r );
+
+		//
+		// send config packet
+		//
+
+		log.txt( LLOG_INFO, "ii : sending config push acknowledge\n" );
+		config_message_send( ph1, cfg );
+
+		cfg->xstate |= CSTATE_SENT_XCONF;
+
+		return false;
+	}
+
+	return false;
+}
+
+bool _IKED::config_server_xauth_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
+{
+	if( cfg->mtype == ISAKMP_CFG_REPLY )
+	{
+		log.txt( LLOG_INFO, "ii : received xauth response\n" );
+
+		//
+		// make sure we at least have
+		// user and password attribs
+		//
+
+		long count = cfg->attr_count();
+		long index = 0;
+
+		for( ; index < count; index++ )
+		{
+			IKE_ATTR * attr = cfg->attr_get( index );
+
+			switch( attr->atype )
+			{
+				case XAUTH_USER_NAME:
+					cfg->xstate |= CSTATE_RECV_XUSER;
+					cfg->tunnel->xauth.user.set( attr->vdata );
+					break;
+
+				case XAUTH_USER_PASSWORD:
+					cfg->xstate |= CSTATE_RECV_XPASS;
+					cfg->tunnel->xauth.pass.set( attr->vdata );
+					break;
+			}
+		}
+
+		if( !cfg->tunnel->xauth.user.size() )
+			log.txt( LLOG_ERROR, "!! : missing required username attribute\n" );
+
+		if( !cfg->tunnel->xauth.pass.size() )
+			log.txt( LLOG_ERROR, "!! : missing required password attribute\n" );
+
+		return false;
+	}
+
+	if( cfg->mtype == ISAKMP_CFG_ACK )
+	{
+		log.txt( LLOG_INFO, "ii : received xauth ack\n" );
+
+		cfg->xstate |= CSTATE_RECV_XRSLT;
+
+		if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_PUSH )
+			cfg->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
+
+		return false;
+	}
+
+	return false;
+}
+
+bool _IKED::config_server_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
+{
+	if( !( cfg->xstate & CSTATE_SENT_XUSER ) )
+	{
+		//
+		// set request attributes
+		//
+
+		cfg->mtype = ISAKMP_CFG_REQUEST;
+
+		cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
+		cfg->attr_add_v( XAUTH_USER_NAME, NULL, 0 );
+		cfg->attr_add_v( XAUTH_USER_PASSWORD, NULL, 0 );
+
+		//
+		// generate message iv
+		//
+
+		phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
+
+		//
+		// send config packet
+		//
+
+		config_message_send( ph1, cfg );
+
+		//
+		// flag as sent
+		//
+
+		cfg->xstate |= CSTATE_SENT_XUSER;
+		cfg->xstate |= CSTATE_SENT_XPASS;
+
+		log.txt( LLOG_INFO, "ii : sent xauth request\n" );
+
+		return false;
+	}
+
+	if( !( cfg->xstate & CSTATE_SENT_XRSLT ) )
+	{
+		bool allow = false;
+		if( cfg->tunnel->xauth.user.size() &&
+			cfg->tunnel->xauth.pass.size() )
+			allow = true;
+
+		//
+		// check user password
+		//
+
+		if( allow )
+		{
+			cfg->tunnel->xauth.user.add( 0, 1 );
+			cfg->tunnel->xauth.pass.add( 0, 1 );
+
+			allow = cfg->tunnel->peer->xauth_source->auth_pwd(
+						cfg->tunnel->xauth );
+
+			if( allow )
+				iked.log.txt( LLOG_INFO,
+					"ii : xauth user %s password accepted ( %s )\n",
+					cfg->tunnel->xauth.user.text(),
+					cfg->tunnel->peer->xauth_source->name() );
+			else
+				iked.log.txt( LLOG_ERROR,
+					"!! : xauth user %s password rejected ( %s )\n",
+					cfg->tunnel->xauth.user.text(),
+					cfg->tunnel->peer->xauth_source->name() );
+		}
+
+		//
+		// check user group membership
+		//
+
+		if( allow && cfg->tunnel->peer->xauth_group.size() )
+		{
+			allow = cfg->tunnel->peer->xauth_source->auth_grp(
+						cfg->tunnel->xauth,
+						cfg->tunnel->peer->xauth_group );
+
+			if( allow )
+				log.txt( LLOG_INFO,
+					"ii : xauth user %s group %s membership accepted ( %s )\n",
+					cfg->tunnel->xauth.user.text(),
+					cfg->tunnel->peer->xauth_group.text(),
+					cfg->tunnel->peer->xauth_source->name() );
+			else
+				log.txt( LLOG_ERROR,
+					"!! : xauth user %s group %s membership rejected ( %s )\n",
+					cfg->tunnel->xauth.user.text(),
+					cfg->tunnel->peer->xauth_group.text(),
+					cfg->tunnel->peer->xauth_source->name() );
+		}
+
+		//
+		// set result attributes
+		//
+
+		cfg->mtype = ISAKMP_CFG_SET;
+
+		if( allow )
+			cfg->attr_add_b( XAUTH_STATUS, 1 );
+		else
+			cfg->attr_add_b( XAUTH_STATUS, 0 );
+
+		//
+		// make sure the msgid is unique
+		//
+
+		rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
+
+		//
+		// generate message iv
+		//
+
+		phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
+
+		//
+		// send config packet
+		//
+
+		config_message_send( ph1, cfg );
+
+		//
+		// flag as sent and release
+		//
+
+		cfg->xstate |= CSTATE_SENT_XRSLT;
+
+		log.txt( LLOG_INFO, "ii : sent xauth result\n" );
+
+		if( !allow )
+			ph1->status( XCH_STATUS_DEAD, XCH_FAILED_USER_AUTH, 0 );
+
+		return false;
+	}
+
+	return false;
+}
+
+bool _IKED::config_server_xconf_pull_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
+{
+	if( cfg->mtype == ISAKMP_CFG_REQUEST )
+	{
+		//
+		// get xconf attributes
+		//
+
+		log.txt( LLOG_INFO, "ii : received config pull request\n" );
+
+		config_xconf_get( cfg,
+			cfg->tunnel->xconf.rqst,
+			0,
+			ph1->vendopts_r );
+
+		cfg->xstate |= CSTATE_RECV_XCONF;
+
+		return false;
+	}
+
+	return false;
+}
+
+bool _IKED::config_server_xconf_pull_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
+{
+	if( !( cfg->xstate & CSTATE_SENT_XCONF ) )
+	{
+		//
+		// obtain the client xconf config
+		//
+
+		cfg->tunnel->peer->xconf_source->rslt(
+			cfg->tunnel );
+
+		//
+		// if we are to generate a policy
+		// list during config, do this now
+		//
+
+		if( cfg->tunnel->peer->plcy_mode == POLICY_MODE_CONFIG )
+			policy_list_create( cfg->tunnel, false );
+
+		if( cfg->tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
+			cfg->tunnel->xconf.opts |= IPSEC_OPTS_SPLITNET;
+
+		//
+		// set result attributes
+		//
+
+		cfg->mtype = ISAKMP_CFG_REPLY;
+
+		log.txt( LLOG_INFO, "ii : building config attribute list\n" );
+
+		config_xconf_set( cfg,
+			cfg->tunnel->xconf.opts,
+			0,
+			ph1->vendopts_r );
+
+		//
+		// send config packet
+		//
+
+		log.txt( LLOG_INFO, "ii : sending config pull response\n" );
+		config_message_send( ph1, cfg );
+
+		//
+		// flag as sent
+		//
+
+		cfg->tunnel->tstate |= CSTATE_SENT_XCONF;
+
+		return false;
+	}
+
+	return false;
+}
+
+bool _IKED::config_server_xconf_push_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
+{
+	if( cfg->mtype == ISAKMP_CFG_ACK )
+	{
+		//
+		// get xconf attributes
+		//
+
+		log.txt( LLOG_INFO, "ii : received config push acknowledge\n" );
+
+		long readmask = 0;
+
+		config_xconf_get( cfg,
+			readmask,
+			0,
+			ph1->vendopts_r );
+
+		cfg->xstate |= CSTATE_RECV_XCONF;
+
+		return false;
+	}
+
+	return false;
+}
+
+bool _IKED::config_server_xconf_push_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
+{
+	if( !( cfg->xstate & CSTATE_SENT_XCONF ) )
+	{
+		//
+		// in push mode the client doesnt
+		// request its desired attributes
+		//
+
+		cfg->tunnel->xconf.rqst = cfg->tunnel->peer->xconf_source->config.opts;
+
+		//
+		// obtain the client xconf config
+		//
+
+		cfg->tunnel->peer->xconf_source->rslt(
+			cfg->tunnel );
+
+		//
+		// if we are to generate a policy
+		// list during config, do this now
+		//
+
+		if( cfg->tunnel->peer->plcy_mode == POLICY_MODE_CONFIG )
+			policy_list_create( cfg->tunnel, false );
+
+		if( cfg->tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
+			cfg->tunnel->xconf.opts |= IPSEC_OPTS_SPLITNET;
+
+		//
+		// set attributes
+		//
+
+		cfg->mtype = ISAKMP_CFG_SET;
+
+		log.txt( LLOG_INFO, "ii : building config attribute list\n" );
+
+		config_xconf_set( cfg,
+			cfg->tunnel->xconf.opts,
+			0,
+			ph1->vendopts_r );
+
+		//
+		// make sure the msgid is unique
+		//
+
+		rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
+
+		//
+		// generate message iv
+		//
+
+		phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
+
+		//
+		// send config packet
+		//
+
+		log.txt( LLOG_INFO, "ii : sending config push request\n" );
+
+		config_message_send( ph1, cfg );
+
+		cfg->attr_reset();
+
+		//
+		// flag as sent
+		//
+
+		cfg->xstate |= CSTATE_SENT_XCONF;
+
+		return false;
+	}
+
+	return false;
+}
+
 
 long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VENDOPTS vendopts )
 {

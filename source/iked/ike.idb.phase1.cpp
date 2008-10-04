@@ -63,22 +63,6 @@ bool _ITH_EVENT_PH1SOFT::func()
 
 	if( ph1->tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
 	{
-		if( ph1->vendopts_l.flag.xauth )
-		{
-			ph1->tunnel->tstate &= ~TSTATE_SENT_XAUTH;
-			ph1->tunnel->tstate &= ~TSTATE_RECV_XAUTH;
-			ph1->tunnel->tstate &= ~TSTATE_SENT_XRSLT;
-			ph1->tunnel->tstate &= ~TSTATE_RECV_XRSLT;
-		}
-
-		if( ph1->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
-		{
-			ph1->tunnel->tstate &= ~TSTATE_RECV_CONFIG;
-			ph1->tunnel->tstate &= ~TSTATE_SENT_CONFIG;
-			ph1->tunnel->tstate &= ~TSTATE_RECV_ACK;
-			ph1->tunnel->tstate &= ~TSTATE_SENT_ACK;
-		}
-
 		IDB_PH1 * addph1 = new IDB_PH1( ph1->tunnel, true, NULL );
 		addph1->add( false );
 		iked.process_phase1_send( addph1 );
@@ -550,6 +534,46 @@ void _IDB_PH1::end()
 		( xch_errorcode != XCH_FAILED_EXPIRED ) &&
 		( xch_errorcode != XCH_FAILED_PEER_DELETE ) )
 		iked.inform_new_delete( this, NULL );
+
+	//
+	// if this sa has reached maturity,
+	// locate any config handles used by
+	// this sa and delete them
+	//
+	// FIXME : There must be a better way
+	//
+
+	if( lstate & LSTATE_HASKEYS )
+	{
+		//
+		// FIXME : Use find here
+		//
+
+		long cfg_count = iked.idb_list_cfg.count();
+		long cfg_index = 0;
+
+		for( ; cfg_index < cfg_count; cfg_index++ )
+		{
+			//
+			// get the next config in our list
+			// and attempt to match by pointer
+			// 
+
+			IDB_CFG * cfg = iked.idb_list_cfg.get( cfg_index );
+			if( cfg->ph1ref == this )
+			{
+				cfg->inc( false );
+
+				cfg->status( XCH_STATUS_DEAD, XCH_FAILED_PENDING, 0 );
+
+				if( cfg->dec( false ) )
+				{
+					cfg_index--;
+					cfg_count--;
+				}
+			}
+		}
+	}
 
 	//
 	// if this sa never reached maturity,

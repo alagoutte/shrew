@@ -405,10 +405,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 			return LIBIKE_OK;
 		}
 
-		uint32_t msgid;
-		packet.get_msgid( msgid );
-
-		if( msgid )
+		if( packet.get_msgid() )
 		{
 			log.txt( LLOG_INFO,
 				"XX : ike packet from %s ignored, invalid message id for exchange type\n",

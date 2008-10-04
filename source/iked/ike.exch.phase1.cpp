@@ -55,7 +55,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	//
 	// make sure we are not dealing
-	// whith a mature or dead sa
+	// with an sa marked for delete
 	//
 
 	if( ph1->status() == XCH_STATUS_DEAD )
@@ -63,6 +63,11 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		log.txt( LLOG_ERROR, "!! : phase1 packet ignored ( sa marked for death )\n" );
 		return LIBIKE_OK;
 	}
+
+	//
+	// make sure we are not dealing
+	// with a mature sa
+	//
 
 	if( ph1->status() >= XCH_STATUS_MATURE )
 	{
@@ -1423,7 +1428,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 				if( !ph1->initiator && ph1->vendopts_l.flag.xauth )
 				{
-					IDB_CFG * cfg = new IDB_CFG( ph1->tunnel, true, 0 );
+					IDB_CFG * cfg = new IDB_CFG( ph1, true, 0 );
 					cfg->add( true );
 					process_config_send( ph1, cfg );
 					cfg->dec( true );
@@ -1447,7 +1452,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 					if( ph1->tunnel->peer->xconf_mode != CONFIG_MODE_PUSH )
 					{
-						IDB_CFG * cfg = new IDB_CFG( ph1->tunnel, true, 0 );
+						IDB_CFG * cfg = new IDB_CFG( ph1, true, 0 );
 						cfg->add( true );
 						process_config_send( ph1, cfg );
 						cfg->dec( true );

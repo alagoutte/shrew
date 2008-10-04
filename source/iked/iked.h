@@ -260,6 +260,17 @@ YY_DECL;
 #define XSTATE_RECV_LP			0x000100000
 #define XSTATE_SENT_LP			0x000200000
 
+#define CSTATE_RECV_XUSER		0x000000001
+#define CSTATE_SENT_XUSER		0x000000002
+#define CSTATE_RECV_XPASS		0x000000004
+#define CSTATE_SENT_XPASS		0x000000008
+#define CSTATE_RECV_XRSLT		0x000000010
+#define CSTATE_SENT_XRSLT		0x000000020
+#define CSTATE_RECV_XCONF		0x000000040
+#define CSTATE_SENT_XCONF		0x000000080
+#define CSTATE_RECV_ACK			0x000000100
+#define CSTATE_SENT_ACK			0x000000200
+
 #define LSTATE_HASSPI			0x000000001		// pfkey spi obtained
 #define LSTATE_CHKPROP			0x000000002		// proposal verified
 #define LSTATE_CHKHASH			0x000000004		// hash verified
@@ -270,19 +281,9 @@ YY_DECL;
 
 #define TSTATE_NATT_FLOAT		0x000000001
 #define TSTATE_INITIALIZED		0x000000002
-#define TSTATE_RECV_XUSER		0x000000004
-#define TSTATE_SENT_XUSER		0x000000008
-#define TSTATE_RECV_XPASS		0x000000010
-#define TSTATE_SENT_XPASS		0x000000020
-#define TSTATE_RECV_XAUTH		( TSTATE_RECV_XUSER | TSTATE_RECV_XPASS )
-#define TSTATE_SENT_XAUTH		( TSTATE_SENT_XUSER | TSTATE_SENT_XPASS )
-#define TSTATE_RECV_XRSLT		0x000000040
-#define TSTATE_SENT_XRSLT		0x000000080
-#define TSTATE_RECV_CONFIG		0x000000100
-#define TSTATE_SENT_CONFIG		0x000000200
-#define TSTATE_RECV_ACK			0x000000400
-#define TSTATE_SENT_ACK			0x000000800
-#define TSTATE_VNET_ENABLE		0x000001000
+#define TSTATE_VNET_CONFIG		0x000000004
+#define TSTATE_VNET_ENABLE		0x000000008
+
 
 #define DSTATE_ACTIVE			0
 #define DSTATE_TERMINATE		1
@@ -659,6 +660,20 @@ typedef class _IKED
 	long	phase2_gen_iv( IDB_PH1 * ph1, unsigned long msgid, BDATA & iv );
 
 	// config exchange helper functions
+
+	bool	config_client_xauth_recv( IDB_CFG * cfg, IDB_PH1 * ph1 );
+	bool	config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 );
+	bool	config_client_xconf_pull_recv( IDB_CFG * cfg, IDB_PH1 * ph1 );
+	bool	config_client_xconf_pull_send( IDB_CFG * cfg, IDB_PH1 * ph1 );
+	bool	config_client_xconf_push_recv( IDB_CFG * cfg, IDB_PH1 * ph1 );
+	bool	config_client_xconf_push_send( IDB_CFG * cfg, IDB_PH1 * ph1 );
+
+	bool	config_server_xauth_recv( IDB_CFG * cfg, IDB_PH1 * ph1 );
+	bool	config_server_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 );
+	bool	config_server_xconf_pull_recv( IDB_CFG * cfg, IDB_PH1 * ph1 );
+	bool	config_server_xconf_pull_send( IDB_CFG * cfg, IDB_PH1 * ph1 );
+	bool	config_server_xconf_push_recv( IDB_CFG * cfg, IDB_PH1 * ph1 );
+	bool	config_server_xconf_push_send( IDB_CFG * cfg, IDB_PH1 * ph1 );
 
 	long	config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VENDOPTS vendopts );
 	long	config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VENDOPTS vendopts );

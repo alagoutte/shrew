@@ -50,7 +50,7 @@ IDB_CFG * _IDB_LIST_CFG::get( int index )
 	return static_cast<IDB_CFG*>( get_entry( index ) );
 }
 
-bool _IDB_LIST_CFG::find( bool lock, IDB_CFG ** cfg, IDB_TUNNEL * tunnel, unsigned long msgid )
+bool _IDB_LIST_CFG::find( bool lock, IDB_CFG ** cfg, IDB_PH1 * ph1 )
 {
 	if( cfg != NULL )
 		*cfg = NULL;
@@ -74,17 +74,10 @@ bool _IDB_LIST_CFG::find( bool lock, IDB_CFG ** cfg, IDB_TUNNEL * tunnel, unsign
 		IDB_CFG * tmp_cfg = get( index );
 
 		//
-		// match the tunnel id
+		// match the phase1 id
 		//
 
-		if( tmp_cfg->tunnel != tunnel )
-			continue;
-
-		//
-		// match the msgid
-		//
-
-		if( tmp_cfg->msgid != msgid )
+		if( tmp_cfg->ph1ref != ph1 )
 			continue;
 
 		iked.log.txt( LLOG_DEBUG, "DB : config found\n" );
@@ -118,13 +111,14 @@ bool _IDB_LIST_CFG::find( bool lock, IDB_CFG ** cfg, IDB_TUNNEL * tunnel, unsign
 // ike configuration exchange handle list entry
 //==============================================================================
 
-_IDB_CFG::_IDB_CFG( IDB_TUNNEL * set_tunnel, bool set_initiator, unsigned long set_msgid )
+_IDB_CFG::_IDB_CFG( IDB_PH1 * set_ph1ref, bool set_initiator, unsigned long set_msgid )
 {
 	msgid = 0;
 	mtype = 0;
 	ident = 0;
 
-	tunnel = set_tunnel;
+	ph1ref = set_ph1ref;			// never accessed directly
+	tunnel = set_ph1ref->tunnel;
 	tunnel->inc( true );
 
 	initiator = set_initiator;
@@ -136,6 +130,27 @@ _IDB_CFG::_IDB_CFG( IDB_TUNNEL * set_tunnel, bool set_initiator, unsigned long s
 		iked.rand_bytes( &msgid, sizeof( msgid ) );
 		iked.rand_bytes( &ident, sizeof( ident ) );
 	}
+
+	//
+	// skip xauth if disabled
+	//
+
+	if( !set_ph1ref->vendopts_l.flag.xauth )
+		xstate |= CSTATE_SENT_XRSLT | CSTATE_RECV_XRSLT;
+
+	//
+	// skip configuration if already negotiated
+	// using pull mode or if the mode is set to
+	// none ( manual )
+	//
+
+	if( tunnel->peer->xconf_mode == CONFIG_MODE_PULL )
+		if( tunnel->tstate & TSTATE_VNET_CONFIG )
+			xstate |= CSTATE_SENT_XCONF | CSTATE_RECV_XCONF;
+
+	if( ( tunnel->peer->xconf_mode == CONFIG_MODE_DHCP ) ||
+		( tunnel->peer->xconf_mode == CONFIG_MODE_NONE ) )
+		xstate |= CSTATE_SENT_XCONF | CSTATE_RECV_XCONF;
 }
 
 _IDB_CFG::~_IDB_CFG()
