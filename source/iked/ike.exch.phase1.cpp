@@ -60,7 +60,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( ph1->status() == XCH_STATUS_DEAD )
 	{
-		log.txt( LLOG_ERROR, "!! : phase1 packet ignored ( sa marked for death )\n" );
+		log.txt( LLOG_ERROR, "!! : phase1 packet ignored ( phase1 marked for death )\n" );
 		return LIBIKE_OK;
 	}
 
@@ -71,7 +71,8 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( ph1->status() >= XCH_STATUS_MATURE )
 	{
-		log.txt( LLOG_ERROR, "!! : phase1 packet ignored ( sa already mature )\n" );
+		log.txt( LLOG_ERROR, "!! : phase1 packet ignored, resending last packet ( phase1 already mature )\n" );
+		ph1->resend();
 		return LIBIKE_OK;
 	}
 
@@ -1317,12 +1318,13 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			if( ph1->xstate & XSTATE_RECV_HA )
 			{
 				if( phase1_chk_hash( ph1 ) == LIBIKE_OK )
+				{
 					ph1->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
+					ph1->resend_clear( true, false );
+					ph1->clean();
+				}
 				else
 					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_AUTH, ISAKMP_N_AUTHENTICATION_FAILED );
-
-				ph1->clean();
-				ph1->resend_clear( true );
 			}
 		}
 
@@ -1337,12 +1339,13 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			if( ph1->xstate & XSTATE_RECV_SI )
 			{
 				if( phase1_chk_sign( ph1 ) == LIBIKE_OK )
+				{
 					ph1->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
+					ph1->resend_clear( true, false );
+					ph1->clean();
+				}
 				else
 					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_AUTH, ISAKMP_N_AUTHENTICATION_FAILED );
-
-				ph1->clean();
-				ph1->resend_clear( true );
 			}
 		}
 	}
@@ -2769,7 +2772,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 			if( ph1->tunnel->peer->natt_mode == IPSEC_NATT_NONE )
 			{
 				log.txt( LLOG_INFO,
-					"ii : initiator port values floated but nat-t is disabled but \n" );
+					"ii : initiator port values floated but nat-t is disabled\n" );
 
 				return false;
 			}
@@ -2777,9 +2780,9 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 			if( ph1->tunnel->lstate & TSTATE_NATT_FLOAT )
 			{
 				log.txt( LLOG_ERROR,
-					"!! : initiator port values should only float once per session\n" );
+					"XX : initiator port values should only float once per session\n" );
 
-				return false;
+				return true;
 			}
 		}
 

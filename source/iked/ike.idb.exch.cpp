@@ -47,42 +47,12 @@
 
 bool _ITH_EVENT_RESEND::func()
 {
-	if( attempt >= iked.retry_count )
-	{
-		iked.log.txt( LLOG_INFO,
-				"ii : resend limit exceeded for %s exchange\n",
-				xch->name() );
-
-		xch->status( XCH_STATUS_DEAD, XCH_FAILED_TIMEOUT, 0 );
+	bool result = xch->resend();
+	
+	if( !result )
 		xch->dec( true );
 
-		return false;
-	}
-
-	xch->lock.lock();
-
-	long count = ipqueue.count();
-	long index = 0;
-
-	for( ; index < count; index++ )
-	{
-		PACKET_IP packet;
-		ipqueue.get( packet, index );
-
-		iked.send_ip(
-			packet );
-	}
-
-	xch->lock.unlock();
-
-	iked.log.txt( LLOG_INFO,
-		"ii : resend %i packet(s) for %s exchange\n",
-		count,
-		xch->name() );
-
-	attempt++;
-
-	return true;
+	return result;
 }
 
 //==============================================================================
@@ -149,10 +119,49 @@ XCH_STATUS _IDB_XCH::status( XCH_STATUS status, XCH_ERRORCODE errorcode, uint16_
 	return cur_status;
 }
 
+bool _IDB_XCH::resend()
+{
+	if( event_resend.attempt >= iked.retry_count )
+	{
+		iked.log.txt( LLOG_INFO,
+				"ii : resend limit exceeded for %s exchange\n",
+				name() );
+
+		status( XCH_STATUS_DEAD, XCH_FAILED_TIMEOUT, 0 );
+
+		return false;
+	}
+
+	lock.lock();
+
+	long count = event_resend.ipqueue.count();
+	long index = 0;
+
+	for( ; index < count; index++ )
+	{
+		PACKET_IP packet;
+		event_resend.ipqueue.get( packet, index );
+
+		iked.send_ip(
+			packet );
+	}
+
+	lock.unlock();
+
+	iked.log.txt( LLOG_INFO,
+		"ii : resend %i packet(s) for %s exchange\n",
+		count,
+		name() );
+
+	event_resend.attempt++;
+
+	return true;
+}
+
 bool _IDB_XCH::resend_queue( PACKET_IP & packet )
 {
 	//
-	// queue our new packet
+	// queue a packet
 	//
 
 	lock.lock();
@@ -162,6 +171,19 @@ bool _IDB_XCH::resend_queue( PACKET_IP & packet )
 	lock.unlock();
 
 	return added;
+}
+
+void _IDB_XCH::resend_purge()
+{
+	//
+	// purge our queue
+	//
+
+	lock.lock();
+
+	event_resend.ipqueue.clean();
+
+	lock.unlock();
 }
 
 bool _IDB_XCH::resend_sched( bool lock )
@@ -203,13 +225,13 @@ bool _IDB_XCH::resend_sched( bool lock )
 	return true;
 }
 
-void _IDB_XCH::resend_clear( bool lock )
+void _IDB_XCH::resend_clear( bool lock, bool purge )
 {
 	if( lock )
 		iked.lock_idb.lock();
 
 	//
-	// remove resend event and clear our queue
+	// remove resend event
 	//
 
 	if( iked.ith_timer.del( &event_resend ) )
@@ -220,6 +242,13 @@ void _IDB_XCH::resend_clear( bool lock )
 			name(),
 			idb_refcount );
 	}
+
+	//
+	// optionally purge our queue
+	//
+
+	if( purge )
+		resend_purge();
 
 	if( lock )
 		iked.lock_idb.unlock();

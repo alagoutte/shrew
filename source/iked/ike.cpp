@@ -116,7 +116,7 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	//
 
 	if( retry )
-		xch->resend_clear( true );
+		xch->resend_clear( true, true );
 
 	//
 	// estimate the maximum packet size

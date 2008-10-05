@@ -189,7 +189,7 @@ void _IDB_CFG::end()
 	// clear the resend queue
 	//
 
-	resend_clear( false );
+	resend_clear( false, true );
 }
 
 //------------------------------------------------------------------------------

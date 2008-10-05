@@ -93,10 +93,16 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// with an sa marked for delete
 	//
 
-	if( ( ph1->status() == XCH_STATUS_DEAD ) ||
-	    ( cfg->status() == XCH_STATUS_DEAD ) )
+	if( ph1->status() == XCH_STATUS_DEAD )
 	{
-		log.txt( LLOG_ERROR, "!! : config packet ignored ( sa marked for death )\n" );
+		log.txt( LLOG_ERROR, "!! : config packet ignored ( phase1 marked for death )\n" );
+		cfg->dec( true );
+		return LIBIKE_OK;
+	}
+
+	if( cfg->status() == XCH_STATUS_DEAD )
+	{
+		log.txt( LLOG_ERROR, "!! : config packet ignored ( config marked for death )\n" );
 		cfg->dec( true );
 		return LIBIKE_OK;
 	}
@@ -108,7 +114,20 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( ph1->status() < XCH_STATUS_MATURE )
 	{
-		log.txt( LLOG_ERROR, "!! : config packet ignored ( sa not mature )\n" );
+		log.txt( LLOG_ERROR, "!! : config packet ignored ( phase1 not mature )\n" );
+		cfg->dec( true );
+		return LIBIKE_OK;
+	}
+
+	//
+	// make sure we are not dealing
+	// with a mature sa
+	//
+
+	if( cfg->status() >= XCH_STATUS_MATURE )
+	{
+		log.txt( LLOG_ERROR, "!! : config packet ignored, resending last packet ( config already mature )\n" );
+		cfg->resend();
 		cfg->dec( true );
 		return LIBIKE_OK;
 	}
@@ -420,7 +439,7 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 		}
 
 		cfg->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
-		cfg->resend_clear( true );
+		cfg->resend_clear( true, false );
 	}
 
 	return LIBIKE_OK;
@@ -870,75 +889,6 @@ bool _IKED::config_client_xconf_push_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 
 bool _IKED::config_client_xconf_push_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 {
-	if( !( cfg->xstate & CSTATE_SENT_XCONF ) )
-	{
-		//
-		// in push mode the client doesnt
-		// request its desired attributes
-		//
-
-		cfg->tunnel->xconf.rqst = cfg->tunnel->peer->xconf_source->config.opts;
-
-		//
-		// obtain the client xconf config
-		//
-
-		cfg->tunnel->peer->xconf_source->rslt(
-			cfg->tunnel );
-
-		//
-		// if we are to generate a policy
-		// list during config, do this now
-		//
-
-		if( cfg->tunnel->peer->plcy_mode == POLICY_MODE_CONFIG )
-			policy_list_create( cfg->tunnel, false );
-
-		if( cfg->tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
-			cfg->tunnel->xconf.opts |= IPSEC_OPTS_SPLITNET;
-
-		//
-		// set attributes
-		//
-
-		cfg->mtype = ISAKMP_CFG_SET;
-
-		log.txt( LLOG_INFO, "ii : building config attribute list\n" );
-
-		config_xconf_set( cfg,
-			cfg->tunnel->xconf.opts,
-			0,
-			ph1->vendopts_r );
-
-		//
-		// make sure the msgid is unique
-		//
-
-		rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
-
-		//
-		// generate message iv
-		//
-
-		phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
-
-		//
-		// send config packet
-		//
-
-		log.txt( LLOG_INFO, "ii : sending config push request\n" );
-
-		config_message_send( ph1, cfg );
-
-		//
-		// flag as sent
-		//
-
-		cfg->xstate |= CSTATE_SENT_XCONF;
-
-		return false;
-	}
-
 	if( !( cfg->xstate & CSTATE_SENT_XCONF ) )
 	{
 		//

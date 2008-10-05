@@ -496,7 +496,7 @@ void _IDB_PH1::end()
 	// clear the resend queue
 	//
 
-	resend_clear( false );
+	resend_clear( false, true );
 
 	//
 	// remove scheduled events

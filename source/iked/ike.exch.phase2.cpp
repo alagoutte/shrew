@@ -98,13 +98,31 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	//
 	// make sure we are not dealing
-	// with an sa marked for delete
+	// with an sa marked for death
 	//
 
-	if( ( ph1->status() == XCH_STATUS_DEAD ) ||
-	    ( ph2->status() == XCH_STATUS_DEAD ) )
+	if( ph1->status() == XCH_STATUS_DEAD )
 	{
-		log.txt( LLOG_ERROR, "!! : phase2 packet ignored ( sa marked for death )\n" );
+		log.txt( LLOG_ERROR, "!! : phase2 packet ignored ( phase1 marked for death )\n" );
+		ph2->dec( true );
+		return LIBIKE_OK;
+	}
+
+	if( ph2->status() == XCH_STATUS_DEAD )
+	{
+		log.txt( LLOG_ERROR, "!! : phase2 packet ignored ( phase2 marked for death )\n" );
+		ph2->dec( true );
+		return LIBIKE_OK;
+	}
+
+	//
+	// make sure we are not dealing
+	// whith an imature phase1 sa
+	//
+
+	if( ph1->status() < XCH_STATUS_MATURE )
+	{
+		log.txt( LLOG_ERROR, "!! : config packet ignored ( phase1 not mature )\n" );
 		ph2->dec( true );
 		return LIBIKE_OK;
 	}
@@ -116,7 +134,8 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( ph2->status() >= XCH_STATUS_MATURE )
 	{
-		log.txt( LLOG_ERROR, "!! : phase2 packet ignored ( sa already mature )\n" );
+		log.txt( LLOG_ERROR, "!! : phase2 packet ignored, resending last packet ( phase2 already mature )\n" );
+		ph2->resend();
 		ph2->dec( true );
 		return LIBIKE_OK;
 	}
@@ -647,8 +666,8 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 						txtaddr_r );
 
 					ph2->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
+					ph2->resend_clear( true, false );
 					ph2->clean();
-					ph2->resend_clear( true );
 				}
 			}
 		}
@@ -803,7 +822,7 @@ long _IKED::process_phase2_send( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 			// send packet
 			//
 
-			packet_ike_send( ph1, ph2, packet, false );
+			packet_ike_send( ph1, ph2, packet, true );
 
 			//
 			// generate our keys
@@ -818,8 +837,8 @@ long _IKED::process_phase2_send( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 			ph2->xstate |= XSTATE_SENT_LP;
 
 			ph2->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
+			ph2->resend_clear( true, false );
 			ph2->clean();
-			ph2->resend_clear( true );
 		}
 	}
 

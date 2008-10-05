@@ -583,9 +583,11 @@ typedef class _IDB_XCH : public IDB_RC_ENTRY
 	XCH_STATUS	status();
 	XCH_STATUS	status( XCH_STATUS status, XCH_ERRORCODE errorcode, uint16_t notifycode );
 
+	bool	resend();
 	bool	resend_queue( PACKET_IP & packet );
+	void	resend_purge();
 	bool	resend_sched( bool lock );
-	void	resend_clear( bool lock ) ;
+	void	resend_clear( bool lock, bool purge );
 
 }IDB_XCH;
 

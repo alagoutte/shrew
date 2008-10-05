@@ -85,10 +85,9 @@ void _ITH_EVENT_TUNDPD::next()
 	if( iked.ith_timer.del( this ) )
 	{
 		//
-		// move to the next sequence
+		// reset the attempt counter
 		//
 
-		sequence++;
 		attempt = 0;
 
 		//
@@ -176,10 +175,10 @@ bool _ITH_EVENT_TUNDPD::func()
 	}
 
 	//
-	// add sequence number and send
+	// add new sequence number and send
 	//
 
-	uint32_t dpdseq = htonl( sequence );
+	uint32_t dpdseq = htonl( ++sequence );
 
 	BDATA bdata;
 	bdata.add( &dpdseq, sizeof( dpdseq ) );
