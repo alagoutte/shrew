@@ -728,7 +728,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				// encrypt and send packet
 				//
 
-				packet_ike_send( ph1, ph1, packet, true );
+				packet_ike_send( ph1, ph1, packet, false );
 
 				ph1->xstate |= XSTATE_SENT_ID;
 			}
@@ -893,7 +893,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						// send packet
 						//
 
-						packet_ike_send( ph1, ph1, packet, true );
+						packet_ike_send( ph1, ph1, packet, false );
 
 						ph1->xstate |= XSTATE_SENT_ID;
 						ph1->xstate |= XSTATE_SENT_HA;
@@ -951,7 +951,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						// send packet
 						//
 
-						packet_ike_send( ph1, ph1, packet, true );
+						packet_ike_send( ph1, ph1, packet, false );
 
 						ph1->xstate |= XSTATE_SENT_ID;
 						ph1->xstate |= XSTATE_SENT_CT;
@@ -1108,7 +1108,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							// send packet
 							//
 
-							packet_ike_send( ph1, ph1, packet, true );
+							packet_ike_send( ph1, ph1, packet, false );
 
 							ph1->xstate |= XSTATE_SENT_HA;
 						}
@@ -1159,7 +1159,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							// send packet
 							//
 
-							packet_ike_send( ph1, ph1, packet, true );
+							packet_ike_send( ph1, ph1, packet, false );
 
 							ph1->xstate |= XSTATE_SENT_CT;
 							ph1->xstate |= XSTATE_SENT_SI;
@@ -1274,7 +1274,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 				packet.done();
 
-				packet_ike_send( ph1, ph1, packet, true );
+				packet_ike_send( ph1, ph1, packet, false );
 
 				ph1->xstate |= XSTATE_SENT_SA;
 				ph1->xstate |= XSTATE_SENT_KE;
@@ -1318,13 +1318,11 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			if( ph1->xstate & XSTATE_RECV_HA )
 			{
 				if( phase1_chk_hash( ph1 ) == LIBIKE_OK )
-				{
 					ph1->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
-					ph1->resend_clear( true, false );
-					ph1->clean();
-				}
 				else
 					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_AUTH, ISAKMP_N_AUTHENTICATION_FAILED );
+
+				ph1->clean();
 			}
 		}
 
@@ -1339,13 +1337,11 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			if( ph1->xstate & XSTATE_RECV_SI )
 			{
 				if( phase1_chk_sign( ph1 ) == LIBIKE_OK )
-				{
 					ph1->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );
-					ph1->resend_clear( true, false );
-					ph1->clean();
-				}
 				else
 					ph1->status( XCH_STATUS_DEAD, XCH_FAILED_PEER_AUTH, ISAKMP_N_AUTHENTICATION_FAILED );
+
+				ph1->clean();
 			}
 		}
 	}

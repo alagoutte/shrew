@@ -108,15 +108,11 @@ long _IKED::packet_ike_send( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	packet_ike_encrypt( ph1, packet, &xch->iv );
 
 	//
-	// if we will be attempting resends
-	// for this packet, clear any old
-	// packets that had previously been
-	// scheduled for resending that are
-	// associated with this db object
+	// clear any old packets associated
+	// with this db object
 	//
 
-	if( retry )
-		xch->resend_clear( true, true );
+	xch->resend_clear( true, true );
 
 	//
 	// estimate the maximum packet size
@@ -302,11 +298,10 @@ long _IKED::packet_ike_xmit( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 	}
 
 	//
-	// potentially queue for resend
+	// queue packet for resend
 	//
 
-	if( retry )
-		xch->resend_queue( packet_ip );
+	xch->resend_queue( packet_ip );
 
 	//
 	// dump for encoded packets
@@ -351,11 +346,15 @@ long _IKED::packet_ike_encap( PACKET_IKE & packet_ike, PACKET_IP & packet_ip, IK
 long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 {
 	log.txt( LLOG_INFO,
-		"=< : using ISAKMP SA %08x%08x:%08x%08x\n",
+		"=< : cookies %08x%08x:%08x%08x\n",
 		htonl( *( long * ) &sa->cookies.i[ 0 ] ),
 		htonl( *( long * ) &sa->cookies.i[ 4 ] ),
 		htonl( *( long * ) &sa->cookies.r[ 0 ] ),
 		htonl( *( long * ) &sa->cookies.r[ 4 ] ) );
+
+	log.txt( LLOG_INFO,
+		"=< : message %08x\n",
+		htonl( packet.get_msgid() ) );
 
 	//
 	// check if decrypt is required
@@ -431,7 +430,7 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 		LLOG_DECODE,
 		data,
 		size,
-		"<= : decrypt packet" );
+		"== : decrypt packet" );
 
 	//
 	// validate the packet integrity
@@ -517,7 +516,7 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 		LLOG_DECODE,
 		iv->buff(),
 		iv->size(),
-		"== : stored iv" );
+		"<= : stored iv" );
 	
 	return LIBIKE_OK;
 }
@@ -525,11 +524,15 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 long _IKED::packet_ike_encrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 {
 	log.txt( LLOG_INFO,
-		"=< : using ISAKMP SA %08x%08x:%08x%08x\n",
+		">= : cookies %08x%08x:%08x%08x\n",
 		htonl( *( long * ) &sa->cookies.i[ 0 ] ),
 		htonl( *( long * ) &sa->cookies.i[ 4 ] ),
 		htonl( *( long * ) &sa->cookies.r[ 0 ] ),
 		htonl( *( long * ) &sa->cookies.r[ 4 ] ) );
+
+	log.txt( LLOG_INFO,
+		">= : message %08x\n",
+		htonl( packet.get_msgid() ) );
 
 	//
 	// check if encrypt is required
@@ -553,7 +556,7 @@ long _IKED::packet_ike_encrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 		LLOG_DECODE,
 		packet.buff(),
 		packet.size(),
-		"=> : encrypt packet" );
+		"== : encrypt packet" );
 
 	//
 	// determine pad length

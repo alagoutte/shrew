@@ -254,9 +254,6 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 	// read packet header
 	//
 
-	log.txt( LLOG_DEBUG,
-		"ii : parsing ike packet header\n" );
-
 	IKE_COOKIES	cookies;
 	uint8_t		payload;
 	uint8_t		exchange;
@@ -281,9 +278,6 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 	// attempt to locate a known sa
 	// sa for this packet
 	//
-
-	log.txt( LLOG_DEBUG,
-		"ii : attempting to locate phase1 sa for packet\n" );
 
 	IDB_PH1 * ph1 = NULL;
 

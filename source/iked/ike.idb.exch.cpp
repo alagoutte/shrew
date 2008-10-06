@@ -148,10 +148,18 @@ bool _IDB_XCH::resend()
 
 	lock.unlock();
 
+	char txtaddr_l[ LIBIKE_MAX_TEXTADDR ];
+	char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
+
+	iked.text_addr( txtaddr_l, &tunnel->saddr_l, true );
+	iked.text_addr( txtaddr_r, &tunnel->saddr_r, true );
+
 	iked.log.txt( LLOG_INFO,
-		"ii : resend %i packet(s) for %s exchange\n",
+		"-> : resend %i %s packet(s) %s -> %s\n",
 		count,
-		name() );
+		name(),
+		txtaddr_l,
+		txtaddr_r );
 
 	event_resend.attempt++;
 
