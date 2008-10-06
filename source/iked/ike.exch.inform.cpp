@@ -165,7 +165,7 @@ long _IKED::process_inform_send( IDB_PH1 * ph1, IDB_XCH * inform )
 			inform->hash_l.buff(),
 			inform->hash_l.size() );
 
-		phase2_gen_iv( ph1, inform->msgid, inform->iv );
+		inform->new_msgiv( ph1 );
 	}
 
 	//
@@ -195,8 +195,7 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	//
 
 	inform.msgid = packet.get_msgid();
-
-	phase2_gen_iv( ph1, inform.msgid, inform.iv );
+	inform.new_msgiv( ph1 );
 
 	//
 	// decrypt packet
@@ -853,7 +852,7 @@ long _IKED::inform_new_notify( IDB_PH1 * ph1, IDB_PH2 * ph2, unsigned short code
 	//
 
 	IDB_INF inform;
-	rand_bytes( &inform.msgid, 4 );
+	inform.new_msgid();
 
 	//
 	// will this be a phase1 or phase2 notification
@@ -958,7 +957,7 @@ long _IKED::inform_new_delete( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	//
 
 	IDB_INF inform;
-	rand_bytes( &inform.msgid, 4 );
+	inform.new_msgid();
 
 	//
 	// will this be a phase1 or phase2 notification

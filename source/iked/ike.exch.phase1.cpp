@@ -1427,7 +1427,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 				if( !ph1->initiator && ph1->vendopts_l.flag.xauth )
 				{
-					IDB_CFG * cfg = new IDB_CFG( ph1, true, 0 );
+					IDB_CFG * cfg = new IDB_CFG( ph1, true );
 					cfg->add( true );
 					process_config_send( ph1, cfg );
 					cfg->dec( true );
@@ -1451,7 +1451,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 					if( ph1->tunnel->peer->xconf_mode != CONFIG_MODE_PUSH )
 					{
-						IDB_CFG * cfg = new IDB_CFG( ph1, true, 0 );
+						IDB_CFG * cfg = new IDB_CFG( ph1, true );
 						cfg->add( true );
 						process_config_send( ph1, cfg );
 						cfg->dec( true );

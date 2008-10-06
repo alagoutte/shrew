@@ -657,7 +657,6 @@ typedef class _IKED
 	long	phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet );
 	long	phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2 );
 	long	phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2, long dir, IKE_PROPOSAL * proposal, BDATA & shared );
-	long	phase2_gen_iv( IDB_PH1 * ph1, unsigned long msgid, BDATA & iv );
 
 	// config exchange helper functions
 

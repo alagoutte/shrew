@@ -67,25 +67,19 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		// create new object config object
 		//
 
-		cfg = new IDB_CFG( ph1, false, msgid );
+		cfg = new IDB_CFG( ph1, false );
 		cfg->add( true );
-
-		//
-		// calculate the iv for this config
-		//
-
-		phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
 	}
 
 	//
-	// if the msgid has changed, reset the
+	// if the msgid has changed, set the
 	// config msgid value and the iv
 	//
 
 	if( cfg->msgid != msgid )
 	{
 		cfg->msgid = msgid;
-		phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
+		cfg->new_msgiv( ph1 );
 	}
 
 	//
@@ -818,8 +812,8 @@ bool _IKED::config_client_xconf_pull_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 			// create new msgid and iv
 			//
 
-			rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
-			phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
+			cfg->new_msgid();
+			cfg->new_msgiv( ph1 );
 
 			//
 			// send config packet
@@ -990,10 +984,11 @@ bool _IKED::config_server_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 		cfg->attr_add_v( XAUTH_USER_PASSWORD, NULL, 0 );
 
 		//
-		// generate message iv
+		// create new msgid and iv
 		//
 
-		phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
+		cfg->new_msgid();
+		cfg->new_msgiv( ph1 );
 
 		//
 		// send config packet
@@ -1080,16 +1075,11 @@ bool _IKED::config_server_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 			cfg->attr_add_b( XAUTH_STATUS, 0 );
 
 		//
-		// make sure the msgid is unique
+		// create new msgid and iv
 		//
 
-		rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
-
-		//
-		// generate message iv
-		//
-
-		phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
+		cfg->new_msgid();
+		cfg->new_msgiv( ph1 );
 
 		//
 		// send config packet
@@ -1259,16 +1249,11 @@ bool _IKED::config_server_xconf_push_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 			ph1->vendopts_r );
 
 		//
-		// make sure the msgid is unique
+		// create new msgid and iv
 		//
 
-		rand_bytes( &cfg->msgid, sizeof( cfg->msgid ) );
-
-		//
-		// generate message iv
-		//
-
-		phase2_gen_iv( ph1, cfg->msgid, cfg->iv );
+		cfg->new_msgid();
+		cfg->new_msgiv( ph1 );
 
 		//
 		// send config packet

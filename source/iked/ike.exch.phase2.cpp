@@ -86,7 +86,7 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		// pahse2 exchange
 		//
 
-		phase2_gen_iv( ph1, ph2->msgid, ph2->iv );
+		ph2->new_msgiv( ph1 );
 
 		//
 		// make sure we respond using the
@@ -773,7 +773,7 @@ long _IKED::process_phase2_send( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 			// pahse2 exchange
 			//
 
-			phase2_gen_iv( ph1, ph2->msgid, ph2->iv );
+			ph2->new_msgiv( ph1 );
 
 			//
 			// send packet
@@ -1856,37 +1856,6 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2, long dir, IKE_PROPOSA
 	pfkey_send_update( ph2, proposal, ekey, akey, dir );
 
 	ph2->lstate |= LSTATE_HASKEYS;
-
-	return LIBIKE_OK;
-}
-
-long _IKED::phase2_gen_iv( IDB_PH1 * ph1, unsigned long msgid, BDATA & iv )
-{
-	//
-	// create new informational iv
-	//
-
-	if( ph1->evp_cipher != NULL )
-	{
-		unsigned char iv_data[ EVP_MAX_MD_SIZE ];
-		unsigned long iv_size = EVP_CIPHER_iv_length( ph1->evp_cipher );
-
-		EVP_MD_CTX ctx_hash;
-		EVP_DigestInit( &ctx_hash, ph1->evp_hash );
-		EVP_DigestUpdate( &ctx_hash, ph1->iv.buff(), ph1->iv.size() );
-		EVP_DigestUpdate( &ctx_hash, &msgid, 4 );
-		EVP_DigestFinal( &ctx_hash, iv_data, NULL );
-		EVP_MD_CTX_cleanup( &ctx_hash );
-
-		iv.set( iv_data, iv_size );
-
-		log.bin(
-			LLOG_DEBUG,
-			LLOG_DECODE,
-			iv.buff(),
-			iv.size(),
-			"== : new phase2 iv" );
-	}
 
 	return LIBIKE_OK;
 }

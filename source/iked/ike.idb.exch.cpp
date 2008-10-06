@@ -119,6 +119,39 @@ XCH_STATUS _IDB_XCH::status( XCH_STATUS status, XCH_ERRORCODE errorcode, uint16_
 	return cur_status;
 }
 
+void _IDB_XCH::new_msgid()
+{
+	iked.rand_bytes( &msgid, sizeof( msgid ) );
+}
+
+bool _IDB_XCH::new_msgiv( IDB_PH1 * ph1 )
+{
+	if( ph1->evp_cipher == NULL )
+		return false;
+
+	unsigned char iv_data[ EVP_MAX_MD_SIZE ];
+	unsigned long iv_size = EVP_CIPHER_iv_length( ph1->evp_cipher );
+
+	EVP_MD_CTX ctx_hash;
+	EVP_DigestInit( &ctx_hash, ph1->evp_hash );
+	EVP_DigestUpdate( &ctx_hash, ph1->iv.buff(), ph1->iv.size() );
+	EVP_DigestUpdate( &ctx_hash, &msgid, 4 );
+	EVP_DigestFinal( &ctx_hash, iv_data, NULL );
+	EVP_MD_CTX_cleanup( &ctx_hash );
+
+	iv.set( iv_data, iv_size );
+
+	iked.log.bin(
+		LLOG_DEBUG,
+		LLOG_DECODE,
+		iv.buff(),
+		iv.size(),
+		"== : new %s iv",
+		name() );
+
+	return true;
+}
+
 bool _IDB_XCH::resend()
 {
 	if( event_resend.attempt >= iked.retry_count )

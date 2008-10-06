@@ -272,7 +272,7 @@ _IDB_PH2::_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, uint32_t set_ms
 	if( set_msgid )
 		msgid = set_msgid;
 	else
-		iked.rand_bytes( &msgid, sizeof( msgid ) );
+		new_msgid();
 
 	//
 	// initialize seqids

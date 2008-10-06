@@ -583,6 +583,9 @@ typedef class _IDB_XCH : public IDB_RC_ENTRY
 	XCH_STATUS	status();
 	XCH_STATUS	status( XCH_STATUS status, XCH_ERRORCODE errorcode, uint16_t notifycode );
 
+	void	new_msgid();
+	bool	new_msgiv( IDB_PH1 * ph1 );
+
 	bool	resend();
 	bool	resend_queue( PACKET_IP & packet );
 	void	resend_purge();
@@ -806,7 +809,7 @@ typedef class _IDB_CFG : public IDB_XCH
 
 	// class functions
 
-	_IDB_CFG( IDB_PH1 * set_ph1ref, bool set_initiator, unsigned long set_msgid );
+	_IDB_CFG( IDB_PH1 * set_ph1ref, bool set_initiator );
 	virtual ~_IDB_CFG();
 
 	BDATA		hash;

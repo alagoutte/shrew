@@ -111,7 +111,7 @@ bool _IDB_LIST_CFG::find( bool lock, IDB_CFG ** cfg, IDB_PH1 * ph1 )
 // ike configuration exchange handle list entry
 //==============================================================================
 
-_IDB_CFG::_IDB_CFG( IDB_PH1 * set_ph1ref, bool set_initiator, unsigned long set_msgid )
+_IDB_CFG::_IDB_CFG( IDB_PH1 * set_ph1ref, bool set_initiator )
 {
 	msgid = 0;
 	mtype = 0;
@@ -122,14 +122,6 @@ _IDB_CFG::_IDB_CFG( IDB_PH1 * set_ph1ref, bool set_initiator, unsigned long set_
 	tunnel->inc( true );
 
 	initiator = set_initiator;
-
-	if( set_msgid )
-		msgid = set_msgid;
-	else
-	{
-		iked.rand_bytes( &msgid, sizeof( msgid ) );
-		iked.rand_bytes( &ident, sizeof( ident ) );
-	}
 
 	//
 	// skip xauth if disabled
