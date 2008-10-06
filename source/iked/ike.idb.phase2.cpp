@@ -244,7 +244,6 @@ void _IDB_LIST_PH2::flush()
 _IDB_PH2::_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, uint32_t set_msgid, uint32_t set_seqid_in )
 {
 	memset( &cookies, 0, sizeof( cookies ) );
-	msgid = 0;
 	seqid_in = 0;
 	seqid_out = 0;
 	nailed_plcyid = 0;

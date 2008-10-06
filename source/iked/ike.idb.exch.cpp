@@ -70,6 +70,7 @@ _IDB_XCH::_IDB_XCH()
 	initiator = false;
 	exchange = 0;
 
+	msgid = 0;
 	lstate = 0;
 	xstate = 0;
 
@@ -154,7 +155,7 @@ bool _IDB_XCH::new_msgiv( IDB_PH1 * ph1 )
 
 bool _IDB_XCH::resend()
 {
-	if( event_resend.attempt >= iked.retry_count )
+	if( event_resend.attempt > iked.retry_count )
 	{
 		iked.log.txt( LLOG_INFO,
 				"ii : resend limit exceeded for %s exchange\n",
@@ -239,12 +240,6 @@ bool _IDB_XCH::resend_sched( bool lock )
 	if( status() != XCH_STATUS_DEAD )
 	{
 		//
-		// reset our attempt counter
-		//
-
-		event_resend.attempt = 0;
-
-		//
 		// add our resend event
 		//
 
@@ -270,6 +265,12 @@ void _IDB_XCH::resend_clear( bool lock, bool purge )
 {
 	if( lock )
 		iked.lock_idb.lock();
+
+	//
+	// reset our attempt counter
+	//
+
+	event_resend.attempt = 0;
 
 	//
 	// remove resend event
