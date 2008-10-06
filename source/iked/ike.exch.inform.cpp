@@ -341,7 +341,7 @@ long _IKED::process_inform_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		//
 
 		if( packet.get_payload_left() )
-			log.txt( LLOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
+			log.txt( LLOG_ERROR, "!! : unprocessed payload data !!!\n" );
 
 		//
 		// check the result
@@ -695,8 +695,8 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 								proposal_l->life_sec = lsecs;
 								proposal_r->life_sec = lsecs;
 
-								log.txt( LLOG_DEBUG, "XX : spi_l = 0x%08x\n", ntohl( proposal_l->spi.spi ) );
-								log.txt( LLOG_DEBUG, "XX : spi_r = 0x%08x\n", ntohl( proposal_r->spi.spi ) );
+								log.txt( LLOG_DEBUG, "ii : spi_l = 0x%08x\n", ntohl( proposal_l->spi.spi ) );
+								log.txt( LLOG_DEBUG, "ii : spi_r = 0x%08x\n", ntohl( proposal_r->spi.spi ) );
 								pindex++;
 							}
 						}

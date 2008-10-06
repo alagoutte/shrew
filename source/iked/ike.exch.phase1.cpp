@@ -430,7 +430,7 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 		//
 
 		if( packet.get_payload_left() )
-			log.txt( LLOG_ERROR, "XX : warning, unprocessed payload data !!!\n" );
+			log.txt( LLOG_ERROR, "!! : unprocessed payload data\n" );
 
 		//
 		// now that we have decoded the payload,
@@ -1629,7 +1629,7 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	if( ph1->dh_size > result )
 	{
 		log.txt( LLOG_DEBUG,
-			"XX : warning, short DH shared secret computed\n" );
+			"ww : short DH shared secret computed\n" );
 
 		shared.size( result );
 		shared.ins( 0, ph1->dh_size - result );
@@ -2756,14 +2756,7 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 	if( saddr_r->saddr4.sin_port != ph1->tunnel->saddr_r.saddr4.sin_port )
 	{
 
-		if( !ph1->initiator )
-		{
-			log.txt( LLOG_ERROR,
-				"!! : responder port values have floated\n" );
-
-			return false;
-		}
-		else
+		if( ph1->initiator )
 		{
 			if( ph1->tunnel->peer->natt_mode == IPSEC_NATT_NONE )
 			{
@@ -2775,11 +2768,16 @@ bool _IKED::phase1_chk_port( IDB_PH1 * ph1, IKE_SADDR * saddr_r, IKE_SADDR * sad
 
 			if( ph1->tunnel->lstate & TSTATE_NATT_FLOAT )
 			{
-				log.txt( LLOG_ERROR,
-					"XX : initiator port values should only float once per session\n" );
+				log.txt( LLOG_INFO,
+					"ww : initiator port values should only float once per session\n" );
 
 				return true;
 			}
+		}
+		else
+		{
+			log.txt( LLOG_DEBUG,
+				"ii : responder port values have floated\n" );
 		}
 
 		//

@@ -443,7 +443,7 @@ bool _IDB_PH2::setup_dhgrp()
 
 		if( dh_size > result )
 		{
-			iked.log.txt( LLOG_DEBUG, "XX : warning, short PFS DH public value\n" );
+			iked.log.txt( LLOG_DEBUG, "ww : short PFS DH public value\n" );
 			xl.size( result );
 			xl.ins( 0, dh_size - result );
 		}

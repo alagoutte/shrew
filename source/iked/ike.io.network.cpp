@@ -309,8 +309,8 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		if( !null_cookie )
 		{
 			log.txt( LLOG_INFO,
-				"XX : ike packet from %s ignored, unknown phase1 sa for peer\n"
-				"XX : %08x%08x:%08x%08x\n",
+				"ww : ike packet from %s ignored, unknown phase1 sa for peer\n"
+				"ww : %08x%08x:%08x%08x\n",
 				txtaddr_src,
 				htonl( *( long * ) &cookies.i[ 0 ] ),
 				htonl( *( long * ) &cookies.i[ 4 ] ),
@@ -351,7 +351,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 					&saddr_src ) )
 			{
 				log.txt( LLOG_INFO,
-					"XX : ike packet from %s ignored, no matching definition for peer\n",
+					"ww : ike packet from %s ignored, no matching definition for peer\n",
 					txtaddr_src );
 
 				return LIBIKE_OK;
@@ -362,7 +362,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 			if( tunnel == NULL )
 			{
 				log.txt( LLOG_INFO,
-					"XX : ike packet from %s ignored, unable to create tunnel object\n",
+					"ww : ike packet from %s ignored, unable to create tunnel object\n",
 					txtaddr_src );
 
 				peer->dec( true );
@@ -381,7 +381,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		if( exchange != tunnel->peer->exchange )
 		{
 			log.txt( LLOG_INFO,
-				"XX : ike packet from %s ignored, exchange type mismatch for peer\n",
+				"ww : ike packet from %s ignored, exchange type mismatch for peer\n",
 				txtaddr_src );
 
 			tunnel->dec( true );
@@ -392,7 +392,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 			( tunnel->peer->contact != IPSEC_CONTACT_BOTH ) )
 		{
 			log.txt( LLOG_INFO,
-				"XX : ike packet from %s ignored, contact is denied for peer\n",
+				"ww : ike packet from %s ignored, contact is denied for peer\n",
 				txtaddr_src );
 
 			tunnel->dec( true );
@@ -402,7 +402,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		if( packet.get_msgid() )
 		{
 			log.txt( LLOG_INFO,
-				"XX : ike packet from %s ignored, invalid message id for exchange type\n",
+				"ww : ike packet from %s ignored, invalid message id for exchange type\n",
 				txtaddr_src );
 
 			tunnel->dec( true );
@@ -422,7 +422,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 		if( ph1 == NULL )
 		{
 			log.txt( LLOG_INFO,
-				"XX : ike packet from %s ignored, unable to create phase1 handle\n",
+				"ww : ike packet from %s ignored, unable to create phase1 handle\n",
 				txtaddr_src );
 
 			tunnel->dec( true );

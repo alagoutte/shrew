@@ -684,7 +684,7 @@ bool _IDB_PH1::setup_dhgrp( IKE_PROPOSAL * proposal )
 
 	if( dh_size > result )
 	{
-		iked.log.txt( LLOG_DEBUG, "XX : warning, short DH public value\n" );
+		iked.log.txt( LLOG_DEBUG, "ww : short DH public value\n" );
 		xl.size( result );
 		xl.ins( 0, dh_size - result );
 	}
