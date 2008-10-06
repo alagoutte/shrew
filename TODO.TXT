@@ -222,12 +222,27 @@ X Validate and document support for Fortigate gateways
 X Fix NDIS 6 miniport problems with filter driver
 X Fix VPN Trace problems on 64 bit Windows targets 
 
+2.1.2 release - Bug fix and fine tuning
+----------------------------------------------------------------------
+X Various platform specific bug fixes
+
+2.1.3 release - Bug fix and fine tuning
+----------------------------------------------------------------------
+X Fix Diffie Hellman negotiation failures
+X Fix mature SA packet re-transmit issues
+X Fix config mode packet retransmit issues
+
 Near Term Goals
 ----------------------------------------------------------------------
+. Validate USB WIFI/Ethernet adapter support on Windows Platforms
+. Validate Dialup/PPP adapter support on Vista Platforms
+. Add checks for mandatory reboot post installation
+. Validate and document support for OpenBSD gateways
+. Validate and document support for Strong/OpenSWAN gateways
 x Validate and document support for Checkpoint gateways
 x Validate and document support for Sidewinder gateways
+x Validate and document support for Lancom gateways
 . Use overlapped IO to interface with the windows filter driver
-. Fix config mode packet retransmit issues
 . Add GUI support for multiple DNS/WINS server addresses
 . Cleanup libpfk, its really ugly
 . Fix static buffer usage for temporary string data
