@@ -232,19 +232,24 @@ X Fix Diffie Hellman negotiation failures
 X Fix mature SA packet re-transmit issues
 X Fix config mode packet retransmit issues
 
+2.2.0 release - Bug fix and fine tuning
+----------------------------------------------------------------------
+X Use overlapped IO to interface with the windows filter driver
+X Add checks for mandatory reboot post installation
+
 Near Term Goals
 ----------------------------------------------------------------------
+. Note the connection time and display this as a tooltip
 . Validate USB WIFI/Ethernet adapter support on Windows Platforms
 . Validate Dialup/PPP adapter support on Vista Platforms
-. Add checks for mandatory reboot post installation
 . Validate and document support for OpenBSD gateways
 . Validate and document support for Strong/OpenSWAN gateways
 x Validate and document support for Checkpoint gateways
 x Validate and document support for Sidewinder gateways
 x Validate and document support for Lancom gateways
-. Use overlapped IO to interface with the windows filter driver
 . Add GUI support for multiple DNS/WINS server addresses
 . Cleanup libpfk, its really ugly
+. Write a setkey replacement tool
 . Fix static buffer usage for temporary string data
 . Add support for encrypted configuration storage
 . Validate and document support for SonicWall gateways
