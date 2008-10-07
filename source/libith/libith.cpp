@@ -829,7 +829,7 @@ long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 	switch( result )
 	{
 		case ERROR_SUCCESS:
-			assert( size == dwsize );
+//			assert( size == dwsize );
 			result = IPCERR_OK;
 			break;
 
