@@ -115,21 +115,12 @@ _IDB_PEER::_IDB_PEER( IKE_PEER * set_peer )
 
 	iked.lock_run.unlock();
 
-	// init peer data
-
-	key = NULL;
-
 	if( set_peer != NULL )
 		*static_cast<IKE_PEER*>( this ) = *set_peer;
 }
 
 _IDB_PEER::~_IDB_PEER()
 {
-	// free peer data
-
-	if( key != NULL )
-		EVP_PKEY_free( key );
-
 	// handle idb zero reference condition
 
 	iked.lock_run.lock();

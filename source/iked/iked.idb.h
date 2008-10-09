@@ -60,8 +60,8 @@ typedef class _IDB_LIST_BDATA : public IDB_LIST
 
 	BDATA name;
 
-	bool	add( BDATA & cert );
-	bool	get( BDATA & cert, long index );
+	bool	add( BDATA & bdata );
+	bool	get( BDATA & bdata, long index );
 
 }IDB_LIST_BDATA;
 
@@ -397,13 +397,13 @@ typedef class _IDB_PEER : public IDB_RC_ENTRY, public IKE_PEER
 
 	public:
 
-	BDATA		fpass;
-	BDATA		cert_l;
-	BDATA		cert_r;
-	BDATA		psk;
 	BDATA		iddata_l;
 	BDATA		iddata_r;
-	EVP_PKEY *	key;
+
+	BDATA		cert_l;
+	BDATA		cert_r;
+	BDATA		cert_k;
+	BDATA		psk;
 
 	BDATA			xauth_group;
 	IKED_XAUTH *	xauth_source;
@@ -440,6 +440,7 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 	long		tunnelid;
 	long		tstate;
 	long		lstate;
+	long		natt_version;
 
 	IDB_PEER *	peer;
 	IKEI *		ikei;
@@ -447,7 +448,9 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 	IKE_SADDR	saddr_l;
 	IKE_SADDR	saddr_r;
 
-	long			natt_version;
+	//
+	// FIXME : move client stuff into class
+	//
 
 	IKEI_STATS		stats;
 	IKE_XAUTH		xauth;
@@ -465,7 +468,7 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 	IDB_LIST_PH2ID	idlist_excl;
 
 	//
-	// FIXME : move DHCP state into config handle
+	// FIXME : move DHCP stuff into class
 	//
 
 	uint32_t	dhcp_xid;
@@ -484,7 +487,7 @@ typedef class _IDB_TUNNEL : public IDB_RC_ENTRY
 	virtual void	beg();
 	virtual void	end();
 
-	_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r );
+	_IDB_TUNNEL( IDB_PEER * set_peer, IKE_XCONF * set_xconf, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r );
 	virtual ~_IDB_TUNNEL();
 
 }IDB_TUNNEL;

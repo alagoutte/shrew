@@ -711,7 +711,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 						BDATA sign;
 						phase1_gen_hash_i( ph1, ph1->hash_l );
-						prvkey_rsa_encrypt( ph1->tunnel->peer->key, ph1->hash_l, sign );
+						prvkey_rsa_encrypt( ph1->tunnel->peer->cert_k, ph1->hash_l, sign );
 
 						payload_add_sign( packet, sign, ISAKMP_PAYLOAD_NONE );
 
@@ -944,7 +944,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 						BDATA sign;
 						phase1_gen_hash_r( ph1, ph1->hash_l );
-						prvkey_rsa_encrypt( ph1->tunnel->peer->key, ph1->hash_l, sign );
+						prvkey_rsa_encrypt( ph1->tunnel->peer->cert_k, ph1->hash_l, sign );
 						payload_add_sign( packet, sign, ISAKMP_PAYLOAD_NONE );
 
 						//
@@ -1139,7 +1139,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 							BDATA sign;
 							phase1_gen_hash_i( ph1, ph1->hash_l );
-							prvkey_rsa_encrypt( ph1->tunnel->peer->key, ph1->hash_l, sign );
+							prvkey_rsa_encrypt( ph1->tunnel->peer->cert_k, ph1->hash_l, sign );
 							payload_add_sign( packet, sign, ph1->natt_pldtype );
 
 							//
@@ -1244,7 +1244,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 						BDATA sign;
 						phase1_gen_hash_r( ph1, ph1->hash_l );
-						prvkey_rsa_encrypt( ph1->tunnel->peer->key, ph1->hash_l, sign );
+						prvkey_rsa_encrypt( ph1->tunnel->peer->cert_k, ph1->hash_l, sign );
 						payload_add_sign( packet, sign, ISAKMP_PAYLOAD_VEND );
 
 						ph1->xstate |= XSTATE_SENT_CT;
@@ -2512,9 +2512,9 @@ long _IKED::phase1_chk_sign( IDB_PH1 * ph1 )
 	// peer provided certificate
 	//
 
-	EVP_PKEY * evp_pkey = NULL;
+	BDATA pubkey;
 
-	if( !pubkey_rsa_read( cert, &evp_pkey ) )
+	if( !pubkey_rsa_read( cert, pubkey ) )
 	{
 		log.txt( LLOG_ERROR, "!! : unable to extract public key from remote peer certificate\n" );
 		return LIBIKE_FAILED;
@@ -2526,7 +2526,7 @@ long _IKED::phase1_chk_sign( IDB_PH1 * ph1 )
 	// by the remote peer
 	//
 
-	if( !pubkey_rsa_decrypt( evp_pkey, ph1->sign_r, ph1->hash_r ) )
+	if( !pubkey_rsa_decrypt( pubkey, ph1->sign_r, ph1->hash_r ) )
 	{
 		log.txt( LLOG_ERROR, "!! : unable to compute remote peer signed hash\n" );
 		return LIBIKE_FAILED;

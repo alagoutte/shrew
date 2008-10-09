@@ -547,25 +547,17 @@ typedef class _IKED
 
 	// x.509 certificate helper functions
 
-	bool	cert_2_bdata( BDATA & cert, X509 * x509 );
-	bool	bdata_2_cert( X509 ** x509, BDATA & cert );
-
-	long	cert_save( BDATA & cert, char * fpath );
 	long	cert_load( BDATA & cert, char * fpath, bool ca, BDATA & pass );
-	bool	cert_load_pem( BDATA & cert, FILE * fp, bool ca, BDATA & pass );
-	bool	cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass );
 	bool	cert_desc( BDATA & cert, BDATA & text );
 	bool	cert_subj( BDATA & cert, BDATA & subj );
 	bool	asn1_text( BDATA & asn1, BDATA & text );
 	bool	text_asn1( BDATA & text, BDATA & asn1 );
 	bool	cert_verify( IDB_LIST_CERT & certs, BDATA & ca, BDATA & cert );
 
-	long	prvkey_rsa_load( EVP_PKEY ** evp_pkey, char * fpath, BDATA & pass );
-	bool	prvkey_rsa_load_pem( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass );
-	bool	prvkey_rsa_load_p12( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass );
-	bool	pubkey_rsa_read( BDATA & cert, EVP_PKEY ** evp_pkey );
-	bool	prvkey_rsa_encrypt( EVP_PKEY * evp_pkey, BDATA & hash, BDATA & sign );
-	bool	pubkey_rsa_decrypt( EVP_PKEY * evp_pkey, BDATA & sign, BDATA & hash );
+	long	prvkey_rsa_load( BDATA & prvkey, char * fpath, BDATA & pass );
+	bool	pubkey_rsa_read( BDATA & cert, BDATA & pubkey );
+	bool	prvkey_rsa_encrypt( BDATA & prvkey, BDATA & hash, BDATA & sign );
+	bool	pubkey_rsa_decrypt( BDATA & pubkey, BDATA & sign, BDATA & hash );
 
 	// id helper functions
 

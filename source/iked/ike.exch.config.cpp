@@ -771,6 +771,12 @@ bool _IKED::config_client_xconf_pull_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 			cfg->tunnel->xconf.rqst,
 			ph1->vendopts_r );
 
+		//
+		// add negotiated options
+		//
+
+		cfg->tunnel->xconf.opts |= cfg->tunnel->xconf.rqst & getmask;
+
 		cfg->xstate |= CSTATE_RECV_XCONF;
 
 		return false;
@@ -861,6 +867,12 @@ bool _IKED::config_client_xconf_push_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 			getmask,
 			cfg->tunnel->xconf.rqst,
 			ph1->vendopts_r );
+
+		//
+		// add negotiated options
+		//
+
+		cfg->tunnel->xconf.opts |= cfg->tunnel->xconf.rqst & getmask;
 
 		//
 		// config is now mature

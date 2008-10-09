@@ -357,7 +357,7 @@ bool _IDB_LIST_TUNNEL::find( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, I
 // tunnel list entry
 //==============================================================================
 
-_IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r )
+_IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_XCONF * set_xconf, IKE_SADDR * set_saddr_l, IKE_SADDR * set_saddr_r )
 {
 	ikei = NULL;
 
@@ -394,10 +394,21 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_SADDR * set_saddr_l, IKE_SADD
 #endif
 
 	//
-	// set the default xconf addr
+	// setup xconf
 	//
 
-	xconf.addr = saddr_r.saddr4.sin_addr;
+	if( set_xconf != NULL )
+		xconf = *set_xconf;
+
+	if( !( xconf.opts & IPSEC_OPTS_ADDR ) )
+	{
+		if( peer->contact == IPSEC_CONTACT_CLIENT )
+			xconf.addr = saddr_l.saddr4.sin_addr;
+		else
+			xconf.addr = saddr_r.saddr4.sin_addr;
+
+		xconf.mask.s_addr = 0xffffffff;
+	}
 
 	//
 	// initialize event info
@@ -608,10 +619,10 @@ void _IDB_TUNNEL::end()
 	}
 
 	//
-	// cleaup tunnels that respond to clients
+	// cleaup client tunnels
 	//
 
-	if( peer->contact != IPSEC_CONTACT_CLIENT )
+	if( peer->contact == IPSEC_CONTACT_SERVER )
 	{
 		if( peer->plcy_mode != POLICY_MODE_DISABLE )
 			iked.policy_list_remove( this, false );

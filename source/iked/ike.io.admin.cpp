@@ -93,6 +93,37 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 {
 	loop_ref_inc( "ipc client" );
 
+	//
+	// temporary configuration data
+	//
+
+	IKE_XCONF ike_xconf;
+	memset( &ike_xconf, 0, sizeof( ike_xconf ) );
+
+	IKE_PEER ike_peer;
+	memset( &ike_peer, 0, sizeof( ike_peer ) );
+
+	BDATA xuser;
+	BDATA xpass;
+	BDATA psk;
+	BDATA cert_r;
+	BDATA cert_l;
+	BDATA cert_k;
+	BDATA iddata_r;
+	BDATA iddata_l;
+
+	IDB_LIST_PROPOSAL	proposals;
+	IDB_LIST_PH2ID		idlist_incl;
+	IDB_LIST_PH2ID		idlist_excl;
+	IDB_LIST_DOMAIN		domains;
+
+	IKE_SADDR saddr_l;
+	BDATA fpass;
+
+	//
+	// db configuration objects
+	//
+
 	IDB_PEER *		peer = NULL;
 	IDB_TUNNEL *	tunnel = NULL;
 	VNET_ADAPTER *	adapter = NULL;
@@ -135,95 +166,51 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 		if( result == IPCERR_OK )
 		{
+			//
+			// set default result
+			//
+
+			result = IKEI_RESULT_FAILED;
+
+			//
+			// handle message by type
+			//
+
 			switch( msg.header.type )
 			{
 				//
-				// peer config add message
+				// client config message
+				//
+
+				case IKEI_MSGID_CLIENT:
+				{
+					log.txt( LLOG_INFO, "<A : client config message\n" );
+
+					if( msg.get_client( &ike_xconf ) != IPCERR_OK )
+					{
+						log.txt( LLOG_ERROR, "!! : failed to read client config message\n" );
+						break;
+					}
+
+					result = IKEI_RESULT_OK;
+					break;
+				}
+
+				//
+				// peer config message
 				//
 
 				case IKEI_MSGID_PEER:
 				{
 					log.txt( LLOG_INFO, "<A : peer config add message\n" );
 
-					IKE_PEER ike_peer;
 					if( msg.get_peer( &ike_peer ) != IPCERR_OK )
-						break;
-
-					//
-					// create new peer
-					//
-
-					peer = new IDB_PEER( &ike_peer );
-
-					//
-					// add new peer
-					//
-
-					if( !peer->add( true ) )
 					{
-						log.txt( LLOG_ERROR, "!! : unable to add peer object\n" );
-
-						delete peer;
-
-						msg.set_result( IKEI_RESULT_FAILED );
-						ikei->send_message( msg );
-
-						failure = true;
-
+						log.txt( LLOG_ERROR, "!! : failed to read peer config message\n" );
 						break;
 					}
 
-					//
-					// determine local tunnel addresses
-					//
-
-					IKE_SADDR saddr_l;
-
-					if( !find_addr_l(
-							peer->saddr,
-							saddr_l,
-							500 ) )
-					{
-						log.txt( LLOG_ERROR, "!! : no route to host\n" );
-
-						delete tunnel;
-
-						msg.set_result( IKEI_RESULT_FAILED );
-						ikei->send_message( msg );
-
-						failure = true;
-
-						break;
-					}
-
-					//
-					// create new tunnel
-					//
-
-					tunnel = new IDB_TUNNEL( peer, &saddr_l, &peer->saddr );
-					tunnel->ikei = ikei;
-
-					//
-					// add new tunnel
-					//
-
-					if( !tunnel->add( true ) )
-					{
-						log.txt( LLOG_ERROR, "!! : unable to add tunnel object\n" );
-
-						delete tunnel;
-
-						msg.set_result( IKEI_RESULT_FAILED );
-						ikei->send_message( msg );
-
-						tunnel->close = XCH_FAILED_CLIENT;
-
-						break;
-					}
-
-					msg.set_result( IKEI_RESULT_OK );
-					ikei->send_message( msg );
-
+					result = IKEI_RESULT_OK;
 					break;
 				}
 
@@ -237,51 +224,18 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 					IKE_PROPOSAL proposal;
 					if( msg.get_proposal( &proposal ) != IPCERR_OK )
-						break;
-
-					//
-					// fortigate hack
-					//
-
-//					if( ( proposal.auth_id == XAUTH_AUTH_INIT_PSK ) &&
-//						( peer->xconf_mode == CONFIG_MODE_DHCP ) )
-//						proposal.auth_id = IKE_AUTH_PRESHARED_KEY;
-
-					if( !peer->proposals.add( &proposal, true ) )
 					{
-						log.txt( LLOG_ERROR, "!! : unable to add peer proposal\n" );
-
-						msg.set_result( IKEI_RESULT_FAILED );
-						ikei->send_message( msg );
-
-						tunnel->close = XCH_FAILED_CLIENT;
-
+						log.txt( LLOG_ERROR, "!! : failed to read proposal config message\n" );
 						break;
 					}
 
-					msg.set_result( IKEI_RESULT_OK );
-					ikei->send_message( msg );
-
-					break;
-				}
-
-				//
-				// client config message
-				//
-
-				case IKEI_MSGID_CLIENT:
-				{
-					log.txt( LLOG_INFO, "<A : client config message\n" );
-
-					IKE_XCONF xconf;
-					if( msg.get_client( &xconf ) != IPCERR_OK )
+					if( !proposals.add( &proposal, true ) )
+					{
+						log.txt( LLOG_ERROR, "!! : unable to add proposal\n" );
 						break;
+					}
 
-					tunnel->xconf = xconf;
-
-					msg.set_result( IKEI_RESULT_OK );
-					ikei->send_message( msg );
-
+					result = IKEI_RESULT_OK;
 					break;
 				}
 
@@ -297,24 +251,27 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 					memset( &ph2id, 0, sizeof( ph2id ) );
 
 					long type;
-
 					if( msg.get_network( &type, &ph2id ) != IPCERR_OK )
-						break;
-
-					switch( type )
 					{
-						case UNITY_SPLIT_INCLUDE:
-							tunnel->idlist_incl.add( ph2id );
-							break;
-
-						case UNITY_SPLIT_EXCLUDE:
-							tunnel->idlist_excl.add( ph2id );
-							break;
+						log.txt( LLOG_ERROR, "!! : failed to read remote resource message\n" );
+						break;
 					}
 
-					msg.set_result( IKEI_RESULT_OK );
-					ikei->send_message( msg );
+					bool added = false;
 
+					if( type == UNITY_SPLIT_INCLUDE )
+						added = idlist_incl.add( ph2id );
+
+					if( type == UNITY_SPLIT_EXCLUDE )
+						added = idlist_excl.add( ph2id );
+
+					if( !added )
+					{
+						log.txt( LLOG_ERROR, "!! : unable to add network\n" );
+						break;
+					}
+
+					result = IKEI_RESULT_OK;
 					break;
 				}
 
@@ -328,7 +285,10 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 					long	type;
 
 					if( msg.get_cfgstr( &type, &text ) != IPCERR_OK )
+					{
+						log.txt( LLOG_ERROR, "!! : failed to read config string message\n" );
 						break;
+					}
 
 					switch( type )
 					{
@@ -340,11 +300,9 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : xauth username message\n" );
 
-							tunnel->xauth.user = text;
+							xuser = text;
 
-							msg.set_result( IKEI_RESULT_OK );
-							ikei->send_message( msg );
-
+							result = IKEI_RESULT_OK;
 							break;
 						}
 
@@ -356,11 +314,9 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : xauth password message\n" );
 
-							tunnel->xauth.pass = text;
+							xpass = text;
 
-							msg.set_result( IKEI_RESULT_OK );
-							ikei->send_message( msg );
-
+							result = IKEI_RESULT_OK;
 							break;
 						}
 
@@ -372,11 +328,9 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : preshared key message\n" );
 
-							tunnel->peer->psk = text;
+							psk = text;
 
-							msg.set_result( IKEI_RESULT_OK );
-							ikei->send_message( msg );
-
+							result = IKEI_RESULT_OK;
 							break;
 						}
 
@@ -388,11 +342,9 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : file password\n" );
 
-							tunnel->peer->fpass = text;
+							fpass = text;
 
-							msg.set_result( IKEI_RESULT_OK );
-							ikei->send_message( msg );
-
+							result = IKEI_RESULT_OK;
 							break;
 						}
 
@@ -406,27 +358,20 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 							log.txt( LLOG_INFO, "<A : remote cert \'%s\' message\n", text.text() );
 
-							long loaded = cert_load( tunnel->peer->cert_r, text.text(), true, tunnel->peer->fpass );
-
-							switch( loaded )
+							switch( cert_load( cert_r, text.text(), true, fpass ) )
 							{
 								case FILE_OK:
-									msg.set_result( IKEI_RESULT_OK );
-									ikei->send_message( msg );
 									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text.text() );
-									break;
-
-								case FILE_PATH:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text.text() );
-									msg.set_result( IKEI_RESULT_FAILED );
-									ikei->send_message( msg );
-									tunnel->close = XCH_FAILED_CLIENT;
+									result = IKEI_RESULT_OK;
 									break;
 
 								case FILE_FAIL:
 									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text.text() );
-									msg.set_result( IKEI_RESULT_PASSWD );
-									ikei->send_message( msg );
+									result = IKEI_RESULT_PASSWD;
+									break;
+
+								case FILE_PATH:
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text.text() );
 									break;
 							}
 
@@ -443,27 +388,20 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 							log.txt( LLOG_INFO, "<A : local cert \'%s\' message\n", text.text() );
 
-							long loaded = cert_load( tunnel->peer->cert_l, text.text(), false, tunnel->peer->fpass );
-
-							switch( loaded )
+							switch( cert_load( cert_l, text.text(), false, fpass ) )
 							{
 								case FILE_OK:
-									msg.set_result( IKEI_RESULT_OK );
-									ikei->send_message( msg );
 									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text.text() );
-									break;
-
-								case FILE_PATH:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text.text() );
-									msg.set_result( IKEI_RESULT_FAILED );
-									ikei->send_message( msg );
-									tunnel->close = XCH_FAILED_CLIENT;
+									result = IKEI_RESULT_OK;
 									break;
 
 								case FILE_FAIL:
 									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text.text() );
-									msg.set_result( IKEI_RESULT_PASSWD );
-									ikei->send_message( msg );
+									result = IKEI_RESULT_PASSWD;
+									break;
+
+								case FILE_PATH:
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text.text() );
 									break;
 							}
 
@@ -480,27 +418,20 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 							log.txt( LLOG_INFO, "<A : local key \'%s\' message\n", text.text() );
 
-							long loaded = prvkey_rsa_load( &tunnel->peer->key, text.text(), tunnel->peer->fpass );
-
-							switch( loaded )
+							switch( prvkey_rsa_load( cert_k, text.text(), fpass ) )
 							{
 								case FILE_OK:
-									msg.set_result( IKEI_RESULT_OK );
-									ikei->send_message( msg );
 									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text.text() );
-									break;
-
-								case FILE_PATH:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text.text() );
-									msg.set_result( IKEI_RESULT_FAILED );
-									ikei->send_message( msg );
-									tunnel->close = XCH_FAILED_CLIENT;
+									result = IKEI_RESULT_OK;
 									break;
 
 								case FILE_FAIL:
 									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text.text() );
-									msg.set_result( IKEI_RESULT_PASSWD );
-									ikei->send_message( msg );
+									result = IKEI_RESULT_PASSWD;
+									break;
+
+								case FILE_PATH:
+									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text.text() );
 									break;
 							}
 
@@ -515,15 +446,13 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						{
 							BDATA idval;
 							idval = text;
-							idval.add( "", 1 );
+							idval.add( 0, 1 );
 
 							log.txt( LLOG_INFO, "<A : local id \'%s\' message\n", idval.text() );
 
-							tunnel->peer->iddata_l = text;
+							iddata_l = text;
 
-							msg.set_result( IKEI_RESULT_OK );
-							ikei->send_message( msg );
-
+							result = IKEI_RESULT_OK;
 							break;
 						}
 
@@ -535,15 +464,13 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						{
 							BDATA idval;
 							idval = text;
-							idval.add( "", 1 );
+							idval.add( 0, 1 );
 
 							log.txt( LLOG_INFO, "<A : remote id \'%s\' message\n", idval.text() );
 
-							tunnel->peer->iddata_r = text;
+							iddata_r = text;
 
-							msg.set_result( IKEI_RESULT_OK );
-							ikei->send_message( msg );
-
+							result = IKEI_RESULT_OK;
 							break;
 						}
 
@@ -553,15 +480,13 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 						case CFGSTR_SPLIT_DOMAIN:
 						{
-							text.add( "", 1 );
+							text.add( 0, 1 );
 
 							log.txt( LLOG_INFO, "<A : split dns \'%s\' message\n", text.text() );
 
-							tunnel->domains.add( text );
+							domains.add( text );
 
-							msg.set_result( IKEI_RESULT_OK );
-							ikei->send_message( msg );
-
+							result = IKEI_RESULT_OK;
 							break;
 						}
 					}
@@ -578,88 +503,128 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 					long enable;
 
 					if( msg.get_enable( &enable ) != IPCERR_OK )
+					{
+						log.txt( LLOG_ERROR, "!! : failed to read tunnel enable message\n" );
 						break;
+					}
 
 					if( enable )
 					{
 						log.txt( LLOG_INFO, "<A : peer tunnel enable message\n" );
 
 						//
-						// if the tunnel peer definition states
-						// that we are to act as a client, create
-						// a new phase1 sa and add it to our list
+						// create peer object
 						//
 
-						if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
+						peer = new IDB_PEER( &ike_peer );
+						if( peer == NULL )
 						{
-							IDB_PH1 * ph1 = new IDB_PH1( tunnel, true, NULL );
-							ph1->add( true );
-							process_phase1_send( ph1 );
-							ph1->dec( true );
+							log.txt( LLOG_ERROR, "!! : unable to create peer object\n" );
+							failure = true;
+							break;
 						}
 
-						if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
+						peer->psk = psk;
+						peer->cert_r = cert_r;
+						peer->cert_l = cert_l;
+						peer->cert_k = cert_l;
+						peer->iddata_r = iddata_r;
+						peer->iddata_l = iddata_l;
+
+						IKE_PROPOSAL * proposal;
+
+						long index = 0;
+						while( proposals.get( &proposal, index++ ) )
+							peer->proposals.add( proposal, true );
+
+						if( !peer->add( true ) )
 						{
-							//
-							// configure our private tunnel endpoint
-							//
-
-							if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
-							{
-								//
-								// if we require a virutal adapter,
-								// create one now as the startup
-								// time can be long if a new device
-								// instance needs to be created
-								//
-
-								if( !vnet_get( &adapter ) )
-								{
-									log.txt( LLOG_ERROR, "ii : unable to create vnet adapter ...\n" );
-									tunnel->close = XCH_FAILED_ADAPTER;
-
-									enable = false;
-								}
-							}
-							else
-							{
-								//
-								// if we are using a public adapter,
-								// set our client info to match the
-								// selected interface
-								//
-
-								tunnel->xconf.addr = tunnel->saddr_l.saddr4.sin_addr;
-								tunnel->xconf.mask.s_addr = 0xffffffff;
-							}
-
-							//
-							// add the statistics event
-							//
-
-							tunnel->inc( true );
-							tunnel->event_stats.delay = 1000;
-							ith_timer.add( &tunnel->event_stats );
+							log.txt( LLOG_ERROR, "!! : unable to add peer object\n" );
+							failure = true;
+							delete peer;
+							peer = NULL;
+							break;
 						}
-					}
-					else
-					{
-						log.txt( LLOG_INFO, "<A : peer tunnel disable message\n" );
-						tunnel->close = XCH_FAILED_USERREQ;
-					}
 
-					if( enable )
-					{
+						//
+						// determine local tunnel addresses
+						//
+
+						if( !find_addr_l(
+								peer->saddr,
+								saddr_l,
+								500 ) )
+						{
+							log.txt( LLOG_ERROR, "!! : no route to host\n" );
+							failure = true;
+							break;
+						}
+
+						//
+						// create tunnel object
+						//
+
+						tunnel = new IDB_TUNNEL( peer, &ike_xconf, &saddr_l, &peer->saddr );
+						if( tunnel == NULL )
+						{
+							log.txt( LLOG_ERROR, "!! : unable to create tunnel object\n" );
+							failure = true;
+							break;
+						}
+
+						tunnel->ikei = ikei;
+						tunnel->xauth.user = xuser;
+						tunnel->xauth.pass = xpass;
+
+						IKE_PH2ID ph2id;
+
+						index = 0;
+						while( idlist_incl.get( ph2id, index++ ) )
+							tunnel->idlist_incl.add( ph2id );
+
+						index = 0;
+						while( idlist_excl.get( ph2id, index++ ) )
+							tunnel->idlist_excl.add( ph2id );
+
+						BDATA domain;
+
+						index = 0;
+						while( domains.get( domain, index++ ) )
+							tunnel->domains.add( domain );
+
+						if( !tunnel->add( true ) )
+						{
+							log.txt( LLOG_ERROR, "!! : unable to add tunnel object\n" );
+							failure = true;
+							delete tunnel;
+							tunnel = NULL;
+							break;
+						}
+
+						//
+						// initiate communications with peer
+						//
+
+						IDB_PH1 * ph1 = new IDB_PH1( tunnel, true, NULL );
+						ph1->add( true );
+						process_phase1_send( ph1 );
+						ph1->dec( true );
+
 						msg.set_enable( true );
 						ikei->send_message( msg );
 					}
 					else
 					{
+						log.txt( LLOG_INFO, "<A : peer tunnel disable message\n" );
+
+						if( tunnel != NULL )
+							tunnel->close = XCH_FAILED_USERREQ;
+
 						msg.set_enable( false );
 						ikei->send_message( msg );
 					}
 
-					break;
+					continue;
 				}
 
 				default:
@@ -668,11 +633,18 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 					break;
 			}
 
+			//
+			// send result message
+			//
+
+			msg.set_result( result );
+			ikei->send_message( msg );
+
 			continue;
 		}
 
 		//
-		// tunnel configuration steps
+		// tunnel configuration steps ( IPCERR_WAKEUP )
 		//
 
 		if( tunnel != NULL )
@@ -709,8 +681,25 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 				if( !tunnel->xconf.mask.s_addr )
 				{
-					log.txt( LLOG_ERROR, "!! : invalid private netmask, defaulting to class c\n" );
+					log.txt( LLOG_ERROR, "!! : invalid private netmask, defaulting to 255.255.255.0\n" );
 					tunnel->xconf.mask.s_addr = inet_addr( "255.255.255.0" );
+				}
+
+				//
+				// if we require a virutal adapter,
+				// create one now as the startup
+				// time can be long if a new device
+				// instance needs to be created
+				//
+
+				if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
+				{
+					if( !vnet_get( &adapter ) )
+					{
+						log.txt( LLOG_ERROR, "ii : unable to create vnet adapter ...\n" );
+						tunnel->close = XCH_FAILED_ADAPTER;
+						break;
+					}
 				}
 
 				//
@@ -732,9 +721,17 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 				// setup dns transparent proxy
 				//
 
-#ifdef OPT_DTP
+				#ifdef OPT_DTP
 				dnsproxy_setup( dtpi, tunnel );
-#endif
+				#endif
+
+				//
+				// add the statistics event
+				//
+
+				tunnel->inc( true );
+				tunnel->event_stats.delay = 1000;
+				ith_timer.add( &tunnel->event_stats );
 
 				//
 				// tunnel is enabled
@@ -747,13 +744,6 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 			}
 		}
 	}
-
-	//
-	// flush our private pcap dump files
-	//
-
-	if( dump_decrypt )
-		pcap_decrypt.flush();
 
 	//
 	// perform tunnel cleanup
@@ -771,8 +761,11 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 	else
 	{
 		//
-		// cleaup our security policy lists
-		// ( caller must hold the sdb lock )
+		// cleanup client settings
+		//
+		// NOTE : policy cleanup must be done here to
+		// avoid route deletion failures from occuring
+		// after a virtual adapter has been removed
 		//
 
 		lock_idb.lock();
@@ -780,32 +773,34 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 		if( tunnel->peer->plcy_mode != POLICY_MODE_DISABLE )
 			iked.policy_list_remove( tunnel, true );
 
-		if( tunnel->peer->xconf_mode == CONFIG_MODE_DHCP )
-			iked.socket_dhcp_remove( tunnel );
-
 		lock_idb.unlock();
 
-		//
-		// cleanup client settings
-		//
+		if( tunnel->peer->xconf_mode == CONFIG_MODE_DHCP )
+			iked.socket_dhcp_remove( tunnel );
 
 		if( tunnel->tstate & TSTATE_VNET_ENABLE )
 			client_cleanup( adapter, tunnel );
 
 		//
-		// if we were using a virutal adapter,
-		// perform some addition cleanup
+		// cleanup dns transparent proxy
 		//
 
-		if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
-		{
-			//
-			// disable the adapter
-			//
+		#ifdef OPT_DTP
+		dnsproxy_cleanup( dtpi );
+		#endif
 
-			if( adapter != NULL )
-				vnet_rel( adapter );
-		}
+		//
+		// release the adapter
+		//
+
+		if( adapter != NULL )
+			vnet_rel( adapter );
+
+		//
+		// flush our arp cache
+		//
+
+		iproute.flusharp( saddr_l.saddr4.sin_addr );
 
 		//
 		// report reason for closing the tunnel
@@ -910,32 +905,18 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 		ikei->send_message( msg );
 
 		//
-		// flush our arp cache
-		//
-
-		iproute.flusharp( tunnel->saddr_l.saddr4.sin_addr );
-
-		//
-		// destroy the tunnel object
+		// release the tunnel object
 		//
 
 		tunnel->dec( true, true );
 	}
 
 	//
-	// perform peer cleanup
+	// release the peer object
 	//
 
 	if( peer != NULL )
 		peer->dec( true, true );
-
-	//
-	// cleanup dns transparent proxy
-	//
-
-#ifdef OPT_DTP
-		dnsproxy_cleanup( dtpi );
-#endif
 
 	//
 	// close the client interface
@@ -946,6 +927,13 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 	ikei->detach();
 
 	delete ikei;
+
+	//
+	// flush our private pcap dump files
+	//
+
+	if( dump_decrypt )
+		pcap_decrypt.flush();
 
 	loop_ref_dec( "ipc client" );
 

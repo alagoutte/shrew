@@ -56,13 +56,13 @@ bool _IDB_LIST_BDATA::add( BDATA & cert )
 	return add_entry( bentry );
 }
 
-bool _IDB_LIST_BDATA::get( BDATA & cert, long index )
+bool _IDB_LIST_BDATA::get( BDATA & bdata, long index )
 {
 	IDB_ENTRY_BDATA * bentry = static_cast<IDB_ENTRY_BDATA*>( get_entry( index ) );
 	if( bentry == NULL )
 		return false;
 
-	cert = *static_cast<BDATA*>( bentry );
+	bdata = *static_cast<BDATA*>( bentry );
 
 	return true;
 }

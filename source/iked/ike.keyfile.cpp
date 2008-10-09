@@ -51,7 +51,76 @@
 # define X509CONST const
 #endif
 
-// openssl password callback
+bool cert_2_bdata( BDATA & cert, X509 * x509 )
+{
+	int size = i2d_X509( x509, NULL );
+	cert.size( size );
+
+	unsigned char * cert_buff = cert.buff();
+	if( i2d_X509( x509, &cert_buff ) < size )
+		return false;
+
+	return true;
+}
+
+bool bdata_2_cert( X509 ** x509, BDATA & cert )
+{
+	X509CONST unsigned char * cert_buff = cert.buff();
+
+	*x509 = d2i_X509( NULL, &cert_buff, ( long ) cert.size() );
+	if( *x509 == NULL )
+		return false;
+
+	return true;
+}
+
+bool prvkey_rsa_2_bdata( BDATA & prvkey, RSA * rsa )
+{
+	int size = i2d_RSAPrivateKey( rsa, NULL );
+	prvkey.size( size );
+
+	unsigned char * prvkey_buff = prvkey.buff();
+	if( i2d_RSAPrivateKey( rsa, &prvkey_buff ) < size )
+		return false;
+
+	return true;
+}
+
+bool bdata_2_prvkey_rsa( RSA ** rsa, BDATA & prvkey )
+{
+	X509CONST unsigned char * prvkey_buff = prvkey.buff();
+
+	*rsa = d2i_RSAPrivateKey( NULL, &prvkey_buff, ( long ) prvkey.size() );
+	if( *rsa == NULL )
+		return false;
+
+	return true;
+}
+
+bool pubkey_rsa_2_bdata( BDATA & pubkey, RSA * rsa )
+{
+	int size = i2d_RSAPublicKey( rsa, NULL );
+	pubkey.size( size );
+
+	unsigned char * pubkey_buff = pubkey.buff();
+	if( i2d_RSAPublicKey( rsa, &pubkey_buff ) < size )
+		return false;
+
+	return true;
+}
+
+bool bdata_2_pubkey_rsa( RSA ** rsa, BDATA & pubkey )
+{
+	X509CONST unsigned char * pubkey_buff = pubkey.buff();
+
+	*rsa = d2i_RSAPublicKey( NULL, &pubkey_buff, ( long ) pubkey.size() );
+	if( *rsa == NULL )
+		return false;
+
+	return true;
+}
+
+// openssl keyfile callback
 
 int keyfile_cb( char * buf, int size, int rwflag, void * userdata )
 {
@@ -67,58 +136,7 @@ int keyfile_cb( char * buf, int size, int rwflag, void * userdata )
 	return size;
 }
 
-bool _IKED::cert_2_bdata( BDATA & cert, X509 * x509 )
-{
-	int size = i2d_X509( x509, NULL );
-	cert.size( size );
-
-	unsigned char * cert_buff = cert.buff();
-	if( i2d_X509( x509, &cert_buff ) < size )
-		return false;
-
-	return true;
-}
-
-bool _IKED::bdata_2_cert( X509 ** x509, BDATA & cert )
-{
-	X509CONST unsigned char * cert_buff = cert.buff();
-
-	*x509 = d2i_X509( NULL, &cert_buff, ( long ) cert.size() );
-	if( *x509 == NULL )
-		return false;
-
-	return true;
-}
-
-long _IKED::cert_load( BDATA & cert, char * fpath, bool ca, BDATA & pass )
-{
-#ifdef WIN32
-
-	FILE * fp;
-	if( fopen_s( &fp, fpath, "rb" ) )
-		return FILE_PATH;
-
-#else
-
-	FILE * fp = fopen( fpath, "rb" );
-	if( !fp )
-		return FILE_PATH;
-
-#endif
-
-	bool loaded = cert_load_pem( cert, fp, ca, pass );
-	if( !loaded )
-		loaded = cert_load_p12( cert, fp, ca, pass );
-
-	fclose( fp );
-
-	if( !loaded )
-		return FILE_FAIL;
-
-	return FILE_OK;
-}
-
-bool _IKED::cert_load_pem( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
+bool cert_load_pem( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 {
 	fseek( fp, 0, SEEK_SET );
 
@@ -133,7 +151,7 @@ bool _IKED::cert_load_pem( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 	return true;
 }
 
-bool _IKED::cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
+bool cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 {
 	fseek( fp, 0, SEEK_SET );
 
@@ -176,31 +194,30 @@ bool _IKED::cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 	return true;
 }
 
-long _IKED::cert_save( BDATA & cert, char * fpath )
+long _IKED::cert_load( BDATA & cert, char * fpath, bool ca, BDATA & pass )
 {
-	X509 * x509;
-	if( !bdata_2_cert( &x509, cert ) )
-		return FILE_FAIL;
-
 #ifdef WIN32
 
 	FILE * fp;
-	if( fopen_s( &fp, fpath, "wb" ) )
-		return FILE_FAIL;
+	if( fopen_s( &fp, fpath, "rb" ) )
+		return FILE_PATH;
 
 #else
 
-	FILE * fp = fopen( fpath, "wb" );
+	FILE * fp = fopen( fpath, "rb" );
 	if( !fp )
-		return FILE_FAIL;
+		return FILE_PATH;
 
 #endif
-	
-	PEM_write_X509( fp, x509 );
+
+	bool loaded = cert_load_pem( cert, fp, ca, pass );
+	if( !loaded )
+		loaded = cert_load_p12( cert, fp, ca, pass );
 
 	fclose( fp );
 
-	X509_free( x509 );
+	if( !loaded )
+		return FILE_FAIL;
 
 	return FILE_OK;
 }
@@ -507,6 +524,8 @@ bool _IKED::text_asn1( BDATA & text, BDATA & asn1 )
 	return false;
 }
 
+// openssl verify callback
+
 static int verify_cb( int ok, X509_STORE_CTX * store_ctx )
 {
 	if( !ok )
@@ -684,7 +703,44 @@ bool _IKED::cert_verify( IDB_LIST_CERT & certs, BDATA & ca, BDATA & cert )
 	return ( result > 0 );
 }
 
-long _IKED::prvkey_rsa_load( EVP_PKEY ** evp_pkey, char * fpath, BDATA & pass )
+bool prvkey_rsa_load_pem( BDATA & prvkey, FILE * fp, BDATA & pass )
+{
+	fseek( fp, 0, SEEK_SET );
+
+	EVP_PKEY * evp_pkey = PEM_read_PrivateKey( fp, NULL, keyfile_cb, &pass );
+	if( evp_pkey == NULL )
+		return false;
+
+	return true;
+}
+
+bool prvkey_rsa_load_p12( BDATA & prvkey, FILE * fp, BDATA & pass )
+{
+	fseek( fp, 0, SEEK_SET );
+
+	PKCS12 * p12 = d2i_PKCS12_fp( fp, NULL );
+	if( p12 == NULL )
+		return false;
+
+	BDATA passnull;
+	passnull.set( pass );
+	passnull.add( 0, 1 );
+
+	EVP_PKEY * evp_pkey;
+	PKCS12_parse( p12, ( const char * ) passnull.buff(), &evp_pkey, NULL, NULL );
+	PKCS12_free( p12 );
+
+	if( evp_pkey == NULL )
+		return false;
+
+	bool result = prvkey_rsa_2_bdata( prvkey, evp_pkey->pkey.rsa );
+
+	EVP_PKEY_free( evp_pkey );
+
+	return true;
+}
+
+long _IKED::prvkey_rsa_load( BDATA & prvkey, char * fpath, BDATA & pass )
 {
 #ifdef WIN32
 
@@ -700,9 +756,9 @@ long _IKED::prvkey_rsa_load( EVP_PKEY ** evp_pkey, char * fpath, BDATA & pass )
 
 #endif
 
-	bool loaded = prvkey_rsa_load_pem( evp_pkey, fp, pass );
+	bool loaded = prvkey_rsa_load_pem( prvkey, fp, pass );
 	if( !loaded )
-		loaded = prvkey_rsa_load_p12( evp_pkey, fp, pass );
+		loaded = prvkey_rsa_load_p12( prvkey, fp, pass );
 
 	fclose( fp );
 
@@ -712,90 +768,72 @@ long _IKED::prvkey_rsa_load( EVP_PKEY ** evp_pkey, char * fpath, BDATA & pass )
 	return FILE_OK;
 }
 
-bool _IKED::prvkey_rsa_load_pem( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass )
-{
-	fseek( fp, 0, SEEK_SET );
-
-	*evp_pkey = PEM_read_PrivateKey( fp, NULL, keyfile_cb, &pass );
-	if( *evp_pkey == NULL )
-		return false;
-
-	return true;
-}
-
-bool _IKED::prvkey_rsa_load_p12( EVP_PKEY ** evp_pkey, FILE * fp, BDATA & pass )
-{
-	fseek( fp, 0, SEEK_SET );
-
-	PKCS12 * p12 = d2i_PKCS12_fp( fp, NULL );
-	if( p12 == NULL )
-		return false;
-
-	BDATA passnull;
-	passnull.set( pass );
-	passnull.add( 0, 1 );
-
-	PKCS12_parse( p12, ( const char * ) passnull.buff(), evp_pkey, NULL, NULL );
-	PKCS12_free( p12 );
-
-	if( *evp_pkey == NULL )
-		return false;
-
-	return true;
-}
-
-bool _IKED::pubkey_rsa_read( BDATA & cert, EVP_PKEY ** evp_pkey )
+bool _IKED::pubkey_rsa_read( BDATA & cert, BDATA & pubkey )
 {
 	X509 * x509;
 	if( !bdata_2_cert( &x509, cert ) )
 		return false;
 
-	*evp_pkey = X509_get_pubkey( x509 );
+	EVP_PKEY * evp_pkey = X509_get_pubkey( x509 );
 
 	X509_free( x509 );
 
-	if( !( *evp_pkey ) )
+	if( evp_pkey == NULL )
 		return false;
 
-	return true;
+	bool result = pubkey_rsa_2_bdata( pubkey, evp_pkey->pkey.rsa );
+
+	EVP_PKEY_free( evp_pkey );
+
+	return result;
 }
 
-bool _IKED::prvkey_rsa_encrypt( EVP_PKEY * evp_pkey, BDATA & hash, BDATA & sign )
+bool _IKED::prvkey_rsa_encrypt( BDATA & prvkey, BDATA & hash, BDATA & sign )
 {
-	int size = RSA_size( evp_pkey->pkey.rsa );
+	RSA * rsa;
+	if( !bdata_2_prvkey_rsa( &rsa, prvkey ) )
+		return false;
 
+	int size = RSA_size( rsa );
 	sign.size( size );
 
 	size = RSA_private_encrypt(
 				( int ) hash.size(),
 				hash.buff(),
 				sign.buff(),
-				evp_pkey->pkey.rsa,
+				rsa,
 				RSA_PKCS1_PADDING );
 
 	if( size == -1 )
 		return false;
+
+	RSA_free( rsa );
 
 	sign.size( size );
 
 	return true;
 }
 
-bool _IKED::pubkey_rsa_decrypt( EVP_PKEY * evp_pkey, BDATA & sign, BDATA & hash )
+bool _IKED::pubkey_rsa_decrypt( BDATA & pubkey, BDATA & sign, BDATA & hash )
 {
-	int size = RSA_size( evp_pkey->pkey.rsa );
+	RSA * rsa;
+	if( !bdata_2_pubkey_rsa( &rsa, pubkey ) )
+		return false;
 
+	int size = RSA_size( rsa );
 	hash.size( size );
 
 	size = RSA_public_decrypt(
 				( int ) sign.size(),
 				sign.buff(),
 				hash.buff(),
-				evp_pkey->pkey.rsa,
+				rsa,
 				RSA_PKCS1_PADDING );
 
 	if( size == -1 )
 		return false;
+
+	RSA_free( rsa );
 
 	hash.size( size );
 

@@ -357,7 +357,7 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 				return LIBIKE_OK;
 			}
 
-			tunnel = new IDB_TUNNEL( peer, &saddr_dst, &saddr_src );
+			tunnel = new IDB_TUNNEL( peer, NULL, &saddr_dst, &saddr_src );
 
 			if( tunnel == NULL )
 			{

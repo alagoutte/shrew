@@ -469,7 +469,7 @@ long _IKED::pfkey_init_phase2( bool nailed, u_int16_t plcytype, u_int32_t plcyid
 		// tunnel for the peer
 		//
 
-		tunnel = new IDB_TUNNEL( peer, &src, &peer->saddr );
+		tunnel = new IDB_TUNNEL( peer, NULL, &src, &peer->saddr );
 
 		if( tunnel == NULL )
 		{

@@ -231,28 +231,31 @@ X Various platform specific bug fixes
 X Fix Diffie Hellman negotiation failures
 X Fix mature SA packet re-transmit issues
 X Fix config mode packet retransmit issues
+X Add checks for mandatory reboot post install on Windows Platforms
 
-2.2.0 release - Bug fix and fine tuning
+2.2.0 release - Remote access server support
 ----------------------------------------------------------------------
 X Use overlapped IO to interface with the windows filter driver
-X Add checks for mandatory reboot post installation
+X Note the connection time and display this as a tooltip
+X Use bdata instead of openssl key struct pointer in keyfile code
+X Fix secrity flaws in the ipc server admin code
+x Add an option for selecting a randomized virtual subnet address
+. Add GUI support for multiple DNS/WINS server addresses
 
 Near Term Goals
 ----------------------------------------------------------------------
-. Note the connection time and display this as a tooltip
 . Validate USB WIFI/Ethernet adapter support on Windows Platforms
 . Validate Dialup/PPP adapter support on Vista Platforms
 . Validate and document support for OpenBSD gateways
 . Validate and document support for Strong/OpenSWAN gateways
+. Validate and document support for SonicWall gateways
 x Validate and document support for Checkpoint gateways
 x Validate and document support for Sidewinder gateways
-x Validate and document support for Lancom gateways
-. Add GUI support for multiple DNS/WINS server addresses
+. Validate and document support for Lancom gateways
+. Move to QT4 for unix client GUI components
 . Cleanup libpfk, its really ugly
-. Write a setkey replacement tool
 . Fix static buffer usage for temporary string data
 . Add support for encrypted configuration storage
-. Validate and document support for SonicWall gateways
 ? Use QT4 to build unified cross platform GUI components
 ? Add ability to drag site connections as shortcuts
 ? Add support for client connect/disconnect script execution
@@ -263,6 +266,7 @@ x Validate and document support for Lancom gateways
 
 Long Term Goals
 ----------------------------------------------------------------------
+. Write a setkey replacement based on libpfk
 . Finalized kernel drivers signed by Microsoft WHQL
 . Add support for unattended installations ( needs signed drivers )
 . Add support for Intel Mac OSX platforms
