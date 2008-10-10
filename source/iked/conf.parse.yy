@@ -74,6 +74,7 @@ typedef class _IKED IKED;
 IDB_PEER *		peer;
 IKE_PROPOSAL		proposal;
 IDB_LIST_PH2ID *	idlist;
+BDATA			fpass;
 
 %}
 
@@ -994,26 +995,26 @@ peer_line
 	EOS
   |	AUTHDATA CA QUOTED
 	{
-		peer->fpass.del();
+		fpass.del();
 
 		if( iked.cert_load(
 			peer->cert_r,
 			$3->text(),
 			true,
-			peer->fpass ) != FILE_OK )
+			fpass ) != FILE_OK )
 			error( @$, std::string( "unable to load file " ) + $3->text() );
 		delete $3;
 	}
 	EOS
   |	AUTHDATA CA QUOTED QUOTED
 	{
-		peer->fpass.set( *$4 );
+		fpass = *$4;
 
 		if( iked.cert_load(
 			peer->cert_r,
 			$3->text(),
 			true,
-			peer->fpass ) != FILE_OK )
+			fpass ) != FILE_OK )
 			error( @$, std::string( "unable to load file " ) + $3->text() );
 
 		delete $3;
@@ -1022,13 +1023,13 @@ peer_line
 	EOS
   |	AUTHDATA CERT QUOTED
 	{
-		peer->fpass.del();
+		fpass.del();
 		
 		if( iked.cert_load(
 			peer->cert_l,
 			$3->text(),
 			false,
-			peer->fpass ) != FILE_OK )
+			fpass ) != FILE_OK )
 			error( @$, std::string( "unable to load file " ) + $3->text() );
 
 		delete $3;
@@ -1036,13 +1037,13 @@ peer_line
 	EOS
   |	AUTHDATA CERT QUOTED QUOTED
 	{
-		peer->fpass.set( *$4 );
+		fpass = *$4;
 		
 		if( iked.cert_load(
 			peer->cert_l,
 			$3->text(),
 			false,
-			peer->fpass ) != FILE_OK )
+			fpass ) != FILE_OK )
 			error( @$, std::string( "unable to load file " ) + $3->text() );
 
 		delete $3;
@@ -1051,12 +1052,12 @@ peer_line
 	EOS
   |	AUTHDATA PKEY QUOTED
 	{
-		peer->fpass.del();
+		fpass.del();
 		
 		if( iked.prvkey_rsa_load(
-			&peer->key,
+			peer->cert_k,
 			$3->text(),
-			peer->fpass ) != FILE_OK )
+			fpass ) != FILE_OK )
 			error( @$, std::string( "unable to load file " ) + $3->text() );
 
 		delete $3;
@@ -1064,12 +1065,12 @@ peer_line
 	EOS
   |	AUTHDATA PKEY QUOTED QUOTED
 	{
-		peer->fpass.set( *$4 );
+		fpass = *$4;
 		
 		if( iked.prvkey_rsa_load(
-			&peer->key,
+			peer->cert_k,
 			$3->text(),
-			peer->fpass ) != FILE_OK )
+			fpass ) != FILE_OK )
 			error( @$, std::string( "unable to load file " ) + $3->text() );
 
 		delete $3;
