@@ -141,7 +141,7 @@ void _IKEC::run()
 	while( host && * host == ' ' )
 		host++;
 
-	if( isdigit( host[ 0 ] ) )
+	if( inet_addr( host ) != INADDR_NONE )
 	{
 		peer.saddr.saddr4.sin_family = AF_INET;
 		peer.saddr.saddr4.sin_addr.s_addr = inet_addr( host );
@@ -670,8 +670,6 @@ void _IKEC::run()
 			{
 				// wins server addresses
 
-//				xconf.nscfg.nbns_count = 0;
-
 				for( long index = 0; index < IPSEC_NBNS_MAX; index++ )
 				{
 					if( !config.get_string( "client-wins-addr", text, MAX_CONFSTRING, index ) )
@@ -707,8 +705,6 @@ void _IKEC::run()
 			if( !numb )
 			{
 				// dns server addresses
-
-//				xconf.nscfg.dnss_count = 0;
 
 				for( long index = 0; index < IPSEC_DNSS_MAX; index++ )
 				{
