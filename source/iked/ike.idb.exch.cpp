@@ -263,6 +263,9 @@ bool _IDB_XCH::resend_sched( bool lock )
 
 void _IDB_XCH::resend_clear( bool lock, bool purge )
 {
+	if( !event_resend.ipqueue.count() )
+		return;
+
 	if( lock )
 		iked.lock_idb.lock();
 
