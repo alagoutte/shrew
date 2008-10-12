@@ -127,6 +127,7 @@ void _IKEC::run()
 	// default values
 
 	peer.contact = IPSEC_CONTACT_CLIENT;
+	peer.plcy_mode = POLICY_MODE_CONFIG;
 	peer.notify = true;
 
 	// netowrk host
@@ -612,12 +613,18 @@ void _IKEC::run()
 		return;
 	}
 
-	if( !strcmp( "virtual", text ) )
+	if( !strcmp( "virtual", text ) || !strcmp( "random", text ) )
 	{
-		xconf.opts |= ( IPSEC_OPTS_ADDR | IPSEC_OPTS_MASK );
-		xconf.rqst |= ( IPSEC_OPTS_ADDR | IPSEC_OPTS_MASK );
+		bool random = false;
 
-		peer.plcy_mode = POLICY_MODE_CONFIG;
+		if( !strcmp( "virtual", text ) )
+			xconf.rqst |= ( IPSEC_OPTS_ADDR | IPSEC_OPTS_MASK );
+
+		if( !strcmp( "random", text ) )
+		{
+			xconf.opts |= ( IPSEC_OPTS_ADDR | IPSEC_OPTS_MASK );
+			random = true;
+		}
 
 		// ip address and netmask
 
@@ -640,9 +647,16 @@ void _IKEC::run()
 				}
 
 				xconf.mask.s_addr = inet_addr( text );
-
-				xconf.rqst &= ~( IPSEC_OPTS_ADDR | IPSEC_OPTS_MASK );
 			}
+		}
+
+		// randomize address
+
+		if( random )
+		{
+			uint32_t addr = rand();
+			addr &= ~xconf.mask.s_addr;
+			xconf.addr.s_addr |= addr;
 		}
 
 		// adapter mtu
@@ -658,17 +672,20 @@ void _IKEC::run()
 	{
 		if( numb )
 		{
-			xconf.opts |= IPSEC_OPTS_NBNS;
-			xconf.rqst |= IPSEC_OPTS_NBNS;
-
 			// netbios name server address
 
 			numb = 0;
 			config.get_number( "client-wins-auto", &numb );
 
-			if( !numb )
+			if( numb )
 			{
-				// wins server addresses
+				// auto server configuration
+				
+				xconf.rqst |= IPSEC_OPTS_NBNS;
+			}
+			else
+			{
+				// static server configuration
 
 				for( long index = 0; index < IPSEC_NBNS_MAX; index++ )
 				{
@@ -685,7 +702,7 @@ void _IKEC::run()
 					return;
 				}
 
-				xconf.rqst &= ~IPSEC_OPTS_NBNS;
+				xconf.opts |= IPSEC_OPTS_NBNS;
 			}
 		}
 	}
@@ -696,13 +713,16 @@ void _IKEC::run()
 	{
 		if( numb )
 		{
-			xconf.opts |= ( IPSEC_OPTS_DNSS | IPSEC_OPTS_DOMAIN );
-			xconf.rqst |= ( IPSEC_OPTS_DNSS | IPSEC_OPTS_DOMAIN );
-
 			numb = 0;
 			config.get_number( "client-dns-auto", &numb );
 
-			if( !numb )
+			if( numb )
+			{
+				// auto server configuration
+
+				xconf.rqst |= IPSEC_OPTS_DNSS;
+			}
+			else
 			{
 				// dns server addresses
 
@@ -721,17 +741,22 @@ void _IKEC::run()
 					return;
 				}
 
-				xconf.rqst &= ~IPSEC_OPTS_DNSS;
+				xconf.opts |= IPSEC_OPTS_DNSS;
+			}
 
-				// domain name suffix
+			if( !config.get_string( "client-dns-suffix", text, MAX_CONFSTRING, 0 ) )
+			{
+				// auto domain configuration
 
-				if( !config.get_string( "client-dns-suffix", text, MAX_CONFSTRING, 0 ) )
-				{
-					xconf.opts &= ~IPSEC_OPTS_DOMAIN;
-					xconf.rqst &= ~IPSEC_OPTS_DOMAIN;
-				}
-				else
-					strncpy( xconf.nscfg.dnss_suffix, text, CONF_STRLEN );
+				xconf.rqst |= IPSEC_OPTS_DOMAIN;
+			}
+			else
+			{
+				// static domain configuration
+
+				strncpy( xconf.nscfg.dnss_suffix, text, CONF_STRLEN );
+
+				xconf.opts |= IPSEC_OPTS_DOMAIN;
 			}
 		}
 	}
@@ -749,13 +774,16 @@ void _IKEC::run()
 	config.get_number( "policy-list-auto", &numb );
 	if( numb )
 	{
+		// automatic policy config
+
 		xconf.rqst |= IPSEC_OPTS_SPLITNET;
 
-		peer.plcy_mode = POLICY_MODE_CONFIG;
 	}
 	else
 	{
-		peer.plcy_mode = POLICY_MODE_COMPAT;
+		// static policy config
+
+		xconf.opts |= IPSEC_OPTS_SPLITNET;
 	}
 
 	//

@@ -50,6 +50,10 @@
 #define AUTH_MUTUAL_RSA		3
 #define AUTH_MUTUAL_PSK		4
 
+#define AMTXT_VIRTUAL	"Use a virtual adapter and assigned address"
+#define AMTXT_RANDOM	"Use a virtual adapter and random address"
+#define AMTXT_DIRECT	"Use an existing adapter and current address"
+
 #define IDTXT_NONE	"No Identity"
 #define IDTXT_ASN1	"ASN.1 Distinguished Name"
 #define IDTXT_FQDN	"Fully Qualified Domain Name"
@@ -179,14 +183,23 @@ void site::init()
 {
 	comboBoxConfigMethod->setCurrentItem( 1 );
 
-	lineEditAddress->setInputMask( "00D . 00D . 00D . 00D" );
+	lineEditAddress->setInputMask( "009 . 009 . 009 . 009" );
 	lineEditAddress->setText( "0.0.0.0" );
 
-	lineEditNetmask->setInputMask( "00D . 00D . 00D . 00D" );
+	lineEditNetmask->setInputMask( "009 . 009 . 009 . 009" );
 	lineEditNetmask->setText( "255.255.255.255" );
 
-	lineEditDNSServer->setInputMask( "00D . 00D . 00D . 00D" );
-	lineEditDNSServer->setText( "0.0.0.0" );
+	lineEditDNSServer1->setInputMask( "009 . 009 . 009 . 009" );
+	lineEditDNSServer1->setText( "0.0.0.0" );
+
+	lineEditDNSServer2->setInputMask( "009 . 009 . 009 . 009" );
+	lineEditDNSServer2->setText( "0.0.0.0" );
+
+	lineEditDNSServer3->setInputMask( "009 . 009 . 009 . 009" );
+	lineEditDNSServer3->setText( "0.0.0.0" );
+
+	lineEditDNSServer4->setInputMask( "009 . 009 . 009 . 009" );
+	lineEditDNSServer4->setText( "0.0.0.0" );
 
 #ifdef OPT_NATT
 
@@ -206,7 +219,7 @@ void site::init()
 
 	// update dialog
 
-	UpdateGeneral();
+	UpdateGeneral( false, false );
 	UpdateAuthentication();
 	UpdatePhase1();
 	UpdatePhase2();
@@ -306,14 +319,24 @@ bool site::Load( CONFIG & config )
 			comboBoxConfigMethod->setCurrentItem( 3 );
 	}
 
+	UpdateGeneral( false, false );
+
 	// local adapter mode ( default virtual )
 
 	if( config.get_string( "client-iface",
 		text, MAX_CONFSTRING, 0 ) )
-		if( !strcmp( text, "direct" ) )
-			comboBoxAddressMethod->setCurrentItem( 1 );
+	{
+		if( !strcmp( text, "virtual" ) )
+			combobox_setbytext( AMTXT_VIRTUAL, comboBoxAddressMethod );
 
-	if( !comboBoxAddressMethod->currentItem() )
+		if( !strcmp( text, "random" ) )
+			combobox_setbytext( AMTXT_RANDOM, comboBoxAddressMethod );
+
+		if( !strcmp( text, "direct" ) )
+			combobox_setbytext( AMTXT_DIRECT, comboBoxAddressMethod );
+	}
+
+	if( !strcmp( text, "virtual" ) || !strcmp( text, "random" ) )
 	{
 		// virtual adapter mtu
 
@@ -456,9 +479,23 @@ bool site::Load( CONFIG & config )
 
 			// dns server address
 
+			long index = 0;
+
 			if( config.get_string( "client-dns-addr",
-				text, MAX_CONFSTRING, 0 ) )
-				lineEditDNSServer->setText( text );
+				text, MAX_CONFSTRING, index++ ) )
+				lineEditDNSServer1->setText( text );
+
+			if( config.get_string( "client-dns-addr",
+				text, MAX_CONFSTRING, index++ ) )
+				lineEditDNSServer2->setText( text );
+
+			if( config.get_string( "client-dns-addr",
+				text, MAX_CONFSTRING, index++ ) )
+				lineEditDNSServer3->setText( text );
+
+			if( config.get_string( "client-dns-addr",
+				text, MAX_CONFSTRING, index++ ) )
+				lineEditDNSServer4->setText( text );
 
 			// adapter netmask
 
@@ -715,7 +752,7 @@ bool site::Load( CONFIG & config )
 
 	// update dialog
 
-	UpdateGeneral();
+	UpdateGeneral( false, false );
 	UpdateAuthentication();
 	UpdatePhase1();
 	UpdatePhase2();
@@ -764,7 +801,27 @@ bool site::Save( CONFIG & config )
 
 	// local adapter mode
 
-	if( comboBoxAddressMethod->currentItem() )
+	QString amode = comboBoxAddressMethod->currentText();
+
+	if( !amode.compare( AMTXT_VIRTUAL ) )
+	{
+		// direct mode
+
+		config.set_string( "client-iface",
+			"virtual",
+			strlen( "virtual" ) );
+	}
+
+	if( !amode.compare( AMTXT_RANDOM ) )
+	{
+		// direct mode
+
+		config.set_string( "client-iface",
+			"random",
+			strlen( "random" ) );
+	}
+
+	if( !amode.compare( AMTXT_DIRECT ) )
 	{
 		// direct mode
 
@@ -772,14 +829,10 @@ bool site::Save( CONFIG & config )
 			"direct",
 			strlen( "direct" ) );
 	}
-	else
+
+
+	if( !amode.compare( AMTXT_VIRTUAL ) || !amode.compare( AMTXT_RANDOM ) )
 	{
-		// virtual mode
-
-		config.set_string( "client-iface",
-			"virtual",
-			strlen( "virtual" ) );
-
 		// adapter mtu
 
 		config.set_number( "network-mtu-size",
@@ -909,14 +962,43 @@ bool site::Save( CONFIG & config )
 
 			config.set_number( "client-dns-auto", 0 );
 
-			// dns server address
+			// dns server addresses
 
-			QString DNSServer = lineEditDNSServer->text();
+			config.del( "client-dns-addr" );
+
+			QString DNSServer;
+
+			DNSServer = lineEditDNSServer1->text();
 			DNSServer = DNSServer.replace( ' ', "" );
 
-			config.set_string( "client-dns-addr",
-				( char * ) DNSServer.ascii(),
-				DNSServer.length() );
+			if( DNSServer.length() )
+				config.add_string( "client-dns-addr",
+					( char * ) DNSServer.ascii(),
+					DNSServer.length() );
+
+			DNSServer = lineEditDNSServer2->text();
+			DNSServer = DNSServer.replace( ' ', "" );
+
+			if( DNSServer.length() )
+				config.add_string( "client-dns-addr",
+					( char * ) DNSServer.ascii(),
+					DNSServer.length() );
+
+			DNSServer = lineEditDNSServer3->text();
+			DNSServer = DNSServer.replace( ' ', "" );
+
+			if( DNSServer.length() )
+				config.add_string( "client-dns-addr",
+					( char * ) DNSServer.ascii(),
+					DNSServer.length() );
+
+			DNSServer = lineEditDNSServer4->text();
+			DNSServer = DNSServer.replace( ' ', "" );
+
+			if( DNSServer.length() )
+				config.add_string( "client-dns-addr",
+					( char * ) DNSServer.ascii(),
+					DNSServer.length() );
 
 			// dns suffix
 
@@ -1269,61 +1351,103 @@ bool site::Verify()
 	return true;
 }
 
-void site::UpdateGeneral()
+void site::UpdateConfigMethod()
 {
-	QString addrmeth = comboBoxAddressMethod->currentText();
+	UpdateGeneral( true, true );
+}
+
+
+void site::UpdateAddressMethod()
+{
+	UpdateGeneral( false, true );
+}
+
+void site::UpdateAddressAuto()
+{
+	UpdateGeneral( false, false );
+}
+
+void site::UpdateGeneral( bool adflt, bool mdflt )
+{
+	QString amode = comboBoxAddressMethod->currentText();
 
 	// auto configuration
 
 	long aconf = comboBoxConfigMethod->currentItem();
 
-	if( aconf == 3 )
+	switch( aconf )
 	{
-		// dhcp over ipsec
+		case 0:	// disabled
+			comboBoxAddressMethod->setEnabled( true );
+			comboBoxAddressMethod->clear();
+			comboBoxAddressMethod->insertItem( AMTXT_VIRTUAL );
+			comboBoxAddressMethod->insertItem( AMTXT_RANDOM );
+			comboBoxAddressMethod->insertItem( AMTXT_DIRECT );
+			break;
 
-		comboBoxAddressMethod->setEnabled( true );
-		comboBoxAddressMethod->clear();
-		comboBoxAddressMethod->insertItem( "Use virtual adapter and assigned address" );
-	}
-	else
-	{
-		// other modes
+		case 3: // dhcp over ipsec
+			comboBoxAddressMethod->setEnabled( true );
+			comboBoxAddressMethod->clear();
+			comboBoxAddressMethod->insertItem( AMTXT_VIRTUAL );
+			break;
 
-		comboBoxAddressMethod->setEnabled( true );
-		comboBoxAddressMethod->clear();
-		comboBoxAddressMethod->insertItem( "Use virtual adapter and assigned address" );
-		comboBoxAddressMethod->insertItem( "Use existing adapter and current address" );
+		default: // push or pull
+			comboBoxAddressMethod->setEnabled( true );
+			comboBoxAddressMethod->clear();
+			comboBoxAddressMethod->insertItem( AMTXT_VIRTUAL );
+			comboBoxAddressMethod->insertItem( AMTXT_DIRECT );
+			break;
 	}
+
+	combobox_setbytext( ( char * ) amode.ascii(), comboBoxAddressMethod );
+
+	if( amode != comboBoxAddressMethod->currentText() )
+		mdflt = true;
 
 	// adapter mode
 
-	combobox_setbytext( ( char * ) addrmeth.ascii(), comboBoxAddressMethod );
-
-	bool addrmeth_changed = false;
-	if( addrmeth != comboBoxAddressMethod->currentText() )
-		addrmeth_changed = true;
-
-	if( !comboBoxAddressMethod->currentItem() )
+	if( !amode.compare( AMTXT_VIRTUAL ) || !amode.compare( AMTXT_RANDOM ) )
 	{
-		// virtual
-
 		switch( aconf )
 		{
 			case 0:	// autoconf disabled
 				checkBoxAddressAuto->setEnabled( false );
 				checkBoxAddressAuto->setChecked( false );
+				if( mdflt )
+				{
+					if( !amode.compare( AMTXT_VIRTUAL ) )
+					{
+						lineEditAddress->setText( "0.0.0.0" );
+						lineEditNetmask->setText( "255.255.255.0" );
+					}
+				
+					if( !amode.compare( AMTXT_RANDOM ) )
+					{
+						lineEditAddress->setText( "198.18.0.0" );
+						lineEditNetmask->setText( "255.254.0.0" );
+					}
+				}
 				break;
 
 			case 1: // ike config push
 			case 2: // ike config pull
 				checkBoxAddressAuto->setEnabled( true );
-				if( addrmeth_changed )
+				if( mdflt )
+				{
 					checkBoxAddressAuto->setChecked( true );
+					lineEditAddress->setText( "0.0.0.0" );
+					lineEditNetmask->setText( "255.255.255.0" );
+				}
 				break;
 
 			case 3:	// dhcp over ipsec
 				checkBoxAddressAuto->setEnabled( false );
 				checkBoxAddressAuto->setChecked( true );
+				if( mdflt )
+				{
+					lineEditAddress->setText( "0.0.0.0" );
+					lineEditNetmask->setText( "0.0.0.0" );
+				}
 				break;
 		}
 
@@ -1432,17 +1556,26 @@ void site::UpdateNameResolution()
 		else
 			checkBoxDNSAuto->setEnabled( true );
 
-		textLabelDNSServer->setEnabled( true );
+		textLabelDNSServer1->setEnabled( true );
+		textLabelDNSServer2->setEnabled( true );
+		textLabelDNSServer3->setEnabled( true );
+		textLabelDNSServer4->setEnabled( true );
 		textLabelDNSSuffix->setEnabled( true );
 
 		if( checkBoxDNSAuto->isChecked() )
 		{
-			lineEditDNSServer->setEnabled( false );
+			lineEditDNSServer1->setEnabled( false );
+			lineEditDNSServer2->setEnabled( false );
+			lineEditDNSServer3->setEnabled( false );
+			lineEditDNSServer4->setEnabled( false );
 			lineEditDNSSuffix->setEnabled( false );
 		}
 		else
 		{
-			lineEditDNSServer->setEnabled( true );
+			lineEditDNSServer1->setEnabled( true );
+			lineEditDNSServer2->setEnabled( true );
+			lineEditDNSServer3->setEnabled( true );
+			lineEditDNSServer4->setEnabled( true );
 			lineEditDNSSuffix->setEnabled( true );
 		}
 	}
@@ -1452,8 +1585,14 @@ void site::UpdateNameResolution()
 
 		checkBoxDNSAuto->setEnabled( false );
 
-		textLabelDNSServer->setEnabled( false );
-		lineEditDNSServer->setEnabled( false );
+		textLabelDNSServer1->setEnabled( false );
+		textLabelDNSServer2->setEnabled( false );
+		textLabelDNSServer3->setEnabled( false );
+		textLabelDNSServer4->setEnabled( false );
+		lineEditDNSServer1->setEnabled( false );
+		lineEditDNSServer2->setEnabled( false );
+		lineEditDNSServer3->setEnabled( false );
+		lineEditDNSServer4->setEnabled( false );
 
 		textLabelDNSSuffix->setEnabled( false );
 		lineEditDNSSuffix->setEnabled( false );
@@ -2004,4 +2143,3 @@ void site::VerifyAccept()
 
 	return;
 }
-

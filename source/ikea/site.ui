@@ -374,6 +374,11 @@
                         </item>
                         <item>
                             <property name="text">
+                                <string>Use a virtual adpter and random address</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
                                 <string>Use an existing adapter and current address</string>
                             </property>
                         </item>
@@ -758,7 +763,7 @@
                             <x>6</x>
                             <y>6</y>
                             <width>261</width>
-                            <height>120</height>
+                            <height>270</height>
                         </rect>
                     </property>
                     <property name="title">
@@ -783,22 +788,6 @@
                             <bool>true</bool>
                         </property>
                     </widget>
-                    <widget class="QLineEdit">
-                        <property name="name">
-                            <cstring>lineEditDNSSuffix</cstring>
-                        </property>
-                        <property name="enabled">
-                            <bool>false</bool>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>120</x>
-                                <y>80</y>
-                                <width>131</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                    </widget>
                     <widget class="QCheckBox">
                         <property name="name">
                             <cstring>checkBoxDNSEnable</cstring>
@@ -820,7 +809,7 @@
                     </widget>
                     <widget class="QLabel">
                         <property name="name">
-                            <cstring>textLabelDNSServer</cstring>
+                            <cstring>textLabelDNSServer1</cstring>
                         </property>
                         <property name="geometry">
                             <rect>
@@ -831,12 +820,12 @@
                             </rect>
                         </property>
                         <property name="text">
-                            <string>DNS Server Address</string>
+                            <string>Server Address #1</string>
                         </property>
                     </widget>
                     <widget class="QLabel">
                         <property name="name">
-                            <cstring>textLabelDNSSuffix</cstring>
+                            <cstring>textLabelDNSServer2</cstring>
                         </property>
                         <property name="geometry">
                             <rect>
@@ -847,12 +836,12 @@
                             </rect>
                         </property>
                         <property name="text">
-                            <string>DNS Suffix</string>
+                            <string>Server Address #2</string>
                         </property>
                     </widget>
                     <widget class="QLineEdit">
                         <property name="name">
-                            <cstring>lineEditDNSServer</cstring>
+                            <cstring>lineEditDNSServer1</cstring>
                         </property>
                         <property name="enabled">
                             <bool>false</bool>
@@ -870,6 +859,136 @@
                         </property>
                         <property name="alignment">
                             <set>AlignHCenter</set>
+                        </property>
+                    </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditDNSServer2</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>120</x>
+                                <y>80</y>
+                                <width>130</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>0.0.0.0</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignHCenter</set>
+                        </property>
+                    </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditDNSServer3</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>120</x>
+                                <y>110</y>
+                                <width>130</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>0.0.0.0</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignHCenter</set>
+                        </property>
+                    </widget>
+                    <widget class="QLabel">
+                        <property name="name">
+                            <cstring>textLabelDNSServer3</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>110</y>
+                                <width>101</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Server Address #3</string>
+                        </property>
+                    </widget>
+                    <widget class="QLabel">
+                        <property name="name">
+                            <cstring>textLabelDNSServer4</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>140</y>
+                                <width>101</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Server Address #4</string>
+                        </property>
+                    </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditDNSServer4</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>120</x>
+                                <y>140</y>
+                                <width>130</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>0.0.0.0</string>
+                        </property>
+                        <property name="alignment">
+                            <set>AlignHCenter</set>
+                        </property>
+                    </widget>
+                    <widget class="QLineEdit">
+                        <property name="name">
+                            <cstring>lineEditDNSSuffix</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>120</x>
+                                <y>170</y>
+                                <width>131</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                    </widget>
+                    <widget class="QLabel">
+                        <property name="name">
+                            <cstring>textLabelDNSSuffix</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>170</y>
+                                <width>101</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>DNS Suffix</string>
                         </property>
                     </widget>
                 </widget>
@@ -2541,18 +2660,6 @@
         <slot>DelPolicy()</slot>
     </connection>
     <connection>
-        <sender>comboBoxAddressMethod</sender>
-        <signal>activated(int)</signal>
-        <receiver>site</receiver>
-        <slot>UpdateGeneral()</slot>
-    </connection>
-    <connection>
-        <sender>checkBoxAddressAuto</sender>
-        <signal>stateChanged(int)</signal>
-        <receiver>site</receiver>
-        <slot>UpdateGeneral()</slot>
-    </connection>
-    <connection>
         <sender>comboBoxNATTMode</sender>
         <signal>activated(int)</signal>
         <receiver>site</receiver>
@@ -2662,9 +2769,21 @@
     </connection>
     <connection>
         <sender>comboBoxConfigMethod</sender>
-        <signal>activated(const QString&amp;)</signal>
+        <signal>activated(int)</signal>
         <receiver>site</receiver>
-        <slot>UpdateGeneral()</slot>
+        <slot>UpdateConfigMethod()</slot>
+    </connection>
+    <connection>
+        <sender>comboBoxAddressMethod</sender>
+        <signal>activated(int)</signal>
+        <receiver>site</receiver>
+        <slot>UpdateAddressMethod()</slot>
+    </connection>
+    <connection>
+        <sender>checkBoxAddressAuto</sender>
+        <signal>clicked()</signal>
+        <receiver>site</receiver>
+        <slot>UpdateAddressAuto()</slot>
     </connection>
 </connections>
 <tabstops>
@@ -2686,7 +2805,7 @@
     <tabstop>checkBoxBanner</tabstop>
     <tabstop>checkBoxDNSEnable</tabstop>
     <tabstop>checkBoxDNSAuto</tabstop>
-    <tabstop>lineEditDNSServer</tabstop>
+    <tabstop>lineEditDNSServer1</tabstop>
     <tabstop>lineEditDNSSuffix</tabstop>
     <tabstop>comboBoxAuthMethod</tabstop>
     <tabstop>tabWidgetAuthInfo</tabstop>
@@ -2731,7 +2850,9 @@
     <slot access="private">init()</slot>
     <slot>ModPolicy()</slot>
     <slot>DelPolicy()</slot>
-    <slot>UpdateGeneral()</slot>
+    <slot>UpdateConfigMethod()</slot>
+    <slot>UpdateAddressMethod()</slot>
+    <slot>UpdateGeneral( bool adflt, bool mdflt )</slot>
     <slot>UpdateClient()</slot>
     <slot>UpdateNameResolution()</slot>
     <slot>UpdateAuthentication()</slot>
@@ -2746,6 +2867,7 @@
     <slot>InputCertFile()</slot>
     <slot>InputPKeyFile()</slot>
     <slot>VerifyAccept()</slot>
+    <slot>UpdateAddressAuto()</slot>
 </slots>
 <functions>
     <function returnType="bool">Load( CONFIG &amp; config )</function>
