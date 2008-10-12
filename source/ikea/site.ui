@@ -771,25 +771,6 @@
                     </property>
                     <widget class="QCheckBox">
                         <property name="name">
-                            <cstring>checkBoxDNSAuto</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>121</x>
-                                <y>20</y>
-                                <width>130</width>
-                                <height>21</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>Obtain Automatically</string>
-                        </property>
-                        <property name="checked">
-                            <bool>true</bool>
-                        </property>
-                    </widget>
-                    <widget class="QCheckBox">
-                        <property name="name">
                             <cstring>checkBoxDNSEnable</cstring>
                         </property>
                         <property name="geometry">
@@ -969,7 +950,7 @@
                         <property name="geometry">
                             <rect>
                                 <x>120</x>
-                                <y>170</y>
+                                <y>200</y>
                                 <width>131</width>
                                 <height>21</height>
                             </rect>
@@ -982,13 +963,51 @@
                         <property name="geometry">
                             <rect>
                                 <x>10</x>
-                                <y>170</y>
+                                <y>200</y>
                                 <width>101</width>
                                 <height>21</height>
                             </rect>
                         </property>
                         <property name="text">
                             <string>DNS Suffix</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>checkBoxDNSAuto</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>121</x>
+                                <y>20</y>
+                                <width>130</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Obtain Automatically</string>
+                        </property>
+                        <property name="checked">
+                            <bool>true</bool>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>checkBoxSuffixAuto</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>120</x>
+                                <y>170</y>
+                                <width>130</width>
+                                <height>21</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Obtain Automatically</string>
+                        </property>
+                        <property name="checked">
+                            <bool>true</bool>
                         </property>
                     </widget>
                 </widget>
@@ -2636,46 +2655,22 @@
 </widget>
 <connections>
     <connection>
-        <sender>buttonSave</sender>
-        <signal>clicked()</signal>
-        <receiver>site</receiver>
-        <slot>VerifyAccept()</slot>
-    </connection>
-    <connection>
         <sender>buttonCancel</sender>
         <signal>clicked()</signal>
         <receiver>site</receiver>
         <slot>reject()</slot>
     </connection>
     <connection>
-        <sender>pushButtonPolicyMod</sender>
+        <sender>buttonSave</sender>
         <signal>clicked()</signal>
         <receiver>site</receiver>
-        <slot>ModPolicy()</slot>
+        <slot>VerifyAccept()</slot>
     </connection>
     <connection>
-        <sender>pushButtonPolicyDel</sender>
+        <sender>checkBoxAddressAuto</sender>
         <signal>clicked()</signal>
         <receiver>site</receiver>
-        <slot>DelPolicy()</slot>
-    </connection>
-    <connection>
-        <sender>comboBoxNATTMode</sender>
-        <signal>activated(int)</signal>
-        <receiver>site</receiver>
-        <slot>UpdateClient()</slot>
-    </connection>
-    <connection>
-        <sender>comboBoxFragMode</sender>
-        <signal>activated(int)</signal>
-        <receiver>site</receiver>
-        <slot>UpdateClient()</slot>
-    </connection>
-    <connection>
-        <sender>checkBoxDNSEnable</sender>
-        <signal>stateChanged(int)</signal>
-        <receiver>site</receiver>
-        <slot>UpdateNameResolution()</slot>
+        <slot>UpdateAddressAuto()</slot>
     </connection>
     <connection>
         <sender>checkBoxDNSAuto</sender>
@@ -2684,19 +2679,79 @@
         <slot>UpdateNameResolution()</slot>
     </connection>
     <connection>
+        <sender>checkBoxDNSEnable</sender>
+        <signal>stateChanged(int)</signal>
+        <receiver>site</receiver>
+        <slot>UpdateNameResolution()</slot>
+    </connection>
+    <connection>
+        <sender>checkBoxLocalIDOption</sender>
+        <signal>stateChanged(int)</signal>
+        <receiver>site</receiver>
+        <slot>UpdateLocalID()</slot>
+    </connection>
+    <connection>
         <sender>checkBoxPolicyAuto</sender>
         <signal>stateChanged(int)</signal>
         <receiver>site</receiver>
         <slot>UpdatePolicy()</slot>
     </connection>
     <connection>
-        <sender>comboBoxP1Exchange</sender>
+        <sender>checkBoxRemoteIDOption</sender>
+        <signal>stateChanged(int)</signal>
+        <receiver>site</receiver>
+        <slot>UpdateNameResolution()</slot>
+    </connection>
+    <connection>
+        <sender>checkBoxRemoteIDOption</sender>
+        <signal>stateChanged(int)</signal>
+        <receiver>site</receiver>
+        <slot>UpdateRemoteID()</slot>
+    </connection>
+    <connection>
+        <sender>comboBoxAddressMethod</sender>
+        <signal>activated(int)</signal>
+        <receiver>site</receiver>
+        <slot>UpdateAddressMethod()</slot>
+    </connection>
+    <connection>
+        <sender>comboBoxAuthMethod</sender>
+        <signal>activated(int)</signal>
+        <receiver>site</receiver>
+        <slot>UpdateAuthentication()</slot>
+    </connection>
+    <connection>
+        <sender>comboBoxConfigMethod</sender>
+        <signal>activated(int)</signal>
+        <receiver>site</receiver>
+        <slot>UpdateConfigMethod()</slot>
+    </connection>
+    <connection>
+        <sender>comboBoxFragMode</sender>
+        <signal>activated(int)</signal>
+        <receiver>site</receiver>
+        <slot>UpdateClient()</slot>
+    </connection>
+    <connection>
+        <sender>comboBoxLocalIDType</sender>
+        <signal>activated(int)</signal>
+        <receiver>site</receiver>
+        <slot>SelectLocalID()</slot>
+    </connection>
+    <connection>
+        <sender>comboBoxNATTMode</sender>
+        <signal>activated(int)</signal>
+        <receiver>site</receiver>
+        <slot>UpdateClient()</slot>
+    </connection>
+    <connection>
+        <sender>comboBoxP1Cipher</sender>
         <signal>activated(int)</signal>
         <receiver>site</receiver>
         <slot>UpdatePhase1()</slot>
     </connection>
     <connection>
-        <sender>comboBoxP1Cipher</sender>
+        <sender>comboBoxP1Exchange</sender>
         <signal>activated(int)</signal>
         <receiver>site</receiver>
         <slot>UpdatePhase1()</slot>
@@ -2708,40 +2763,34 @@
         <slot>UpdatePhase2()</slot>
     </connection>
     <connection>
-        <sender>listViewPolicies</sender>
-        <signal>selectionChanged()</signal>
-        <receiver>site</receiver>
-        <slot>UpdatePolicy()</slot>
-    </connection>
-    <connection>
-        <sender>comboBoxAuthMethod</sender>
-        <signal>activated(int)</signal>
-        <receiver>site</receiver>
-        <slot>UpdateAuthentication()</slot>
-    </connection>
-    <connection>
-        <sender>comboBoxLocalIDType</sender>
-        <signal>activated(int)</signal>
-        <receiver>site</receiver>
-        <slot>SelectLocalID()</slot>
-    </connection>
-    <connection>
         <sender>comboBoxRemoteIDType</sender>
         <signal>activated(int)</signal>
         <receiver>site</receiver>
         <slot>SelectRemoteID()</slot>
     </connection>
     <connection>
-        <sender>checkBoxLocalIDOption</sender>
-        <signal>stateChanged(int)</signal>
+        <sender>listViewPolicies</sender>
+        <signal>selectionChanged()</signal>
         <receiver>site</receiver>
-        <slot>UpdateLocalID()</slot>
+        <slot>UpdatePolicy()</slot>
     </connection>
     <connection>
-        <sender>checkBoxRemoteIDOption</sender>
-        <signal>stateChanged(int)</signal>
+        <sender>pushButtonPolicyAdd</sender>
+        <signal>clicked()</signal>
         <receiver>site</receiver>
-        <slot>UpdateRemoteID()</slot>
+        <slot>AddPolicy()</slot>
+    </connection>
+    <connection>
+        <sender>pushButtonPolicyDel</sender>
+        <signal>clicked()</signal>
+        <receiver>site</receiver>
+        <slot>DelPolicy()</slot>
+    </connection>
+    <connection>
+        <sender>pushButtonPolicyMod</sender>
+        <signal>clicked()</signal>
+        <receiver>site</receiver>
+        <slot>ModPolicy()</slot>
     </connection>
     <connection>
         <sender>toolButtonCAFile</sender>
@@ -2762,28 +2811,10 @@
         <slot>InputPKeyFile()</slot>
     </connection>
     <connection>
-        <sender>pushButtonPolicyAdd</sender>
-        <signal>clicked()</signal>
+        <sender>checkBoxSuffixAuto</sender>
+        <signal>stateChanged(int)</signal>
         <receiver>site</receiver>
-        <slot>AddPolicy()</slot>
-    </connection>
-    <connection>
-        <sender>comboBoxConfigMethod</sender>
-        <signal>activated(int)</signal>
-        <receiver>site</receiver>
-        <slot>UpdateConfigMethod()</slot>
-    </connection>
-    <connection>
-        <sender>comboBoxAddressMethod</sender>
-        <signal>activated(int)</signal>
-        <receiver>site</receiver>
-        <slot>UpdateAddressMethod()</slot>
-    </connection>
-    <connection>
-        <sender>checkBoxAddressAuto</sender>
-        <signal>clicked()</signal>
-        <receiver>site</receiver>
-        <slot>UpdateAddressAuto()</slot>
+        <slot>UpdateNameResolution()</slot>
     </connection>
 </connections>
 <tabstops>
@@ -2852,6 +2883,7 @@
     <slot>DelPolicy()</slot>
     <slot>UpdateConfigMethod()</slot>
     <slot>UpdateAddressMethod()</slot>
+    <slot>UpdateAddressAuto()</slot>
     <slot>UpdateGeneral( bool adflt, bool mdflt )</slot>
     <slot>UpdateClient()</slot>
     <slot>UpdateNameResolution()</slot>
@@ -2867,7 +2899,6 @@
     <slot>InputCertFile()</slot>
     <slot>InputPKeyFile()</slot>
     <slot>VerifyAccept()</slot>
-    <slot>UpdateAddressAuto()</slot>
 </slots>
 <functions>
     <function returnType="bool">Load( CONFIG &amp; config )</function>

@@ -467,17 +467,15 @@ bool site::Load( CONFIG & config )
 
 		if( numb )
 		{
-			// automatic
+			// automatic dns server addresses
 
 			checkBoxDNSAuto->setChecked( true );
 		}
 		else
 		{
-			// manual
+			// manual dns server addresses
 
 			checkBoxDNSAuto->setChecked( false );
-
-			// dns server address
 
 			long index = 0;
 
@@ -496,8 +494,22 @@ bool site::Load( CONFIG & config )
 			if( config.get_string( "client-dns-addr",
 				text, MAX_CONFSTRING, index++ ) )
 				lineEditDNSServer4->setText( text );
+		}
 
-			// adapter netmask
+		numb = 1;
+		config.get_number( "client-dns-suffix-auto", &numb );
+
+		if( numb )
+		{
+			// automatic dns default suffix
+
+			checkBoxSuffixAuto->setChecked( true );
+		}
+		else
+		{
+			// manual dns default suffix
+
+			checkBoxSuffixAuto->setChecked( false );
 
 			if( config.get_string( "client-dns-suffix",
 				text, MAX_CONFSTRING, 0 ) )
@@ -952,17 +964,15 @@ bool site::Save( CONFIG & config )
 
 		if( checkBoxDNSAuto->isChecked() )
 		{
-			// automatic
+			// automatic dns server addresses
 
 			config.set_number( "client-dns-auto", 1 );
 		}
 		else
 		{
-			// manual
+			// manual dns server addresses
 
 			config.set_number( "client-dns-auto", 0 );
-
-			// dns server addresses
 
 			config.del( "client-dns-addr" );
 
@@ -971,7 +981,7 @@ bool site::Save( CONFIG & config )
 			DNSServer = lineEditDNSServer1->text();
 			DNSServer = DNSServer.replace( ' ', "" );
 
-			if( DNSServer.length() )
+			if( inet_addr( DNSServer.ascii() ) )
 				config.add_string( "client-dns-addr",
 					( char * ) DNSServer.ascii(),
 					DNSServer.length() );
@@ -979,7 +989,7 @@ bool site::Save( CONFIG & config )
 			DNSServer = lineEditDNSServer2->text();
 			DNSServer = DNSServer.replace( ' ', "" );
 
-			if( DNSServer.length() )
+			if( inet_addr( DNSServer.ascii() ) )
 				config.add_string( "client-dns-addr",
 					( char * ) DNSServer.ascii(),
 					DNSServer.length() );
@@ -987,7 +997,7 @@ bool site::Save( CONFIG & config )
 			DNSServer = lineEditDNSServer3->text();
 			DNSServer = DNSServer.replace( ' ', "" );
 
-			if( DNSServer.length() )
+			if( inet_addr( DNSServer.ascii() ) )
 				config.add_string( "client-dns-addr",
 					( char * ) DNSServer.ascii(),
 					DNSServer.length() );
@@ -995,12 +1005,25 @@ bool site::Save( CONFIG & config )
 			DNSServer = lineEditDNSServer4->text();
 			DNSServer = DNSServer.replace( ' ', "" );
 
-			if( DNSServer.length() )
+			if( inet_addr( DNSServer.ascii() ) )
 				config.add_string( "client-dns-addr",
 					( char * ) DNSServer.ascii(),
 					DNSServer.length() );
+		}
 
-			// dns suffix
+		if( checkBoxSuffixAuto->isChecked() )
+		{
+			// automatic dns domain suffix
+
+			config.set_number( "client-dns-suffix-auto", 1 );
+		}
+		else
+		{
+			// manual dns domain suffix
+
+			config.set_number( "client-dns-suffix-auto", 0 );
+
+			config.del( "client-dns-suffix" );
 
 			config.set_string( "client-dns-suffix",
 				( char * ) lineEditDNSSuffix->text().ascii(),
@@ -1290,6 +1313,93 @@ bool site::Verify()
 	if( lineEditHost->text().length() < 1 )
 		errmsg = "Please enter a valid host name or ip address.";
 
+
+	// local adapter mode
+
+	QString amode = comboBoxAddressMethod->currentText();
+
+	if( !amode.compare( AMTXT_VIRTUAL ) || !amode.compare( AMTXT_RANDOM ) )
+	{
+		// adapter mtu
+
+		if( ( lineEditMTU->text().toLong() < 68 ) ||
+		    ( lineEditMTU->text().toLong() > 1500 ) )
+			errmsg = "Please enter valid Adapter MTU from 68 to 1500 bytes.";
+
+		// adapter address
+
+		if( !checkBoxAddressAuto->isChecked() )
+		{
+			// adapter address
+
+			QString Address = lineEditAddress->text();
+			Address = Address.replace( ' ', "" );
+			uint32_t addr = inet_addr( Address.ascii() );
+
+			if( !addr || ( addr == INADDR_NONE ) )
+				errmsg = "Please enter valid virtual adapter address.";
+
+			// adapter netmask
+
+			QString Netmask = lineEditNetmask->text();
+			Netmask = Netmask.replace( ' ', "" );
+			uint32_t mask = inet_addr( Netmask.ascii() );
+
+			if( !mask )
+				errmsg = "Please enter valid virtual adapter netmask.";
+		}
+	}
+
+	// dns enabled
+
+	if( checkBoxDNSEnable->isChecked() )
+	{
+		// dns settings
+
+		if( !checkBoxDNSAuto->isChecked() )
+		{
+			// manual dns server addresses
+
+			QString DNSServer;
+			uint32_t addr;
+
+			DNSServer = lineEditDNSServer1->text();
+			DNSServer = DNSServer.replace( ' ', "" );
+			addr = inet_addr( DNSServer.ascii() );
+
+			if( addr && ( addr == INADDR_NONE ) )
+				errmsg = "Please enter valid DNS server #1 address.";
+
+			DNSServer = lineEditDNSServer2->text();
+			DNSServer = DNSServer.replace( ' ', "" );
+
+			if( addr && ( addr == INADDR_NONE ) )
+				errmsg = "Please enter valid DNS server #2 address.";
+
+			DNSServer = lineEditDNSServer3->text();
+			DNSServer = DNSServer.replace( ' ', "" );
+
+			if( addr && ( addr == INADDR_NONE ) )
+				errmsg = "Please enter valid DNS server #3 address.";
+
+			DNSServer = lineEditDNSServer4->text();
+			DNSServer = DNSServer.replace( ' ', "" );
+
+			if( addr && ( addr == INADDR_NONE ) )
+				errmsg = "Please enter valid DNS server #4 address.";
+		}
+
+		if( !checkBoxSuffixAuto->isChecked() )
+		{
+			// manual dns domain suffix
+
+			QString DNSSuffix = lineEditDNSSuffix->text();
+
+			if( !DNSSuffix.length() )
+				errmsg = "Please enter valid DNS suffix.";
+		}
+	}
+
 	// check local id data
 
 	if( !comboBoxLocalIDType->currentText().compare( IDTXT_ADDR ) )
@@ -1552,15 +1662,20 @@ void site::UpdateNameResolution()
 		{
 			checkBoxDNSAuto->setEnabled( false );
 			checkBoxDNSAuto->setChecked( false );
+
+			checkBoxSuffixAuto->setEnabled( false );
+			checkBoxSuffixAuto->setChecked( false );
 		}
 		else
+		{
 			checkBoxDNSAuto->setEnabled( true );
+			checkBoxSuffixAuto->setEnabled( true );
+		}
 
 		textLabelDNSServer1->setEnabled( true );
 		textLabelDNSServer2->setEnabled( true );
 		textLabelDNSServer3->setEnabled( true );
 		textLabelDNSServer4->setEnabled( true );
-		textLabelDNSSuffix->setEnabled( true );
 
 		if( checkBoxDNSAuto->isChecked() )
 		{
@@ -1568,7 +1683,6 @@ void site::UpdateNameResolution()
 			lineEditDNSServer2->setEnabled( false );
 			lineEditDNSServer3->setEnabled( false );
 			lineEditDNSServer4->setEnabled( false );
-			lineEditDNSSuffix->setEnabled( false );
 		}
 		else
 		{
@@ -1576,8 +1690,14 @@ void site::UpdateNameResolution()
 			lineEditDNSServer2->setEnabled( true );
 			lineEditDNSServer3->setEnabled( true );
 			lineEditDNSServer4->setEnabled( true );
-			lineEditDNSSuffix->setEnabled( true );
 		}
+
+		textLabelDNSSuffix->setEnabled( true );
+
+		if( checkBoxSuffixAuto->isChecked() )
+			lineEditDNSSuffix->setEnabled( false );
+		else
+			lineEditDNSSuffix->setEnabled( true );
 	}
 	else
 	{
@@ -1589,10 +1709,13 @@ void site::UpdateNameResolution()
 		textLabelDNSServer2->setEnabled( false );
 		textLabelDNSServer3->setEnabled( false );
 		textLabelDNSServer4->setEnabled( false );
+
 		lineEditDNSServer1->setEnabled( false );
 		lineEditDNSServer2->setEnabled( false );
 		lineEditDNSServer3->setEnabled( false );
 		lineEditDNSServer4->setEnabled( false );
+
+		checkBoxSuffixAuto->setEnabled( false );
 
 		textLabelDNSSuffix->setEnabled( false );
 		lineEditDNSSuffix->setEnabled( false );

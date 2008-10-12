@@ -110,6 +110,9 @@ bool _IKEC::log( long code, const char * format, ... )
 
 void _IKEC::run()
 {
+	memset( &peer, 0, sizeof( peer ) );
+	memset( &xconf, 0, sizeof( xconf ) );
+
 	//
 	// load the config into ipsecc
 	//
@@ -121,8 +124,6 @@ void _IKEC::run()
 	//
 	// ---------- PEER CONFIG ----------
 	//
-
-	memset( &peer, 0, sizeof( peer ) );
 
 	// default values
 
@@ -744,7 +745,10 @@ void _IKEC::run()
 				xconf.opts |= IPSEC_OPTS_DNSS;
 			}
 
-			if( !config.get_string( "client-dns-suffix", text, MAX_CONFSTRING, 0 ) )
+			numb = 0;
+			config.get_number( "client-dns-suffix-auto", &numb );
+
+			if( numb )
 			{
 				// auto domain configuration
 
@@ -753,6 +757,12 @@ void _IKEC::run()
 			else
 			{
 				// static domain configuration
+
+				if( !config.get_string( "client-dns-suffix", text, MAX_CONFSTRING, 0 ) )
+				{
+					log( STATUS_FAIL, "config error : client-dns-suffix undefined\n" );
+					return;
+				}
 
 				strncpy( xconf.nscfg.dnss_suffix, text, CONF_STRLEN );
 

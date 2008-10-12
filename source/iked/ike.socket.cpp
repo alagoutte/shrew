@@ -804,18 +804,52 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 
 		rename( "/etc/resolv.conf", "/etc/resolv.iked" );
 
-		FILE * fp = fopen( "/etc/resolv.conf", "w+" );
-		if( fp != NULL )
+		FILE * fp1 = fopen( "/etc/resolv.iked", "r" );
+		FILE * fp2 = fopen( "/etc/resolv.conf", "w+" );
+
+		if( fp2 != NULL )
 		{
+			// write configuration
+
 			if( tunnel->xconf.opts & IPSEC_OPTS_DOMAIN )
-				fprintf( fp, "domain\t%s\n", tunnel->xconf.nscfg.dnss_suffix );
+				fprintf( fp2, "domain\t%s\n", tunnel->xconf.nscfg.dnss_suffix );
 
 			if( tunnel->xconf.opts & IPSEC_OPTS_DNSS )
 				for( int i = 0; i < tunnel->xconf.nscfg.dnss_count; i++ )
-					fprintf( fp, "nameserver\t%s\n",
+					fprintf( fp2, "nameserver\t%s\n",
 						inet_ntoa( tunnel->xconf.nscfg.dnss_list[ i ] ) );
 
-			fclose( fp );
+			if( fp1 != NULL )
+			{
+				// merge additional options
+
+				char line[ 1024 ];
+
+				while( fgets( line, sizeof( line ), fp1 ) != NULL )
+				{
+					if( !strncmp( line, "domain", 6 ) )
+					{
+						if( !( tunnel->xconf.opts & IPSEC_OPTS_DOMAIN ) )
+							fwrite( line, strlen( line ), 1, fp2 );
+
+						continue;
+					}
+
+					if( !strncmp( line, "nameserver", 9 ) )
+					{
+						if( !( tunnel->xconf.opts & IPSEC_OPTS_DNSS ) )
+							fwrite( line, strlen( line ), 1, fp2 );
+
+						continue;
+					}
+
+					fwrite( line, strlen( line ), 1, fp2 );
+				}
+
+				fclose( fp1 );
+			}
+
+			fclose( fp2 );
 		}
 	}
 
