@@ -460,12 +460,20 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 			return LIBIKE_FAILED;
 		}
 
+		if( payload->reserved )
+		{
+			log.txt( LLOG_ERROR,
+				"!! : validate packet failed ( reserved value is non-null )\n" );
+
+			return LIBIKE_FAILED;
+		}
+
 		size += ntohs( payload->length );
 
 		if( packet.size() < size )
 		{
 			log.txt( LLOG_ERROR,
-				"!! : validate packet failed ( decryption error or corrupted )\n" );
+				"!! : validate packet failed ( payload length is invalid )\n" );
 
 			return LIBIKE_FAILED;
 		}
@@ -476,7 +484,7 @@ long _IKED::packet_ike_decrypt( IDB_PH1 * sa, PACKET_IKE & packet, BDATA * iv )
 
 	//
 	// validate packet padding. if the encrypted
-	// packet size is equal the the ike message
+	// packet size is equal to the ike message
 	// length, we can skip this step. although the
 	// RFC states there should at least be one pad
 	// byte that describes the padding length, if

@@ -1023,8 +1023,6 @@ long _IKED::pfkey_recv_getspi( PFKI_MSG & msg )
 		log.txt( LLOG_DEBUG, "ii : waiting for %i spi updates\n", ph2->spicount );
 	else
 	{
-		ph2->lstate |= LSTATE_HASSPI;
-
 		IDB_PH1 * ph1 = NULL;
 
 		if( ph2->initiator )
@@ -1270,8 +1268,6 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 		// step through all proposals and
 		// store the request id to be used
 		// when sending the update message.
-		// we also need to acquire the spi
-		// to be used for outbound sas
 		//
 
 		if( policy->sp.dir == IPSEC_DIR_INBOUND )
@@ -1285,15 +1281,23 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 				// match the protocol type
 				//
 
-				if( proposal->proto == proto )
-				{
-					//
-					// copy the request id
-					//
+				if( proposal->proto != proto )
+					continue;
 
-					proposal->reqid = ( uint16_t ) sainfo.sa2.reqid;
-				}
+				//
+				// copy the request id
+				//
+
+				proposal->reqid = ( uint16_t ) sainfo.sa2.reqid;
 			}
+
+			//
+			// inbound spis are dictated by
+			// our kernel. we will need to
+			// wait for an update response
+			//
+
+			ph2->spicount++;
 		}
 
 		if( policy->sp.dir == IPSEC_DIR_OUTBOUND )
@@ -1315,40 +1319,30 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 				// obtain the spi value
 				//
 
-				if( proposal->proto == proto )
+				if( proposal->proto != proto )
+					continue;
+
+				//
+				// copy the request id
+				//
+
+				proposal->reqid = ( uint16_t ) sainfo.sa2.reqid;
+
+				//
+				// copy the spi value
+				//
+
+				if( proto != ISAKMP_PROTO_IPCOMP )
 				{
-					//
-					// copy the request id
-					//
-
-					proposal->reqid = ( uint16_t ) sainfo.sa2.reqid;
-
-					//
-					// copy the spi value
-					//
-
-					if( proto != ISAKMP_PROTO_IPCOMP )
-					{
-						sainfo.range.min = ntohl( proposal->spi.spi );
-						sainfo.range.max = ntohl( proposal->spi.spi );
-					}
-					else
-					{
-						sainfo.range.min = ntohs( proposal->spi.cpi );
-						sainfo.range.max = ntohs( proposal->spi.cpi );
-					}
+					sainfo.range.min = ntohl( proposal->spi.spi );
+					sainfo.range.max = ntohl( proposal->spi.spi );
+				}
+				else
+				{
+					sainfo.range.min = ntohs( proposal->spi.cpi );
+					sainfo.range.max = ntohs( proposal->spi.cpi );
 				}
 			}
-		}
-		else
-		{
-			//
-			// inbound spis are dictated by
-			// our kernel. we will need to
-			// wait for an update response
-			//
-
-			ph2->spicount++;
 		}
 
 		//

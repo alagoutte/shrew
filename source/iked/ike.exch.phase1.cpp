@@ -77,81 +77,13 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	}
 
 	//
-	// check for duplicate exchange packets.
-	// if we don't discard these before our
-	// processing, we run the risk of errors
-	// assiciated with erroneous data caused
-	// by decrypting packets using invalid
-	// cipher initialization vector data.
-	//
-
-	bool duplicate = false;
-
-	if( ph1->exchange == ISAKMP_EXCH_IDENT_PROTECT )
-	{
-		switch( payload )
-		{
-			case ISAKMP_PAYLOAD_SA:
-				if( ph1->xstate & XSTATE_RECV_SA )
-					duplicate = true;
-				break;
-
-			case ISAKMP_PAYLOAD_KEX:
-				if( ph1->xstate & XSTATE_RECV_KE )
-					duplicate = true;
-				break;
-
-			case ISAKMP_PAYLOAD_IDENT:
-				if( ph1->xstate & XSTATE_RECV_ID )
-					duplicate = true;
-				break;
-
-			case ISAKMP_PAYLOAD_HASH:
-				if( ph1->xstate & XSTATE_RECV_HA )
-					duplicate = true;
-				break;
-		}
-	}
-
-	if( ph1->exchange == ISAKMP_EXCH_AGGRESSIVE )
-	{
-		switch( payload )
-		{
-			case ISAKMP_PAYLOAD_SA:
-				if( ph1->xstate & XSTATE_RECV_SA )
-					duplicate = true;
-				break;
-
-			case ISAKMP_PAYLOAD_CERT:
-				if( ph1->xstate & XSTATE_RECV_CT )
-					duplicate = true;
-				break;
-
-			case ISAKMP_PAYLOAD_HASH:
-				if( ph1->xstate & XSTATE_RECV_HA )
-					duplicate = true;
-				break;
-		}
-	}
-
-	if( duplicate )
-	{
-		log.txt( LLOG_ERROR,
-			"!! : phase1 packet ignored ( duplicate leading %s payload )\n",
-			find_name( NAME_PAYLOAD, payload ) );
-
-		return LIBIKE_OK;
-	}
-
-	//
 	// attempt to decrypt our packet
 	//
 
 	if( packet_ike_decrypt( ph1, packet, &ph1->iv ) != LIBIKE_OK )
 	{
-		log.txt( LLOG_ERROR,
-			"!! : phase1 packet ignored ( packet decryption error )\n" );
-
+		log.txt( LLOG_ERROR, "!! : phase1 packet ignored, resending last packet ( packet decryption error )\n" );
+		ph1->resend();
 		return LIBIKE_OK;
 	}
 

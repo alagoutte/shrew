@@ -271,13 +271,12 @@ YY_DECL;
 #define CSTATE_RECV_ACK			0x000000100
 #define CSTATE_SENT_ACK			0x000000200
 
-#define LSTATE_HASSPI			0x000000001		// pfkey spi obtained
-#define LSTATE_CHKPROP			0x000000002		// proposal verified
-#define LSTATE_CHKHASH			0x000000004		// hash verified
-#define LSTATE_CHKIDS			0x000000008		// identity verified
-#define LSTATE_GENNATD			0x000000010		// natt discovery generated
-#define LSTATE_HASKEYS			0x000000020		// keys generated
-#define LSTATE_CLAIMLT			0x000000040		// claim reponder lifetime
+#define LSTATE_CHKPROP			0x000000001		// proposal verified
+#define LSTATE_CHKHASH			0x000000002		// hash verified
+#define LSTATE_CHKIDS			0x000000004		// identity verified
+#define LSTATE_GENNATD			0x000000008		// natt discovery generated
+#define LSTATE_HASKEYS			0x000000010		// keys generated
+#define LSTATE_CLAIMLT			0x000000020		// claim reponder lifetime
 
 #define TSTATE_NATT_FLOAT		0x000000001
 #define TSTATE_INITIALIZED		0x000000002

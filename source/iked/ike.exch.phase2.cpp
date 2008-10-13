@@ -146,7 +146,8 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( packet_ike_decrypt( ph1, packet, &ph2->iv ) != LIBIKE_OK )
 	{
-		log.txt( LLOG_ERROR, "!! : phase2 packet ignored ( packet decryption error )\n" );
+		log.txt( LLOG_ERROR, "!! : phase2 packet ignored, resending last packet ( packet decryption error )\n" );
+		ph2->resend();
 		ph2->dec( true );
 		return LIBIKE_OK;
 	}
@@ -690,8 +691,12 @@ long _IKED::process_phase2_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 	// now build and send any response
 	// packets that may be necessary
 	//
+	// NOTE : responder packets are only
+	// sent via the pfkey thread after an
+	// outbound SPI is received
+	//
 
-	if( ( ph2->lstate & LSTATE_HASSPI ) &&
+	if( ph2->initiator &&
 		( ph1->status() != XCH_STATUS_DEAD ) &&
 		( ph2->status() < XCH_STATUS_MATURE ) )
 		process_phase2_send( ph1, ph2 );
