@@ -1109,8 +1109,8 @@ long _IKED::phase2_chk_hash_i( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	// generate hash data for comparison
 	//
 
-	BDATA hash;
-	phase2_gen_hash_i( ph1, ph2, hash );
+	BDATA hash_c;
+	phase2_gen_hash_i( ph1, ph2, hash_c );
 
 	log.bin(
 		LLOG_DEBUG,
@@ -1133,7 +1133,7 @@ long _IKED::phase2_chk_hash_i( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	// compare hash data
 	//
 
-	if( memcmp( hash.buff(), ph2->hash_r.buff(), ph1->hash_size ) )
+	if( ph2->hash_r != hash_c )
 	{
 		log.txt( LLOG_ERROR,
 			"!! : phase2 sa rejected, initiator quick mode hash invalid\n"
@@ -1153,8 +1153,8 @@ long _IKED::phase2_chk_hash_r( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	// generate hash data for comparison
 	//
 
-	BDATA hash;
-	phase2_gen_hash_r( ph1, ph2, hash );
+	BDATA hash_c;
+	phase2_gen_hash_r( ph1, ph2, hash_c );
 
 	log.bin(
 		LLOG_DEBUG,
@@ -1177,7 +1177,7 @@ long _IKED::phase2_chk_hash_r( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	// compare hash data
 	//
 
-	if( memcmp( hash.buff(), ph2->hash_r.buff(), ph1->hash_size ) )
+	if( ph2->hash_r != hash_c )
 	{
 		log.txt( LLOG_ERROR,
 			"!! : phase2 sa rejected, responder quick mode hash invalid\n"
@@ -1197,8 +1197,8 @@ long _IKED::phase2_chk_hash_p( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	// generate hash data for comparison
 	//
 
-	BDATA hash;
-	phase2_gen_hash_p( ph1, ph2, hash );
+	BDATA hash_c;
+	phase2_gen_hash_p( ph1, ph2, hash_c );
 
 	log.bin(
 		LLOG_DEBUG,
@@ -1221,7 +1221,7 @@ long _IKED::phase2_chk_hash_p( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	// compare hash data
 	//
 
-	if( memcmp( hash.buff(), ph2->hash_r.buff(), ph1->hash_size ) )
+	if( ph2->hash_r != hash_c )
 	{
 		log.txt( LLOG_ERROR,
 			"!! : phase2 sa rejected, initiator liveliness proof hash invalid\n"

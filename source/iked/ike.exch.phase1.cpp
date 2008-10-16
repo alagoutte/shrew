@@ -294,19 +294,12 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			case ISAKMP_PAYLOAD_NAT_VXX_DISC:
 			case ISAKMP_PAYLOAD_NAT_RFC_DISC:
 			{
-				if( !( ph1->xstate & XSTATE_RECV_NDL ) )
-				{
-					result = payload_get_natd( packet, ph1->natd_rd, ph1->hash_size );
-					ph1->xstate |= XSTATE_RECV_NDL;
-					break;
-				}
+				BDATA natd;
+				result = payload_get_natd( packet, natd, ph1->hash_size );
+				if( result == LIBIKE_OK )
+					ph1->natd_hash_r.add( natd );
 
-				if( !( ph1->xstate & XSTATE_RECV_NDR ) )
-				{
-					result = payload_get_natd( packet, ph1->natd_rs, ph1->hash_size );
-					ph1->xstate |= XSTATE_RECV_NDR;
-					break;
-				}
+				ph1->xstate |= XSTATE_RECV_ND;
 
 				break;
 			}
@@ -565,8 +558,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				if( ph1->natt_version != IPSEC_NATT_NONE )
 				{
 					phase1_gen_natd( ph1 );
-					payload_add_natd( packet, ph1->natd_ld, ph1->natt_pldtype );
-					payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
+					phase1_add_natd( ph1, packet, ISAKMP_PAYLOAD_NONE );
 				}
 
 				packet.done();
@@ -753,8 +745,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				if( ph1->natt_version != IPSEC_NATT_NONE )
 				{
 					phase1_gen_natd( ph1 );
-					payload_add_natd( packet, ph1->natd_ld, ph1->natt_pldtype );
-					payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
+					phase1_add_natd( ph1, packet, ISAKMP_PAYLOAD_NONE );
 				}
 
 				packet.done();
@@ -1030,8 +1021,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							if( ph1->natt_version != IPSEC_NATT_NONE )
 							{
 								phase1_gen_natd( ph1 );
-								payload_add_natd( packet, ph1->natd_ld, ph1->natt_pldtype );
-								payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
+								phase1_add_natd( ph1, packet, ISAKMP_PAYLOAD_NONE );
 							}
 
 							packet.done();
@@ -1081,8 +1071,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							if( ph1->natt_version != IPSEC_NATT_NONE )
 							{
 								phase1_gen_natd( ph1 );
-								payload_add_natd( packet, ph1->natd_ld, ph1->natt_pldtype );
-								payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
+								phase1_add_natd( ph1, packet, ISAKMP_PAYLOAD_NONE );
 							}
 
 							packet.done();
@@ -1196,8 +1185,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				if( ph1->natt_version != IPSEC_NATT_NONE )
 				{
 					phase1_gen_natd( ph1 );
-					payload_add_natd( packet, ph1->natd_ld, ph1->natt_pldtype );
-					payload_add_natd( packet, ph1->natd_ls, ISAKMP_PAYLOAD_NONE );
+					phase1_add_natd( ph1, packet, ISAKMP_PAYLOAD_NONE );
 				}
 
 				//
@@ -2371,28 +2359,28 @@ long _IKED::phase1_chk_hash( IDB_PH1 * ph1 )
 	// generate hash data for comparison
 	//
 
-	BDATA hash;
+	BDATA hash_c;
 
 	if( ph1->initiator )
 	{
-		phase1_gen_hash_r( ph1, hash );
+		phase1_gen_hash_r( ph1, hash_c );
 
 		log.bin(
 			LLOG_DEBUG,
 			LLOG_DECODE,
 			ph1->hash_r.buff(),
-			hash.size(),
+			hash_c.size(),
 			"== : phase1 hash_r ( received )" );
 	}
 	else
 	{
-		phase1_gen_hash_i( ph1, hash );
+		phase1_gen_hash_i( ph1, hash_c );
 
 		log.bin(
 			LLOG_DEBUG,
 			LLOG_DECODE,
 			ph1->hash_r.buff(),
-			hash.size(),
+			hash_c.size(),
 			"== : phase1 hash_i ( received )" );
 	}
 
@@ -2402,8 +2390,7 @@ long _IKED::phase1_chk_hash( IDB_PH1 * ph1 )
 	text_addr( txtaddr_l, &ph1->tunnel->saddr_l, true );
 	text_addr( txtaddr_r, &ph1->tunnel->saddr_r, true );
 
-	long result = memcmp( hash.buff(), ph1->hash_r.buff(), ph1->hash_size );
-	if( result )
+	if( hash_c != ph1->hash_r )
 	{
 		log.txt( LLOG_INFO,
 			"!! : phase1 sa rejected, invalid auth data\n"
@@ -2483,42 +2470,67 @@ long _IKED::phase1_chk_sign( IDB_PH1 * ph1 )
 
 long _IKED::phase1_gen_natd( IDB_PH1 * ph1 )
 {
-	//
-	// compute the nat discovery
-	// hash for local address
-	//
+	if( ph1->lstate & LSTATE_GENNATD )
+		return LIBIKE_OK;
 
-	if( !ph1->natd_ls.size( ph1->hash_size ) )
+	BDATA natd;
+	if( !natd.size( ph1->hash_size ) )
 		return LIBIKE_MEMORY;
-
-	EVP_MD_CTX ctx_hash;
-	EVP_DigestInit( &ctx_hash, ph1->evp_hash );
-	EVP_DigestUpdate( &ctx_hash, ph1->cookies.i, ISAKMP_COOKIE_SIZE );
-	EVP_DigestUpdate( &ctx_hash, ph1->cookies.r, ISAKMP_COOKIE_SIZE );
-	EVP_DigestUpdate( &ctx_hash, &ph1->tunnel->saddr_l.saddr4.sin_addr.s_addr, 4 );
-	EVP_DigestUpdate( &ctx_hash, &ph1->tunnel->saddr_l.saddr4.sin_port, 2 );
-	EVP_DigestFinal( &ctx_hash, ph1->natd_ls.buff(), NULL );
-	EVP_MD_CTX_cleanup( &ctx_hash );
 
 	//
 	// compute the nat discovery
 	// hash for remote address
 	//
 
-	if( !ph1->natd_ld.size( ph1->hash_size ) )
-		return LIBIKE_MEMORY;
-
+	EVP_MD_CTX ctx_hash;
 	EVP_DigestInit( &ctx_hash, ph1->evp_hash );
 	EVP_DigestUpdate( &ctx_hash, ph1->cookies.i, ISAKMP_COOKIE_SIZE );
 	EVP_DigestUpdate( &ctx_hash, ph1->cookies.r, ISAKMP_COOKIE_SIZE );
 	EVP_DigestUpdate( &ctx_hash, &ph1->tunnel->saddr_r.saddr4.sin_addr.s_addr, 4 );
 	EVP_DigestUpdate( &ctx_hash, &ph1->tunnel->saddr_r.saddr4.sin_port, 2 );
-	EVP_DigestFinal( &ctx_hash, ph1->natd_ld.buff(), NULL );
+	EVP_DigestFinal( &ctx_hash, natd.buff(), NULL );
 	EVP_MD_CTX_cleanup( &ctx_hash );
+
+	ph1->natd_hash_l.add( natd );
+
+	//
+	// compute the nat discovery
+	// hash for local address
+	//
+
+	EVP_DigestInit( &ctx_hash, ph1->evp_hash );
+	EVP_DigestUpdate( &ctx_hash, ph1->cookies.i, ISAKMP_COOKIE_SIZE );
+	EVP_DigestUpdate( &ctx_hash, ph1->cookies.r, ISAKMP_COOKIE_SIZE );
+	EVP_DigestUpdate( &ctx_hash, &ph1->tunnel->saddr_l.saddr4.sin_addr.s_addr, 4 );
+	EVP_DigestUpdate( &ctx_hash, &ph1->tunnel->saddr_l.saddr4.sin_port, 2 );
+	EVP_DigestFinal( &ctx_hash, natd.buff(), NULL );
+	EVP_MD_CTX_cleanup( &ctx_hash );
+
+	ph1->natd_hash_l.add( natd );
 
 	ph1->lstate |= LSTATE_GENNATD;
 
 	return LIBIKE_OK;
+}
+
+bool _IKED::phase1_add_natd( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
+{
+	BDATA natd;
+
+	long index = 0;
+	long count = ph1->natd_hash_l.count();
+
+	for( long index = 0; index < count; index++ )
+	{
+		ph1->natd_hash_l.get( natd, index );
+
+		if( index < ( count - 1 ) )
+			payload_add_natd( packet, natd, ph1->natt_pldtype );
+		else
+			payload_add_natd( packet, natd, next );
+	}
+
+	return true;
 }
 
 bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
@@ -2544,7 +2556,10 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 
 		case IPSEC_NATT_ENABLE:
 		{
-			bool xlated = false;
+			bool xlated_l = true;
+			bool xlated_r = true;
+			BDATA natd_l;
+			BDATA natd_r;
 
 			//
 			// make sure remote peer negotiated natt
@@ -2557,55 +2572,69 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 			}
 
 			//
-			// generate nat discovery if neccessary
+			// make sure local nat discovery hashes
+			// have been generated
 			//
 
-			if( !( ph1->lstate & LSTATE_GENNATD ) )
-				phase1_gen_natd( ph1 );
+			phase1_gen_natd( ph1 );
 
 			//
 			// compare the remote destination
-			// hash to the local source hash
+			// hash to all local source hashes
 			//
 
-			if( ph1->natd_rd.size() == ph1->natd_ls.size() )
+			if( !ph1->natd_hash_r.get( natd_r, 0 ) )
 			{
-				if( memcmp(
-						ph1->natd_rd.buff(),
-						ph1->natd_ls.buff(),
-						ph1->natd_ls.size() ) )
-				{
-					log.txt( LLOG_INFO,
-						"ii : nat discovery - local address is translated\n" );
+				log.txt( LLOG_ERROR,
+					"!! : no remote desitnation hash available for comparison\n" );
+				break;
+			}
 
-					xlated = true;
+			for( long index = 1; index < ph1->natd_hash_l.count(); index++ )
+			{
+				ph1->natd_hash_l.get( natd_l, index );
+				if( natd_r == natd_l )
+				{
+					xlated_l = false;
+					break;
 				}
 			}
 
+			if( xlated_l )
+				log.txt( LLOG_INFO,
+					"ii : nat discovery - local address is translated\n" );
+
 			//
-			// compare the remote source hash
-			// to the local destination hash
+			// compare the local destination
+			// hash to all remote source hashes
 			//
 
-			if( ph1->natd_rs.size() == ph1->natd_ld.size() )
+			if( !ph1->natd_hash_l.get( natd_l, 0 ) )
 			{
-				if( memcmp(
-						ph1->natd_rs.buff(),
-						ph1->natd_ld.buff(),
-						ph1->natd_ld.size() ) )
-				{
-					log.txt( LLOG_INFO,
-						"ii : nat discovery - remote address is translated\n" );
+				log.txt( LLOG_ERROR,
+					"!! : no local desitnation hash available for comparison\n" );
+				break;
+			}
 
-					xlated = true;
+			for( long index = 1; index < ph1->natd_hash_r.count(); index++ )
+			{
+				ph1->natd_hash_r.get( natd_r, index );
+				if( natd_l == natd_r )
+				{
+					xlated_r = false;
+					break;
 				}
 			}
+
+			if( xlated_r )
+				log.txt( LLOG_INFO,
+					"ii : nat discovery - remote address is translated\n" );
 
 			//
 			// only set the nat-t port if translation was detected
 			//
 
-			if( xlated )
+			if( xlated_l || xlated_r )
 			{
 				ph1->tunnel->natt_version = ph1->natt_version;
 				break;

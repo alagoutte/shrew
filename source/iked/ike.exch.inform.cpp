@@ -420,7 +420,7 @@ long _IKED::inform_chk_hash( IDB_PH1 * ph1, IDB_XCH * inform )
 		inform->hash_r.size(),
 		"== : informational hash_c ( received )" );
 
-	if( memcmp( inform->hash_r.buff(), hash_c.buff(), hash_c.size() ) )
+	if( inform->hash_r != hash_c )
 	{
 		log.txt( LLOG_ERROR,	"!! : informational hash verification failed\n" );
 

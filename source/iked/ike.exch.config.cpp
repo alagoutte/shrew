@@ -2258,7 +2258,7 @@ long _IKED::config_chk_hash( IDB_PH1 * ph1, IDB_CFG * cfg, unsigned long msgid )
 		hash_c.size(),
 		"== : configure hash_c ( computed )" );
 
-	if( memcmp( cfg->hash_r.buff(), hash_c.buff(), hash_c.size() ) )
+	if( cfg->hash_r != hash_c )
 	{
 		log.txt( LLOG_ERROR,	"!! : configure hash verification failed\n" );
 		return LIBIKE_FAILED;

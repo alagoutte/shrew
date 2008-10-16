@@ -45,12 +45,25 @@
 // basic data class
 //
 
-_BDATA &_BDATA::operator =( _BDATA & bdata )
+_BDATA & _BDATA::operator =( _BDATA & bdata )
 {
 	del();
 	set( bdata );
 
 	return *this;
+}
+
+bool _BDATA::operator ==( _BDATA & bdata )
+{
+	if( bdata.size() != size() )
+		return false;
+
+	return ( memcmp( bdata.buff(), buff(), size() ) == 0 );
+}
+
+bool _BDATA::operator !=( _BDATA & bdata )
+{
+	return !( *this == bdata );
 }
 
 _BDATA::_BDATA()

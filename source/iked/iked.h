@@ -252,13 +252,12 @@ YY_DECL;
 #define XSTATE_RECV_SI			0x000001000
 #define XSTATE_RECV_CT			0x000002000
 #define XSTATE_RECV_CR			0x000004000
-#define XSTATE_RECV_NDL			0x000008000
-#define XSTATE_RECV_NDR			0x000010000
-#define XSTATE_RECV_IDL			0x000020000
-#define XSTATE_RECV_IDR			0x000040000
-#define XSTATE_RECV_HA			0x000080000
-#define XSTATE_RECV_LP			0x000100000
-#define XSTATE_SENT_LP			0x000200000
+#define XSTATE_RECV_ND			0x000008000
+#define XSTATE_RECV_IDL			0x000010000
+#define XSTATE_RECV_IDR			0x000020000
+#define XSTATE_RECV_HA			0x000040000
+#define XSTATE_RECV_LP			0x000080000
+#define XSTATE_SENT_LP			0x000100000
 
 #define CSTATE_RECV_XUSER		0x000000001
 #define CSTATE_SENT_XUSER		0x000000002
@@ -638,6 +637,7 @@ typedef class _IKED
 	long	phase1_chk_hash( IDB_PH1 * ph1 );
 	long	phase1_chk_sign( IDB_PH1 * ph1 );
 	long	phase1_gen_natd( IDB_PH1 * ph1 );
+	bool	phase1_add_natd( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next );
 	bool	phase1_chk_natd( IDB_PH1 * ph1 );
 	long	phase1_chk_idr( IDB_PH1 * ph1 );
 

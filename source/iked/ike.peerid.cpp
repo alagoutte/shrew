@@ -263,16 +263,8 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 			ids.varid.add( 0, 1 );
 			idt.varid.add( 0, 1 );
 
-			if( ids.varid.size() != idt.varid.size() )
+			if( ids.varid != idt.varid )
 				match = false;
-			else
-			{
-				if( memcmp(
-						ids.varid.buff(),
-						idt.varid.buff(),
-						idt.varid.size() ) )
-						match = false;
-			}
 
 			break;
 		}
@@ -299,16 +291,8 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 				idts.add( 0, 1 );
 				idtt.add( 0, 1 );
 
-				if( idts.size() != idtt.size() )
+				if( idts != idtt )
 					match = false;
-				else
-				{
-					if( memcmp(
-							idts.buff(),
-							idtt.buff(),
-							idtt.size() ) )
-							match = false;
-				}
 			}
 			else
 				expl = expl_cert;

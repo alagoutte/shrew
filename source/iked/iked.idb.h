@@ -647,9 +647,6 @@ typedef class _IDB_PH1 : public IDB_XCH_SA
 	long	natt_version;	// version negotiated
 	uint8_t	natt_pldtype;	// payload identifier
 
-	bool	natted_l;	// local address is natted
-	bool	natted_r;	// remote address is natted
-
 	uint8_t		ctype_l;	// local certificate type
 	uint8_t		ctype_r;	// remote certificate type
 
@@ -662,10 +659,8 @@ typedef class _IDB_PH1 : public IDB_XCH_SA
 	BDATA	idi;
 	BDATA	idr;
 
-	BDATA	natd_ls;
-	BDATA	natd_ld;
-	BDATA	natd_rs;
-	BDATA	natd_rd;
+	IDB_LIST_BDATA	natd_hash_l;
+	IDB_LIST_BDATA	natd_hash_r;
 
 	IDB_LIST_CERT	certs_r;
 	BDATA			sign_r;

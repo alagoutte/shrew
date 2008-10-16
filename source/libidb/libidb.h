@@ -66,6 +66,8 @@ typedef class DLX _BDATA
 	public:
 
 	_BDATA &		operator =( _BDATA & bdata );
+	bool			operator ==( _BDATA & bdata );
+	bool			operator !=( _BDATA & bdata );
 
 	_BDATA();
 	_BDATA( _BDATA & bdata );

@@ -45,13 +45,13 @@
 // certificate list
 //
 
-bool _IDB_LIST_BDATA::add( BDATA & cert )
+bool _IDB_LIST_BDATA::add( BDATA & bdata )
 {
 	IDB_ENTRY_BDATA * bentry = new IDB_ENTRY_BDATA;
 	if( bentry == NULL )
 		return false;
 
-	*static_cast<BDATA*>( bentry ) = cert;
+	*static_cast<BDATA*>( bentry ) = bdata;
 
 	return add_entry( bentry );
 }
