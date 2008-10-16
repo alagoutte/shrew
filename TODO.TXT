@@ -250,10 +250,14 @@ X Validate and document support for Sidewinder gateways
 X Add an option for selecting a randomized virtual subnet address
 X Add GUI support for multiple DNS/WINS server addresses
 X Fix problems with resolv.conf file generation on unix platforms
-. Add support for stable software update checks
+X Add support for automatic stable software update checks
+X Fix slow responsiveness duing DHCP over IPsec negotiations
+X Fix quick disconnects after negotiating with a cisco gateway
 . Add proper support for multiple NAT-T hash values
 . Make the client config subordinate to the phase1 handle
 . Make the config exchange handle subordinate to the phase1 handle
+. Remove the now unnedded COMPAT policy mode
+. Fix negotiation of tunnel-all configuration in iked
 . Fix the server mode support in iked
 
 Near Term Goals

@@ -511,7 +511,18 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 		return false;
 	}
 
-	policy->nailed = tunnel->peer->nailed;
+	//
+	// set special flags for outbound policies
+	//
+
+	if( tunnel->peer->nailed )
+		policy->flags |= PFLAG_NAILED;
+
+	if( tunnel->tstate & TSTATE_POLICY_INIT )
+	{
+		policy->flags |= PFLAG_INITIAL;
+		tunnel->tstate &= ~TSTATE_POLICY_INIT;
+	}
 
 	//
 	// create client policy route
@@ -538,7 +549,8 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 					route_entry.addr,
 					route_entry.mask );
 
-				policy->route_added = iproute.add( route_entry );
+				if( iproute.add( route_entry ) )
+					policy->flags |= PFLAG_ROUTED;
 
 				break;
 			}
@@ -555,14 +567,15 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 					if( id2.type == ISAKMP_ID_IPV4_ADDR )
 						route_entry.mask.s_addr = 0xffffffff;
 
-					policy->route_added = iproute.add( route_entry );
+					if( iproute.add( route_entry ) )
+						policy->flags |= PFLAG_ROUTED;
 				}
 
 				break;
 			}
 		}
 
-		if( policy->route_added )
+		if( policy->flags & PFLAG_ROUTED )
 		{
 			log.txt( LLOG_INFO,
 				"ii : created %s policy route for %s\n",
@@ -597,8 +610,8 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 
 	IDB_POLICY * policy;
 
-	bool route_added = false;
 	bool route_deleted = false;
+	long flags = 0;
 	IPROUTE_ENTRY route_entry;
 
 	IKE_SADDR * src;
@@ -669,8 +682,8 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 			&id1,
 			&id2 ) )
 	{
-		route_added = policy->route_added;
 		route_entry = policy->route_entry;
+		flags = policy->flags;
 
 		text_ph2id( txtid_src, &id1 );
 		text_ph2id( txtid_dst, &id2 );
@@ -693,7 +706,7 @@ bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	// remove client policy route
 	//
 
-	if( route && route_added && ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) )
+	if( route && ( flags & PFLAG_ROUTED ) && ( tunnel->peer->contact == IPSEC_CONTACT_CLIENT ) )
 	{
 		switch( type )
 		{

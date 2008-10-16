@@ -2296,6 +2296,16 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 
 	if( vendcmp( vend, vend_unity ) )
 	{
+		//
+		// if we are communcating with a
+		// cisco unity device, set the
+		// policy init flag. this forces
+		// a single phase2 SA negotiation
+		// for the first policy created
+		// 
+
+		ph1->tunnel->tstate |= TSTATE_POLICY_INIT;
+
 		ph1->vendopts_r.flag.unity = true;
 		log.txt( LLOG_INFO, "ii : peer is CISCO UNITY compatible\n" );
 		return LIBIKE_OK;

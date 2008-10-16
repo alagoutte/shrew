@@ -370,7 +370,7 @@ long _IKED::pfkey_init_phase2( bool nailed, u_int16_t plcytype, u_int32_t plcyid
 	// in the form of an aquire
 	//
 
-	if( policy_out->nailed && !nailed )
+	if( policy_out->flags & PFLAG_NAILED )
 	{
 		log.txt( LLOG_INFO, "ii : ignoring init phase2 by acquire, tunnel is nailed\n" );
 
@@ -682,9 +682,16 @@ long _IKED::pfkey_recv_spadd( PFKI_MSG & msg )
 	// call init phase2 now
 	//
 
-	if( policy->nailed )
+	if( policy->flags & PFLAG_NAILED )
 	{
 		log.txt( LLOG_DEBUG, "ii : calling init phase2 for nailed policy\n" );
+		pfkey_init_phase2( true, spinfo.sp.type, spinfo.sp.id, 0 );
+	}
+
+	if( policy->flags & PFLAG_INITIAL )
+	{
+		policy->flags &= ~PFLAG_INITIAL;
+		log.txt( LLOG_DEBUG, "ii : calling init phase2 for initial policy\n" );
 		pfkey_init_phase2( true, spinfo.sp.type, spinfo.sp.id, 0 );
 	}
 

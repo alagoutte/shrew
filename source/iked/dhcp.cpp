@@ -125,7 +125,7 @@ long _IKED::socket_dhcp_create( IDB_TUNNEL * tunnel )
 	//
 
 	tunnel->inc( true );
-	tunnel->event_dhcp.delay = 1000;
+	tunnel->event_dhcp.delay = 100;
 
 	ith_timer.add( &tunnel->event_dhcp );
 
@@ -586,8 +586,6 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			}
 
 			tunnel->tstate |= TSTATE_VNET_CONFIG;
-
-			tunnel->ikei->wakeup();
 		}
 	}
 
@@ -603,6 +601,7 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			// setup lease times
 			//
 
+			tunnel->event_dhcp.delay = 1000;
 			tunnel->event_dhcp.retry = 0;
 			tunnel->event_dhcp.renew = time( NULL );
 			tunnel->event_dhcp.renew += tunnel->event_dhcp.lease / 2;

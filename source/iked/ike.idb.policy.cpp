@@ -186,10 +186,9 @@ _IDB_POLICY::_IDB_POLICY( PFKI_SPINFO * spinfo )
 
 	memset( &sp, 0, sizeof( sp ) );
 	memset( xforms, 0, sizeof( xforms ) );
-
-	route_added = false;
+	
 	memset( &route_entry, 0, sizeof( route_entry ) );
-	nailed = false;
+	flags = 0;
 
 	iked.rand_bytes( &spinfo->seq, sizeof( spinfo->seq ) );
 
