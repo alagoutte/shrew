@@ -686,10 +686,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 				}
 
 				//
-				// if we require a virutal adapter,
-				// create one now as the startup
-				// time can be long if a new device
-				// instance needs to be created
+				// if we require a virutal adapter
 				//
 
 				if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )

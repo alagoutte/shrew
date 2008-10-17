@@ -120,8 +120,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 	if( cfg->status() >= XCH_STATUS_MATURE )
 	{
-		log.txt( LLOG_ERROR, "!! : config packet ignored, resending last packet ( config already mature )\n" );
-		cfg->resend();
+		log.txt( LLOG_ERROR, "!! : config packet ignored ( config already mature )\n" );
 		cfg->dec( true );
 		return LIBIKE_OK;
 	}

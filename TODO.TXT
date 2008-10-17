@@ -253,7 +253,7 @@ X Fix problems with resolv.conf file generation on unix platforms
 X Add support for automatic stable software update checks
 X Fix slow responsiveness duing DHCP over IPsec negotiations
 X Fix quick disconnects after negotiating with a cisco gateway
-. Add proper support for multiple NAT-T hash values
+X Add proper support for multiple NAT-T hash values
 . Make the client config subordinate to the phase1 handle
 . Make the config exchange handle subordinate to the phase1 handle
 . Remove the now unnedded COMPAT policy mode

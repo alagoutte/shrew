@@ -677,9 +677,9 @@ long _IKED::pfkey_recv_spadd( PFKI_MSG & msg )
 	policy->sp.id = spinfo.sp.id;
 
 	//
-	// if this policy was marked as
-	// nailed for a client tunnel,
-	// call init phase2 now
+	// if this policy was marked as nailed
+	// or initial for a client tunnel, call
+	// init phase2 now
 	//
 
 	if( policy->flags & PFLAG_NAILED )
