@@ -238,7 +238,10 @@ X Fix dns resoltion for names that begin with numeric digit
 ----------------------------------------------------------------------
 X Fix a thread state bug that caused phase2 to fail in rare cases
 X Fix a phase2 responder bug that caused packet re-transmit to fail
-. Add explicit link state notifications for Vista filter drivers
+X Add explicit link state notifications for Vista filter drivers
+X Fix quick disconnects after negotiating with a cisco gateway
+X Add Dialup/PPP adapter support for Vista Platforms
+X Fix a critical bug in the windows libvflt ip forward caching code
 
 2.2.0 release - Remote access server support
 ----------------------------------------------------------------------
@@ -252,7 +255,6 @@ X Add GUI support for multiple DNS/WINS server addresses
 X Fix problems with resolv.conf file generation on unix platforms
 X Add support for automatic stable software update checks
 X Fix slow responsiveness duing DHCP over IPsec negotiations
-X Fix quick disconnects after negotiating with a cisco gateway
 X Add proper support for multiple NAT-T hash values
 . Make the client config subordinate to the phase1 handle
 . Make the config exchange handle subordinate to the phase1 handle
@@ -263,7 +265,6 @@ X Add proper support for multiple NAT-T hash values
 Near Term Goals
 ----------------------------------------------------------------------
 . Validate USB WIFI/Ethernet adapter support on Windows Platforms
-. Validate Dialup/PPP adapter support on Vista Platforms
 . Validate and document support for OpenBSD gateways
 . Validate and document support for Strong/OpenSWAN gateways
 . Validate and document support for SonicWall gateways

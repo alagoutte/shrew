@@ -636,7 +636,6 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						BDATA sign;
 						phase1_gen_hash_i( ph1, ph1->hash_l );
 						prvkey_rsa_encrypt( ph1->tunnel->peer->cert_k, ph1->hash_l, sign );
-
 						payload_add_sign( packet, sign, ISAKMP_PAYLOAD_NONE );
 
 						ph1->xstate |= XSTATE_SENT_CT;

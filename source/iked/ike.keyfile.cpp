@@ -144,11 +144,10 @@ bool cert_load_pem( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 	if( x509 == NULL )
 		return false;
 
-	cert_2_bdata( cert, x509 );
-
+	bool converted = cert_2_bdata( cert, x509 );
 	X509_free( x509 );
 
-	return true;
+	return converted;
 }
 
 bool cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
@@ -188,10 +187,10 @@ bool cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 	if( x509 == NULL )
 		return false;
 
-	cert_2_bdata( cert, x509 );
+	bool converted = cert_2_bdata( cert, x509 );
 	X509_free( x509 );
 
-	return true;
+	return converted;
 }
 
 long _IKED::cert_load( BDATA & cert, char * fpath, bool ca, BDATA & pass )
@@ -711,7 +710,10 @@ bool prvkey_rsa_load_pem( BDATA & prvkey, FILE * fp, BDATA & pass )
 	if( evp_pkey == NULL )
 		return false;
 
-	return true;
+	bool converted = prvkey_rsa_2_bdata( prvkey, evp_pkey->pkey.rsa );
+	EVP_PKEY_free( evp_pkey );
+
+	return converted;
 }
 
 bool prvkey_rsa_load_p12( BDATA & prvkey, FILE * fp, BDATA & pass )
@@ -733,11 +735,10 @@ bool prvkey_rsa_load_p12( BDATA & prvkey, FILE * fp, BDATA & pass )
 	if( evp_pkey == NULL )
 		return false;
 
-	bool result = prvkey_rsa_2_bdata( prvkey, evp_pkey->pkey.rsa );
-
+	bool converted = prvkey_rsa_2_bdata( prvkey, evp_pkey->pkey.rsa );
 	EVP_PKEY_free( evp_pkey );
 
-	return true;
+	return converted;
 }
 
 long _IKED::prvkey_rsa_load( BDATA & prvkey, char * fpath, BDATA & pass )

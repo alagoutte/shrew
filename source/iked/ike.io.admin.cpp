@@ -527,9 +527,15 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						peer->psk = psk;
 						peer->cert_r = cert_r;
 						peer->cert_l = cert_l;
-						peer->cert_k = cert_l;
+						peer->cert_k = cert_k;
 						peer->iddata_r = iddata_r;
 						peer->iddata_l = iddata_l;
+
+						psk.del();
+						cert_l.del();
+						cert_k.del();
+						iddata_r.del();
+						iddata_l.del();
 
 						IKE_PROPOSAL * proposal;
 
@@ -576,6 +582,9 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						tunnel->xauth.user = xuser;
 						tunnel->xauth.pass = xpass;
 
+						xuser.del( true );
+						xpass.del( true );
+
 						IKE_PH2ID ph2id;
 
 						index = 0;
@@ -591,6 +600,8 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						index = 0;
 						while( domains.get( domain, index++ ) )
 							tunnel->domains.add( domain );
+
+						domain.del();
 
 						if( !tunnel->add( true ) )
 						{
