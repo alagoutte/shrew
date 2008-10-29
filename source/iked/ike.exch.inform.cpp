@@ -540,18 +540,55 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 		// phase1 notify
 		//
 
+		case 0:
+
+			//
+			// NOTE: the Netgear DPD implementation in
+			// badly broken. it sends a protocol type
+			// if ISAKMP and an SPI length of zero.
+			//
+
 		case ( ISAKMP_COOKIE_SIZE * 2 ):
 		{
 			switch( notify->code )
 			{
+				//
+				// NOTE : the Netgear DPD implementation is
+				// badly broken. they send 16 bytes of zero
+				// padding before the 4 byte sequence value.
+				// if we respond with the full 20 bytes sent
+				// to us, the gateway rejects the value. if
+				// we send only the relevent 4 bytes, the
+				// gateway accepts the value. this is likely
+				// related to the absent ISAKMP cookie value
+				// as the null padding is the same length as
+				// an ISAKMP cookie pair.
+				//
+
 				case ISAKMP_N_DPD_R_U_THERE:
 				{
+					size_t seq_size = sizeof( ph1->tunnel->event_dpd.sequence );
+					size_t seq_padd = notify->data.size() - seq_size;
+
+					if( notify->data.size() < seq_size )
+					{
+						log.txt( LLOG_ERROR, "!! : DPD ARE-YOU-THERE sequence data is invalid ( %i bytes )\n", notify->data.size() );
+						break;
+					}
+
 					uint32_t sequence;
+					notify->data.oset( seq_padd );
 					notify->data.get( &sequence, sizeof( sequence ) );
-					sequence = ntohl( sequence );
+
+					if( seq_padd )
+					{
+						notify->data.del();
+						notify->data.add( &sequence, sizeof( sequence ) );
+					}
 
 					inform_new_notify( ph1, NULL, ISAKMP_N_DPD_R_U_THERE_ACK, &notify->data );
 
+					sequence = ntohl( sequence );
 					log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE sequence %08x returned\n", sequence );
 
 					break;
@@ -559,35 +596,42 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 
 				case ISAKMP_N_DPD_R_U_THERE_ACK:
 				{
-					if( notify->data.size() == sizeof( ph1->tunnel->event_dpd.sequence ) )
+					size_t seq_size = sizeof( ph1->tunnel->event_dpd.sequence );
+					size_t seq_padd = notify->data.size() - seq_size;
+
+					if( notify->data.size() < seq_size )
 					{
-						//
-						// obtain sequence number and
-						// convert to host byte order
-						//
-
-						uint32_t sequence;
-						notify->data.get( &sequence, sizeof( sequence ) );
-						sequence = ntohl( sequence );
-
-						//
-						// check dpd sequence number
-						//
-
-						if( sequence != ph1->tunnel->event_dpd.sequence )
-						{
-							log.txt( LLOG_ERROR, "!! : DPD ARE-YOU-THERE-ACK sequence %08x rejected\n", sequence );
-							break;
-						}
-
-						//
-						// setup the next dpd cycle
-						//
-
-						log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE-ACK sequence %08x accepted\n", sequence );
-
-						ph1->tunnel->event_dpd.next();
+						log.txt( LLOG_ERROR, "!! : DPD ARE-YOU-THERE-ACK sequence data is invalid ( %i bytes )\n", notify->data.size() );
+						break;
 					}
+
+					//
+					// obtain sequence number and
+					// convert to host byte order
+					//
+
+					uint32_t sequence;
+					notify->data.oset( seq_padd );
+					notify->data.get( &sequence, sizeof( sequence ) );
+
+					//
+					// check dpd sequence number
+					//
+
+					sequence = ntohl( sequence );
+					if( sequence != ph1->tunnel->event_dpd.sequence )
+					{
+						log.txt( LLOG_ERROR, "!! : DPD ARE-YOU-THERE-ACK sequence %08x rejected\n", sequence );
+						break;
+					}
+
+					//
+					// setup the next dpd cycle
+					//
+
+					log.txt( LLOG_DEBUG, "ii : DPD ARE-YOU-THERE-ACK sequence %08x accepted\n", sequence );
+
+					ph1->tunnel->event_dpd.next();
 
 					break;
 				}

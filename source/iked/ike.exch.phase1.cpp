@@ -1931,7 +1931,7 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 		vid_count++;
 
 	if( ph1->vendopts_l.flag.dpdv1 )
-		vid_count++;
+		vid_count += 2;
 
 	if( ph1->vendopts_l.flag.ssoft )
 		vid_count++;
@@ -2010,6 +2010,7 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 	if( ph1->vendopts_l.flag.dpdv1 )
 	{
 		payload_add_vend( packet, vend_dpd1, vendpld( vid_count, next ) );
+		payload_add_vend( packet, vend_dpd1_ng, vendpld( vid_count, next ) );
 		log.txt( LLOG_INFO, "ii : local supports DPDv1\n" );
 	}
 
@@ -2029,7 +2030,12 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 
 	if( ph1->vendopts_l.flag.unity )
 	{
-		payload_add_vend( packet, vend_unity, vendpld( vid_count, next ) );
+		BDATA vend_unity2;
+		vend_unity2.add( vend_unity );	// base vendor id
+		vend_unity2.add( 0x02, 1 );		// major version
+		vend_unity2.add( 0x04, 1 );		// minor version
+
+		payload_add_vend( packet, vend_unity2, vendpld( vid_count, next ) );
 		log.txt( LLOG_INFO, "ii : local is CISCO UNITY compatible\n" );
 	}
 
@@ -2054,8 +2060,7 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 	}
 
 	//
-	// prepair and optionally add checkpoint vendor
-	// id payload ( must be last )
+	// optionally add checkpoint vendor payload ( must be last )
 	//
 
 	if( ph1->vendopts_l.flag.chkpt )
@@ -2134,7 +2139,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for dead peer detection vendor id
 	//
 
-	if( vendcmp( vend, vend_dpd1 ) )
+	if( vendcmp( vend, vend_dpd1 ) || vendcmp( vend, vend_dpd1_ng ) )
 	{
 		ph1->vendopts_r.flag.dpdv1 = true;
 		log.txt( LLOG_INFO, "ii : peer supports DPDv1\n" );
@@ -2281,7 +2286,7 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	// check for unity vendor id
 	//
 
-	if( vendcmp( vend, vend_unity ) )
+	if( vendcmp( vend, vend_unity, true ) )
 	{
 		//
 		// if we are communcating with a
