@@ -44,6 +44,7 @@
 
 #include "openssl/dh.h"
 #include "openssl/evp.h"
+#include "openssl/md5.h"
 #include "openssl/hmac.h"
 #include "openssl/pem.h"
 #include "openssl/pkcs12.h"

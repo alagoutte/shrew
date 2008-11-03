@@ -466,12 +466,12 @@ bool _IKED::config_client_xauth_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 		// read the request attributes
 		//
 
+		cfg->tunnel->xauth.type = XAUTH_TYPE_GENERIC;
+
 		BDATA message;
 
 		long count = cfg->attr_count();
 		long index = 0;
-
-		bool auth_type = false;
 
 		for( ; index < count; index++ )
 		{
@@ -481,21 +481,28 @@ bool _IKED::config_client_xauth_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 			{
 				case XAUTH_TYPE:
 				case CHKPT_TYPE:
-					auth_type = true;
+					if( attr->basic )
+						cfg->tunnel->xauth.type = attr->bdata;
+					log.txt( LLOG_INFO, "ii : - xauth authentication type\n" );
 					break;
 
 				case XAUTH_USER_NAME:
 				case CHKPT_USER_NAME:
 					cfg->xstate |= CSTATE_RECV_XUSER;
-					if( attr->basic )
-						log.txt( LLOG_INFO, "!! : warning, basic xauth username attribute type\n" );
+					log.txt( LLOG_INFO, "ii : - xauth username\n" );
 					break;
 
 				case XAUTH_USER_PASSWORD:
 				case CHKPT_USER_PASSWORD:
 					cfg->xstate |= CSTATE_RECV_XPASS;
-					if( attr->basic )
-						log.txt( LLOG_INFO, "!! : warning, basic xauth password attribute type\n" );
+					log.txt( LLOG_INFO, "ii : - xauth password\n" );
+					break;
+
+				case XAUTH_CHALLENGE:
+					cfg->xstate |= CSTATE_RECV_XPASS;
+					log.txt( LLOG_INFO, "ii : - xauth challenge\n" );
+					if( !attr->basic )
+						cfg->tunnel->xauth.hash = attr->vdata;
 					break;
 
 				case XAUTH_MESSAGE:
@@ -505,7 +512,7 @@ bool _IKED::config_client_xauth_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 					break;
 
 				default:
-					log.txt( LLOG_INFO, "!! : warning, unhandled xauth attribute %i\n", attr->atype );
+					log.txt( LLOG_INFO, "ww : unhandled xauth attribute %i\n", attr->atype );
 					break;
 			}
 		}
@@ -516,10 +523,26 @@ bool _IKED::config_client_xauth_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 		// examine the xauth request
 		//
 
-		if( !auth_type )
-			log.txt( LLOG_INFO, "!! : warning, missing required xauth type attribute\n" );
+		switch( cfg->tunnel->xauth.type )
+		{
+			case XAUTH_TYPE_GENERIC:
+				log.txt( LLOG_INFO,
+					"ii : received basic xauth request - %s\n",
+					message.text() );
+				break;
 
-		log.txt( LLOG_INFO, "ii : received xauth request - %s\n", message.text() );
+			case XAUTH_TYPE_RADIUS_CHAP:
+				log.txt( LLOG_INFO,
+					"ii : received chap xauth request - %s\n",
+					message.text() );
+				break;
+
+			default:
+				log.txt( LLOG_ERROR,
+					"!! : received unhandled xauth request type\n" );
+				ph1->status( XCH_STATUS_DEAD, XCH_FAILED_MSG_FORMAT, 0 );
+				break;
+		}
 
 		return false;
 	}
@@ -646,7 +669,7 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 			// standard xauth processing
 			//
 
-			cfg->attr_add_b( XAUTH_TYPE, XAUTH_TYPE_GENERIC );
+			cfg->attr_add_b( XAUTH_TYPE, cfg->tunnel->xauth.type );
 
 			if(  ( cfg->xstate & CSTATE_RECV_XUSER ) &&
 				!( cfg->xstate & CSTATE_SENT_XUSER ) )
@@ -658,20 +681,54 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 				cfg->xstate |= CSTATE_SENT_XUSER;
 
 				log.txt( LLOG_INFO,
-					"ii : added standard xauth username attribute\n" );
+					"ii : - standard xauth username\n" );
 			}
+
 
 			if(  ( cfg->xstate & CSTATE_RECV_XPASS ) &&
 				!( cfg->xstate & CSTATE_SENT_XPASS ) )
 			{
-				cfg->attr_add_v( XAUTH_USER_PASSWORD,
-					cfg->tunnel->xauth.pass.buff(),
-					cfg->tunnel->xauth.pass.size() );
+				switch( cfg->tunnel->xauth.type )
+				{
+					case XAUTH_TYPE_GENERIC:
+
+						cfg->attr_add_v( XAUTH_USER_PASSWORD,
+							cfg->tunnel->xauth.pass.buff(),
+							cfg->tunnel->xauth.pass.size() );
+
+						log.txt( LLOG_INFO,
+							"ii : - standard xauth basic password\n" );
+
+						break;
+
+					case XAUTH_TYPE_RADIUS_CHAP:
+					{
+						uint8_t id;
+						rand_bytes( &id, 1 );
+
+						BDATA rslt;
+						rslt.add( &id, sizeof( id ) );
+						rslt.add( 0, MD5_DIGEST_LENGTH );
+
+						MD5_CTX ctx;
+						MD5_Init( &ctx );
+						MD5_Update( &ctx, &id, sizeof( id ) );
+						MD5_Update( &ctx, cfg->tunnel->xauth.pass.buff(), cfg->tunnel->xauth.pass.size() );
+						MD5_Update( &ctx, cfg->tunnel->xauth.hash.buff(), cfg->tunnel->xauth.hash.size() );
+						MD5_Final( rslt.buff() + sizeof( id ), &ctx );
+
+						cfg->attr_add_v( XAUTH_USER_PASSWORD,
+							rslt.buff(),
+							rslt.size() );
+
+						log.txt( LLOG_INFO,
+							"ii : - standard xauth chap password\n" );
+
+						break;
+					}
+				}
 
 				cfg->xstate |= CSTATE_SENT_XPASS;
-
-				log.txt( LLOG_INFO,
-					"ii : added standard xauth password attribute\n" );
 			}
 		}
 		else
@@ -680,7 +737,7 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 			// checkpoint xauth processing
 			//
 
-			cfg->attr_add_b( CHKPT_TYPE, XAUTH_TYPE_GENERIC );
+			cfg->attr_add_b( XAUTH_TYPE, cfg->tunnel->xauth.type );
 
 			if(  ( cfg->xstate & CSTATE_RECV_XUSER ) &&
 				!( cfg->xstate & CSTATE_SENT_XUSER ) )
@@ -692,20 +749,53 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 				cfg->xstate |= CSTATE_SENT_XUSER;
 
 				log.txt( LLOG_INFO,
-					"ii : added checkpoint xauth username attribute\n" );
+					"ii : - checkpoint xauth username\n" );
 			}
 
 			if(  ( cfg->xstate & CSTATE_RECV_XPASS ) &&
 				!( cfg->xstate & CSTATE_SENT_XPASS ) )
 			{
-				cfg->attr_add_v( CHKPT_USER_PASSWORD,
-					cfg->tunnel->xauth.pass.buff(),
-					cfg->tunnel->xauth.pass.size() );
+				switch( cfg->tunnel->xauth.type )
+				{
+					case XAUTH_TYPE_GENERIC:
+
+						cfg->attr_add_v( CHKPT_USER_PASSWORD,
+							cfg->tunnel->xauth.pass.buff(),
+							cfg->tunnel->xauth.pass.size() );
+
+						log.txt( LLOG_INFO,
+							"ii : - checkpoint xauth basic password\n" );
+
+						break;
+
+					case XAUTH_TYPE_RADIUS_CHAP:
+					{
+						uint8_t id;
+						rand_bytes( &id, 1 );
+
+						BDATA rslt;
+						rslt.add( &id, sizeof( id ) );
+						rslt.add( 0, MD5_DIGEST_LENGTH );
+
+						MD5_CTX ctx;
+						MD5_Init( &ctx );
+						MD5_Update( &ctx, &id, sizeof( id ) );
+						MD5_Update( &ctx, cfg->tunnel->xauth.pass.buff(), cfg->tunnel->xauth.pass.size() );
+						MD5_Update( &ctx, cfg->tunnel->xauth.hash.buff(), cfg->tunnel->xauth.hash.size() );
+						MD5_Final( rslt.buff() + sizeof( id ), &ctx );
+
+						cfg->attr_add_v( XAUTH_USER_PASSWORD,
+							rslt.buff(),
+							rslt.size() );
+
+						log.txt( LLOG_INFO,
+							"ii : - checkpoint xauth chap password\n" );
+
+						break;
+					}
+				}
 
 				cfg->xstate |= CSTATE_SENT_XPASS;
-
-				log.txt( LLOG_INFO,
-					"ii : added checkpoint xauth password attribute\n" );
 			}
 		}
 
