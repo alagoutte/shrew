@@ -740,8 +740,9 @@ const char * _IKED::find_name( long type, long id )
 			static const char * notify31 = "RESPONDER-LIFETIME";
 			static const char * notify32 = "REPLAY-STATUS";
 			static const char * notify33 = "INITIAL-CONTACT";
-			static const char * notify34 = "DPDV1-R-U-THERE";
-			static const char * notify35 = "DPDV1-R-U-THERE-ACK";
+			static const char * notify34 = "UNITY-LOAD-BALANCE";
+			static const char * notify35 = "DPDV1-R-U-THERE";
+			static const char * notify36 = "DPDV1-R-U-THERE-ACK";
 			
 			switch( id )
 			{
@@ -844,11 +845,14 @@ const char * _IKED::find_name( long type, long id )
 				case ISAKMP_N_INITIAL_CONTACT:
 					return notify33;
 
-				case ISAKMP_N_DPD_R_U_THERE:
+				case ISAKMP_N_UNITY_LOAD_BALANCE:
 					return notify34;
 
-				case ISAKMP_N_DPD_R_U_THERE_ACK:
+				case ISAKMP_N_DPD_R_U_THERE:
 					return notify35;
+
+				case ISAKMP_N_DPD_R_U_THERE_ACK:
+					return notify36;
 
 				default:
 					return unknown2;

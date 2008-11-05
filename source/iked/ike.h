@@ -326,6 +326,10 @@
 
 #define IKE_FRAG_FLAG_LAST			0x01
 
+// cisco high availability
+
+#define ISAKMP_N_UNITY_LOAD_BALANCE	40501
+
 // dead peer detection
 
 #define ISAKMP_N_DPD_R_U_THERE		36136

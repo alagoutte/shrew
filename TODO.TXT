@@ -243,7 +243,8 @@ X Fix quick disconnects after negotiating with a cisco gateway
 X Add Dialup/PPP adapter support for Vista Platforms
 X Fix a critical bug in the windows libvflt ip forward caching code
 X Add proper support for multiple NAT-T hash values
-. Fix negotiation issues with Cisco PIX devices
+X Fix negotiation issues with Cisco PIX devices
+X Add support for Cisco Unity LOAD-BALANCE notifications
 
 2.2.0 release - Remote access server support
 ----------------------------------------------------------------------
