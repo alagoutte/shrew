@@ -674,6 +674,15 @@ bool site::Load( CONFIG & config )
 	if( config.get_number( "phase1-life-kbytes", &numb ) )
 		lineEditP1LifeData->setText( QString::number( numb, 10 ) );
 
+	// phase1 checkpoint vendor option
+
+	numb = 1;
+	config.get_number( "vendor-chkpt-enable", &numb );
+	if( numb )
+		checkBoxCheckpointID->setChecked( true );
+	else
+		checkBoxCheckpointID->setChecked( false );
+
 	// phase2 trasform algorithm ( default auto )
 
 	if( config.get_string( "phase2-transform",
@@ -1209,6 +1218,13 @@ bool site::Save( CONFIG & config )
 
 	config.set_number( "phase1-life-kbytes",
 		lineEditP1LifeData->text().toLong() );
+
+	// phase1 Checkpoint vendor option
+
+	if( !checkBoxCheckpointID->isChecked() )
+		config.set_number( "vendor-chkpt-enable", 0 );
+	else
+		config.set_number( "vendor-chkpt-enable", 1 );
 
 	// phase2 trasform algorithm
 

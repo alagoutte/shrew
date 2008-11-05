@@ -1592,22 +1592,6 @@
                     </widget>
                     <widget class="QLabel">
                         <property name="name">
-                            <cstring>textLabelLifeData</cstring>
-                        </property>
-                        <property name="geometry">
-                            <rect>
-                                <x>10</x>
-                                <y>200</y>
-                                <width>100</width>
-                                <height>20</height>
-                            </rect>
-                        </property>
-                        <property name="text">
-                            <string>Key Life Data Limit</string>
-                        </property>
-                    </widget>
-                    <widget class="QLabel">
-                        <property name="name">
                             <cstring>textLabelLifeKBs</cstring>
                         </property>
                         <property name="geometry">
@@ -1951,6 +1935,41 @@
                             </rect>
                         </property>
                     </widget>
+                    <widget class="QLabel">
+                        <property name="name">
+                            <cstring>textLabelLifeData</cstring>
+                        </property>
+                        <property name="geometry">
+                            <rect>
+                                <x>10</x>
+                                <y>200</y>
+                                <width>100</width>
+                                <height>20</height>
+                            </rect>
+                        </property>
+                        <property name="text">
+                            <string>Key Life Data Limit</string>
+                        </property>
+                    </widget>
+                </widget>
+                <widget class="QCheckBox">
+                    <property name="name">
+                        <cstring>checkBoxCheckpointID</cstring>
+                    </property>
+                    <property name="geometry">
+                        <rect>
+                            <x>10</x>
+                            <y>250</y>
+                            <width>250</width>
+                            <height>21</height>
+                        </rect>
+                    </property>
+                    <property name="text">
+                        <string>Enable Check Point Compatible Vendor ID</string>
+                    </property>
+                    <property name="checked">
+                        <bool>false</bool>
+                    </property>
                 </widget>
             </widget>
             <widget class="QWidget">

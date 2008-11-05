@@ -796,6 +796,13 @@ void _IKEC::run()
 		xconf.opts |= IPSEC_OPTS_SPLITNET;
 	}
 
+	// vendor compatibility options
+
+	numb = 0;
+	config.get_number( "vendor-chkpt-enable", &numb );
+	if( numb )
+		xconf.opts |= IPSEC_OPTS_VEND_CHKPT;
+
 	//
 	// ---------- CONNECT TO IKED ----------
 	//
