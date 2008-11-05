@@ -1936,13 +1936,13 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 	if( ph1->vendopts_l.flag.ssoft )
 		vid_count++;
 
-	if( ph1->vendopts_l.flag.unity )
-		vid_count++;
-
 	if( ph1->vendopts_l.flag.netsc )
 		vid_count++;
 
 	if( ph1->vendopts_l.flag.swind )
+		vid_count++;
+
+	if( ph1->vendopts_l.flag.unity )
 		vid_count++;
 
 	if( ph1->vendopts_l.flag.chkpt )
@@ -2025,21 +2025,6 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 	}
 
 	//
-	// optionally add unity vendor id payload
-	//
-
-	if( ph1->vendopts_l.flag.unity )
-	{
-		BDATA vend_unity2;
-		vend_unity2.add( vend_unity );	// base vendor id
-		vend_unity2.add( 0x02, 1 );		// major version
-		vend_unity2.add( 0x04, 1 );		// minor version
-
-		payload_add_vend( packet, vend_unity2, vendpld( vid_count, next ) );
-		log.txt( LLOG_INFO, "ii : local is CISCO UNITY compatible\n" );
-	}
-
-	//
 	// optionally add netscreen vendor payload
 	//
 
@@ -2057,6 +2042,21 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 	{
 		payload_add_vend( packet, vend_swind, vendpld( vid_count, next ) );
 		log.txt( LLOG_INFO, "ii : local is SIDEWINDER compatible\n" );
+	}
+
+	//
+	// optionally add unity vendor id payload
+	//
+
+	if( ph1->vendopts_l.flag.unity )
+	{
+		BDATA vend_unity2;
+		vend_unity2.add( vend_unity );	// base vendor id
+		vend_unity2.add( 0x02, 1 );		// major version
+		vend_unity2.add( 0x04, 1 );		// minor version
+
+		payload_add_vend( packet, vend_unity2, vendpld( vid_count, next ) );
+		log.txt( LLOG_INFO, "ii : local is CISCO UNITY compatible\n" );
 	}
 
 	//
@@ -2283,27 +2283,6 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	}
 
 	//
-	// check for unity vendor id
-	//
-
-	if( vendcmp( vend, vend_unity, true ) )
-	{
-		//
-		// if we are communcating with a
-		// cisco unity device, set the
-		// policy init flag. this forces
-		// a single phase2 SA negotiation
-		// for the first policy created
-		// 
-
-		ph1->tunnel->tstate |= TSTATE_POLICY_INIT;
-
-		ph1->vendopts_r.flag.unity = true;
-		log.txt( LLOG_INFO, "ii : peer is CISCO UNITY compatible\n" );
-		return LIBIKE_OK;
-	}
-
-	//
 	// check for netscreen vendor id
 	//
 
@@ -2333,6 +2312,27 @@ long _IKED::phase1_chk_vend( IDB_PH1 * ph1, BDATA & vend )
 	{
 		ph1->vendopts_r.flag.swind = true;
 		log.txt( LLOG_INFO, "ii : peer is SIDEWINDER compatible\n" );
+		return LIBIKE_OK;
+	}
+
+	//
+	// check for unity vendor id
+	//
+
+	if( vendcmp( vend, vend_unity, true ) )
+	{
+		//
+		// if we are communcating with a
+		// cisco unity device, set the
+		// policy init flag. this forces
+		// a single phase2 SA negotiation
+		// for the first policy created
+		// 
+
+		ph1->tunnel->tstate |= TSTATE_POLICY_INIT;
+
+		ph1->vendopts_r.flag.unity = true;
+		log.txt( LLOG_INFO, "ii : peer is CISCO UNITY compatible\n" );
 		return LIBIKE_OK;
 	}
 

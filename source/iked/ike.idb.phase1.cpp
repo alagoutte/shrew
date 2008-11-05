@@ -351,11 +351,13 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 
 	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
 	{
-		vendopts_l.flag.unity = true;
 		vendopts_l.flag.netsc = true;
 		vendopts_l.flag.zwall = true;
 		vendopts_l.flag.swind = true;
-		vendopts_l.flag.chkpt = true;
+		vendopts_l.flag.unity = true;
+
+		if( tunnel->xconf.opts & IPSEC_OPTS_VEND_CHKPT )
+			vendopts_l.flag.chkpt = true;
 	}
 
 	//
