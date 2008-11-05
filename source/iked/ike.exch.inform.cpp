@@ -573,6 +573,17 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 					char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 					text_addr( txtaddr, addr );
 
+					//
+					// only migrate if we have yet to setup
+					// the tunnel policies and routes
+					//
+
+					if( ph1->tunnel->tstate & TSTATE_VNET_CONFIG )
+					{
+						log.txt( LLOG_INFO, "ii : UNITY-LOAD-BALANCE request ignored ( tunnel already mature )\n" );
+						break;
+					}
+
 					log.txt( LLOG_INFO, "ii : UNITY-LOAD-BALANCE requested migration to %s\n", txtaddr );
 
 					//
@@ -583,7 +594,7 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 					ph1_ulb->add( true );
 
 					//
-					// remove our existing phase1 object
+					// flag our existing phase1 object for removal
 					//
 
 					ph1->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
