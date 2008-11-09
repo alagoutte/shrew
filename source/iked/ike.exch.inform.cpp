@@ -597,15 +597,41 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 					// flag our existing phase1 object for removal
 					//
 
+					ph1->inc( true );
 					ph1->status( XCH_STATUS_DEAD, XCH_NORMAL, 0 );
+					ph1->dec( true );
 
 					//
 					// re-initialize our tunnel state
 					//
+					// NOTE : we should probably find a better way
+					// to handle this. having this code here is a
+					// bit hackish but we cant use a new tunnel as
+					// the admin thread retains a pointer to the
+					// object for its own use. our only option is
+					// to recycle the existing tunnel and peer.
+					//
+
+					if( iked.ith_timer.del( &ph1->tunnel->event_dhcp ) )
+						ph1->tunnel->dec( true );
+
+					if( iked.ith_timer.del( &ph1->tunnel->event_dpd ) )
+						ph1->tunnel->dec( true );
+
+					if( iked.ith_timer.del( &ph1->tunnel->event_natt ) )
+						ph1->tunnel->dec( true );
+
+					if( iked.ith_timer.del( &ph1->tunnel->event_stats ) )
+						ph1->tunnel->dec( true );
 
 					ph1_ulb->tunnel->tstate = 0;
 					ph1_ulb->tunnel->lstate = 0;
 					ph1_ulb->tunnel->natt_version = IPSEC_NATT_NONE;
+
+					//
+					// update the peer and tunnel objects to use
+					// the address received in the notify data
+					//
 
 					ph1_ulb->tunnel->peer->saddr.saddr4.sin_addr = addr;
 					ph1_ulb->tunnel->saddr_r = ph1_ulb->tunnel->peer->saddr;
