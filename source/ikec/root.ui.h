@@ -101,8 +101,6 @@ void root::customEvent( QCustomEvent * e )
 
 			pushButtonExit->setEnabled( true );
 			pushButtonExit->setText( "Cancel" );
-
-			textLabelRemoteValue->setText( event->host );
 		}
 		else
 		{
@@ -116,8 +114,6 @@ void root::customEvent( QCustomEvent * e )
 
 			pushButtonExit->setEnabled( true );
 			pushButtonExit->setText( "Exit" );
-
-			textLabelRemoteValue->setText( event->host );
 		}
 	}
 
@@ -208,6 +204,8 @@ void root::customEvent( QCustomEvent * e )
 
 		n.setNum( event->stats.sa_fail );
 		textLabelFailedValue->setText( n );
+
+		textLabelRemoteValue->setText( inet_ntoa( event->stats.peer.saddr4.sin_addr ) );
 
 		if( event->stats.natt )
 			textLabelTransportValue->setText( "NAT-T / IKE | ESP" );

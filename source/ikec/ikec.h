@@ -77,13 +77,11 @@ class RunningEvent : public QCustomEvent
 {
 	public:
 
-	QString	host;
-	bool	running;
+	bool running;
 
-	RunningEvent( bool value, QString hname ) : QCustomEvent( EVENT_RUNNING )
+	RunningEvent( bool value ) : QCustomEvent( EVENT_RUNNING )
 	{
 		running = value;
-		host = hname;
 	}
 };
 

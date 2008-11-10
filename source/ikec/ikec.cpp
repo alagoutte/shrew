@@ -827,7 +827,7 @@ void _IKEC::run()
 
 	active = true;
 
-	QApplication::postEvent( r, new RunningEvent( true, host ) );
+	QApplication::postEvent( r, new RunningEvent( true ) );
 
 	//
 	// send the peer configuration message
@@ -1331,7 +1331,7 @@ void _IKEC::run()
 
 	active = false;
 
-	QApplication::postEvent( r, new RunningEvent( false, "" ) );
+	QApplication::postEvent( r, new RunningEvent( false ) );
 
 	return;
 }
