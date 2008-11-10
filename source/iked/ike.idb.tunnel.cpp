@@ -275,6 +275,8 @@ bool _ITH_EVENT_TUNSTATS::func()
 
 	if( !( tunnel->close ) && ( tunnel->tstate & TSTATE_VNET_ENABLE ) )
 	{
+		tunnel->stats.peer = tunnel->saddr_r;
+
 		IKEI_MSG msg;
 		msg.set_stats( &tunnel->stats );
 		tunnel->ikei->send_message( msg );

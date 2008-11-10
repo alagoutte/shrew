@@ -263,6 +263,8 @@ X Add support for the XAuth Radius CHAP method
 X Fix negotiation of tunnel-all ( 0.0.0.0/0 ) configurations in iked
 . Fix problem with direct adapter mode DNS configuration
 . Fix reverse DNS lookup issues
+. Move to Qt4 for unix client GUI components
+. Make all libraries dynamically linked on unix platform
 . Add support for Cisco PCF file import
 . Make the client config subordinate to the phase1 handle
 . Make the config exchange handle subordinate to the phase1 handle
@@ -277,7 +279,6 @@ Near Term Goals
 . Validate and document support for SonicWall gateways
 x Validate and document support for Checkpoint gateways
 . Validate and document support for Lancom gateways
-. Move to Qt4 for unix client GUI components
 . Cleanup libpfk, its really ugly
 . Fix static buffer usage for temporary string data
 . Add support for encrypted configuration storage

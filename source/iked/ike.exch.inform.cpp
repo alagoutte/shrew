@@ -621,12 +621,13 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 					if( iked.ith_timer.del( &ph1->tunnel->event_natt ) )
 						ph1->tunnel->dec( true );
 
-					if( iked.ith_timer.del( &ph1->tunnel->event_stats ) )
-						ph1->tunnel->dec( true );
-
 					ph1_ulb->tunnel->tstate = 0;
 					ph1_ulb->tunnel->lstate = 0;
 					ph1_ulb->tunnel->natt_version = IPSEC_NATT_NONE;
+
+					ph1_ulb->tunnel->stats.dpd = false;
+					ph1_ulb->tunnel->stats.frag = false;
+					ph1_ulb->tunnel->stats.natt = false;
 
 					//
 					// update the peer and tunnel objects to use
@@ -635,6 +636,7 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 
 					ph1_ulb->tunnel->peer->saddr.saddr4.sin_addr = addr;
 					ph1_ulb->tunnel->saddr_r = ph1_ulb->tunnel->peer->saddr;
+					ph1_ulb->tunnel->saddr_l.saddr4.sin_port = htons( 500 );
 
 					//
 					// reinitialize our filter

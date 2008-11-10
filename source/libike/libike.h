@@ -121,6 +121,8 @@ typedef struct _IKEI_BASIC
 
 typedef struct _IKEI_STATS
 {
+	IKE_SADDR	peer;
+
 	long	sa_good;
 	long	sa_fail;
 	long	sa_dead;
