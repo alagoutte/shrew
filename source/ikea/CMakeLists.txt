@@ -7,10 +7,6 @@
 #        : Copyright 2007, Shrew Soft Inc
 #
 
-message(
-	STATUS
-	"Using QT Libs ${QT_LIBRARIES} ..." )
-
 include_directories(
 	${IKE_SOURCE_DIR}/source/
 	${IKE_SOURCE_DIR}/source/libidb

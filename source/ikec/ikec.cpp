@@ -72,11 +72,11 @@ char * _IKEC::site_path()
 	return sites;
 }
 
-bool _IKEC::init( root * setr )
+bool _IKEC::init( ikecRoot * setRoot )
 {
 	// store our root window
 
-	r = setr;
+	r = setRoot;
 
 	// locate user home directory
 
@@ -810,9 +810,6 @@ void _IKEC::run()
 	long	result;
 	long	msgres;
 
-	IKEI	ikei;
-	pikei = &ikei;
-
 	if( ikei.attach( 3000 ) != IPCERR_OK )
 	{
 		log( STATUS_FAIL, "failed to attach to key daemon ...\n" );
@@ -910,7 +907,9 @@ void _IKEC::run()
 		( proposal_isakmp.auth_id == HYBRID_AUTH_INIT_RSA ) )
 	{
 		BDATA user;
-		user.set( ikec.username.ascii(), ikec.username.length() );
+		user.set(
+			( const char * ) ikec.username.toAscii(),
+			ikec.username.length() );
 
 		msg.set_cfgstr( CFGSTR_CRED_XAUTH_USER, &user );
 		result = ikei.send_message( msg, &msgres );
@@ -922,7 +921,9 @@ void _IKEC::run()
 		}
 
 		BDATA pass;
-		pass.set( ikec.password.ascii(), ikec.password.length() );
+		pass.set(
+			( const char * ) ikec.password.toAscii(),
+			ikec.password.length() );
 
 		msg.set_cfgstr( CFGSTR_CRED_XAUTH_PASS, &pass );
 		result = ikei.send_message( msg, &msgres );
@@ -1013,7 +1014,9 @@ void _IKEC::run()
 			}
 
 			BDATA fpass;
-			fpass.set( PassData.password.ascii(), PassData.password.length() );
+			fpass.set(
+				( const char * ) PassData.password.toAscii(),
+				PassData.password.length() );
 
 			msg.set_cfgstr( CFGSTR_CRED_FILE_PASS, &fpass );
 			result = ikei.send_message( msg, &msgres );
@@ -1061,7 +1064,9 @@ void _IKEC::run()
 			}
 
 			BDATA fpass;
-			fpass.set( PassData.password.ascii(), PassData.password.length() );
+			fpass.set(
+				( const char * ) PassData.password.toAscii(),
+				PassData.password.length() );
 
 			msg.set_cfgstr( CFGSTR_CRED_FILE_PASS, &fpass );
 			result = ikei.send_message( msg, &msgres );
@@ -1105,7 +1110,9 @@ void _IKEC::run()
 			}
 
 			BDATA fpass;
-			fpass.set( PassData.password.ascii(), PassData.password.length() );
+			fpass.set(
+				( const char * ) PassData.password.toAscii(),
+				PassData.password.length() );
 
 			msg.set_cfgstr( CFGSTR_CRED_FILE_PASS, &fpass );
 			result = ikei.send_message( msg, &msgres );

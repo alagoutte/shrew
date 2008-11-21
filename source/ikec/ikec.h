@@ -42,16 +42,6 @@
 #ifndef _IKEC_H_
 #define _IKEC_H_
 
-#include <qapplication.h>
-#include <qtextbrowser.h>
-#include <qgroupbox.h>
-#include <qpushbutton.h>
-#include <qlineedit.h>
-#include <qlabel.h>
-#include <qthread.h>
-#include <qevent.h>
-#include <qfileinfo.h>
-
 #include <unistd.h>
 #include <signal.h>
 #include <pwd.h>
@@ -59,65 +49,68 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-//#include <arpa/inet.h>
 
-#include "root.h"
-#include "banner.h"
-#include "filepass.h"
+#include <QEvent>
+#include <QThread>
+#include <QFileInfo>
+
 #include "libike.h"
-#include "config.h"
+#include "../ikea/config.h"
+#include "ui_root.h"
+#include "ui_banner.h"
+#include "ui_filepass.h"
 
-#define EVENT_RUNNING		QEvent::User + 1
-#define EVENT_ENABLE		QEvent::User + 2
-#define EVENT_STATUS		QEvent::User + 3
-#define EVENT_STATS		QEvent::User + 4
-#define EVENT_FILEPASS		QEvent::User + 5
+#define EVENT_RUNNING		QEvent::Type( QEvent::User + 1 )
+#define EVENT_ENABLE		QEvent::Type( QEvent::User + 2 )
+#define EVENT_STATUS		QEvent::Type( QEvent::User + 3 )
+#define EVENT_STATS		QEvent::Type( QEvent::User + 4 )
+#define EVENT_FILEPASS		QEvent::Type( QEvent::User + 5 )
 
-class RunningEvent : public QCustomEvent
+class RunningEvent : public QEvent
 {
 	public:
 
 	bool running;
 
-	RunningEvent( bool value ) : QCustomEvent( EVENT_RUNNING )
+	RunningEvent( bool value ) : QEvent( EVENT_RUNNING )
 	{
 		running = value;
 	}
 };
 
-class EnableEvent : public QCustomEvent
+class EnableEvent : public QEvent
 {
 	public:
 
 	bool enabled;
 
-	EnableEvent( bool value ) : QCustomEvent( EVENT_ENABLE )
+	EnableEvent( bool value ) : QEvent( EVENT_ENABLE )
 	{
 		enabled = value;
 	}
 };
 
-class StatusEvent : public QCustomEvent
+class StatusEvent : public QEvent
 {
 	public:
 
 	QString text;
 	long	status;
 
-	StatusEvent( QString value, long level ) : QCustomEvent( EVENT_STATUS )
+	StatusEvent( QString value, long level ) : QEvent( EVENT_STATUS )
 	{
 		text = value;
 		status = level;
 	}
 };
 
-class StatsEvent : public QCustomEvent
+class StatsEvent : public QEvent
 {
 	public:
 
 	IKEI_STATS stats;
 
-	StatsEvent( IKEI_STATS value ) : QCustomEvent( EVENT_STATS )
+	StatsEvent( IKEI_STATS value ) : QEvent( EVENT_STATS )
 	{
 		stats = value;
 	}
@@ -137,21 +130,77 @@ class FilePassData
 	}
 };
 
-class FilePassEvent : public QCustomEvent
+class FilePassEvent : public QEvent
 {
 	public:
 
 	FilePassData *	PassData;
 
-	FilePassEvent( FilePassData * CallData ) : QCustomEvent( EVENT_FILEPASS )
+	FilePassEvent( FilePassData * CallData ) : QEvent( EVENT_FILEPASS )
 	{
 		PassData = CallData;
 	}
 };
 
+typedef class _ikecRoot : public QMainWindow, public Ui::ikecRoot
+{
+	Q_OBJECT
+
+	public:
+
+	_ikecRoot( QWidget * parent = NULL ) : QMainWindow( parent )
+	{
+		setupUi( this );
+
+		connect( pushButtonConnect, SIGNAL( clicked() ), this, SLOT( siteConnect() ) );
+		connect( pushButtonExit, SIGNAL( clicked() ), this, SLOT( siteDisconnect() ) );
+
+		lineEditUsername->setFocus();
+	}
+
+	public slots:
+
+	void customEvent( QEvent * e );
+
+	void siteConnect();
+	void siteDisconnect();
+
+}ikecRoot;
+
+typedef class _ikecBanner : public QDialog, public Ui::ikecBanner
+{
+	Q_OBJECT
+
+	public:
+
+	_ikecBanner( QWidget * parent = NULL ) : QDialog( parent )
+	{
+		setupUi( this );
+
+		connect( buttonOk, SIGNAL( clicked() ), this, SLOT( accept() ) );
+	}
+
+}ikecBanner;
+
+typedef class _ikecFilePass : public QDialog, public Ui::ikecFilePass
+{
+	Q_OBJECT
+
+	public:
+
+	_ikecFilePass( QWidget * parent = NULL ) : QDialog( parent )
+	{
+		setupUi( this );
+
+		connect( buttonOk, SIGNAL( clicked() ), this, SLOT( accept() ) );
+		connect( buttonCancel, SIGNAL( clicked() ), this, SLOT( reject() ) );
+	}
+
+}ikecFilePass;
+
 typedef class _IKEC : public QThread
 {
-	friend class root;
+	friend class _ikecRoot;
 	
 	protected:
 
@@ -159,14 +208,14 @@ typedef class _IKEC : public QThread
 	char	fpath[ 1024 ];
 	char	sites[ 1024 ];
 
-	root *	r;
+	ikecRoot * r;
 
 	IKE_PEER	peer;
 	IKE_XCONF       xconf;
 	IKE_PROPOSAL    proposal_isakmp;
 	IKE_PROPOSAL    proposal_esp;
 	IKE_PROPOSAL    proposal_ipcomp;
-	IKEI *		pikei;
+	IKEI		ikei;
 
 	void	run();
 
@@ -181,7 +230,7 @@ typedef class _IKEC : public QThread
 	_IKEC();
 	~_IKEC();
 
-	bool	init( root * setr );
+	bool	init( ikecRoot * setr );
 	bool	log( long code, const char * format, ... );
 
 	char *	file_spec( char * name = NULL );

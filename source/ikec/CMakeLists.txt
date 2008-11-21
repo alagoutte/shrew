@@ -16,39 +16,35 @@ include_directories(
 	${IKE_SOURCE_DIR}/source/libith
 	${IKE_SOURCE_DIR}/source/liblog
 	${IKE_SOURCE_DIR}/source/libip
-	${QT_INCLUDE_DIR} )
+	${QT_INCLUDES} )
 
 link_directories(
-	${IKE_SOURCE_DIR}/source/libip )
+	${IKE_SOURCE_DIR}/source/libip
+	${QT_LIBRARY_DIR} )
 
-set(
-	UIC_FILES
+qt4_wrap_ui(
+	UIH_FILES
 	banner.ui
 	filepass.ui
 	root.ui )
 
-set(
-	IMG_FILES
-	png/ikec.png )
+qt4_wrap_cpp(
+	CXX_FILES
+	ikec.h )
 
-qt_wrap_ui(
-	LIB_FILES
-	INC_FILES
-	CPP_FILES
-	${UIC_FILES} )
-
-qt_wrap_cpp(
-	LIB_FILES
-	MOC_FILES
-	${INC_FILES} )
+qt4_add_resources(
+	QRC_FILES
+	ikec.qrc )
 
 add_executable(
 	ikec
 	main.cpp
 	ikec.cpp
+	root.cpp
 	../ikea/config.cpp
-	images.cxx
-	${CPP_FILES} )
+	${UIH_FILES}
+	${CXX_FILES}
+	${QRC_FILES} )
 
 target_link_libraries(
 	ikec
@@ -57,16 +53,9 @@ target_link_libraries(
         ith
         log
 	pthread
+	QtCore
+	QtGui
 	${QT_LIBRARIES} )
-
-# qt image support
-
-add_custom_command(  
-	SOURCE ${IMG_FILES}
-        COMMAND ${QT_UIC_EXECUTABLE}
-        ARGS -embed ikec ${IMG_FILES} -o images.cxx
-        TARGET ikec
-        OUTPUTS images.cxx )
 
 # install support
 

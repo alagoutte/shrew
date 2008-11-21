@@ -53,11 +53,11 @@ int main( int argc, char ** argv )
 
 	// create our root window
 
-	root w;
+	ikecRoot r;
 
 	// init our ikec object
 
-	ikec.init( &w );
+	ikec.init( &r );
 
 	// read our command line args
 
@@ -90,7 +90,7 @@ int main( int argc, char ** argv )
 				break;
 			}
 
-			w.lineEditUsername->setText( argv[ argi ] );
+			r.lineEditUsername->setText( argv[ argi ] );
 			continue;
 		}
 
@@ -104,7 +104,7 @@ int main( int argc, char ** argv )
 				break;
 			}
 
-			w.lineEditPassword->setText( argv[ argi ] );
+			r.lineEditPassword->setText( argv[ argi ] );
 			syntax_error = false;
 			
 			continue;
@@ -131,8 +131,8 @@ int main( int argc, char ** argv )
 			"  -p\tconnection user password\n"
 			"  -a\tauto connect\n" );
 
-		w.pushButtonConnect->setHidden( true );
-		w.groupBoxCredentials->setHidden( true );
+		r.pushButtonConnect->setHidden( true );
+		r.groupBoxCredentials->setHidden( true );
 	}
 	else
 	{
@@ -152,8 +152,8 @@ int main( int argc, char ** argv )
 			ikec.log( STATUS_INFO, "failed to load \'%s\'\n",
 				ikec.file_spec() );
 
-			w.pushButtonConnect->setHidden( true );
-			w.groupBoxCredentials->setHidden( true );
+			r.pushButtonConnect->setHidden( true );
+			r.groupBoxCredentials->setHidden( true );
 		}
 
 		// hide the credentials group
@@ -164,17 +164,17 @@ int main( int argc, char ** argv )
 		ikec.config.get_string( "auth-method", auth_method, 63, 0 );
 
 		if( strstr( auth_method, "xauth" ) == NULL )
-			w.groupBoxCredentials->setHidden( true );
+			r.groupBoxCredentials->setHidden( true );
 	}
 
 	// show the root window
 
-	w.show();
+	r.show();
 
 	// auto connect if requested
 
 	if( auto_connect )
-		w.SiteConnect();
+		r.siteConnect();
 
 	a.connect( &a, SIGNAL( lastWindowClosed() ), &a, SLOT( quit() ) );
 

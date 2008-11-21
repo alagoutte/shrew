@@ -154,11 +154,12 @@ void _ikeaRoot::siteConnect()
 	// launch ikec with site name as parameter
 
 	QStringList args;
+	args << "ikec";
 	args << "-r";
 	args << i->text();
 
-	QProcess proc( this );
-	proc.start( "ikec", args );
+	QProcess * proc = new QProcess( this );
+	proc->start( "ikec", args );
 }
 
 void _ikeaRoot::siteAdd()
