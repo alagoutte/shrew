@@ -39,18 +39,19 @@
  *
  */
 
-#include <qapplication.h>
 #include "ikea.h"
 
 IKEA ikea;
 
 int main( int argc, char ** argv )
 {
+	Q_INIT_RESOURCE(ikea);
+
 	QApplication a( argc, argv );
 
 	// iniitialize our root window
 
-	root r;
+	ikeaRoot r;
 	r.show();
 
 	// initialize our ikea config

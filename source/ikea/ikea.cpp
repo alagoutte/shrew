@@ -86,7 +86,7 @@ void update_site( CONFIG * config, const char * path, long & version )
 	}
 
 	version++;
-	printf( "updated site \'%s\' to version %i\n", config->get_id(), version );
+	printf( "updated site \'%s\' to version %li\n", config->get_id(), version );
 	config->set_number( "version", version );
 	config->file_write( path );
 }
@@ -101,72 +101,73 @@ _IKEA::~_IKEA()
 
 const char * _IKEA::site_path()
 {
-	return sites.ascii();
+	return sites.toAscii().constData();
 }
 
 const char * _IKEA::cert_path()
 {
-	return certs.ascii();
+	return certs.toAscii().constData();
 }
 
-bool _IKEA::init( root * setr )
+bool _IKEA::init( ikeaRoot * setRoot )
 {
 	QDir qdir;
 
 	// store our root window
 
-	r = setr;
+	r = setRoot;
 
 	// create config directory
 
-	qdir.mkdir( QDir::homeDirPath() + "/.ike" );
+	qdir.mkdir( QDir::homePath() + "/.ike" );
 
 	// create sites directory
 
-	ikea.sites = QDir::homeDirPath() + "/.ike/sites";
+	ikea.sites = QDir::homePath() + "/.ike/sites";
 	qdir.mkdir( ikea.sites );
 
 	// create certs directory
 
-	ikea.certs = QDir::homeDirPath() + "/.ike/certs";
+	ikea.certs = QDir::homePath() + "/.ike/certs";
 	qdir.mkdir( ikea.certs );
 
 	// read site list
 
-	qdir.setPath( QDir::homeDirPath() + "/.ike/sites" );
-	qdir.setFilter( QDir::Files );
+	qdir.setPath( ikea.sites );
+	qdir.setFilter( QDir::Files | QDir::NoSymLinks );
 
-	QStringList entryList = qdir.entryList( "*" );
-	QStringList::const_iterator eit = entryList.constBegin();
+	QFileInfoList infoList = qdir.entryInfoList();
 
-	for( ; eit != entryList.constEnd(); ++eit)
+	printf( "reading %i sites\n", infoList.size() );
+
+	for( int i = 0; i < infoList.size(); ++i )
 	{
-		QString fileName = *eit;
+		QFileInfo fileInfo = infoList.at( i );
+		QString fileName = fileInfo.fileName();
 		QString filePath = ikea.sites + "/" + fileName;
 
 		CONFIG config;
-		if( config.file_read( filePath.ascii() ) )
+		if( config.file_read( filePath.toAscii().constData() ) )
 		{
-			config.set_id( fileName.ascii() );
+			config.set_id( fileName.toAscii().constData() );
 
 			long version = 0;
 			config.get_number( "version", &version );
 			while( version < CLIENT_VER_CFG )
-				update_site( &config, filePath.ascii(), version );
+				update_site( &config, filePath.toAscii().constData(), version );
 
-			printf( "adding entry for site file \'%s\'\n", fileName.ascii() );
+			printf( "adding entry for site file \'%s\'\n", fileName.toAscii().constData() );
 
-			QIconViewItem * i = new QIconViewItem( r->iconViewSites );
-			if( i == NULL )
-				return false;
-
-			i->setText( fileName.ascii() );
-			i->setPixmap( QPixmap::fromMimeSource( "site.png" ) );
-			i->setRenameEnabled ( true );
+			QListWidgetItem * widgetItem = new QListWidgetItem( r->listWidgetSites );
+			widgetItem->setIcon( QIcon( ":/png/site.png" ) );
+			widgetItem->setText( fileName );
+			widgetItem->setData( Qt::UserRole, fileName );
+			widgetItem->setFlags( Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable );
+//			widgetItem->setRenameEnabled ( true );
 		}
 		else
 		{
-			printf( "error loading site file \'%s\'\n", fileName.ascii() );
+			printf( "error loading site file \'%s\'\n", fileName.toAscii().constData() );
 		}
 	}
 

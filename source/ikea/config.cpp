@@ -369,7 +369,7 @@ bool _CONFIG::file_write( const char * path )
 				break;
 
 			case DATA_NUMBER:
-				fprintf( fp, "n:%s:%i\n", cfgdat->key.text(), cfgdat->nval );
+				fprintf( fp, "n:%s:%li\n", cfgdat->key.text(), cfgdat->nval );
 				break;
 
 			case DATA_BINARY:
@@ -398,7 +398,7 @@ bool _CONFIG::file_read( const char * path )
 
 	while( true )
 	{
-		int	next;
+		int	next = 0;
 		int	type;
 		BDATA	name;
 		BDATA	data;
@@ -424,7 +424,7 @@ bool _CONFIG::file_read( const char * path )
 
 		if( fgetc( fp ) != ':' )
 		{
-			printf( "invalid delimiter \'%c\' between type and name ( line %i )\n",
+			printf( "invalid delimiter \'%c\' between type and name ( line %li )\n",
 				next, line );
 			goto parse_fail;
 		}
@@ -456,7 +456,7 @@ bool _CONFIG::file_read( const char * path )
 
 		if( next != ':' )
 		{
-			printf( "invalid delimiter \'%c\' between name and value ( line %i )\n",
+			printf( "invalid delimiter \'%c\' between name and value ( line %li )\n",
 				next, line );
 			goto parse_fail;
 		}
@@ -517,7 +517,7 @@ bool _CONFIG::file_read( const char * path )
 			}
 
 			default:
-				printf( "invalid value type \'%c\' ( line %i )\n",
+				printf( "invalid value type \'%c\' ( line %li )\n",
 					type, line );
 				goto parse_fail;
 		}
@@ -531,7 +531,7 @@ bool _CONFIG::file_read( const char * path )
 
 	parse_fail:
 
-	printf( "parse error in line %i\n", line );
+	printf( "parse error in line %li\n", line );
 
 	fclose( fp );
 

@@ -2,34 +2,34 @@ TEMPLATE	= app
 LANGUAGE	= C++
 
 CONFIG	+= qt warn_on release
+QT	+= qtgui
+LIBS	+= ../libidb/libidb.a ../libith/libith.a ../liblog/liblog.a
 
-LIBS	+= ../libip/libip.a
+DEFINES	+= OPT_NATT UNIX
 
-DEFINES	+= OPT_NATT
+INCLUDEPATH = 		\
+	+= ./.. ../libidb ../libith ../liblog
 
-INCLUDEPATH	+= ./.. ../libip
+HEADERS	+= 		\
+	config.h	\
+	ikea.h
 
-HEADERS	+= config.h
+SOURCES	+=		\
+	main.cpp	\
+	config.cpp	\
+	ikea.cpp	\
+	root.cpp	\
+	site.cpp
 
-SOURCES	+= main.cpp \
-	config.cpp \
-	ikea.cpp
-
-FORMS	= site.ui \
-	root.ui \
-	topology.ui \
-	about.ui \
+FORMS	=		\
+	site.ui		\
+	root.ui		\
+	topology.ui	\
+	about.ui	\
 	conflict.ui
 
-IMAGES	= png/policy_exc.png \
-	png/policy_inc.png \
-	png/site.png \
-	png/site_add.png \
-	png/site_con.png \
-	png/site_del.png \
-	png/site_mod.png \
-	png/ikea.png \
-	png/logo_ssoft.png
+RESOURCES =		\
+	ikea.qrc
 
 unix {
   UI_DIR = .ui

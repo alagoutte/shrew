@@ -1,0 +1,14 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource>
+        <file>png/ikea.png</file>
+        <file>png/logo_ssoft.png</file>
+        <file>png/policy_exc.png</file>
+        <file>png/policy_inc.png</file>
+        <file>png/site.png</file>
+        <file>png/site_add.png</file>
+        <file>png/site_con.png</file>
+        <file>png/site_del.png</file>
+        <file>png/site_mod.png</file>
+    </qresource>
+</RCC>

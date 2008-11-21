@@ -48,35 +48,217 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <qfiledialog.h>
-#include <qlabel.h>
-#include <qlineedit.h>
-#include <qmessagebox.h>
-#include <qprocess.h>
-#include <qiconview.h>
-#include <qdir.h>
+#include <QContextMenuEvent>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QProcess>
+#include <QDir>
 
 #include "../version.h"
 #include "config.h"
-#include "root.h"
-#include "site.h"
-#include "conflict.h"
-#include "topology.h"
-#include "about.h"
+#include "ui_root.h"
+#include "ui_site.h"
+#include "ui_conflict.h"
+#include "ui_topology.h"
+#include "ui_about.h"
 
 #define	CONFLICT_OVERWRITE	100
 #define	CONFLICT_CONTINUE	101
+
+typedef class _ikeaRoot : public QMainWindow, public Ui::ikeaRoot
+{
+	Q_OBJECT
+
+	public:
+	
+	_ikeaRoot( QWidget * parent = NULL ) : QMainWindow( parent )
+	{
+		setupUi( this );
+
+		connect( listWidgetSites, SIGNAL( customContextMenuRequested( const QPoint & ) ), this, SLOT( siteContext( const QPoint & ) ) );
+		connect( listWidgetSites, SIGNAL( itemChanged( QListWidgetItem * ) ), this, SLOT( siteRenamed( QListWidgetItem * ) ) );
+
+		connect( actionConnect, SIGNAL( triggered() ), this, SLOT( siteConnect() ) );
+		connect( actionAdd, SIGNAL( triggered() ), this, SLOT( siteAdd() ) );
+		connect( actionModify, SIGNAL( triggered() ), this, SLOT( siteModify() ) );
+		connect( actionDelete, SIGNAL( triggered() ), this, SLOT( siteDelete() ) );
+		connect( actionRename, SIGNAL( triggered() ), this, SLOT( siteRename() ) );
+
+		connect( actionImport, SIGNAL( triggered() ), this, SLOT( siteImport() ) );
+		connect( actionExport, SIGNAL( triggered() ), this, SLOT( siteExport() ) );
+
+		connect( actionAbout, SIGNAL( triggered() ), this, SLOT( showAbout() ) );
+		connect( actionExit, SIGNAL( triggered() ), this, SLOT( close() ) );
+	}
+
+	void fileConflict( QString & path, QString & name );
+
+	private slots:
+
+	void siteContext( const QPoint & pos );
+
+	void siteConnect();
+	void siteAdd();
+	void siteModify();
+	void siteDelete();
+	void siteRename();
+	void siteRenamed( QListWidgetItem * );
+
+	void siteImport();
+	void siteExport();
+
+	void showAbout();
+
+}ikeaRoot;
+
+typedef class _ikeaSite : public QDialog, public Ui::ikeaSite
+{
+	Q_OBJECT
+
+	public:
+	
+	_ikeaSite( QWidget * parent = NULL ) : QDialog( parent )
+	{
+		setupUi( this );
+		init();
+
+		connect( buttonSave, SIGNAL( clicked() ), this, SLOT( verify() ) );
+		connect( buttonCancel, SIGNAL( clicked() ), this, SLOT( reject() ) );
+
+		connect( checkBoxAddressAuto, SIGNAL( clicked() ), this, SLOT( updateAddressAuto() ) );
+
+		connect( checkBoxDNSEnable, SIGNAL( clicked() ), this, SLOT( updateNameResolution() ) );
+		connect( checkBoxDNSAuto, SIGNAL( clicked() ), this, SLOT( updateNameResolution() ) );
+		connect( checkBoxSuffixAuto, SIGNAL( clicked() ), this, SLOT( updateNameResolution() ) );
+
+		connect( checkBoxLocalIDOption, SIGNAL( clicked() ), this, SLOT( updateLocalID() ) );
+		connect( checkBoxRemoteIDOption, SIGNAL( clicked() ), this, SLOT( updateRemoteID() ) );
+
+		connect( checkBoxPolicyAuto, SIGNAL( clicked() ), this, SLOT( updatePolicy() ) );
+
+		connect( comboBoxAuthMethod, SIGNAL( activated( int ) ), this, SLOT( updateAuthentication() ) );
+		connect( comboBoxConfigMethod, SIGNAL( activated( int ) ), this, SLOT( updateConfigMethod() ) );
+		connect( comboBoxAddressMethod, SIGNAL( activated( int ) ), this, SLOT( updateAddressMethod() ) );
+
+		connect( comboBoxFragMode, SIGNAL( activated( int ) ), this, SLOT( updateClient() ) );
+		connect( comboBoxNATTMode, SIGNAL( activated( int ) ), this, SLOT( updateClient() ) );
+
+		connect( comboBoxLocalIDType, SIGNAL( activated( int ) ), this, SLOT( updateLocalID() ) );
+		connect( comboBoxRemoteIDType, SIGNAL( activated( int ) ), this, SLOT( updateRemoteID() ) );
+
+		connect( comboBoxP1Exchange, SIGNAL( activated( int ) ), this, SLOT( updatePhase1() ) );
+		connect( comboBoxP1Cipher, SIGNAL( activated( int ) ), this, SLOT( updatePhase1() ) );
+
+		connect( comboBoxP2Transform, SIGNAL( activated( int ) ), this, SLOT( updatePhase2() ) );
+
+		connect( pushButtonPolicyAdd, SIGNAL( clicked() ), this, SLOT( policyAdd() ) );
+		connect( pushButtonPolicyMod, SIGNAL( clicked() ), this, SLOT( policyModify() ) );
+		connect( pushButtonPolicyDel, SIGNAL( clicked() ), this, SLOT( policyDelete() ) );
+
+		connect( toolButtonCAFile, SIGNAL( clicked() ), this, SLOT( inputCAFile() ) );
+		connect( toolButtonCertFile, SIGNAL( clicked() ), this, SLOT( inputCertFile() ) );
+		connect( toolButtonPKeyFile, SIGNAL( clicked() ), this, SLOT( inputPKeyFile() ) );
+
+		connect( treeWidgetPolicies, SIGNAL( itemSelectionChanged() ), this, SLOT( updatePolicy() ) );
+	}
+
+	void init();
+	bool load( CONFIG & config );
+	bool save( CONFIG & config );
+
+	private slots:
+
+	bool verify();
+
+	void policyAdd();
+	void policyModify();
+	void policyDelete();
+
+	void updateConfigMethod();
+	void updateAddressAuto();
+	void updateAddressMethod();
+	void updateGeneral( bool adflt, bool mdflt );
+	void updateClient();
+	void updateNameResolution();
+	void updateAuthentication();
+	void updateLocalID();
+	void updateRemoteID();
+	void updatePhase1();
+	void updatePhase2();
+	void updatePolicy();
+
+	void selectLocalID();
+	void selectRemoteID();
+
+	void inputCAFile();
+	void inputCertFile();
+	void inputPKeyFile();
+
+}ikeaSite;
+
+typedef class _ikeaConflict : public QDialog, public Ui::ikeaConflict
+{
+	Q_OBJECT
+
+	public:
+	
+	_ikeaConflict( QWidget * parent = NULL ) : QDialog( parent )
+	{
+		setupUi( this );
+
+		connect( buttonContinue, SIGNAL( clicked() ), this, SLOT( accept() ) );
+		connect( buttonOverwrite, SIGNAL( clicked() ), this, SLOT( reject() ) );
+	}
+
+	private slots:
+
+}ikeaConflict;
+
+typedef class _ikeaTopology : public QDialog, public Ui::ikeaTopology
+{
+	Q_OBJECT
+
+	public:
+	
+	_ikeaTopology( QWidget * parent = NULL ) : QDialog( parent )
+	{
+		setupUi( this );
+
+		connect( buttonOk, SIGNAL( clicked() ), this, SLOT( accept() ) );
+		connect( buttonCancel, SIGNAL( clicked() ), this, SLOT( reject() ) );
+	}
+
+	private slots:
+
+}ikeaTopology;
+
+typedef class _ikeaAbout : public QDialog, public Ui::ikeaAbout
+{
+	Q_OBJECT
+
+	public:
+	
+	_ikeaAbout( QWidget * parent = NULL ) : QDialog( parent )
+	{
+		setupUi( this );
+
+		connect( buttonOk, SIGNAL( clicked() ), this, SLOT( accept() ) );
+	}
+
+	private slots:
+
+}ikeaAbout;
 
 typedef class _IKEA
 {
 	protected:
 
-	QString sites;
-	QString certs;
-
-	root *	r;
+	ikeaRoot * r;
 
 	public:
+
+	QString sites;
+	QString certs;
 
 	_IKEA();
 	~_IKEA();
@@ -84,7 +266,7 @@ typedef class _IKEA
 	const char * site_path();
 	const char * cert_path();
 
-	bool init( root * setr );
+	bool init( ikeaRoot * setRoot );
 
 }IKEA;
 

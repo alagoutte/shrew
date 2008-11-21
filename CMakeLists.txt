@@ -370,17 +370,17 @@ if( QTGUI )
 
 	add_definitions( -DQT_THREAD_SUPPORT )
 
-	set( QT_MT_REQUIRED TRUE )
+	find_package( Qt4 )
 
-	find_package( Qt3 )
+	set( QT_USE_QTMAIN 1 )
 
-	if( NOT QT_FOUND )
+	if( NOT QT_QTGUI_FOUND )
 
 		message(
 			FATAL_ERROR
 			"Unable to locate required package : QT" )
 
-	endif( NOT QT_FOUND )
+	endif( NOT QT_QTGUI_FOUND )
 		
 	# success
 

@@ -7,71 +7,57 @@
 #        : Copyright 2007, Shrew Soft Inc
 #
 
+message(
+	STATUS
+	"Using QT Libs ${QT_LIBRARIES} ..." )
+
 include_directories(
 	${IKE_SOURCE_DIR}/source/
 	${IKE_SOURCE_DIR}/source/libidb
 	${IKE_SOURCE_DIR}/source/libith
 	${IKE_SOURCE_DIR}/source/liblog
-	${QT_INCLUDE_DIR} )
+	${QT_INCLUDES} )
 
 link_directories(
-	${IKE_SOURCE_DIR}/source/libip )
+	${IKE_SOURCE_DIR}/source/libip
+	${QT_LIBRARY_DIR} )
 
-set(
-	UIC_FILES
-	site.ui
-	root.ui
+qt4_wrap_ui(
+	UIH_FILES
+	about.ui
 	conflict.ui
-	topology.ui
-	about.ui )
+	root.ui
+	site.ui
+	topology.ui )
 
-set(
-	IMG_FILES
-	png/logo_ssoft.png
-	png/policy_exc.png
-	png/policy_inc.png
-	png/site.png
-	png/site_add.png
-	png/site_con.png
-	png/site_del.png
-	png/site_mod.png
-	png/ikea.png )
+qt4_wrap_cpp(
+	CXX_FILES
+	ikea.h )
 
-qt_wrap_ui(
-	LIB_FILES
-	INC_FILES
-	CPP_FILES
-	${UIC_FILES} )
-
-qt_wrap_cpp(
-	LIB_FILES
-	MOC_FILES
-	${INC_FILES} )
+qt4_add_resources(
+	QRC_FILES
+	ikea.qrc )
 
 add_executable(
 	ikea
-	main.cpp
-	ikea.cpp
 	config.cpp
-	images.cxx
-	${CPP_FILES} )
+	ikea.cpp
+	main.cpp
+	root.cpp
+	site.cpp
+	${UIH_FILES}
+	${CXX_FILES}
+	${QRC_FILES} )
 
 target_link_libraries(
 	ikea
-        idb
-        ith
-        log
+	idb
+	ith
+	log
 	pthread
+	QtCore
+	QtGui
 	${QT_LIBRARIES} )
-
-# qt image support
-
-add_custom_command(  
-	SOURCE ${IMG_FILES}
-        COMMAND ${QT_UIC_EXECUTABLE}
-        ARGS -embed ikea ${IMG_FILES} -o images.cxx
-        TARGET ikea
-        OUTPUTS images.cxx )
 
 # install support
 
