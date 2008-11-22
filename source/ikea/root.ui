@@ -26,14 +26,14 @@
       <property name="contextMenuPolicy" >
        <enum>Qt::CustomContextMenu</enum>
       </property>
+      <property name="editTriggers" >
+       <set>QAbstractItemView::EditKeyPressed</set>
+      </property>
       <property name="movement" >
        <enum>QListView::Static</enum>
       </property>
       <property name="resizeMode" >
        <enum>QListView::Adjust</enum>
-      </property>
-      <property name="spacing" >
-       <number>8</number>
       </property>
       <property name="viewMode" >
        <enum>QListView::IconMode</enum>
@@ -54,7 +54,7 @@
      <x>0</x>
      <y>0</y>
      <width>339</width>
-     <height>20</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile" >
@@ -65,6 +65,7 @@
     <addaction name="separator" />
     <addaction name="actionImport" />
     <addaction name="actionExport" />
+    <addaction name="separator" />
     <addaction name="actionExit" />
    </widget>
    <widget class="QMenu" name="menuEdit" >
@@ -73,9 +74,9 @@
     </property>
     <addaction name="actionAdd" />
     <addaction name="actionDelete" />
+    <addaction name="actionRename" />
     <addaction name="separator" />
     <addaction name="actionModify" />
-    <addaction name="actionRename" />
    </widget>
    <widget class="QMenu" name="menuHelp" >
     <property name="title" >
@@ -83,8 +84,17 @@
     </property>
     <addaction name="actionAbout" />
    </widget>
+   <widget class="QMenu" name="menuView" >
+    <property name="title" >
+     <string>&amp;View</string>
+    </property>
+    <addaction name="actionViewLarge" />
+    <addaction name="actionViewSmall" />
+    <addaction name="separator" />
+   </widget>
    <addaction name="menuFile" />
    <addaction name="menuEdit" />
+   <addaction name="menuView" />
    <addaction name="menuHelp" />
   </widget>
   <widget class="QToolBar" name="toolBar" >
@@ -188,6 +198,67 @@
   <action name="actionAbout" >
    <property name="text" >
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionLarge_Icons" >
+   <property name="text" >
+    <string>Large Icons</string>
+   </property>
+  </action>
+  <action name="actionViewLarge" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="checked" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Large Icons</string>
+   </property>
+   <property name="iconText" >
+    <string>&amp;Large Icons</string>
+   </property>
+   <property name="toolTip" >
+    <string>Large Icon View</string>
+   </property>
+  </action>
+  <action name="actionViewSmall" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Small Icons</string>
+   </property>
+   <property name="iconText" >
+    <string>&amp;Small Icons</string>
+   </property>
+   <property name="toolTip" >
+    <string>Small Icon View</string>
+   </property>
+  </action>
+  <action name="actionViewDetail" >
+   <property name="text" >
+    <string>Details</string>
+   </property>
+   <property name="iconText" >
+    <string>&amp;Details</string>
+   </property>
+   <property name="toolTip" >
+    <string>Detailed View</string>
+   </property>
+  </action>
+  <action name="actionViewToolBar" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="checked" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Toolbar</string>
+   </property>
+   <property name="iconText" >
+    <string>&amp;Toolbar</string>
    </property>
   </action>
  </widget>

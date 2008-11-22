@@ -69,20 +69,37 @@ typedef class _ikeaRoot : public QMainWindow, public Ui::ikeaRoot
 {
 	Q_OBJECT
 
+	QActionGroup *	actionGroupView;
+	QMenu *		menuContext;
+	QMenu *		menuContextView;
+
 	public:
-	
+
 	_ikeaRoot( QWidget * parent = NULL ) : QMainWindow( parent )
 	{
 		setupUi( this );
 
+		actionGroupView = new QActionGroup( this );
+		actionGroupView->addAction( actionViewLarge );
+		actionGroupView->addAction( actionViewSmall );
+
+		menuView->addAction( toolBar->toggleViewAction() );
+
+		menuContext = new QMenu( listWidgetSites );
+		menuContextView = new QMenu( "View", listWidgetSites );
+
 		connect( listWidgetSites, SIGNAL( customContextMenuRequested( const QPoint & ) ), this, SLOT( siteContext( const QPoint & ) ) );
 		connect( listWidgetSites, SIGNAL( itemChanged( QListWidgetItem * ) ), this, SLOT( siteRenamed( QListWidgetItem * ) ) );
+		connect( listWidgetSites, SIGNAL( itemDoubleClicked ( QListWidgetItem * ) ), this, SLOT( siteConnect() ) ); 
 
 		connect( actionConnect, SIGNAL( triggered() ), this, SLOT( siteConnect() ) );
 		connect( actionAdd, SIGNAL( triggered() ), this, SLOT( siteAdd() ) );
 		connect( actionModify, SIGNAL( triggered() ), this, SLOT( siteModify() ) );
 		connect( actionDelete, SIGNAL( triggered() ), this, SLOT( siteDelete() ) );
 		connect( actionRename, SIGNAL( triggered() ), this, SLOT( siteRename() ) );
+
+		connect( actionViewLarge, SIGNAL( triggered() ), this, SLOT( showViewLarge() ) );
+		connect( actionViewSmall, SIGNAL( triggered() ), this, SLOT( showViewSmall() ) );
 
 		connect( actionImport, SIGNAL( triggered() ), this, SLOT( siteImport() ) );
 		connect( actionExport, SIGNAL( triggered() ), this, SLOT( siteExport() ) );
@@ -94,6 +111,9 @@ typedef class _ikeaRoot : public QMainWindow, public Ui::ikeaRoot
 	void fileConflict( QString & path, QString & name );
 
 	private slots:
+
+	void showViewLarge();
+	void showViewSmall();
 
 	void siteContext( const QPoint & pos );
 

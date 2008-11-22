@@ -5,8 +5,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>285</width>
-    <height>283</height>
+    <width>296</width>
+    <height>299</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -39,44 +39,36 @@
           <property name="title" >
            <string>Credentials</string>
           </property>
-          <layout class="QVBoxLayout" >
-           <item>
-            <layout class="QHBoxLayout" >
-             <item>
-              <widget class="QLabel" name="textLabelUsername" >
-               <property name="text" >
-                <string>Username</string>
-               </property>
-               <property name="wordWrap" >
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="lineEditUsername" />
-             </item>
-            </layout>
+          <layout class="QGridLayout" >
+           <item row="0" column="0" >
+            <widget class="QLabel" name="textLabelUsername" >
+             <property name="text" >
+              <string>Username</string>
+             </property>
+             <property name="wordWrap" >
+              <bool>false</bool>
+             </property>
+            </widget>
            </item>
-           <item>
-            <layout class="QHBoxLayout" >
-             <item>
-              <widget class="QLabel" name="textLabelPassword" >
-               <property name="text" >
-                <string>Password</string>
-               </property>
-               <property name="wordWrap" >
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="lineEditPassword" >
-               <property name="echoMode" >
-                <enum>QLineEdit::Password</enum>
-               </property>
-              </widget>
-             </item>
-            </layout>
+           <item row="0" column="1" >
+            <widget class="QLineEdit" name="lineEditUsername" />
+           </item>
+           <item row="1" column="0" >
+            <widget class="QLabel" name="textLabelPassword" >
+             <property name="text" >
+              <string>Password</string>
+             </property>
+             <property name="wordWrap" >
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1" >
+            <widget class="QLineEdit" name="lineEditPassword" >
+             <property name="echoMode" >
+              <enum>QLineEdit::Password</enum>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -156,6 +148,9 @@
              </property>
              <property name="pixmap" >
               <pixmap resource="ikec.qrc" >:/png/png/ikec.png</pixmap>
+             </property>
+             <property name="alignment" >
+              <set>Qt::AlignCenter</set>
              </property>
             </widget>
            </item>
@@ -404,7 +399,6 @@
   <tabstop>tabWidget</tabstop>
   <tabstop>textBrowserStatus</tabstop>
  </tabstops>
- <includes/>
  <resources>
   <include location="ikec.qrc" />
  </resources>

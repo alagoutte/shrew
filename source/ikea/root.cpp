@@ -120,29 +120,54 @@ void _ikeaRoot::fileConflict( QString & path, QString & name )
 
 void _ikeaRoot::siteContext( const QPoint & pos )
 {
-//	printf( "IN\n" );
+	QListWidgetItem * i = listWidgetSites->itemAt( pos );
 
-	QMenu m( listWidgetSites );
+	menuContextView->clear();
+	menuContextView->addAction( actionViewLarge );
+	menuContextView->addAction( actionViewSmall );
 
-	if( listWidgetSites->itemAt( pos ) != NULL )
+	menuContext->clear();
+
+	if( i != NULL )
 	{
-		m.addAction( actionConnect );
-		m.addSeparator();
+		menuContext->addAction( actionConnect );
+		menuContext->addSeparator();
 	}
 
-	m.addAction( actionAdd );
+	menuContext->addMenu( menuContextView );
+	menuContext->addSeparator();
 
-	if( listWidgetSites->itemAt( pos ) != NULL )
+	menuContext->addSeparator();
+	menuContext->addAction( actionAdd );
+
+	if( i != NULL )
 	{
-		m.addAction( actionDelete );
-		m.addSeparator();
-		m.addAction( actionModify );
-		m.addAction( actionRename );
+		menuContext->addAction( actionDelete );
+		menuContext->addAction( actionRename );
+		menuContext->addSeparator();
+		menuContext->addAction( actionModify );
 	}
 
-	m.exec( listWidgetSites->mapToGlobal( pos ) );
+	//
+	// FIXME : If we don't change the position
+	// value the popup immediately dissapears
+	// when the user right clicks. Why?
+	//
 
-//	printf( "OUT\n" );
+	QPoint mpos( listWidgetSites->mapToGlobal( pos ) );
+	mpos.setX( mpos.x() + 1 );
+
+	menuContext->popup( mpos );
+}
+
+void _ikeaRoot::showViewLarge()
+{
+	listWidgetSites->setViewMode( QListView::IconMode );
+}
+
+void _ikeaRoot::showViewSmall()
+{
+	listWidgetSites->setViewMode( QListView::ListMode );
 }
 
 void _ikeaRoot::siteConnect()
@@ -354,9 +379,8 @@ void _ikeaRoot::siteImport()
 
 	// determine file name
 
-	QString fileName = loadPath;
-	if( fileName.indexOf( "/" ) != -1 )
-		fileName = fileName.section( '/', -1 );
+	QFileInfo fileInfo( loadPath );
+	QString fileName = fileInfo.baseName();
 
 	// mangle name if duplicate
 
@@ -409,7 +433,7 @@ void _ikeaRoot::siteExport()
 
 	QString savePath = QFileDialog::getSaveFileName(
 				this, "Select the VPN Export File",
-				QDir::homePath(),
+				QDir::homePath() + "/" + i->text() + ".vpn",
 				types );
 
 	if( !savePath.length() )
@@ -426,11 +450,10 @@ void _ikeaRoot::siteExport()
 
 		file_to_bdata( tmpPath, data );
 
-		QString name = tmpPath;
-		if( name.indexOf( "/" ) != -1 )
-			name = name.section( '/', -1 );
+		QFileInfo fileInfo( tmpPath );
+		QString fileName = fileInfo.fileName();
 
-		config.set_string( "auth-client-cert", name.toAscii(), name.length() );
+		config.set_string( "auth-client-cert", fileName.toAscii(), fileName.length() );
 		config.set_binary( "auth-client-cert-data", data );
 	}
 
@@ -440,11 +463,10 @@ void _ikeaRoot::siteExport()
 
 		file_to_bdata( tmpPath, data );
 
-		QString name = tmpPath;
-		if( name.indexOf( "/" ) != -1 )
-			name = name.section( '/', -1 );
+		QFileInfo fileInfo( tmpPath );
+		QString fileName = fileInfo.fileName();
 
-		config.set_string( "auth-client-key", name.toAscii(), name.length() );
+		config.set_string( "auth-client-key", fileName.toAscii(), fileName.length() );
 		config.set_binary( "auth-client-key-data", data );
 	}
 
@@ -454,11 +476,10 @@ void _ikeaRoot::siteExport()
 
 		file_to_bdata( tmpPath, data );
 
-		QString name = tmpPath;
-		if( name.indexOf( "/" ) != -1 )
-			name = name.section( '/', -1 );
+		QFileInfo fileInfo( tmpPath );
+		QString fileName = fileInfo.fileName();
 
-		config.set_string( "auth-server-cert", name.toAscii(), name.length() );
+		config.set_string( "auth-server-cert", fileName.toAscii(), fileName.length() );
 		config.set_binary( "auth-server-cert-data", data );
 	}
 

@@ -67,10 +67,10 @@ incomplete.
 Optional
 --------------------------------------------------------------------------------
 
-TrollTech QT >= 3.3 ( multithreaded version, qt-mt )
+TrollTech QT >= 4.2
 openldap >= 2.0
 
-The Trolltech QT toolkit version 3.3.x or higher is also required if you plan
+The Trolltech QT toolkit version 4.2.x or higher is also required if you plan
 to build the QT client front end applications. Version 4.x has not been tested
 and is not supported. The openldap support is only required if you plan to use
 iked to facilitate VPN client gateway connectivity and require xauth support
@@ -163,10 +163,10 @@ compiling and using the QT front end applications. For example, the following
 lines were added to the users ~/.profie script when testing this software for
 NetBSD ...
 
-QTDIR=/usr/pkg/qt3
+QTDIR=/usr/pkg/qt4
 QMAKESPEC=netbsd-g++
 PATH=${PATH}:${QTDIR}/bin
-LD_LIBRARY_PATH=/usr/pkg/qt3/lib/:/usr/X11R6/lib
+LD_LIBRARY_PATH=/usr/pkg/qt4/lib/:/usr/X11R6/lib
 
 export PATH QTDIR QMAKESPEC LD_LIBRARY_PATH
 
