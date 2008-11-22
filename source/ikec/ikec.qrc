@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/png" >
+        <file>png/ikec.png</file>
+    </qresource>
+</RCC>

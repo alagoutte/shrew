@@ -41,49 +41,7 @@
 
 #include "ikec.h"
 
-void root::SiteConnect()
-{
-	if( ikec.active )
-	{
-		ikec.pikei->wakeup();
-	}
-	else
-	{
-		// if enabled, verify that a valid
-		// username and password was supplied
-
-		if( !groupBoxCredentials->isHidden() )
-		{
-			if( !lineEditUsername->text().length() ||
-			    !lineEditPassword->text().length() )
-			{
-				textBrowserStatus->append( 
-					"please enter a valid username and password\n" );
-				return;
-			}
-		}
-
-		// store username and password
-
-		ikec.username = lineEditUsername->text().ascii();
-		ikec.password = lineEditPassword->text().ascii();
-
-		// start our thread
-
-		ikec.start();
-	}
-}
-
-
-void root::SiteDisconnect()
-{
-	if( ikec.active )
-		ikec.pikei->wakeup();
-	else
-		close();
-}
-
-void root::customEvent( QCustomEvent * e )
+void ikecRoot::customEvent( QEvent * e )
 {
 	if( e->type() == EVENT_RUNNING )
 	{
@@ -122,9 +80,9 @@ void root::customEvent( QCustomEvent * e )
 		EnableEvent * event = ( EnableEvent * ) e;
 
 		if( event->enabled )
-			textBrowserStatus->append( "bringing up tunnel ...\n" );
+			textBrowserStatus->insertPlainText( "bringing up tunnel ...\n" );
 		else
-			textBrowserStatus->append( "bringing down tunnel ...\n" );
+			textBrowserStatus->insertPlainText( "bringing down tunnel ...\n" );
 	}
 
 	if( e->type() == EVENT_STATUS )
@@ -135,26 +93,26 @@ void root::customEvent( QCustomEvent * e )
 		{
 			case STATUS_WARN:
 
-				textBrowserStatus->setColor( QColor( 192, 128, 0 ) );
+				textBrowserStatus->setTextColor( QColor( 192, 128, 0 ) );
 
 				break;
 
 			case STATUS_FAIL:
 
-				textBrowserStatus->setColor( QColor( 128, 0, 0 ) );
+				textBrowserStatus->setTextColor( QColor( 128, 0, 0 ) );
 
 				break;
 
 			default:
 
-				textBrowserStatus->setColor( QColor( 0, 0, 0 ) );
+				textBrowserStatus->setTextColor( QColor( 0, 0, 0 ) );
 		}
 
 		switch( event->status )
 		{
 			case STATUS_BANNER:
 			{
-				banner b( this );
+				ikecBanner b( this );
 				b.textBrowserMOTD->setText( event->text );
 				b.exec();
 
@@ -171,7 +129,7 @@ void root::customEvent( QCustomEvent * e )
 				pushButtonExit->setEnabled( false );
 				pushButtonExit->setText( "Cancel" );
 
-				textBrowserStatus->append( event->text );
+				textBrowserStatus->insertPlainText( event->text );
 
 				break;
 
@@ -180,14 +138,16 @@ void root::customEvent( QCustomEvent * e )
 			case STATUS_WARN:
 			case STATUS_FAIL:
 
-				textBrowserStatus->append( event->text );
+				textBrowserStatus->insertPlainText( event->text );
 
 				break;
 
 			default:
 
-				textBrowserStatus->append( "!!! unknown status message !!!\n" );
+				textBrowserStatus->insertPlainText( "!!! unknown status message !!!\n" );
 		}
+
+		textBrowserStatus->moveCursor( QTextCursor::End );
 	}
 
 	if( e->type() == EVENT_STATS )
@@ -227,10 +187,53 @@ void root::customEvent( QCustomEvent * e )
 	{
 		FilePassEvent * event = ( FilePassEvent * ) e;
 
-		filepass fp;
+		ikecFilePass fp;
 		QFileInfo pathInfo( event->PassData->filepath );
-		fp.setCaption( "Password for " + pathInfo.fileName());
+		fp.setWindowTitle( "Password for " + pathInfo.fileName() );
 		event->PassData->result = fp.exec();
 		event->PassData->password = fp.lineEditPassword->text();
 	}
 }
+
+void ikecRoot::siteConnect()
+{
+	if( ikec.active )
+	{
+		ikec.ikei.wakeup();
+	}
+	else
+	{
+		// if enabled, verify that a valid
+		// username and password was supplied
+
+		if( !groupBoxCredentials->isHidden() )
+		{
+			if( !lineEditUsername->text().length() ||
+			    !lineEditPassword->text().length() )
+			{
+				textBrowserStatus->insertPlainText( 
+					"please enter a valid username and password\n" );
+				return;
+			}
+		}
+
+		// store username and password
+
+		ikec.username = lineEditUsername->text();
+		ikec.password = lineEditPassword->text();
+
+		// start our thread
+
+		ikec.start();
+	}
+}
+
+
+void ikecRoot::siteDisconnect()
+{
+	if( ikec.active )
+		ikec.ikei.wakeup();
+	else
+		close();
+}
+
