@@ -390,8 +390,8 @@ if( QTGUI )
 
 	add_definitions( ${QT_DEFINITIONS} )
 
-	add_subdirectory( source/ikea )
-	add_subdirectory( source/ikec )
+	add_subdirectory( source/qikea )
+	add_subdirectory( source/qikec )
 
 endif( QTGUI )
 

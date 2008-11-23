@@ -14,7 +14,7 @@ include_directories(
 	${IKE_SOURCE_DIR}/source/libith )
 
 add_library(
-	ip
+	ss.ip SHARED
 	libip.frag.cpp
 	libip.packet.cpp
 	libip.packet.dns.cpp
@@ -25,7 +25,13 @@ add_library(
 	libip.route.cpp )
 
 set_target_properties(
-	ip PROPERTIES
+	ss.ip
+	PROPERTIES
 	VERSION ${RELVER}
 	SOVERSION ${RELVER} )
 
+# install support
+
+install(
+	TARGETS ss.ip
+	LIBRARY DESTINATION lib )

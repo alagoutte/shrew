@@ -41,17 +41,17 @@ add_executable(
 	main.cpp
 	ikec.cpp
 	root.cpp
-	../ikea/config.cpp
+	../qikea/config.cpp
 	${UIH_FILES}
 	${CXX_FILES}
 	${QRC_FILES} )
 
 target_link_libraries(
 	ikec
-	ike
-        idb
-        ith
-        log
+	ss.ike
+	ss.idb
+	ss.ith
+	ss.log
 	pthread
 	QtCore
 	QtGui
@@ -66,4 +66,3 @@ install(
 install(
 	FILES ikec.1
 	DESTINATION ${PATH_MAN}/man1 )
-

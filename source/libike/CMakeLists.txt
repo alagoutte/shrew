@@ -17,17 +17,16 @@ include_directories(
         ${IKE_SOURCE_DIR}/source/libip )
 
 add_library(
-	ike SHARED
+	ss.ike SHARED
 	libike.cpp )
 
 set_target_properties(
-	ike PROPERTIES
+	ss.ike PROPERTIES
 	VERSION ${RELVER}
 	SOVERSION ${RELVER} )
 
 # install support
 
 install(
-	TARGETS ike
+	TARGETS ss.ike
 	LIBRARY DESTINATION lib )
-
