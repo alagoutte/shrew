@@ -35,7 +35,7 @@ qt4_add_resources(
 	ikea.qrc )
 
 add_executable(
-	ikea
+	ikea-qt
 	config.cpp
 	ikea.cpp
 	main.cpp
@@ -46,7 +46,7 @@ add_executable(
 	${QRC_FILES} )
 
 target_link_libraries(
-	ikea
+	ikea-qt
 	ss.idb
 	ss.ith
 	ss.log
@@ -58,7 +58,7 @@ target_link_libraries(
 # install support
 
 install(
-	TARGETS ikea
+	TARGETS ikea-qt
 	RUNTIME	DESTINATION bin )
 
 install(

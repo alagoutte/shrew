@@ -37,17 +37,17 @@ qt4_add_resources(
 	ikec.qrc )
 
 add_executable(
-	ikec
+	ikec-qt
 	main.cpp
 	ikec.cpp
 	root.cpp
-	../qikea/config.cpp
+	../ikea-qt/config.cpp
 	${UIH_FILES}
 	${CXX_FILES}
 	${QRC_FILES} )
 
 target_link_libraries(
-	ikec
+	ikec-qt
 	ss.ike
 	ss.idb
 	ss.ith
@@ -60,7 +60,7 @@ target_link_libraries(
 # install support
 
 install(
-	TARGETS ikec
+	TARGETS ikec-qt
 	RUNTIME	DESTINATION bin )
 
 install(

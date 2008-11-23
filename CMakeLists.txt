@@ -390,8 +390,8 @@ if( QTGUI )
 
 	add_definitions( ${QT_DEFINITIONS} )
 
-	add_subdirectory( source/qikea )
-	add_subdirectory( source/qikec )
+	add_subdirectory( source/ikea-qt )
+	add_subdirectory( source/ikec-qt )
 
 endif( QTGUI )
 
@@ -406,6 +406,3 @@ if( TESTS )
 	add_subdirectory( source/test_ith )
 
 endif( TESTS )
-
-
-
