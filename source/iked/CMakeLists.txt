@@ -67,12 +67,12 @@ add_executable(
 
 target_link_libraries(
 	iked
-	ss.ike
-	ss.idb
-	ss.ith
-	ss.ip
-	ss.log
-	ss.pfk
+	ss_ike
+	ss_idb
+	ss_ith
+	ss_ip
+	ss_log
+	ss_pfk
 	crypt
 	crypto
 	pthread )

@@ -15,16 +15,16 @@ include_directories(
 	${INC_KERNEL_DIR} )
 
 add_library(
-	ss.pfk SHARED
+	ss_pfk SHARED
 	libpfk.cpp )
 
 set_target_properties(
-	ss.pfk PROPERTIES
+	ss_pfk PROPERTIES
 	VERSION ${RELVER}
 	SOVERSION ${RELVER} )
 
 # install support
 
 install(
-	TARGETS ss.pfk
+	TARGETS ss_pfk
 	LIBRARY DESTINATION lib )

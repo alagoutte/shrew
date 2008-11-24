@@ -47,9 +47,9 @@ add_executable(
 
 target_link_libraries(
 	ikea-qt
-	ss.idb
-	ss.ith
-	ss.log
+	ss_idb
+	ss_ith
+	ss_log
 	pthread
 	QtCore
 	QtGui

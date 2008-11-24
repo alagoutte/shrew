@@ -12,16 +12,16 @@ include_directories(
         ${IKE_SOURCE_DIR}/source/libith )
 
 add_library(
-	ss.log SHARED
+	ss_log SHARED
 	liblog.cpp )
 
 set_target_properties(
-	ss.log PROPERTIES
+	ss_log PROPERTIES
 	VERSION ${RELVER}
 	SOVERSION ${RELVER} )
 
 # install support
 
 install(
-	TARGETS ss.log
+	TARGETS ss_log
 	LIBRARY DESTINATION lib )

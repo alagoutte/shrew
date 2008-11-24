@@ -1,3 +1,4 @@
+
 #
 # Shrew Soft VPN / IKE Daemon Interface Library
 # Cross Platform Make File
@@ -17,16 +18,16 @@ include_directories(
         ${IKE_SOURCE_DIR}/source/libip )
 
 add_library(
-	ss.ike SHARED
+	ss_ike SHARED
 	libike.cpp )
 
 set_target_properties(
-	ss.ike PROPERTIES
+	ss_ike PROPERTIES
 	VERSION ${RELVER}
 	SOVERSION ${RELVER} )
 
 # install support
 
 install(
-	TARGETS ss.ike
+	TARGETS ss_ike
 	LIBRARY DESTINATION lib )

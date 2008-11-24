@@ -14,17 +14,17 @@ include_directories(
 	${IKE_SOURCE_DIR}/source/libith )
 
 add_library(
-	ss.idb SHARED
+	ss_idb SHARED
 	libidb.cpp
 	base64.cpp )
 
 set_target_properties(
-	ss.idb PROPERTIES
+	ss_idb PROPERTIES
 	VERSION ${RELVER}
 	SOVERSION ${RELVER} )
 
 # install support
 
 install(
-	TARGETS ss.idb
+	TARGETS ss_idb
 	LIBRARY DESTINATION lib )

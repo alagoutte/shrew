@@ -11,7 +11,7 @@ include_directories(
         ${IKE_SOURCE_DIR}/source )
 
 add_library(
-	ss.ith SHARED
+	ss_ith SHARED
 	libith.cpp )
 
 # Linux realtime library
@@ -19,18 +19,18 @@ add_library(
 if( PATH_LIB_RT )
 
 	target_link_libraries(
-		ss.ith
+		ss_ith
 		rt )
 
 endif( PATH_LIB_RT )
 
 set_target_properties(
-	ss.ith PROPERTIES
+	ss_ith PROPERTIES
 	VERSION ${RELVER}
 	SOVERSION ${RELVER} )
 
 # install support
 
 install(
-        TARGETS ss.ith
+        TARGETS ss_ith
         LIBRARY DESTINATION lib )

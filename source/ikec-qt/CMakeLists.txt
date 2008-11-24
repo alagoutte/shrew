@@ -48,10 +48,10 @@ add_executable(
 
 target_link_libraries(
 	ikec-qt
-	ss.ike
-	ss.idb
-	ss.ith
-	ss.log
+	ss_ike
+	ss_idb
+	ss_ith
+	ss_log
 	pthread
 	QtCore
 	QtGui
