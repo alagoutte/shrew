@@ -65,7 +65,20 @@ bool _LOG::write_buff( char * buff, size_t size )
 		struct tm *	ltime;
 
 		time( &ctime );
+
+#ifdef WIN32
+
+		struct tm ltm;
+		ltime = &ltm;
+		localtime_s( ltime, &ctime );
+
+#endif
+
+#ifdef UNIX
+
 		ltime = localtime( &ctime );
+
+#endif
 
 		tlen = strftime( tbuff, LOG_MAX_TXT, "%y/%m/%d %H:%M:%S ", ltime );
 	}
