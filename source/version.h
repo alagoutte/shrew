@@ -40,8 +40,8 @@
  */
 
 #define CLIENT_VER_MAJ		2
-#define CLIENT_VER_MIN		1
+#define CLIENT_VER_MIN		2
 #define CLIENT_VER_BLD		0
 #define CLIENT_STABLE		0
-#define CLIENT_YEAR			2007
+#define CLIENT_YEAR			2008
 #define CLIENT_VER_CFG		3

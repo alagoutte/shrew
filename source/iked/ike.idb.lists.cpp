@@ -42,7 +42,7 @@
 #include "iked.h"
 
 //==============================================================================
-// certificate list
+// basic data list
 //
 
 bool _IDB_LIST_BDATA::add( BDATA & bdata )
@@ -253,6 +253,34 @@ bool _IDB_LIST_NOTIFY::get( IKE_NOTIFY & notify, long index )
 	notify.proto	= nentry->proto;
 	notify.spi		= nentry->spi;
 	notify.data		= nentry->data;
+
+	return true;
+}
+
+//==============================================================================
+// IKE certificate list
+//
+
+bool _IDB_LIST_CERT::add( uint8_t & type, BDATA & data )
+{
+	IDB_ENTRY_CERT * centry = new IDB_ENTRY_CERT;
+	if( centry == NULL )
+		return false;
+
+	centry->type = type;
+	centry->data = data;
+
+	return add_entry( centry );
+}
+
+bool _IDB_LIST_CERT::get( uint8_t & type, BDATA & data, long index )
+{
+	IDB_ENTRY_CERT * centry = static_cast<IDB_ENTRY_CERT*>( get_entry( index ) );
+	if( centry == NULL )
+		return false;
+
+	type = centry->type;
+	data = centry->data;
 
 	return true;
 }

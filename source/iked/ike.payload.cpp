@@ -1231,15 +1231,15 @@ long _IKED::payload_get_ph2id( PACKET_IKE & packet, IKE_PH2ID & ph2id )
 	{
 		case ISAKMP_ID_IPV4_ADDR:
 
-			packet.get_quad( temp1, false );		// host address
+			packet.get_quad( temp1, false );	// host address
 
 			break;
 
 		case ISAKMP_ID_IPV4_ADDR_RANGE:
 		case ISAKMP_ID_IPV4_ADDR_SUBNET:
 
-			packet.get_quad( temp1, false );		// address range / subnet
-			packet.get_quad( temp2, false );		// address range / subnet mask
+			packet.get_quad( temp1, false );	// address range / subnet
+			packet.get_quad( temp2, false );	// address range / subnet mask
 
 			break;
 
@@ -1269,10 +1269,10 @@ long _IKED::payload_add_cert( PACKET_IKE & packet, uint8_t type, BDATA & cert, u
 	// write certificate payload
 	//
 
-	packet.add_payload( false, next );				// ADD - certificate
-	packet.add_byte( type );						// certificate type
-	packet.add( cert );								// certificate data
-	packet.end_payload( false );					// END - certificate
+	packet.add_payload( false, next );		// ADD - certificate
+	packet.add_byte( type );				// certificate type
+	packet.add( cert );						// certificate data
+	packet.end_payload( false );			// END - certificate
 
 	return LIBIKE_OK;
 }
@@ -1290,26 +1290,28 @@ long _IKED::payload_get_cert( PACKET_IKE & packet, uint8_t & type, BDATA & cert 
 
 	if( size > ISAKMP_CERT_MAX )
 	{
-		log.txt( LLOG_ERROR, "!! : invalid certificate size ( %i bytes )\n", size );
+		log.txt( LLOG_ERROR,
+			"!! : invalid certificate size ( %i > %i )\n",
+			size,
+			ISAKMP_CERT_MAX );
 
-		packet.notify = ISAKMP_N_INVALID_CERT_ENCODING;
+		packet.notify = ISAKMP_N_PAYLOAD_MALFORMED;
 
 		return LIBIKE_DECODE;
 	}
 
-	packet.get_byte( type );						// certificate type
-	packet.get( cert, size );						// certificate data
+	packet.get_byte( type );				// certificate type
+	packet.get( cert, size );				// certificate data
 
 	//
 	// check certificate type
 	//
 
-	if( type != ISAKMP_CERT_X509_SIG )
-	{
-		packet.notify = ISAKMP_N_CERT_TYPE_UNSUPPORTED;
-
-		return LIBIKE_DECODE;
-	}
+//	if( type != ISAKMP_CERT_X509_SIG )
+//	{
+//		packet.notify = ISAKMP_N_CERT_TYPE_UNSUPPORTED;
+//		return LIBIKE_DECODE;
+//	}
 
 	return LIBIKE_OK;
 }
@@ -1329,7 +1331,7 @@ long _IKED::payload_add_creq( PACKET_IKE & packet, uint8_t type, uint8_t next )
 	return LIBIKE_OK;
 }
 
-long _IKED::payload_get_creq( PACKET_IKE & packet, uint8_t & type )
+long _IKED::payload_get_creq( PACKET_IKE & packet, uint8_t & type, BDATA & dn )
 {
 	log.txt( LLOG_DEBUG, "<< : cert request payload\n" );
 
@@ -1337,36 +1339,33 @@ long _IKED::payload_get_creq( PACKET_IKE & packet, uint8_t & type )
 	// read certificate request payload
 	//
 
-	if( !packet.get_byte( type ) )		// certificate request type
-	{
-		log.txt( LLOG_ERROR, "!! : no certificate request type\n" );
-
-		packet.notify = ISAKMP_N_INVALID_COOKIE;
-
-		return LIBIKE_DECODE;
-	}
-
 	size_t size = packet.get_payload_left();
+	size--;
 
 	if( size > ISAKMP_CREQ_MAX )
 	{
-		log.txt( LLOG_ERROR, "!! : invalid cert authority payload size\n" );
+		log.txt( LLOG_ERROR,
+			"!! : invalid certificate request size ( %i > %i )\n",
+			size,
+			ISAKMP_CREQ_MAX );
+
+		packet.notify = ISAKMP_N_PAYLOAD_MALFORMED;
 
 		return LIBIKE_DECODE;
 	}
+
+	packet.get_byte( type );				// certificate request type
+	packet.get( dn, size );					// certificate request dn data
 
 	//
 	// check certificate type
 	//
 
-	if( type != ISAKMP_CERT_X509_SIG )
-		return LIBIKE_DECODE;
-
-	//
-	// TODO : verify certificate request data
-	//
-
-	packet.get_null( size );
+//	if( type != ISAKMP_CERT_X509_SIG )
+//	{
+//		packet.notify = ISAKMP_N_CERT_TYPE_UNSUPPORTED;
+//		return LIBIKE_DECODE;
+//	}
 
 	return LIBIKE_OK;
 }
@@ -1379,9 +1378,9 @@ long _IKED::payload_add_sign( PACKET_IKE & packet, BDATA & sign, uint8_t next )
 	// write signature payload
 	//
 
-	packet.add_payload( false, next );				// ADD - signature
-	packet.add( sign );								// signature data
-	packet.end_payload( false );					// END - signature
+	packet.add_payload( false, next );		// ADD - signature
+	packet.add( sign );						// signature data
+	packet.end_payload( false );			// END - signature
 
 	return LIBIKE_OK;
 }
@@ -1399,16 +1398,16 @@ long _IKED::payload_get_sign( PACKET_IKE & packet, BDATA & sign )
 	if( size > ISAKMP_SIGN_MAX )
 	{
 		log.txt( LLOG_ERROR,
-			"!! : invalid signature size ( %i > %i )\n",
+			"!! : invalid signature payload size ( %i > %i )\n",
 			size,
 			ISAKMP_SIGN_MAX );
 
-		packet.notify = ISAKMP_N_INVALID_SIGNATURE;
+		packet.notify = ISAKMP_N_PAYLOAD_MALFORMED;
 
 		return LIBIKE_DECODE;
 	}
 
-	packet.get( sign, size );						// signature data
+	packet.get( sign, size );				// signature data
 
 	return LIBIKE_OK;
 }
@@ -1421,9 +1420,9 @@ long _IKED::payload_add_hash( PACKET_IKE & packet, BDATA & hash, uint8_t next )
 	// write hash payload
 	//
 
-	packet.add_payload( false, next );				// ADD - hash
-	packet.add( hash );								// hash value
-	packet.end_payload( false );					// END - hash
+	packet.add_payload( false, next );		// ADD - hash
+	packet.add( hash );						// hash value
+	packet.end_payload( false );			// END - hash
 
 	return LIBIKE_OK;
 }
@@ -1450,7 +1449,7 @@ long _IKED::payload_get_hash( PACKET_IKE & packet, BDATA & hash, long hash_size 
 		return LIBIKE_DECODE;
 	}
 
-	packet.get( hash, size );						// hash value
+	packet.get( hash, size );				// hash value
 
 	return LIBIKE_OK;
 }
@@ -1504,9 +1503,9 @@ long _IKED::payload_add_cfglist( PACKET_IKE & packet, IDB_CFG * cfg, uint8_t nex
 	//
 
 	packet.add_payload( false, next );
-	packet.add_byte( cfg->mtype );	// message type
-	packet.add_byte( 0 );				// reserved
-	packet.add_word( cfg->ident );	// identity
+	packet.add_byte( cfg->mtype );			// message type
+	packet.add_byte( 0 );					// reserved
+	packet.add_word( cfg->ident );			// identity
 
 	long count = cfg->attr_count();
 	long index = 0;
@@ -1549,9 +1548,9 @@ long _IKED::payload_get_cfglist( PACKET_IKE & packet, IDB_CFG * cfg )
 	// read attribute payload
 	//
 
-	packet.get_byte( cfg->mtype );	// message type
-	packet.get_null( 1 );				// reserved
-	packet.get_word( cfg->ident );	// identity
+	packet.get_byte( cfg->mtype );			// message type
+	packet.get_null( 1 );					// reserved
+	packet.get_word( cfg->ident );			// identity
 
 	//
 	// get remaining payload length
@@ -1618,9 +1617,9 @@ long _IKED::payload_add_natd( PACKET_IKE & packet, BDATA & natd, uint8_t next )
 	// write natd hash payload
 	//
 
-	packet.add_payload( false, next );				// ADD - hash
-	packet.add( natd );								// hash value
-	packet.end_payload( false );					// END - hash
+	packet.add_payload( false, next );		// ADD - hash
+	packet.add( natd );						// hash value
+	packet.end_payload( false );			// END - hash
 
 	return LIBIKE_OK;
 }
@@ -1647,7 +1646,7 @@ long _IKED::payload_get_natd( PACKET_IKE & packet, BDATA & natd, long natd_size 
 		return LIBIKE_DECODE;
 	}
 
-	packet.get( natd, size );						// hash value
+	packet.get( natd, size );				// hash value
 
 	return LIBIKE_OK;
 }

@@ -282,9 +282,6 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	natt_version = IPSEC_NATT_NONE;
 	natt_pldtype = ISAKMP_PAYLOAD_NONE;
 
-	ctype_l = 0;
-	ctype_r = 0;
-
 	hash_size = 0;
 
 	//
@@ -805,6 +802,8 @@ void _IDB_PH1::clean()
 	natd_hash_l.clean();
 	natd_hash_r.clean();
 
+	certs_r.clean();
+	creqs_r.clean();
 	sign_r.del( true );
 }
 

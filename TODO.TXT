@@ -246,6 +246,10 @@ X Add proper support for multiple NAT-T hash values
 X Fix negotiation issues with Cisco PIX devices
 X Add support for Cisco Unity LOAD-BALANCE notifications
 
+2.1.5 release - Bug fix and fine tuning
+----------------------------------------------------------------------
+X Add proper support for multiple certificate request payloads
+
 2.2.0 release - Remote access server support
 ----------------------------------------------------------------------
 X Use overlapped IO to interface with the windows filter driver
@@ -261,15 +265,19 @@ X Fix slow responsiveness duing DHCP over IPsec negotiations
 X Validate and document support for Netgear gateways
 X Add support for the XAuth Radius CHAP method
 X Fix negotiation of tunnel-all ( 0.0.0.0/0 ) configurations in iked
+X Move to Qt4 for unix client GUI components
+X Make all libs build and link as shared ojects on unix platform
+. Fix hibernate high utilization loop problem in iked
+. Fix multiple assigned adapter addresses with DHCP over IPsec
 . Fix problem with direct adapter mode DNS configuration
-. Fix reverse DNS lookup issues
-. Move to Qt4 for unix client GUI components
-. Make all libraries dynamically linked on unix platform
+? Fix reverse DNS lookup issues
 . Add support for Cisco PCF file import
 . Make the client config subordinate to the phase1 handle
 . Make the config exchange handle subordinate to the phase1 handle
 . Remove all references to the obsolete COMPAT policy mode
 . Fix the server mode support in iked
+. Verify support for multiple simultaneous VPN connections
+. Improve site configuration policy entry documentation
 
 Near Term Goals
 ----------------------------------------------------------------------

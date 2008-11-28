@@ -723,7 +723,7 @@ typedef class _IKED
 	long	payload_get_cert( PACKET_IKE & packet, uint8_t & type, BDATA & cert );
 
 	long	payload_add_creq( PACKET_IKE & packet, uint8_t type, uint8_t next );
-	long	payload_get_creq( PACKET_IKE & packet, uint8_t & type );
+	long	payload_get_creq( PACKET_IKE & packet, uint8_t & type, BDATA & dn );
 
 	long	payload_add_sign( PACKET_IKE & packet, BDATA & sign, uint8_t next );
 	long	payload_get_sign( PACKET_IKE & packet, BDATA & sign );

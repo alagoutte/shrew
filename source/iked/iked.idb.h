@@ -111,13 +111,21 @@ typedef class _IDB_LIST_NOTIFY : public IDB_LIST
 // certificate list
 //
 
-typedef IDB_ENTRY_BDATA IDB_ENTRY_CERT;
-
-typedef class _IDB_LIST_CERT : public IDB_LIST_BDATA
+typedef class _IDB_ENTRY_CERT : public IDB_ENTRY
 {
 	public:
 
-	BDATA name;
+	uint8_t	type;
+	BDATA	data;
+
+}IDB_ENTRY_CERT;
+
+typedef class _IDB_LIST_CERT : public IDB_LIST
+{
+	public:
+
+	bool	add( uint8_t & type, BDATA & data );
+	bool	get( uint8_t & type, BDATA & data, long index );
 
 }IDB_LIST_CERT;
 
@@ -647,9 +655,6 @@ typedef class _IDB_PH1 : public IDB_XCH_SA
 	long	natt_version;	// version negotiated
 	uint8_t	natt_pldtype;	// payload identifier
 
-	uint8_t		ctype_l;	// local certificate type
-	uint8_t		ctype_r;	// remote certificate type
-
 	uint16_t	auth_id;	// selected authentication type
 
 	IDB_LIST	frags;
@@ -662,6 +667,7 @@ typedef class _IDB_PH1 : public IDB_XCH_SA
 	IDB_LIST_BDATA	natd_hash_l;
 	IDB_LIST_BDATA	natd_hash_r;
 
+	IDB_LIST_CERT	creqs_r;
 	IDB_LIST_CERT	certs_r;
 	BDATA			sign_r;
 

@@ -630,8 +630,9 @@ bool _IKED::cert_verify( IDB_LIST_CERT & certs, BDATA & ca, BDATA & cert )
 	STACK_OF( X509 ) * chain = sk_X509_new_null();
 	X509 * x509_cert;
 
+	uint8_t type;
 	long index = 0;
-	while( certs.get( cert, index++ ) )
+	while( certs.get( type, cert, index++ ) )
 		if( bdata_2_cert( &x509_cert, cert ) )
 			sk_X509_push( chain, x509_cert );
 

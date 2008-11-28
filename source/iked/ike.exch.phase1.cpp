@@ -232,10 +232,12 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 			case ISAKMP_PAYLOAD_CERT:
 			{
-				BDATA cert;
-				result = payload_get_cert( packet, ph1->ctype_r, cert );
+				uint8_t	type;
+				BDATA	cert;
+
+				result = payload_get_cert( packet, type, cert );
 				if( result == LIBIKE_OK )
-					ph1->certs_r.add( cert );
+					ph1->certs_r.add( type, cert );
 
 				ph1->xstate |= XSTATE_RECV_CT;
 
@@ -247,15 +249,18 @@ long _IKED::process_phase1_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 			//
 
 			case ISAKMP_PAYLOAD_CERT_REQ:
+			{
+				uint8_t	type;
+				BDATA	dn;
 
-				if( ph1->xstate & XSTATE_RECV_CR )
-					log.txt( LLOG_INFO, "<< : ignoring duplicate cert request payload\n" );
-				else
-					result = payload_get_creq( packet, ph1->ctype_l );
+				result = payload_get_creq( packet, type, dn );
+				if( result == LIBIKE_OK )
+					ph1->creqs_r.add( type, dn );
 
 				ph1->xstate |= XSTATE_RECV_CR;
 
 				break;
+			}
 
 			//
 			// signature payload
