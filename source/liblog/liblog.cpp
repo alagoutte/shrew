@@ -77,7 +77,7 @@ bool _LOG::write_buff( char * buff, size_t size )
 	//
 
 	if( log_flags & LOGFLAG_ECHO )
-		printf( buff );
+		printf( "%s", buff );
 
 	//
 	// log individual lines
@@ -134,7 +134,7 @@ bool _LOG::write_line( char * buff, size_t size )
 #ifdef UNIX
 
 	if( log_flags & LOGFLAG_SYSTEM )
-		syslog( LOG_NOTICE, buff );
+		syslog( LOG_NOTICE, "%s", buff );
 	else
 	{
 		if( fp != NULL )

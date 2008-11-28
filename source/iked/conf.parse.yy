@@ -328,7 +328,7 @@ daemon_line
 	EOS
   |	LOG_FILE QUOTED
 	{
-		snprintf( iked.path_log, MAX_PATH, $2->text() );
+		snprintf( iked.path_log, MAX_PATH, "%s", $2->text() );
 		delete $2;
 	}
 	EOS
@@ -364,14 +364,14 @@ daemon_line
 	EOS
   |	PCAP_ENCRYPT QUOTED
 	{
-		snprintf( iked.path_decrypt, MAX_PATH, $2->text() );
+		snprintf( iked.path_decrypt, MAX_PATH, "%s", $2->text() );
 		iked.dump_decrypt = true;
 		delete $2;
 	}
 	EOS
   |	PCAP_DECRYPT QUOTED
 	{
-		snprintf( iked.path_encrypt, MAX_PATH, $2->text() );
+		snprintf( iked.path_encrypt, MAX_PATH, "%s", $2->text() );
 		iked.dump_encrypt = true;
 		delete $2;
 	}

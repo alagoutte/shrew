@@ -13,7 +13,8 @@
    <string>Tolology Entry</string>
   </property>
   <property name="windowIcon" >
-   <iconset/>
+   <iconset resource="ikea.qrc" >
+    <normaloff>:/png/site_mod.png</normaloff>:/png/site_mod.png</iconset>
   </property>
   <layout class="QVBoxLayout" >
    <item>
@@ -115,7 +116,7 @@
      <property name="orientation" >
       <enum>Qt::Vertical</enum>
      </property>
-     <property name="sizeHint" >
+     <property name="sizeHint" stdset="0" >
       <size>
        <width>20</width>
        <height>40</height>
@@ -133,7 +134,7 @@
        <property name="sizeType" >
         <enum>QSizePolicy::Expanding</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0" >
         <size>
          <width>41</width>
          <height>31</height>

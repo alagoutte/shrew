@@ -637,9 +637,8 @@ long _PFKI::buff_get_ext( PFKI_MSG & msg, sadb_ext ** ext, long type )
 
 		if( PFKEY_EXTLEN( ext_head ) > size )
 		{
-			printf( "XX : buffer too small for ext body ( %i > %i )\n",
-				PFKEY_EXTLEN( ext_head ),
-				size );
+			printf( "XX : buffer too small for ext body ( %i bytes )\n",
+				PFKEY_EXTLEN( ext_head ) );
 
 			return IPCERR_FAILED;
 		}
