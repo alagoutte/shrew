@@ -182,12 +182,12 @@ bool _IKEC::load( BDATA & name )
 		return false;
 	
 	fspec = name;
-	fspec.add( NULL, 1 );
+	fspec.add( "", 1 );
 
 	fpath = sites;
 	fpath.add( "/", 1 );
 	fpath.add( name );
-	fpath.add( NULL, 1 );
+	fpath.add( "", 1 );
 
 	if( !config.file_read( fpath.text() ) )
 	{

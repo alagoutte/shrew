@@ -29,6 +29,7 @@ set(
 
 subdirs(
 	source/iked
+	source/ikec
 	source/libike
 	source/libip
 	source/libidb

@@ -72,11 +72,22 @@ Automatically initiate the connection.
 .El
 .Sh RETURN VALUES
 The command exits with 0 on success, and non-zero on errors.
-.Sh SITE CONFIGRUATION FILE FORMAT
+.Sh FILES
+All user related configuration data is stored under the
+.Pa ~/.iked
+directory. Site Configuration files are stored under the
+.Pa ~/.iked/sites
+directory. Certificates and keys are are typically stored under the
+.Pa ~/.iked/certs
+directory. These directories are automatically created when the
+.Nm
+application is run for the first time by a user.
+.Sh SITE CONFIGRUATIONS
 TODO : copy info from readme.
 .Sh SEE ALSO
-.Xr ikea 1 ,
 .Xr iked 8 ,
+.Xr ikec-qt 1 ,
+.Xr ikea-qt 1 ,
 .Sh HISTORY
 The
 .Nm
