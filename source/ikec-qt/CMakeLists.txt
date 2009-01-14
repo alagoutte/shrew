@@ -64,5 +64,5 @@ install(
 	RUNTIME	DESTINATION bin )
 
 install(
-	FILES ikec.1
+	FILES ikec-qt.1
 	DESTINATION ${PATH_MAN}/man1 )
