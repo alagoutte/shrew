@@ -56,6 +56,7 @@ stock c includes
 pthread support
 
 lex or flex
+libedit
 bison >= 2.3
 cmake >= 2.4
 opsenssl >= 0.9.x
@@ -71,10 +72,9 @@ TrollTech QT >= 4.2
 openldap >= 2.0
 
 The Trolltech QT toolkit version 4.2.x or higher is also required if you plan
-to build the QT client front end applications. Version 4.x has not been tested
-and is not supported. The openldap support is only required if you plan to use
-iked to facilitate VPN client gateway connectivity and require xauth support
-via an external LDAP database.
+to build the QT client front end applications. The openldap support is only
+useful if you plan to use iked to facilitate VPN client gateway connectivity
+and require xauth support via an external LDAP database.
 
 
 ================================================================================
@@ -192,7 +192,7 @@ header file path on older versions of Linux.
 COMPILING
 ================================================================================
 
-The build system uses cmake to generate platform dependent make files. To
+The cmake build system is used to generate platform specific make files. To
 configure the build, you simply run cmake in the base distribution directory
 using any optional parameters you may require. For example: enter the following
 to build and install the basic software ...
@@ -210,16 +210,16 @@ In addition to the standard CMake options such as CMAKE_INSTALL_PREFIX, a few
 additional build parameters may be specified. Here is a brief list ...
 
 DEBUG	Enable Debug Symbols
+TESTS	Enable Library Tests Build
 QTGUI	Enable Client QT GUI
 NATT	Enable Nat Traversal Support
 LDAP	Enable LDAP Authentication Support
 ETCDIR	System etc configuration path
 MANDIR	System man page path
 KRNINC	Kernel include path
-TESTS	Build library test programs
 
-For example: enter the following to build and install the software with all
-options enabled ...
+For example: enter the following to build and install the software with a few
+common options enabled ...
 
 cmake -DDEBUG=YES -DQTGUI=YES -DNATT=YES -DLDAP=YES
 make
@@ -239,11 +239,13 @@ client operation but can also be modified to allow for site to site or client
 gateway operation as well. See the iked.conf man page for more details.
 
 Once the iked process has been launched, the VPN Access Manager application
-( ikea ) is used to build remote access client configurations and initiate
+( ikea-qt ) is used to build remote access client configurations and initiate
 client connections. When the Access Manager GUI is used to initiate a client
-connection, a VPN Connect application ( ikec ) process is created. This process
-interacts with iked to initiate the connection. Please see the online
-documentation available at http://www.shrew.net for more details.
+connection, a VPN Connect application ( ikec-qt ) process is created. This
+process interacts with iked to initiate the connection. Alternately, a command
+line version of the VPN Connect application ( ikec ) can be used to initiate a
+connection. Please see the online documentation available at
+http://www.shrew.net for more details.
 
 ================================================================================
 EXPORTED CONFIGURATION FILES
