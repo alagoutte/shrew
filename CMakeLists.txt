@@ -177,6 +177,32 @@ if( NOT PATH_LIB_CRYPTO )
 
 endif( NOT PATH_LIB_CRYPTO )
 
+find_path(
+	PATH_INC_EDIT
+	NAMES "histedit.h"
+	PATHS ${SEARCH_INC} )
+
+if( NOT PATH_INC_EDIT )
+
+	message(
+		FATAL_ERROR
+		"Unable to locate libedit include files" )
+
+endif( NOT PATH_INC_EDIT )
+
+find_library(
+	PATH_LIB_EDIT
+	NAMES "edit"
+	PATHS ${SEARCH_LIB} )
+
+if( NOT PATH_LIB_EDIT )
+
+	message(
+		FATAL_ERROR
+		"Unable to locate libedit library file" )
+
+endif( NOT PATH_LIB_EDIT )
+
 find_package( Threads )
 
 if( NOT CMAKE_USE_PTHREADS_INIT )
