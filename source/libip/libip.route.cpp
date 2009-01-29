@@ -690,10 +690,6 @@ bool rtmsg_recv( int s, IPROUTE_ENTRY & route )
 						// printf( "XX : netlink attribute = RTA_METRICS\n" );
 						break;
 
-					case RTA_TABLE:
-						// printf( "XX : netlink attribute = RTA_TABLE\n" );
-						break;
-
 					case RTA_CACHEINFO:
 						// printf( "XX : netlink attribute = RTA_CACHEINFO\n" );
 						break;
