@@ -308,6 +308,7 @@ typedef struct _SOCK_INFO : public IDB_ENTRY
 {
 	int			sock;
 	IKE_SADDR	saddr;
+	bool		natt;
 
 }SOCK_INFO;
 
@@ -502,9 +503,10 @@ typedef class _IKED
 
 	long	socket_init();
 	void	socket_done();
-	long	socket_create( IKE_SADDR & saddr, bool encap );
-	long	socket_locate( IKE_SADDR & saddr );
+	long	socket_create( IKE_SADDR & saddr, bool natt );
 	long	socket_select( unsigned long timeout );
+	long	socket_lookup_addr( IKE_SADDR & saddr_l, IKE_SADDR & saddr_r );
+	long	socket_lookup_port( IKE_SADDR & saddr_l, bool natt );
 
 #ifdef WIN32
 
@@ -541,9 +543,6 @@ typedef class _IKED
 
 	void	text_ph1id( char * text, IKE_PH1ID * ph1id );
 	void	text_ph2id( char * text, IKE_PH2ID * ph2id );
-
-	bool	find_addr_r( sockaddr_in & raddr, unsigned short rport, char * rname );
-	bool	find_addr_l( IKE_SADDR & saddr_r, IKE_SADDR & addr_l, unsigned short lport );
 
 	// config file loader
 

@@ -99,13 +99,14 @@ long _IKED::socket_select( unsigned long timeout )
 	return result;
 }
 
-long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
+long _IKED::socket_create( IKE_SADDR & saddr, bool natt )
 {
 	SOCK_INFO * sock_info = new SOCK_INFO;
 	if( sock_info == NULL )
 		return LIBIKE_SOCKET;
 
 	sock_info->saddr = saddr;
+	sock_info->natt = natt;
 	sock_info->sock = socket( PF_INET, SOCK_DGRAM, 0 );
 
 	if( sock_info->sock < 0 )
@@ -162,7 +163,7 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 
 #ifdef OPT_NATT
 
-	if( encap )
+	if( natt )
 	{
 		optval = UDP_ENCAP_ESPINUDP;
 		if( setsockopt( sock_info->sock, SOL_UDP, UDP_ENCAP, &optval, sizeof( optval ) ) < 0)
@@ -192,28 +193,63 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool encap )
 	char txtaddr[ LIBIKE_MAX_TEXTADDR ];
 	iked.text_addr( txtaddr, &saddr, true );
 
-	if( !encap )
+	if( natt )
 	{
-		log.txt( LLOG_INFO,
-			"ii : created ike socket %s\n",
-			txtaddr );
-
-		sock_ike_open++;
+		log.txt( LLOG_INFO, "ii : created natt socket %s\n", txtaddr );
+		sock_natt_open++;
 	}
 	else
 	{
-		log.txt( LLOG_INFO,
-			"ii : created natt socket %s\n",
-			txtaddr );
-
-		sock_natt_open++;
+		log.txt( LLOG_INFO, "ii : created ike socket %s\n",	txtaddr );
+		sock_ike_open++;
 	}
 
 	return LIBIKE_OK;
 }
 
-long _IKED::socket_locate( IKE_SADDR & saddr )
+long _IKED::socket_lookup_addr( IKE_SADDR & saddr_r, IKE_SADDR & saddr_l )
 {
+	//
+	// determine the best interface and local
+	// address to reach a remote host address
+	//
+
+	IPROUTE_ENTRY entry;
+	memset( &entry, 0, sizeof( entry ) );
+	entry.addr = saddr_r.saddr4.sin_addr;
+
+	if( !iproute.best( entry ) )
+	{
+		char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+		text_addr( txtaddr, &saddr_r, true );
+
+		log.txt( LLOG_DEBUG,
+				"ii : unable to select local address for peer %s\n",
+				txtaddr );
+
+		return LIBIKE_SOCKET;
+	}
+
+	saddr_l.saddr4.sin_family = AF_INET;
+	saddr_l.saddr4.sin_addr = entry.iface;
+
+	char txtaddr[ LIBIKE_MAX_TEXTADDR ];
+	text_addr( txtaddr, &saddr_l, false );
+
+	log.txt( LLOG_DEBUG,
+		"ii : local address %s selected for peer\n",
+		txtaddr );
+
+	return LIBIKE_OK;
+}
+
+long _IKED::socket_lookup_port( IKE_SADDR & saddr_l, bool natt )
+{
+	//
+	// locate a locally bound socket port for
+	// the specified local address and type
+	//
+
 	long count = list_socket.count();
 	long index = 0;
 
@@ -222,12 +258,15 @@ long _IKED::socket_locate( IKE_SADDR & saddr )
 		SOCK_INFO * sock_info = static_cast<SOCK_INFO*>( list_socket.get_entry( index ) );
 
 		if( has_sockaddr( &sock_info->saddr.saddr  ) )
-			if( cmp_sockaddr( sock_info->saddr.saddr, saddr.saddr, false ) )
+			if( cmp_sockaddr( sock_info->saddr.saddr, saddr_l.saddr, false ) )
 				continue;
+
+		if( sock_info->natt != natt )
+			continue;
 
 		u_int16_t port;
 		get_sockport( sock_info->saddr.saddr, port );
-		set_sockport( saddr.saddr, port );
+		set_sockport( saddr_l.saddr, port );
 
 		return LIBIKE_OK;
 	}

@@ -2693,13 +2693,22 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 	ph1->tunnel->lstate |= TSTATE_NATT_FLOAT;
 
 	if( ph1->tunnel->natt_version >= IPSEC_NATT_V02 )
-
 	{
 		//
-		// switch our port to natt
+		// switch our local port to natt
 		//
 
-		ph1->tunnel->saddr_l.saddr4.sin_port = ph1->tunnel->peer->natt_port;
+		if( socket_lookup_port(	ph1->tunnel->saddr_l, true ) != LIBIKE_OK )
+		{
+			log.txt( LLOG_INFO,
+				"ii : unable to locate local nat-t udp port\n" );
+
+			return false;
+		}
+
+		log.txt( LLOG_INFO,
+			"ii : switching to src nat-t udp port %u\n",
+			ntohs( ph1->tunnel->saddr_l.saddr4.sin_port ) );
 
 		//
 		// switch the peer port to natt
@@ -2708,8 +2717,8 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 		ph1->tunnel->saddr_r.saddr4.sin_port = ph1->tunnel->peer->natt_port;
 
 		log.txt( LLOG_INFO,
-			"ii : switching to nat-t udp port %u\n",
-			ntohs( ph1->tunnel->peer->natt_port ) );
+			"ii : switching to dst nat-t udp port %u\n",
+			ntohs( ph1->tunnel->saddr_r.saddr4.sin_port ) );
 
 		//
 		// setup our filter

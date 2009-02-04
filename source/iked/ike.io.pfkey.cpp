@@ -449,10 +449,10 @@ long _IKED::pfkey_init_phase2( bool nailed, u_int16_t plcytype, u_int32_t plcyid
 		// port value
 		//
 
-		if( socket_locate( src ) != LIBIKE_OK )
+		if( socket_lookup_port( src, false ) != LIBIKE_OK )
 		{
 			char txtaddr[ LIBIKE_MAX_TEXTADDR ];
-			text_addr( txtaddr, &src, false );
+			text_addr( txtaddr, &src, true );
 
 			log.txt( LLOG_ERROR,
 				"!! : unable to create tunnel, no socket for address %s\n",
