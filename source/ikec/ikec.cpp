@@ -342,7 +342,10 @@ long _IKEC::func( void * )
 	if( config.get_string( "network-natt-mode", text, MAX_CONFSTRING, 0 ) )
 	{
 		if( !strcmp( "enable", text ) )
+		{
 			peer.natt_mode = IPSEC_NATT_ENABLE;
+			xconf.rqst |= IPSEC_OPTS_CISCO_UDP;
+		}
 
 		if( !strcmp( "force", text ) )
 			peer.natt_mode = IPSEC_NATT_FORCE_RFC;
@@ -352,6 +355,13 @@ long _IKEC::func( void * )
 
 		if( !strcmp( "force-rfc", text ) )
 			peer.natt_mode = IPSEC_NATT_FORCE_RFC;
+
+		if( !strcmp( "force-cisco-udp", text ) )
+		{
+			peer.natt_mode = IPSEC_NATT_FORCE_CISCO;
+			peer.natt_port = htons( 10000 );
+			xconf.rqst |= IPSEC_OPTS_CISCO_UDP;
+		}
 
 		// nat-t udp port
 

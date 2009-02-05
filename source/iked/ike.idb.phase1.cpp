@@ -371,7 +371,8 @@ _IDB_PH1::_IDB_PH1( IDB_TUNNEL * set_tunnel, bool set_initiator, IKE_COOKIES * s
 	// determine natt negotiation
 	//
 
-	if( tunnel->peer->natt_mode >= IPSEC_NATT_ENABLE )
+	if( ( tunnel->peer->natt_mode >= IPSEC_NATT_ENABLE ) &&
+		( tunnel->peer->natt_mode != IPSEC_NATT_FORCE_CISCO ) )
 		vendopts_l.flag.natt = true;
 
 	//

@@ -167,10 +167,36 @@ void ikecRoot::customEvent( QEvent * e )
 
 		textLabelRemoteValue->setText( inet_ntoa( event->stats.peer.saddr4.sin_addr ) );
 
-		if( event->stats.natt )
-			textLabelTransportValue->setText( "NAT-T / IKE | ESP" );
-		else
-			textLabelTransportValue->setText( "IKE | ESP" );
+		switch( event->stats.natt )
+		{
+			case IPSEC_NATT_NONE:
+				textLabelTransportValue->setText( "IKE | ESP" );
+				break;
+
+			case IPSEC_NATT_CISCO:
+				textLabelTransportValue->setText( "IKE | CISCO-UDP / ESP" );
+				break;
+
+			case IPSEC_NATT_V00:
+				textLabelTransportValue->setText( "NAT-T v00 / IKE | ESP" );
+				break;
+
+			case IPSEC_NATT_V01:
+				textLabelTransportValue->setText( "NAT-T v01 / IKE | ESP" );
+				break;
+
+			case IPSEC_NATT_V02:
+				textLabelTransportValue->setText( "NAT-T v02 / IKE | ESP" );
+				break;
+
+			case IPSEC_NATT_V03:
+				textLabelTransportValue->setText( "NAT-T v03 / IKE | ESP" );
+				break;
+
+			case IPSEC_NATT_RFC:
+				textLabelTransportValue->setText( "NAT-T RFC / IKE | ESP" );
+				break;
+		}
 
 		if( event->stats.frag )
 			textLabelFragValue->setText( "Enabled" );

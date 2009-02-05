@@ -127,7 +127,7 @@ typedef struct _IKEI_STATS
 	long	sa_fail;
 	long	sa_dead;
 
-	bool	natt;
+	long	natt;
 	bool	frag;
 	bool	dpd;
 

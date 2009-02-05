@@ -440,6 +440,11 @@
                 <string>force-rfc</string>
                </property>
               </item>
+              <item>
+               <property name="text" >
+                <string>force-cisco-udp</string>
+               </property>
+              </item>
              </widget>
             </item>
            </layout>

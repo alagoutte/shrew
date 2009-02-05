@@ -1198,9 +1198,21 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 	// determine natt port usage
 	//
 
+	IKE_SADDR saddr_l = ph2->tunnel->saddr_l;
+	IKE_SADDR saddr_r = ph2->tunnel->saddr_r;
+
 	bool use_ports = false;
+
 	if( ph2->tunnel->natt_version != IPSEC_NATT_NONE )
+	{
+		if( ph2->tunnel->natt_version == IPSEC_NATT_CISCO )
+		{
+			socket_lookup_port( saddr_l, true );
+			set_sockport( saddr_r.saddr, ph2->tunnel->peer->natt_port );
+		}
+
 		use_ports = true;
+	}
 
 	//
 	// convert source and destination
@@ -1213,14 +1225,14 @@ long _IKED::pfkey_send_getspi( IDB_POLICY * policy, IDB_PH2 * ph2 )
 	switch( policy->sp.dir )
 	{
 		case IPSEC_DIR_INBOUND:
-			cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_src.saddr, use_ports );
-			cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_dst.saddr, use_ports );
+			cpy_sockaddr( saddr_r.saddr, sainfo.paddr_src.saddr, use_ports );
+			cpy_sockaddr( saddr_l.saddr, sainfo.paddr_dst.saddr, use_ports );
 			sainfo.seq = ph2->seqid_in;
 			break;
 
 		case IPSEC_DIR_OUTBOUND:
-			cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_src.saddr, use_ports );
-			cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_dst.saddr, use_ports );
+			cpy_sockaddr( saddr_l.saddr, sainfo.paddr_src.saddr, use_ports );
+			cpy_sockaddr( saddr_r.saddr, sainfo.paddr_dst.saddr, use_ports );
 			sainfo.seq = ph2->seqid_out;
 			break;
 	}
@@ -1391,6 +1403,26 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 	memset( &sainfo, 0, sizeof( sainfo ) );
 
 	//
+	// determine natt port usage
+	//
+
+	IKE_SADDR saddr_l = ph2->tunnel->saddr_l;
+	IKE_SADDR saddr_r = ph2->tunnel->saddr_r;
+
+	bool use_ports = false;
+
+	if( ph2->tunnel->natt_version != IPSEC_NATT_NONE )
+	{
+		if( ph2->tunnel->natt_version == IPSEC_NATT_CISCO )
+		{
+			socket_lookup_port( saddr_l, true );
+			set_sockport( saddr_r.saddr, ph2->tunnel->peer->natt_port );
+		}
+
+		use_ports = true;
+	}
+
+	//
 	// convert mode
 	//
 
@@ -1501,30 +1533,35 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 
 			switch( proposal->encap )
 			{
+				case ISAKMP_ENCAP_TUNNEL:
+					if( ph2->tunnel->natt_version == IPSEC_NATT_CISCO )
+						sainfo.natt.type = UDP_ENCAP_ESPINUDP;
+					break;
+
 				case ISAKMP_ENCAP_VXX_UDP_TUNNEL:
 				case ISAKMP_ENCAP_RFC_UDP_TUNNEL:
 				case ISAKMP_ENCAP_VXX_UDP_TRANSPORT:
 				case ISAKMP_ENCAP_RFC_UDP_TRANSPORT:
-				{
 					if( ph2->tunnel->natt_version >= IPSEC_NATT_V02 )
 						sainfo.natt.type = UDP_ENCAP_ESPINUDP;
 					else
 						sainfo.natt.type = UDP_ENCAP_ESPINUDP_NON_IKE;
-
-					switch( dir )
-					{
-						case IPSEC_DIR_INBOUND:
-							get_sockport( ph2->tunnel->saddr_r.saddr, sainfo.natt.port_src );
-							get_sockport( ph2->tunnel->saddr_l.saddr, sainfo.natt.port_dst );
-							break;
-
-						case IPSEC_DIR_OUTBOUND:
-							get_sockport( ph2->tunnel->saddr_l.saddr, sainfo.natt.port_src );
-							get_sockport( ph2->tunnel->saddr_r.saddr, sainfo.natt.port_dst );
-							break;
-					}
-
 					break;
+			}
+
+			if( sainfo.natt.type )
+			{
+				switch( dir )
+				{
+					case IPSEC_DIR_INBOUND:
+						get_sockport( saddr_r.saddr, sainfo.natt.port_src );
+						get_sockport( saddr_l.saddr, sainfo.natt.port_dst );
+						break;
+
+					case IPSEC_DIR_OUTBOUND:
+						get_sockport( saddr_l.saddr, sainfo.natt.port_src );
+						get_sockport( saddr_r.saddr, sainfo.natt.port_dst );
+						break;
 				}
 			}
 
@@ -1620,14 +1657,6 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 	sainfo.ltime_soft.bytes		/= 100;
 
 	//
-	// determine natt port usage
-	//
-
-	bool use_ports = false;
-	if( ph2->tunnel->natt_version != IPSEC_NATT_NONE )
-		use_ports = true;
-
-	//
 	// convert source and destination
 	// and store sequence ids
 	//
@@ -1638,14 +1667,14 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 	switch( dir )
 	{
 		case IPSEC_DIR_INBOUND:
-			cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_src.saddr, use_ports );
-			cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_dst.saddr, use_ports );
+			cpy_sockaddr( saddr_r.saddr, sainfo.paddr_src.saddr, use_ports );
+			cpy_sockaddr( saddr_l.saddr, sainfo.paddr_dst.saddr, use_ports );
 			sainfo.seq = ph2->seqid_in;
 			break;
 
 		case IPSEC_DIR_OUTBOUND:
-			cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_src.saddr, use_ports );
-			cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_dst.saddr, use_ports );
+			cpy_sockaddr( saddr_l.saddr, sainfo.paddr_src.saddr, use_ports );
+			cpy_sockaddr( saddr_r.saddr, sainfo.paddr_dst.saddr, use_ports );
 			sainfo.seq = ph2->seqid_out;
 			break;
 	}
@@ -1732,15 +1761,31 @@ long _IKED::pfkey_send_delete( IDB_PH2 * ph2 )
 		memset( &sainfo, 0, sizeof( sainfo ) );
 
 		//
+		// determine natt port usage
+		//
+
+		IKE_SADDR saddr_l = ph2->tunnel->saddr_l;
+		IKE_SADDR saddr_r = ph2->tunnel->saddr_r;
+
+		bool use_ports = false;
+
+		if( ph2->tunnel->natt_version != IPSEC_NATT_NONE )
+		{
+			if( ph2->tunnel->natt_version == IPSEC_NATT_CISCO )
+			{
+				socket_lookup_port( saddr_l, true );
+				set_sockport( saddr_r.saddr, ph2->tunnel->peer->natt_port );
+			}
+
+			use_ports = true;
+		}
+
+		//
 		// determine the sa endpoint addresses
 		//
 
-		bool use_ports = false;
-		if( ph2->tunnel->natt_version != IPSEC_NATT_NONE )
-			use_ports = true;
-
-		cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_src.saddr, use_ports );
-		cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_dst.saddr, use_ports );
+		cpy_sockaddr( saddr_l.saddr, sainfo.paddr_src.saddr, use_ports );
+		cpy_sockaddr( saddr_r.saddr, sainfo.paddr_dst.saddr, use_ports );
 
 		char txtid_src[ LIBIKE_MAX_TEXTP2ID ];
 		char txtid_dst[ LIBIKE_MAX_TEXTP2ID ];
@@ -1794,15 +1839,31 @@ long _IKED::pfkey_send_delete( IDB_PH2 * ph2 )
 		memset( &sainfo, 0, sizeof( sainfo ) );
 
 		//
+		// determine natt port usage
+		//
+
+		IKE_SADDR saddr_l = ph2->tunnel->saddr_l;
+		IKE_SADDR saddr_r = ph2->tunnel->saddr_r;
+
+		bool use_ports = false;
+
+		if( ph2->tunnel->natt_version != IPSEC_NATT_NONE )
+		{
+			if( ph2->tunnel->natt_version == IPSEC_NATT_CISCO )
+			{
+				socket_lookup_port( saddr_l, true );
+				set_sockport( saddr_r.saddr, ph2->tunnel->peer->natt_port );
+			}
+
+			use_ports = true;
+		}
+
+		//
 		// determine the sa endpoint addresses
 		//
 
-		bool use_ports = false;
-		if( ph2->tunnel->natt_version != IPSEC_NATT_NONE )
-			use_ports = true;
-
-		cpy_sockaddr( ph2->tunnel->saddr_r.saddr, sainfo.paddr_src.saddr, use_ports );
-		cpy_sockaddr( ph2->tunnel->saddr_l.saddr, sainfo.paddr_dst.saddr, use_ports );
+		cpy_sockaddr( saddr_r.saddr, sainfo.paddr_src.saddr, use_ports );
+		cpy_sockaddr( saddr_l.saddr, sainfo.paddr_dst.saddr, use_ports );
 
 		char txtid_src[ LIBIKE_MAX_TEXTP2ID ];
 		char txtid_dst[ LIBIKE_MAX_TEXTP2ID ];

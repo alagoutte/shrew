@@ -1,0 +1,5 @@
+This file lists major source code contributions to the Shrew Soft VPN Client.
+
+NAME : Robert Nelson
+DATE : 02-04-2009
+Added support for negotiating Cisco UDP encapsulation of ESP packets.

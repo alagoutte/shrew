@@ -1777,7 +1777,27 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 					cfg->tunnel->xconf.svpw );
 			}
 		}
+
+		if( setmask & IPSEC_OPTS_CISCO_UDP )
+		{
+			if( nullmask & IPSEC_OPTS_CISCO_UDP )
+			{
+				cfg->attr_add_v( UNITY_NATT_PORT, NULL, 0 );
+				log.txt( LLOG_DEBUG,
+					"ii : - CISCO UDP Port\n" );
+			}
+			else
+			{
+				cfg->attr_add_b( UNITY_NATT_PORT,
+					cfg->tunnel->peer->natt_port );
+
+				log.txt( LLOG_DEBUG,
+					"ii : - CISCO UDP Port = %i\n",
+					ntohs( cfg->tunnel->peer->natt_port ) );
+			}
+		}
 	}
+
 	//
 	// checkpoint attributes
 	//
@@ -2306,6 +2326,30 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 					}
 					else
 						log.txt( LLOG_DEBUG, "ii : - Save Password\n" );
+
+					break;
+				}
+
+				case UNITY_NATT_PORT:
+				{
+					getmask |= IPSEC_OPTS_CISCO_UDP;
+
+					if( ( readmask & IPSEC_OPTS_CISCO_UDP ) && attr->basic )
+					{
+						log.txt( LLOG_DEBUG,
+							"ii : - Cisco UDP Port = %d\n",
+							attr->bdata );
+
+						if( cfg->tunnel->natt_version == IPSEC_NATT_NONE )
+						{
+							cfg->tunnel->natt_version = IPSEC_NATT_CISCO;
+							cfg->tunnel->peer->natt_port = htons( attr->bdata );
+
+							log.txt( LLOG_INFO, "ii : switching nat-t to cisco-udp\n" );
+						}
+					}
+					else
+						log.txt( LLOG_DEBUG, "ii : - Cisco UDP Port\n" );
 
 					break;
 				}

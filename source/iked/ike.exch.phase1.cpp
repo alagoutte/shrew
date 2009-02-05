@@ -560,7 +560,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				// optionally add nat discovery hash payloads
 				//
 
-				if( ph1->natt_version != IPSEC_NATT_NONE )
+				if( ph1->natt_pldtype != ISAKMP_PAYLOAD_NONE )
 				{
 					phase1_gen_natd( ph1 );
 					phase1_add_natd( ph1, packet, ISAKMP_PAYLOAD_NONE );
@@ -746,7 +746,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				// optionally add nat discovery hash payloads
 				//
 
-				if( ph1->natt_version != IPSEC_NATT_NONE )
+				if( ph1->natt_pldtype != ISAKMP_PAYLOAD_NONE )
 				{
 					phase1_gen_natd( ph1 );
 					phase1_add_natd( ph1, packet, ISAKMP_PAYLOAD_NONE );
@@ -1022,7 +1022,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							// optionally add nat discovery hash payloads
 							//
 
-							if( ph1->natt_version != IPSEC_NATT_NONE )
+							if( ph1->natt_pldtype != ISAKMP_PAYLOAD_NONE )
 							{
 								phase1_gen_natd( ph1 );
 								phase1_add_natd( ph1, packet, ISAKMP_PAYLOAD_NONE );
@@ -1072,7 +1072,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							// optionally add nat discovery hash payloads
 							//
 
-							if( ph1->natt_version != IPSEC_NATT_NONE )
+							if( ph1->natt_pldtype != ISAKMP_PAYLOAD_NONE )
 							{
 								phase1_gen_natd( ph1 );
 								phase1_add_natd( ph1, packet, ISAKMP_PAYLOAD_NONE );
@@ -1186,7 +1186,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				// optionally add nat discovery hash payloads
 				//
 
-				if( ph1->natt_version != IPSEC_NATT_NONE )
+				if( ph1->natt_pldtype != ISAKMP_PAYLOAD_NONE )
 				{
 					phase1_gen_natd( ph1 );
 					phase1_add_natd( ph1, packet, ISAKMP_PAYLOAD_NONE );
@@ -1296,8 +1296,6 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 
 			if( ph1->tunnel->natt_version != IPSEC_NATT_NONE )
 			{
-				ph1->tunnel->stats.natt = true;
-
 				ph1->tunnel->inc( true );
 				ph1->tunnel->event_natt.delay = ph1->tunnel->peer->natt_rate * 1000;
 
@@ -2558,10 +2556,8 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 	switch( ph1->tunnel->peer->natt_mode )
 	{
 		case IPSEC_NATT_DISABLE:
-		{
 			log.txt( LLOG_INFO, "ii : nat-t is disabled locally\n" );
 			break;
-		}
 
 		case IPSEC_NATT_ENABLE:
 		{
@@ -2682,6 +2678,18 @@ bool _IKED::phase1_chk_natd( IDB_PH1 * ph1 )
 				ph1->tunnel->natt_version = ph1->natt_version;
 			else
 				ph1->tunnel->natt_version = IPSEC_NATT_RFC;
+
+			break;
+
+		case IPSEC_NATT_FORCE_CISCO:
+
+			log.txt( LLOG_INFO, "ii : forcing nat-t to cisco-udp\n" );
+
+			//
+			// set natt to cisco-udp
+			//
+
+			ph1->tunnel->natt_version = IPSEC_NATT_CISCO;
 
 			break;
 	}

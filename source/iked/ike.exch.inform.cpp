@@ -627,7 +627,7 @@ long _IKED::inform_chk_notify( IDB_PH1 * ph1, IKE_NOTIFY * notify, bool secure )
 
 					ph1_ulb->tunnel->stats.dpd = false;
 					ph1_ulb->tunnel->stats.frag = false;
-					ph1_ulb->tunnel->stats.natt = false;
+					ph1_ulb->tunnel->stats.natt = IPSEC_NATT_NONE;
 
 					//
 					// update the peer and tunnel objects to use

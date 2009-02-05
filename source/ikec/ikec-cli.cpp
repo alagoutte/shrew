@@ -200,7 +200,12 @@ void _IKEC_CLI::show_stats()
 	static char state_disconnecting[] = "disconnecting";
 
 	static char xport_ike_esp[] = "IKE | ESP";
-	static char xport_ike_natt[] = "NAT-T / IKE | ESP";
+	static char xport_ike_natt_cisco[] = "IKE | CISCO-UDP / ESP";
+	static char xport_ike_natt_v00[] = "NAT-T v00 / IKE | ESP";
+	static char xport_ike_natt_v01[] = "NAT-T v01 / IKE | ESP";
+	static char xport_ike_natt_v02[] = "NAT-T v02 / IKE | ESP";
+	static char xport_ike_natt_v03[] = "NAT-T v03 / IKE | ESP";
+	static char xport_ike_natt_rfc[] = "NAT-T RFC / IKE | ESP";
 
 	static char enabled[] = "enabled";
 	static char disabled[] = "disabled";
@@ -229,10 +234,36 @@ void _IKEC_CLI::show_stats()
 			break;
 	}
 
-	if( !stats.natt )
-		xport = xport_ike_esp;
-	else
-		xport = xport_ike_natt;
+	switch( stats.natt )
+	{
+		case IPSEC_NATT_NONE:
+			xport = xport_ike_esp;
+			break;
+
+		case IPSEC_NATT_CISCO:
+			xport = xport_ike_natt_cisco;
+			break;
+
+		case IPSEC_NATT_V00:
+			xport = xport_ike_natt_v00;
+			break;
+
+		case IPSEC_NATT_V01:
+			xport = xport_ike_natt_v01;
+			break;
+
+		case IPSEC_NATT_V02:
+			xport = xport_ike_natt_v02;
+			break;
+
+		case IPSEC_NATT_V03:
+			xport = xport_ike_natt_v03;
+			break;
+
+		case IPSEC_NATT_RFC:
+			xport = xport_ike_natt_rfc;
+			break;
+	}
 
 	if( !stats.frag )
 		frag = disabled;

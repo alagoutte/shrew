@@ -852,6 +852,7 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 								switch( ph2->tunnel->natt_version )
 								{
 									case IPSEC_NATT_NONE:
+									case IPSEC_NATT_CISCO:
 										proposal.encap = ISAKMP_ENCAP_TUNNEL;
 										break;
 
@@ -872,6 +873,7 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 								switch( ph2->tunnel->natt_version )
 								{
 									case IPSEC_NATT_NONE:
+									case IPSEC_NATT_CISCO:
 										proposal.encap = ISAKMP_ENCAP_TRANSPORT;
 										break;
 
