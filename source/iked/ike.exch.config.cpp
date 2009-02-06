@@ -2345,6 +2345,10 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 							cfg->tunnel->natt_version = IPSEC_NATT_CISCO;
 							cfg->tunnel->peer->natt_port = htons( attr->bdata );
 
+							cfg->tunnel->inc( true );
+							cfg->tunnel->event_natt.delay = cfg->tunnel->peer->natt_rate * 1000;
+							ith_timer.add( &cfg->tunnel->event_natt );
+
 							log.txt( LLOG_INFO, "ii : switching nat-t to cisco-udp\n" );
 						}
 					}

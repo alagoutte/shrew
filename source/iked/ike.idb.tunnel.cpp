@@ -217,26 +217,39 @@ bool _ITH_EVENT_TUNNATT::func()
 	}
 
 	//
+	// determine natt ports
+	//
+
+	IKE_SADDR saddr_l = ph1->tunnel->saddr_l;
+	IKE_SADDR saddr_r = ph1->tunnel->saddr_r;
+
+	if( ph1->tunnel->natt_version == IPSEC_NATT_CISCO )
+	{
+		iked.socket_lookup_port( saddr_l, true );
+		set_sockport( saddr_r.saddr, ph1->tunnel->peer->natt_port );
+	}
+
+	//
 	// encapsulate natt keep alive
 	//
 
 	PACKET_UDP packet_udp;
 
 	packet_udp.write(
-		ph1->tunnel->saddr_l.saddr4.sin_port,
-		ph1->tunnel->saddr_r.saddr4.sin_port );
+		saddr_l.saddr4.sin_port,
+		saddr_r.saddr4.sin_port );
 
 	packet_udp.add_byte( 0xff );
 
 	packet_udp.done(
-		ph1->tunnel->saddr_l.saddr4.sin_addr,
-		ph1->tunnel->saddr_r.saddr4.sin_addr );
+		saddr_l.saddr4.sin_addr,
+		saddr_r.saddr4.sin_addr );
 
 	PACKET_IP packet_ip;
 
 	packet_ip.write(
-		ph1->tunnel->saddr_l.saddr4.sin_addr,
-		ph1->tunnel->saddr_r.saddr4.sin_addr,
+		saddr_l.saddr4.sin_addr,
+		saddr_r.saddr4.sin_addr,
 		iked.ident++,
 		PROTO_IP_UDP );
 
@@ -251,8 +264,8 @@ bool _ITH_EVENT_TUNNATT::func()
 	char txtaddr_l[ LIBIKE_MAX_TEXTADDR ];
 	char txtaddr_r[ LIBIKE_MAX_TEXTADDR ];
 
-	iked.text_addr( txtaddr_l, &ph1->tunnel->saddr_l, true );
-	iked.text_addr( txtaddr_r, &ph1->tunnel->saddr_r, true );
+	iked.text_addr( txtaddr_l, &saddr_l, true );
+	iked.text_addr( txtaddr_r, &saddr_r, true );
 
 	iked.log.txt( LLOG_DEBUG,
 		"-> : send NAT-T:KEEP-ALIVE packet %s -> %s\n",
