@@ -291,9 +291,10 @@ long _IKED::packet_ike_xmit( IDB_PH1 * ph1, IDB_XCH * xch, PACKET_IKE & packet, 
 					packet_ip,
 					&header );
 
-	if( result == LIBIKE_SOCKET )
+	if( result != LIBIKE_OK )
 	{
-		ph1->tunnel->close = XCH_FAILED_NETWORK;
+		ph1->status( XCH_STATUS_DEAD, XCH_FAILED_NETWORK, 0 );
+		xch->status( XCH_STATUS_DEAD, XCH_FAILED_NETWORK, 0 );
 		return LIBIKE_FAILED;
 	}
 
