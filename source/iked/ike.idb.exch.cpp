@@ -81,6 +81,7 @@ _IDB_XCH::_IDB_XCH()
 	//
 
 	event_resend.xch = this;
+	event_resend.attempt = 0;
 }
 
 _IDB_XCH::~_IDB_XCH()
@@ -189,9 +190,11 @@ bool _IDB_XCH::resend()
 	iked.text_addr( txtaddr_r, &tunnel->saddr_r, true );
 
 	iked.log.txt( LLOG_INFO,
-		"-> : resend %i %s packet(s) %s -> %s\n",
+		"-> : resend %i %s packet(s) [%i/%i] %s -> %s\n",
 		count,
 		name(),
+		event_resend.attempt,
+		iked.retry_count,
 		txtaddr_l,
 		txtaddr_r );
 
