@@ -2055,8 +2055,8 @@ long _IKED::phase1_add_vend( IDB_PH1 * ph1, PACKET_IKE & packet, uint8_t next )
 	{
 		BDATA vend_unity2;
 		vend_unity2.add( vend_unity );	// base vendor id
-		vend_unity2.add( 0x02, 1 );		// major version
-		vend_unity2.add( 0x04, 1 );		// minor version
+		vend_unity2.add( 0x01, 1 );		// major version
+		vend_unity2.add( 0x00, 1 );		// minor version
 
 		payload_add_vend( packet, vend_unity2, vendpld( vid_count, next ) );
 		log.txt( LLOG_INFO, "ii : local is CISCO UNITY compatible\n" );
