@@ -45,10 +45,16 @@
 // opsenssl version compatibility
 //
 
-#if OPENSSL_VERSION_NUMBER < 0x0090800fL
-# define X509CONST
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+# define D2I_X509_CONST const
 #else
-# define X509CONST const
+# define D2I_X509_CONST 
+#endif
+
+#if OPENSSL_VERSION_NUMBER >= 0x00907000L
+# define D2I_RSA_CONST const
+#else
+# define D2I_RSA_CONST 
 #endif
 
 bool cert_2_bdata( BDATA & cert, X509 * x509 )
@@ -65,7 +71,7 @@ bool cert_2_bdata( BDATA & cert, X509 * x509 )
 
 bool bdata_2_cert( X509 ** x509, BDATA & cert )
 {
-	X509CONST unsigned char * cert_buff = cert.buff();
+	D2I_X509_CONST unsigned char * cert_buff = cert.buff();
 
 	*x509 = d2i_X509( NULL, &cert_buff, ( long ) cert.size() );
 	if( *x509 == NULL )
@@ -88,7 +94,7 @@ bool prvkey_rsa_2_bdata( BDATA & prvkey, RSA * rsa )
 
 bool bdata_2_prvkey_rsa( RSA ** rsa, BDATA & prvkey )
 {
-	X509CONST unsigned char * prvkey_buff = prvkey.buff();
+	D2I_RSA_CONST unsigned char * prvkey_buff = prvkey.buff();
 
 	*rsa = d2i_RSAPrivateKey( NULL, &prvkey_buff, ( long ) prvkey.size() );
 	if( *rsa == NULL )
@@ -111,7 +117,7 @@ bool pubkey_rsa_2_bdata( BDATA & pubkey, RSA * rsa )
 
 bool bdata_2_pubkey_rsa( RSA ** rsa, BDATA & pubkey )
 {
-	X509CONST unsigned char * pubkey_buff = pubkey.buff();
+	D2I_RSA_CONST unsigned char * pubkey_buff = pubkey.buff();
 
 	*rsa = d2i_RSAPublicKey( NULL, &pubkey_buff, ( long ) pubkey.size() );
 	if( *rsa == NULL )
@@ -294,7 +300,7 @@ bool _IKED::asn1_text( BDATA & data, BDATA & text )
 {
 	X509_NAME * x509_name = NULL;
 
-	X509CONST unsigned char * buff = data.buff();
+	D2I_X509_CONST unsigned char * buff = data.buff();
 	if( buff == NULL )
 		return false;
 
