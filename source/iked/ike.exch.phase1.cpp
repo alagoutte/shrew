@@ -1012,11 +1012,55 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							packet.write( ph1->cookies, ISAKMP_PAYLOAD_HASH, ph1->exchange, ISAKMP_FLAG_ENCRYPT );
 
 							//
+							// cisco hybrid authentication uses an extra
+							// notification payload containing the group
+							// password hash
+							//
+
+							uint8_t nextp = ph1->natt_pldtype;
+							if( ph1->tunnel->xconf.opts & IPSEC_OPTS_CISCO_GRP )
+								nextp = ISAKMP_PAYLOAD_NOTIFY;
+
+							//
 							// add payloads
 							//
 
 							phase1_gen_hash_i( ph1, ph1->hash_l );
-							payload_add_hash( packet, ph1->hash_l, ph1->natt_pldtype );
+							payload_add_hash( packet, ph1->hash_l, nextp );
+
+							//
+							// optionally add unity notification payload
+							//
+
+							if( ph1->tunnel->xconf.opts & IPSEC_OPTS_CISCO_GRP )
+							{
+								//
+								// generate the group password hash
+								//
+
+								BDATA psk_hash;
+								psk_hash.size( ph1->hash_size );
+
+								HMAC_CTX ctx_prf;
+								HMAC_Init( &ctx_prf, ph1->skeyid.buff(), ( int ) ph1->skeyid.size(), ph1->evp_hash );
+								HMAC_Update( &ctx_prf, ph1->tunnel->peer->psk.buff(), ph1->tunnel->peer->psk.size() );
+								HMAC_Final( &ctx_prf, psk_hash.buff(), NULL );
+								HMAC_cleanup( &ctx_prf );
+
+								//
+								// add the notification payload
+								//
+
+								IKE_NOTIFY notify;
+								notify.type = ISAKMP_PAYLOAD_NOTIFY;
+								notify.code = ISAKMP_N_UNITY_GROUP_HASH;
+								notify.doi = ISAKMP_DOI_IPSEC;
+								notify.proto = ISAKMP_PROTO_ISAKMP;
+								notify.spi.size = sizeof( ph1->cookies );
+								notify.spi.cookies = ph1->cookies;
+								notify.data.set( psk_hash );
+								payload_add_notify( packet, &notify, ph1->natt_pldtype );
+							}
 
 							//
 							// optionally add nat discovery hash payloads
