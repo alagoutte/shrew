@@ -45,10 +45,11 @@
 #define EXCH_MAIN_MODE		1
 
 #define AUTH_HYBRID_RSA_XAUTH	0
-#define AUTH_MUTUAL_RSA_XAUTH	1
-#define AUTH_MUTUAL_PSK_XAUTH	2
-#define AUTH_MUTUAL_RSA		3
-#define AUTH_MUTUAL_PSK		4
+#define AUTH_HYBRID_GRP_XAUTH	1
+#define AUTH_MUTUAL_RSA_XAUTH	2
+#define AUTH_MUTUAL_PSK_XAUTH	3
+#define AUTH_MUTUAL_RSA		4
+#define AUTH_MUTUAL_PSK		5
 
 #define AMTXT_VIRTUAL	"Use a virtual adapter and assigned address"
 #define AMTXT_RANDOM	"Use a virtual adapter and random address"
@@ -536,17 +537,20 @@ bool ikeaSite::load( CONFIG & config )
 		if( !strcmp( "hybrid-rsa-xauth", text ) )
 			comboBoxAuthMethod->setCurrentIndex( 0 );
 
-		if( !strcmp( "mutual-rsa-xauth", text ) )
+		if( !strcmp( "hybrid-grp-xauth", text ) )
 			comboBoxAuthMethod->setCurrentIndex( 1 );
 
-		if( !strcmp( "mutual-psk-xauth", text ) )
+		if( !strcmp( "mutual-rsa-xauth", text ) )
 			comboBoxAuthMethod->setCurrentIndex( 2 );
 
-		if( !strcmp( "mutual-rsa", text ) )
+		if( !strcmp( "mutual-psk-xauth", text ) )
 			comboBoxAuthMethod->setCurrentIndex( 3 );
 
-		if( !strcmp( "mutual-psk", text ) )
+		if( !strcmp( "mutual-rsa", text ) )
 			comboBoxAuthMethod->setCurrentIndex( 4 );
+
+		if( !strcmp( "mutual-psk", text ) )
+			comboBoxAuthMethod->setCurrentIndex( 5 );
 	}
 
 	// local identity type
@@ -1048,6 +1052,11 @@ bool ikeaSite::save( CONFIG & config )
 		case AUTH_HYBRID_RSA_XAUTH:
 			config.set_string( "auth-method",
 				"hybrid-rsa-xauth", strlen( "hybrid-rsa-xauth" ) );
+			break;
+
+		case AUTH_HYBRID_GRP_XAUTH:
+			config.set_string( "auth-method",
+				"hybrid-rsa-xauth", strlen( "hybrid-grp-xauth" ) );
 			break;
 
 		case AUTH_MUTUAL_RSA_XAUTH:
@@ -1759,6 +1768,7 @@ void ikeaSite::updateAuthentication()
 	switch( auth )
 	{
 		case AUTH_HYBRID_RSA_XAUTH:
+		case AUTH_HYBRID_GRP_XAUTH:
 		{
 			comboBoxLocalIDType->clear();
 
@@ -1841,6 +1851,7 @@ void ikeaSite::updateAuthentication()
 	switch( auth )
 	{
 		case AUTH_HYBRID_RSA_XAUTH:
+		case AUTH_HYBRID_GRP_XAUTH:
 		case AUTH_MUTUAL_RSA_XAUTH:
 		case AUTH_MUTUAL_RSA:
 		{
@@ -1918,6 +1929,22 @@ void ikeaSite::updateAuthentication()
 			toolButtonPKeyFile->setEnabled( false );
 			
 			lineEditPSK->setEnabled( false );
+
+			break;
+		}
+
+		case AUTH_HYBRID_GRP_XAUTH:
+		{
+			lineEditCAFile->setEnabled( true );
+			toolButtonCAFile->setEnabled( true );
+			
+			lineEditCertFile->setEnabled( false );
+			toolButtonCertFile->setEnabled( false );
+			
+			lineEditPKeyFile->setEnabled( false );
+			toolButtonPKeyFile->setEnabled( false );
+			
+			lineEditPSK->setEnabled( true );
 
 			break;
 		}

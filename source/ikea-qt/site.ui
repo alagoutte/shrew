@@ -23,7 +23,8 @@
    <string>VPN Site Configuration</string>
   </property>
   <property name="windowIcon" >
-   <iconset resource="ikea.qrc" >:/png/site_mod.png</iconset>
+   <iconset resource="ikea.qrc" >
+    <normaloff>:/png/site_mod.png</normaloff>:/png/site_mod.png</iconset>
   </property>
   <property name="autoFillBackground" >
    <bool>true</bool>
@@ -208,7 +209,7 @@
               <property name="orientation" >
                <enum>Qt::Vertical</enum>
               </property>
-              <property name="sizeHint" >
+              <property name="sizeHint" stdset="0" >
                <size>
                 <width>20</width>
                 <height>40</height>
@@ -254,7 +255,7 @@
               <property name="sizeType" >
                <enum>QSizePolicy::Preferred</enum>
               </property>
-              <property name="sizeHint" >
+              <property name="sizeHint" stdset="0" >
                <size>
                 <width>20</width>
                 <height>20</height>
@@ -376,7 +377,7 @@
          <property name="orientation" >
           <enum>Qt::Vertical</enum>
          </property>
-         <property name="sizeHint" >
+         <property name="sizeHint" stdset="0" >
           <size>
            <width>20</width>
            <height>61</height>
@@ -706,7 +707,7 @@
          <property name="orientation" >
           <enum>Qt::Vertical</enum>
          </property>
-         <property name="sizeHint" >
+         <property name="sizeHint" stdset="0" >
           <size>
            <width>20</width>
            <height>291</height>
@@ -931,7 +932,7 @@
          <property name="orientation" >
           <enum>Qt::Vertical</enum>
          </property>
-         <property name="sizeHint" >
+         <property name="sizeHint" stdset="0" >
           <size>
            <width>20</width>
            <height>40</height>
@@ -963,6 +964,11 @@
            <item>
             <property name="text" >
              <string>Hybrid RSA + XAuth</string>
+            </property>
+           </item>
+           <item>
+            <property name="text" >
+             <string>Hybrid GRP + XAuth</string>
             </property>
            </item>
            <item>
@@ -1070,7 +1076,7 @@
              <property name="orientation" >
               <enum>Qt::Vertical</enum>
              </property>
-             <property name="sizeHint" >
+             <property name="sizeHint" stdset="0" >
               <size>
                <width>20</width>
                <height>40</height>
@@ -1156,7 +1162,7 @@
              <property name="orientation" >
               <enum>Qt::Vertical</enum>
              </property>
-             <property name="sizeHint" >
+             <property name="sizeHint" stdset="0" >
               <size>
                <width>20</width>
                <height>40</height>
@@ -1265,7 +1271,7 @@
              <property name="orientation" >
               <enum>Qt::Vertical</enum>
              </property>
-             <property name="sizeHint" >
+             <property name="sizeHint" stdset="0" >
               <size>
                <width>254</width>
                <height>20</height>
@@ -1282,7 +1288,7 @@
          <property name="orientation" >
           <enum>Qt::Vertical</enum>
          </property>
-         <property name="sizeHint" >
+         <property name="sizeHint" stdset="0" >
           <size>
            <width>278</width>
            <height>16</height>
@@ -1751,7 +1757,7 @@
          <property name="orientation" >
           <enum>Qt::Vertical</enum>
          </property>
-         <property name="sizeHint" >
+         <property name="sizeHint" stdset="0" >
           <size>
            <width>21</width>
            <height>101</height>
@@ -2167,7 +2173,7 @@
          <property name="orientation" >
           <enum>Qt::Vertical</enum>
          </property>
-         <property name="sizeHint" >
+         <property name="sizeHint" stdset="0" >
           <size>
            <width>20</width>
            <height>81</height>
@@ -2292,7 +2298,7 @@
        <property name="sizeType" >
         <enum>QSizePolicy::Expanding</enum>
        </property>
-       <property name="sizeHint" >
+       <property name="sizeHint" stdset="0" >
         <size>
          <width>20</width>
          <height>20</height>

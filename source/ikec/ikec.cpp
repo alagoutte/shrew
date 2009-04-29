@@ -599,6 +599,12 @@ long _IKEC::func( void * )
 	if( !strcmp( "hybrid-rsa-xauth", text ) )
 		proposal_isakmp.auth_id = HYBRID_AUTH_INIT_RSA;
 
+	if( !strcmp( "hybrid-grp-xauth", text ) )
+	{
+		proposal_isakmp.auth_id = HYBRID_AUTH_INIT_RSA;
+		xconf.opts |= IPSEC_OPTS_CISCO_GRP;
+	}
+
 	if( !strcmp( "mutual-rsa-xauth", text ) )
 		proposal_isakmp.auth_id = XAUTH_AUTH_INIT_RSA;
 
@@ -1237,7 +1243,8 @@ long _IKEC::func( void * )
 	}
 
 	if( ( proposal_isakmp.auth_id == XAUTH_AUTH_INIT_PSK ) ||
-		( proposal_isakmp.auth_id == IKE_AUTH_PRESHARED_KEY ) )
+		( proposal_isakmp.auth_id == IKE_AUTH_PRESHARED_KEY ) ||
+		( xconf.opts & IPSEC_OPTS_CISCO_GRP ) )
 	{
 		// mutual preshared key
 
