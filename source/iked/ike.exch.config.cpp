@@ -703,26 +703,38 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 
 					case XAUTH_TYPE_RADIUS_CHAP:
 					{
-						uint8_t id;
-						rand_bytes( &id, 1 );
+						if( !cfg->tunnel->xauth.hash.size() )
+						{
+							cfg->attr_add_v( XAUTH_USER_PASSWORD,
+								cfg->tunnel->xauth.pass.buff(),
+								cfg->tunnel->xauth.pass.size() );
 
-						BDATA rslt;
-						rslt.add( &id, sizeof( id ) );
-						rslt.add( 0, MD5_DIGEST_LENGTH );
+							log.txt( LLOG_INFO,
+								"ii : - standard xauth basic password ( no chap challenge received )\n" );
+						}
+						else
+						{
+							uint8_t id;
+							rand_bytes( &id, 1 );
 
-						MD5_CTX ctx;
-						MD5_Init( &ctx );
-						MD5_Update( &ctx, &id, sizeof( id ) );
-						MD5_Update( &ctx, cfg->tunnel->xauth.pass.buff(), cfg->tunnel->xauth.pass.size() );
-						MD5_Update( &ctx, cfg->tunnel->xauth.hash.buff(), cfg->tunnel->xauth.hash.size() );
-						MD5_Final( rslt.buff() + sizeof( id ), &ctx );
+							BDATA rslt;
+							rslt.add( &id, sizeof( id ) );
+							rslt.add( 0, MD5_DIGEST_LENGTH );
 
-						cfg->attr_add_v( XAUTH_USER_PASSWORD,
-							rslt.buff(),
-							rslt.size() );
+							MD5_CTX ctx;
+							MD5_Init( &ctx );
+							MD5_Update( &ctx, &id, sizeof( id ) );
+							MD5_Update( &ctx, cfg->tunnel->xauth.pass.buff(), cfg->tunnel->xauth.pass.size() );
+							MD5_Update( &ctx, cfg->tunnel->xauth.hash.buff(), cfg->tunnel->xauth.hash.size() );
+							MD5_Final( rslt.buff() + sizeof( id ), &ctx );
 
-						log.txt( LLOG_INFO,
-							"ii : - standard xauth chap password\n" );
+							cfg->attr_add_v( XAUTH_USER_PASSWORD,
+								rslt.buff(),
+								rslt.size() );
+
+							log.txt( LLOG_INFO,
+								"ii : - standard xauth chap password\n" );
+						}
 
 						break;
 					}
@@ -770,26 +782,38 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 
 					case XAUTH_TYPE_RADIUS_CHAP:
 					{
-						uint8_t id;
-						rand_bytes( &id, 1 );
+						if( !cfg->tunnel->xauth.hash.size() )
+						{
+							cfg->attr_add_v( XAUTH_USER_PASSWORD,
+								cfg->tunnel->xauth.pass.buff(),
+								cfg->tunnel->xauth.pass.size() );
 
-						BDATA rslt;
-						rslt.add( &id, sizeof( id ) );
-						rslt.add( 0, MD5_DIGEST_LENGTH );
+							log.txt( LLOG_INFO,
+								"ii : - checkpoint xauth basic password ( no chap challenge received )\n" );
+						}
+						else
+						{
+							uint8_t id;
+							rand_bytes( &id, 1 );
 
-						MD5_CTX ctx;
-						MD5_Init( &ctx );
-						MD5_Update( &ctx, &id, sizeof( id ) );
-						MD5_Update( &ctx, cfg->tunnel->xauth.pass.buff(), cfg->tunnel->xauth.pass.size() );
-						MD5_Update( &ctx, cfg->tunnel->xauth.hash.buff(), cfg->tunnel->xauth.hash.size() );
-						MD5_Final( rslt.buff() + sizeof( id ), &ctx );
+							BDATA rslt;
+							rslt.add( &id, sizeof( id ) );
+							rslt.add( 0, MD5_DIGEST_LENGTH );
 
-						cfg->attr_add_v( XAUTH_USER_PASSWORD,
-							rslt.buff(),
-							rslt.size() );
+							MD5_CTX ctx;
+							MD5_Init( &ctx );
+							MD5_Update( &ctx, &id, sizeof( id ) );
+							MD5_Update( &ctx, cfg->tunnel->xauth.pass.buff(), cfg->tunnel->xauth.pass.size() );
+							MD5_Update( &ctx, cfg->tunnel->xauth.hash.buff(), cfg->tunnel->xauth.hash.size() );
+							MD5_Final( rslt.buff() + sizeof( id ), &ctx );
 
-						log.txt( LLOG_INFO,
-							"ii : - checkpoint xauth chap password\n" );
+							cfg->attr_add_v( XAUTH_USER_PASSWORD,
+								rslt.buff(),
+								rslt.size() );
+
+							log.txt( LLOG_INFO,
+								"ii : - checkpoint xauth chap password\n" );
+						}
 
 						break;
 					}
