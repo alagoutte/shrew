@@ -79,7 +79,6 @@
 #  include <sys/linker.h>
 # endif
 # include "compat/winstring.h"
-# include "conf.parse.hpp"
 # ifndef SOCKET
 #  define SOCKET int
 # endif
@@ -140,17 +139,10 @@
 #define PATH_DEBUG		"/var/log"
 #define MAX_PATH		1024
 
-// Conf parser definition
-
-#define YY_DECL										\
-	yy::conf_parser::token_type						\
-	yylex( yy::conf_parser::semantic_type * yylval,	\
-	yy::conf_parser::location_type * yylloc,		\
-	IKED & iked )
-
-YY_DECL;
+namespace yy{ class conf_parser; };
 
 #endif
+
 
 //
 // IKED constants
