@@ -141,6 +141,86 @@ unsigned char * _BDATA::buff()
 	return data_buff;
 }
 
+bool _BDATA::hex_encode( bool upper_case )
+{
+	BDATA	hex_temp;
+	size_t	hex_oset = 0;
+
+	while( hex_oset < data_size )
+	{
+		uint8_t temp1 = data_buff[ hex_oset++ ];
+		uint8_t temp2 = temp1 >> 4;
+		uint8_t temp3 = temp1 & 0xf;
+
+		if( temp2 <= 9 )
+			temp2 += 48;
+		else
+		{
+			if( upper_case )
+				temp2 += 55;
+			else
+				temp2 += 87;
+		}
+
+		hex_temp.add( temp2, 1 );
+
+		if( temp3 <= 9 )
+			temp3 += 48;
+		else
+		{
+			if( upper_case )
+				temp3 += 55;
+			else
+				temp3 += 87;
+		}
+
+		hex_temp.add( temp3, 1 );
+	}
+
+	*this = hex_temp;
+
+	return true;
+}
+
+bool _BDATA::hex_decode()
+{
+	BDATA	hex_temp;
+	size_t	hex_oset = 0;
+
+	if( size() & 1 )
+		return false;
+
+	while( hex_oset < data_size )
+	{
+		uint8_t temp1 = data_buff[ hex_oset++ ];
+		uint8_t temp2 = data_buff[ hex_oset++ ];
+
+		if( ( temp1 >= 48 ) && ( temp1 <= 57 ) )
+			temp1 -= 48;
+		if( ( temp1 >= 65 ) && ( temp1 <= 70 ) )
+			temp1 -= 55;
+		if( ( temp1 >= 97 ) && ( temp1 <= 102 ) )
+			temp1 -= 87;
+
+		if( ( temp2 >= 48 ) && ( temp2 <= 57 ) )
+			temp2 -= 48;
+		if( ( temp2 >= 65 ) && ( temp2 <= 70 ) )
+			temp2 -= 55;
+		if( ( temp2 >= 97 ) && ( temp2 <= 102 ) )
+			temp2 -= 87;
+
+		int temp3 = ( temp1 << 4 ) | temp2;
+
+		hex_temp.add( temp3, 1 );
+	}
+
+	hex_temp.size( data_size >> 1 );
+
+	*this = hex_temp;
+
+	return true;
+}
+
 bool _BDATA::base64_encode()
 {
 	BDATA	b64_temp;

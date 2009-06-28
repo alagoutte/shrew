@@ -79,6 +79,9 @@ typedef class DLX _BDATA
 	char *			text();
 	unsigned char *	buff();
 
+	bool	hex_encode( bool upper_case = false );
+	bool	hex_decode();
+
 	bool	base64_encode();
 	bool	base64_decode();
 

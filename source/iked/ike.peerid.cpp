@@ -137,6 +137,9 @@ bool _IKED::gen_ph1id_r( IDB_PH1 * ph1, IKE_PH1ID & ph1id )
 
 	switch( ph1id.type )
 	{
+		case ISAKMP_ID_NONE:
+			break;
+
 		case ISAKMP_ID_ASN1_DN:
 		{
 			if( ph1->tunnel->peer->iddata_r.size() )
@@ -224,7 +227,7 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 	// with our generated peer id
 	//
 
-	if( ids.type != idt.type )
+	if( ( ids.type != idt.type ) &&	( idt.type != ISAKMP_ID_NONE ) )
 	{
 		log.txt( LLOG_ERROR, 
 			"!! : phase1 id type mismatch ( received %s but expected %s )\n",
