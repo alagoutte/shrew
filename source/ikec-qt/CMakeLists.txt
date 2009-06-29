@@ -9,7 +9,7 @@
 
 include_directories(
 	${IKE_SOURCE_DIR}/source/
-	${IKE_SOURCE_DIR}/source/ikea
+	${IKE_SOURCE_DIR}/source/ikec
 	${IKE_SOURCE_DIR}/source/iked
 	${IKE_SOURCE_DIR}/source/libike
 	${IKE_SOURCE_DIR}/source/libidb
@@ -41,7 +41,7 @@ add_executable(
 	main.cpp
 	ikec.cpp
 	root.cpp
-	../ikea-qt/config.cpp
+	../ikec/config.cpp
 	${UIH_FILES}
 	${CXX_FILES}
 	${QRC_FILES} )
@@ -52,6 +52,7 @@ target_link_libraries(
 	ss_idb
 	ss_ith
 	ss_log
+	crypto
 	pthread
 	QtCore
 	QtGui

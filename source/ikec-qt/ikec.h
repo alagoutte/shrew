@@ -55,7 +55,7 @@
 #include <QFileInfo>
 
 #include "libike.h"
-#include "../ikea-qt/config.h"
+#include "../ikec/config.h"
 #include "ui_root.h"
 #include "ui_banner.h"
 #include "ui_filepass.h"

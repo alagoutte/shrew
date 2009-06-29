@@ -325,6 +325,9 @@ void _IKEC::run()
 		return;
 	}
 
+	if( !strcmp( "any", text ) )
+		peer.idtype_r = ISAKMP_ID_NONE;
+
 	if( !strcmp( "asn1dn", text ) )
 		peer.idtype_r = ISAKMP_ID_ASN1_DN;
 

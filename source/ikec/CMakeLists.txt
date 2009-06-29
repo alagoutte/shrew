@@ -34,6 +34,7 @@ target_link_libraries(
 	ss_idb
 	ss_ith
 	ss_log
+	crypto
 	pthread
 	edit )
 

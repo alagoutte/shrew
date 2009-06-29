@@ -9,6 +9,7 @@
 
 include_directories(
 	${IKE_SOURCE_DIR}/source/
+	${IKE_SOURCE_DIR}/source/ikec
 	${IKE_SOURCE_DIR}/source/libidb
 	${IKE_SOURCE_DIR}/source/libith
 	${IKE_SOURCE_DIR}/source/liblog
@@ -36,7 +37,7 @@ qt4_add_resources(
 
 add_executable(
 	ikea-qt
-	config.cpp
+	../ikec/config.cpp
 	ikea.cpp
 	main.cpp
 	root.cpp
@@ -50,6 +51,7 @@ target_link_libraries(
 	ss_idb
 	ss_ith
 	ss_log
+	crypto
 	pthread
 	QtCore
 	QtGui

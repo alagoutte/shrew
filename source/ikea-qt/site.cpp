@@ -56,6 +56,7 @@
 #define AMTXT_DIRECT	"Use an existing adapter and current address"
 
 #define IDTXT_NONE	"No Identity"
+#define IDTXT_ANY	"Any"
 #define IDTXT_ASN1	"ASN.1 Distinguished Name"
 #define IDTXT_FQDN	"Fully Qualified Domain Name"
 #define IDTXT_UFQDN	"User Fully Qualified Domain Name"
@@ -593,6 +594,9 @@ bool ikeaSite::load( CONFIG & config )
 	if( config.get_string( "ident-server-type",
 		text, MAX_CONFSTRING, 0 ) )
 	{
+		if( !strcmp( "any", text ) )
+			combobox_setbytext( IDTXT_ANY, comboBoxRemoteIDType );
+
 		if( !strcmp( "asn1dn", text ) )
 			combobox_setbytext( IDTXT_ASN1, comboBoxRemoteIDType );
 
@@ -1121,6 +1125,10 @@ bool ikeaSite::save( CONFIG & config )
 
 	QString rmtid = comboBoxRemoteIDType->currentText();
 
+	if( !rmtid.compare( IDTXT_ANY ) )
+		config.set_string( "any",
+			"any", strlen( "any" ) );
+
 	if( !rmtid.compare( IDTXT_ASN1 ) )
 		config.set_string( "ident-server-type",
 			"asn1dn", strlen( "asn1dn" ) );
@@ -1342,7 +1350,6 @@ bool ikeaSite::verify()
 	if( lineEditHost->text().length() < 1 )
 		errmsg = "Please enter a valid host name or ip address.";
 
-
 	// local adapter mode
 
 	QString amode = comboBoxAddressMethod->currentText();
@@ -1431,17 +1438,19 @@ bool ikeaSite::verify()
 
 	// check local id data
 
-	if( !comboBoxLocalIDType->currentText().compare( IDTXT_ADDR ) )
-		if( lineEditLocalIDData->isEnabled() )
-			if( lineEditLocalIDData->text().length() < 1 )
-				errmsg = "Please enter valid local ID address data.";
+	bool isaddr_l = ( comboBoxLocalIDType->currentText().compare( IDTXT_ADDR ) == 0 );
+
+	if( isaddr_l && lineEditLocalIDData->isEnabled() )
+		if( lineEditLocalIDData->text().length() < 1 )
+			errmsg = "Please enter valid local ID address data.";
 
 	// check remote id data
 
-	if( !comboBoxRemoteIDType->currentText().compare( IDTXT_ADDR ) )
-		if( lineEditRemoteIDData->isEnabled() )
-			if( lineEditRemoteIDData->text().length() < 1 )
-				errmsg = "Please enter valid remote ID address data.";
+	bool isaddr_r = ( comboBoxRemoteIDType->currentText().compare( IDTXT_ADDR ) == 0 );
+
+	if( isaddr_r && lineEditRemoteIDData->isEnabled() )
+		if( lineEditRemoteIDData->text().length() < 1 )
+			errmsg = "Please enter valid remote ID address data.";
 
 	// check cert authority file
 
@@ -1473,6 +1482,7 @@ bool ikeaSite::verify()
 		if( !treeWidgetPolicies->childCount() )
 			errmsg = "You must specify at least one remote network resource.";
 */
+
 	if( errmsg.length() )
 	{
 		QMessageBox m;
@@ -1486,6 +1496,30 @@ bool ikeaSite::verify()
 
 		return false;
 	}
+
+	if( comboBoxP1Exchange->currentIndex() == EXCH_MAIN_MODE )
+	{
+		if( !isaddr_l || !isaddr_r )
+		{
+			long index = comboBoxAuthMethod->currentIndex();
+
+			if( ( index == AUTH_MUTUAL_PSK_XAUTH ) ||
+				( index == AUTH_MUTUAL_PSK ) )
+			{
+				QMessageBox m;
+
+				m.warning( this,
+					"Site Configuration Warning",
+					"Main mode and Pre-Shared Keys should be used with Address "
+					"ID types. While some gateways require alternate ID types, "
+					"use them with caution.",
+					QMessageBox::Ok,
+					QMessageBox::NoButton,
+					QMessageBox::NoButton );
+			}
+		}
+	}
+	
 
 	// accept the dialog changes
 
@@ -1772,8 +1806,6 @@ void ikeaSite::updateAuthentication()
 		{
 			comboBoxLocalIDType->clear();
 
-			// main or aggressive mode
-
 //			comboBoxLocalIDType->addItem( IDTXT_NONE );
 			comboBoxLocalIDType->addItem( IDTXT_FQDN );
 			comboBoxLocalIDType->addItem( IDTXT_UFQDN );
@@ -1788,24 +1820,11 @@ void ikeaSite::updateAuthentication()
 		{
 			comboBoxLocalIDType->clear();
 
-			if( comboBoxP1Exchange->currentIndex() == EXCH_AGGR_MODE )
-			{
-				// aggressive mode
-
-				comboBoxLocalIDType->addItem( IDTXT_ASN1 );
-				comboBoxLocalIDType->addItem( IDTXT_FQDN );
-				comboBoxLocalIDType->addItem( IDTXT_UFQDN );
-				comboBoxLocalIDType->addItem( IDTXT_ADDR );
-				comboBoxLocalIDType->addItem( IDTXT_KEYID );
-			}
-
-			if( comboBoxP1Exchange->currentIndex() == EXCH_MAIN_MODE )
-			{
-				// main mode
-
-				comboBoxLocalIDType->addItem( IDTXT_ASN1 );
-				comboBoxLocalIDType->addItem( IDTXT_ADDR );
-			}
+			comboBoxLocalIDType->addItem( IDTXT_ASN1 );
+			comboBoxLocalIDType->addItem( IDTXT_FQDN );
+			comboBoxLocalIDType->addItem( IDTXT_UFQDN );
+			comboBoxLocalIDType->addItem( IDTXT_ADDR );
+			comboBoxLocalIDType->addItem( IDTXT_KEYID );
 
 			break;
 		}
@@ -1815,22 +1834,10 @@ void ikeaSite::updateAuthentication()
 		{
 			comboBoxLocalIDType->clear();
 
-			if( comboBoxP1Exchange->currentIndex() == EXCH_AGGR_MODE )
-			{
-				// aggressive mode
-
-				comboBoxLocalIDType->addItem( IDTXT_FQDN );
-				comboBoxLocalIDType->addItem( IDTXT_UFQDN );
-				comboBoxLocalIDType->addItem( IDTXT_ADDR );
-				comboBoxLocalIDType->addItem( IDTXT_KEYID );
-			}
-
-			if( comboBoxP1Exchange->currentIndex() == EXCH_MAIN_MODE )
-			{
-				// main mode
-
-				comboBoxLocalIDType->addItem( IDTXT_ADDR );
-			}
+			comboBoxLocalIDType->addItem( IDTXT_FQDN );
+			comboBoxLocalIDType->addItem( IDTXT_UFQDN );
+			comboBoxLocalIDType->addItem( IDTXT_ADDR );
+			comboBoxLocalIDType->addItem( IDTXT_KEYID );
 
 			break;
 		}
@@ -1857,24 +1864,12 @@ void ikeaSite::updateAuthentication()
 		{
 			comboBoxRemoteIDType->clear();
 
-			if( comboBoxP1Exchange->currentIndex() == EXCH_AGGR_MODE )
-			{
-				// aggressive mode
-
-				comboBoxRemoteIDType->addItem( IDTXT_ASN1 );
-				comboBoxRemoteIDType->addItem( IDTXT_FQDN );
-				comboBoxRemoteIDType->addItem( IDTXT_UFQDN );
-				comboBoxRemoteIDType->addItem( IDTXT_ADDR );
-				comboBoxRemoteIDType->addItem( IDTXT_KEYID );
-			}
-
-			if( comboBoxP1Exchange->currentIndex() == EXCH_MAIN_MODE )
-			{
-				// main mode
-
-				comboBoxRemoteIDType->addItem( IDTXT_ASN1 );
-				comboBoxRemoteIDType->addItem( IDTXT_ADDR );
-			}
+			comboBoxRemoteIDType->addItem( IDTXT_ANY );
+			comboBoxRemoteIDType->addItem( IDTXT_ASN1 );
+			comboBoxRemoteIDType->addItem( IDTXT_FQDN );
+			comboBoxRemoteIDType->addItem( IDTXT_UFQDN );
+			comboBoxRemoteIDType->addItem( IDTXT_ADDR );
+			comboBoxRemoteIDType->addItem( IDTXT_KEYID );
 
 			break;
 		}
@@ -1884,22 +1879,11 @@ void ikeaSite::updateAuthentication()
 		{
 			comboBoxRemoteIDType->clear();
 
-			if( comboBoxP1Exchange->currentIndex() == EXCH_AGGR_MODE )
-			{
-				// aggressive mode
-
-				comboBoxRemoteIDType->addItem( IDTXT_FQDN );
-				comboBoxRemoteIDType->addItem( IDTXT_UFQDN );
-				comboBoxRemoteIDType->addItem( IDTXT_ADDR );
-				comboBoxRemoteIDType->addItem( IDTXT_KEYID );
-			}
-
-			if( comboBoxP1Exchange->currentIndex() == EXCH_MAIN_MODE )
-			{
-				// main mode
-
-				comboBoxRemoteIDType->addItem( IDTXT_ADDR );
-			}
+			comboBoxRemoteIDType->addItem( IDTXT_ANY );
+			comboBoxRemoteIDType->addItem( IDTXT_FQDN );
+			comboBoxRemoteIDType->addItem( IDTXT_UFQDN );
+			comboBoxRemoteIDType->addItem( IDTXT_ADDR );
+			comboBoxRemoteIDType->addItem( IDTXT_KEYID );
 
 			break;
 		}
@@ -2041,6 +2025,14 @@ void ikeaSite::updateLocalID()
 void ikeaSite::updateRemoteID()
 {
 	QString type = comboBoxRemoteIDType->currentText();
+
+	if( !type.compare( IDTXT_ANY ) )
+	{
+		textLabelRemoteIDData->setText( "" );
+		lineEditRemoteIDData->setEnabled( false );
+		checkBoxRemoteIDOption->setHidden( true );
+		return;
+	}
 
 	if( !type.compare( IDTXT_ASN1 ) )
 	{

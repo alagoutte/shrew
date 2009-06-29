@@ -91,6 +91,8 @@ typedef class DLX _CONFIG : private IDB_LIST
 	
 	bool	file_read( const char * path );
 	bool	file_write( const char * path );
+
+	bool	file_import_pcf( const char * path, bool & need_certs );
 	
 	bool		set_id( const char * id );
 	const char *	get_id();

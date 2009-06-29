@@ -1105,6 +1105,11 @@
             <widget class="QComboBox" name="comboBoxRemoteIDType" >
              <item>
               <property name="text" >
+               <string>Any</string>
+              </property>
+             </item>
+             <item>
+              <property name="text" >
                <string>ASN.1 Distinguished Name</string>
               </property>
              </item>

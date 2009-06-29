@@ -309,12 +309,13 @@ void _ikeaRoot::siteImport()
 {
 	// get the input path
 
-        QString types(
-                "Site Configurations files (*.vpn);;"
-                "All files (*)" );
+	QString types(
+		"Shrew Soft VPN file (*.vpn);;"
+		"Cisco PCF file (*.pcf);;"
+		"All files (*)" );
 
 	QString loadPath = QFileDialog::getOpenFileName(
-				this, "Select the VPN Import File",
+				this, "Select the Import File",
 				QDir::homePath(),
 				types );
 
@@ -324,7 +325,13 @@ void _ikeaRoot::siteImport()
 	// load the site config
 
 	CONFIG config;
-	config.file_read( loadPath.toAscii() );
+
+	bool need_certs = false;
+
+	if( !loadPath.contains( ".pcf", Qt::CaseInsensitive ) )
+		config.file_read( loadPath.toAscii() );
+	else
+		config.file_import_pcf( loadPath.toAscii(), need_certs );
 
 	// modify for import
 
@@ -408,6 +415,21 @@ void _ikeaRoot::siteImport()
 	i->setData( Qt::UserRole, fileName );
 	i->setFlags( Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable );
 	i->setSelected( true );
+
+	if( need_certs )
+	{
+		QMessageBox m;
+
+		m.warning( this,
+			"Site Import Warning",
+			"The Cisco site configuration was imported but uses "
+			"an RSA authentication method. You will need to import "
+			"a certificate manually to complete the configuration.",
+			QMessageBox::Ok,
+			QMessageBox::NoButton,
+			QMessageBox::NoButton );
+	}
+
 	listWidgetSites->editItem( i );
 }
 
@@ -426,9 +448,9 @@ void _ikeaRoot::siteExport()
 
 	// get the output path
 
-        QString types(
-                "Site Configurations files (*.vpn);;"
-                "All files (*)" );
+	QString types(
+				"Site Configurations files (*.vpn);;"
+				"All files (*)" );
 
 	QString savePath = QFileDialog::getSaveFileName(
 				this, "Select the VPN Export File",
