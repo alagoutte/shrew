@@ -499,6 +499,7 @@ bool _IKED::config_client_xauth_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 					break;
 
 				case XAUTH_CHALLENGE:
+				case CHKPT_CHALLENGE:
 					cfg->xstate |= CSTATE_RECV_XPASS;
 					log.txt( LLOG_INFO, "ii : - xauth challenge\n" );
 					if( !attr->basic )
@@ -770,7 +771,7 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 				switch( cfg->tunnel->xauth.type )
 				{
 					case XAUTH_TYPE_GENERIC:
-
+					{
 						cfg->attr_add_v( CHKPT_USER_PASSWORD,
 							cfg->tunnel->xauth.pass.buff(),
 							cfg->tunnel->xauth.pass.size() );
@@ -779,41 +780,30 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 							"ii : - checkpoint xauth basic password\n" );
 
 						break;
+					}
 
 					case XAUTH_TYPE_RADIUS_CHAP:
 					{
-						if( !cfg->tunnel->xauth.hash.size() )
-						{
-							cfg->attr_add_v( XAUTH_USER_PASSWORD,
-								cfg->tunnel->xauth.pass.buff(),
-								cfg->tunnel->xauth.pass.size() );
+						uint8_t id;
+						rand_bytes( &id, 1 );
 
-							log.txt( LLOG_INFO,
-								"ii : - checkpoint xauth basic password ( no chap challenge received )\n" );
-						}
-						else
-						{
-							uint8_t id;
-							rand_bytes( &id, 1 );
+						BDATA rslt;
+						rslt.add( &id, sizeof( id ) );
+						rslt.add( 0, MD5_DIGEST_LENGTH );
 
-							BDATA rslt;
-							rslt.add( &id, sizeof( id ) );
-							rslt.add( 0, MD5_DIGEST_LENGTH );
+						MD5_CTX ctx;
+						MD5_Init( &ctx );
+						MD5_Update( &ctx, &id, sizeof( id ) );
+						MD5_Update( &ctx, cfg->tunnel->xauth.pass.buff(), cfg->tunnel->xauth.pass.size() );
+						MD5_Update( &ctx, cfg->tunnel->xauth.hash.buff(), cfg->tunnel->xauth.hash.size() );
+						MD5_Final( rslt.buff() + sizeof( id ), &ctx );
 
-							MD5_CTX ctx;
-							MD5_Init( &ctx );
-							MD5_Update( &ctx, &id, sizeof( id ) );
-							MD5_Update( &ctx, cfg->tunnel->xauth.pass.buff(), cfg->tunnel->xauth.pass.size() );
-							MD5_Update( &ctx, cfg->tunnel->xauth.hash.buff(), cfg->tunnel->xauth.hash.size() );
-							MD5_Final( rslt.buff() + sizeof( id ), &ctx );
+						cfg->attr_add_v( CHKPT_USER_PASSWORD,
+							rslt.buff(),
+							rslt.size() );
 
-							cfg->attr_add_v( XAUTH_USER_PASSWORD,
-								rslt.buff(),
-								rslt.size() );
-
-							log.txt( LLOG_INFO,
-								"ii : - checkpoint xauth chap password\n" );
-						}
+						log.txt( LLOG_INFO,
+							"ii : - checkpoint xauth chap password\n" );
 
 						break;
 					}
@@ -848,6 +838,15 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 			return true;
 
 		cfg->mtype = ISAKMP_CFG_ACK;
+
+		//
+		// add the status attribute
+		//
+
+		if( !ph1->vendopts_r.flag.chkpt ) 
+			cfg->attr_add_b( XAUTH_STATUS, 1 );
+		else
+			cfg->attr_add_b( CHKPT_STATUS, 1 );
 
 		//
 		// send config packet

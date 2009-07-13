@@ -1301,17 +1301,15 @@ long _IKED::payload_get_cert( PACKET_IKE & packet, uint8_t & type, BDATA & cert 
 	}
 
 	packet.get_byte( type );				// certificate type
-	packet.get( cert, size );				// certificate data
 
 	//
 	// check certificate type
 	//
 
-//	if( type != ISAKMP_CERT_X509_SIG )
-//	{
-//		packet.notify = ISAKMP_N_CERT_TYPE_UNSUPPORTED;
-//		return LIBIKE_DECODE;
-//	}
+	if( type == ISAKMP_CERT_X509_SIG )
+		packet.get( cert, size );			// certificate data
+	else
+		packet.get_null( size );			// certificate data
 
 	return LIBIKE_OK;
 }

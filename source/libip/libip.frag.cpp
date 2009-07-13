@@ -257,10 +257,7 @@ bool _IPFRAG::defrag_add( PACKET_IP & fragment, unsigned short & id )
 	IPFRAG_ENTRY * entry = NULL;
 
 	if( free.count() > 0 )
-	{
 		entry = static_cast<IPFRAG_ENTRY*>( free.del_entry( 0 ) );
-		entry->packet.size( 0 );
-	}
 	else
 	{
 		long count = used.count() + free.count();
@@ -276,7 +273,7 @@ bool _IPFRAG::defrag_add( PACKET_IP & fragment, unsigned short & id )
 	//
 
 	entry->expire = current + IPFRAG_MAX_LIFETIME;
-	entry->packet.add( fragment );
+	entry->packet.set( fragment );
 
 	//
 	// obtain the packet ip header and record
@@ -300,7 +297,8 @@ bool _IPFRAG::defrag_chk( unsigned short ident )
 	// of ip fragments for a given ip identity
 	//
 
-	unsigned short offset = 0;
+	unsigned long next_offset = 0;
+	unsigned long temp_offset = 0;
 
 	while( true )
 	{
@@ -309,9 +307,8 @@ bool _IPFRAG::defrag_chk( unsigned short ident )
 		// on the fragmentation offset
 		//
 
-		long count = used.count();
 		long index = 0;
-		bool found = false;
+		long count = used.count();
 
 		for( ; index < count; index++ )
 		{
@@ -340,40 +337,33 @@ bool _IPFRAG::defrag_chk( unsigned short ident )
 			//
 
 			unsigned short flags = ntohs( ip_header->flags );
+			temp_offset = ( flags & IP_MASK_OFFSET ) << 3;
 
-			if( offset == ( ( flags & IP_MASK_OFFSET ) << 3 ) )
-			{
-				//
-				// we found at least one fragment
-				// during this sweep of our queue
-				//
+			if( temp_offset != next_offset )
+				continue;
 
-				found = true;
+			//
+			// calculate this fragments data size
+			// to our running total and determine
+			// if this was the last fragment in
+			// our packet
+			//
 
-				//
-				// calculate this fragments data size
-				// to our running total and determine
-				// if this was the last fragment in
-				// our packet
-				//
+			next_offset += ntohs( ip_header->size ) - ip_hdsize;
 
-				offset += ntohs( ip_header->size ) - ip_hdsize;
+			//
+			// complete packet is available
+			//
 
-				//
-				// complete packet is available
-				//
-
-				if( !( flags & IP_FLAG_MORE ) )
-					return true;
-			}
+			if( !( flags & IP_FLAG_MORE ) )
+				return true;
 		}
 
 		//
-		// make sure we matched at least
-		// one packet fragment
+		// next fragment not found
 		//
 
-		if( !found )
+		if( index >= count )
 			break;
 	}
 
@@ -398,7 +388,8 @@ bool _IPFRAG::defrag_get( unsigned short ident, PACKET_IP & packet )
 	// ip packet identity
 	//
 
-	unsigned short offset = 0;
+	unsigned long next_offset = 0;
+	unsigned long temp_offset = 0;
 
 	while( true )
 	{
@@ -409,7 +400,6 @@ bool _IPFRAG::defrag_get( unsigned short ident, PACKET_IP & packet )
 
 		long count = used.count();
 		long index = 0;
-		bool found = false;
 
 		for( ; index < count; index++ )
 		{
@@ -438,103 +428,84 @@ bool _IPFRAG::defrag_get( unsigned short ident, PACKET_IP & packet )
 			//
 
 			unsigned short flags = ntohs( ip_header->flags );
+			temp_offset = ( flags & IP_MASK_OFFSET ) << 3;
 
-			if( offset == ( ( flags & IP_MASK_OFFSET ) << 3 ) )
+			if( temp_offset != next_offset )
+				continue;
+
+			//
+			// if this is the first fragment,
+			// build a new ip header based on
+			// first fragments ip header info
+			//
+
+			if( next_offset == 0 )
 			{
-				//
-				// if this is the first fragment,
-				// build a new ip header based on
-				// first fragments ip header info
-				//
+				in_addr addr_s;
+				in_addr addr_d;
 
-				if( offset == 0 )
-				{
-					in_addr addr_s;
-					in_addr addr_d;
+				addr_s.s_addr = ip_header->ip_src;
+				addr_d.s_addr = ip_header->ip_dst;
 
-					addr_s.s_addr = ip_header->ip_src;
-					addr_d.s_addr = ip_header->ip_dst;
+				packet.write(
+					addr_s,
+					addr_d,
+					ip_header->ident,
+					ip_header->protocol );
+			}
 
-					packet.write(
-						addr_s,
-						addr_d,
-						ip_header->ident,
-						ip_header->protocol );
-				}
+			//
+			// correct for our change in list
+			// index and item count
+			//
 
-				//
-				// we found at least one fragment
-				// during this sweep of our queue
-				//
+			index--;
+			count--;
 
-				found = true;
+			//
+			// calculate this fragments data size
+			// and add it to our complete packet
+			//
 
-				//
-				// correct for our change in list
-				// index and item count
-				//
+			unsigned short fragsize = ntohs( ip_header->size ) - ip_hdsize;
 
-				index--;
-				count--;
+			packet.add(
+				entry->packet.buff() + ip_hdsize,
+				fragsize );
 
-				//
-				// calculate this fragments data size
-				// and add it to our complete packet
-				//
+			//
+			// add this fragments data size to our
+			// running offset
+			//
+			
+			next_offset += fragsize;
 
-				unsigned short fragsize = ntohs( ip_header->size ) - ip_hdsize;
+			//
+			// remove the fragment from our list
+			// and free its resources
+			//
 
-				packet.add(
-					entry->packet.buff() + ip_hdsize,
-					fragsize );
+			used.del_entry( entry );
+			free.add_entry( entry );
 
-				//
-				// add this fragments data size to our
-				// running offset
-				//
-				
-				offset += ntohs( ip_header->size ) - ip_hdsize;
+			//
+			// complete packet is available
+			//
 
-				//
-				// remove the fragment from our list
-				// and free its resources
-				//
-
-				used.del_entry( entry );
-				free.add_entry( entry );
-
-				//
-				// determine if this was the last
-				// fragment in our full packet
-				//
-
-				if( !( flags & IP_FLAG_MORE ) )
-				{
-					//
-					// finished building the packet
-					//
-
-					packet.done();
-
-					return true;
-				}
+			if( !( flags & IP_FLAG_MORE ) )
+			{
+				packet.done();
+				return true;
 			}
 		}
 
 		//
-		// make sure we matched at least
-		// one packet fragment
+		// we shouldn't ever get here but break
+		// if we are missing a packet fragment
 		//
 
-		if( !found )
-		{
-			//
-			// we shouldn't ever get here but break
-			// if we are missing a packet fragment
-			//
-
+		if( index >= count )
 			break;
-		}
 	}
 
 	//

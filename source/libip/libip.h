@@ -198,9 +198,9 @@
 
 #define TCPDUMP_MAGIC			0xa1b2c3d4
 
-#define RAWNET_BUFF_SIZE		1024 * 4
+#define RAWNET_BUFF_SIZE		8192
 
-#define IPFRAG_MAX_LIFETIME		5
+#define IPFRAG_MAX_LIFETIME		8
 #define IPFRAG_MAX_FRAGCOUNT	64
 
 #pragma pack( 1 )
