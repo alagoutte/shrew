@@ -243,9 +243,11 @@ bool _IKED::cmp_ph1id( IKE_PH1ID & idt, IKE_PH1ID & ids, bool natt )
 
 	bool match = true;
 
-	switch( ids.type )
+	switch( idt.type )
 	{
 		case ISAKMP_ID_NONE:
+			log.txt( LLOG_INFO, 
+				"ii : phase1 id target is any\n" );
 			break;
 
 		case ISAKMP_ID_IPV4_ADDR:
