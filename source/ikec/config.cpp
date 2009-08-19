@@ -592,7 +592,7 @@ bool read_line_pcf( FILE * fp, BDATA & name, BDATA & data )
 	while( line.get( &next, 1 ) )
 	{
 		if( !name.size() )
-			if( next == ' ' )
+			if( ( next == ' ' ) || ( next == '!' ) )
 				continue;
 
 		if( next == '=' )
@@ -683,7 +683,7 @@ bool _CONFIG::file_import_pcf( const char * path, bool & need_certs )
 
 	set_string( "phase2-transform", "auto", 5 );
 	set_string( "phase2-hmac", "auto", 5 );
-	set_number( "phase2-pfsgroup", -1 );
+	set_number( "phase2-pfsgroup", 0 );
 
 	set_string( "ipcomp-transform", "disabled", 9 );
 
