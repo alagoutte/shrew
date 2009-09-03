@@ -843,10 +843,13 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 		// add the status attribute
 		//
 
-		if( !ph1->vendopts_r.flag.chkpt ) 
-			cfg->attr_add_b( XAUTH_STATUS, 1 );
-		else
+		if( ph1->vendopts_r.flag.chkpt ) 
 			cfg->attr_add_b( CHKPT_STATUS, 1 );
+
+//		if( !ph1->vendopts_r.flag.chkpt ) 
+//			cfg->attr_add_b( XAUTH_STATUS, 1 );
+//		else
+//			cfg->attr_add_b( CHKPT_STATUS, 1 );
 
 		//
 		// send config packet
