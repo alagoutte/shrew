@@ -498,6 +498,11 @@ bool _IKED::config_client_xauth_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 					log.txt( LLOG_INFO, "ii : - xauth password\n" );
 					break;
 
+				case XAUTH_PASSCODE:
+					cfg->xstate |= CSTATE_RECV_XPASS | CSTATE_USE_PASSCODE;
+					log.txt( LLOG_INFO, "ii : - xauth passcode\n" );
+					break;
+
 				case XAUTH_CHALLENGE:
 				case CHKPT_CHALLENGE:
 					cfg->xstate |= CSTATE_RECV_XPASS;
@@ -685,7 +690,6 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 					"ii : - standard xauth username\n" );
 			}
 
-
 			if(  ( cfg->xstate & CSTATE_RECV_XPASS ) &&
 				!( cfg->xstate & CSTATE_SENT_XPASS ) )
 			{
@@ -693,12 +697,24 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 				{
 					case XAUTH_TYPE_GENERIC:
 
-						cfg->attr_add_v( XAUTH_USER_PASSWORD,
-							cfg->tunnel->xauth.pass.buff(),
-							cfg->tunnel->xauth.pass.size() );
+						if( !( cfg->xstate & CSTATE_USE_PASSCODE ) )
+						{
+							cfg->attr_add_v( XAUTH_USER_PASSWORD,
+								cfg->tunnel->xauth.pass.buff(),
+								cfg->tunnel->xauth.pass.size() );
 
-						log.txt( LLOG_INFO,
-							"ii : - standard xauth basic password\n" );
+							log.txt( LLOG_INFO,
+								"ii : - standard xauth password\n" );
+						}
+						else
+						{
+							cfg->attr_add_v( XAUTH_PASSCODE,
+								cfg->tunnel->xauth.pass.buff(),
+								cfg->tunnel->xauth.pass.size() );
+
+							log.txt( LLOG_INFO,
+								"ii : - standard xauth passcode\n" );
+						}
 
 						break;
 
@@ -711,7 +727,7 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 								cfg->tunnel->xauth.pass.size() );
 
 							log.txt( LLOG_INFO,
-								"ii : - standard xauth basic password ( no chap challenge received )\n" );
+								"ii : - standard xauth password ( no chap challenge received )\n" );
 						}
 						else
 						{
@@ -777,7 +793,7 @@ bool _IKED::config_client_xauth_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 							cfg->tunnel->xauth.pass.size() );
 
 						log.txt( LLOG_INFO,
-							"ii : - checkpoint xauth basic password\n" );
+							"ii : - checkpoint xauth password\n" );
 
 						break;
 					}

@@ -262,6 +262,7 @@ namespace yy{ class conf_parser; };
 #define CSTATE_SENT_XCONF		0x000000080
 #define CSTATE_RECV_ACK			0x000000100
 #define CSTATE_SENT_ACK			0x000000200
+#define CSTATE_USE_PASSCODE		0x800000000
 
 #define LSTATE_CHKPROP			0x000000001		// proposal verified
 #define LSTATE_CHKHASH			0x000000002		// hash verified
