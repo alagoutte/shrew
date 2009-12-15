@@ -223,24 +223,22 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	}
 
 	//
-	// if we will be forcing all traffic
-	// via this tunnel, add none policies
-	// to ensure we will still communicate
-	// with our peer
+	// add NONE policies to ensure we will
+	// still communicate with our peer for
+	// the case where IPSEC policies exist
+	// that encrypt traffic between client
+	// and gateway endpoint addresses
 	//
 
-	if( tunnel->force_all )
-	{
-		memset( &id1, 0, sizeof( id1 ) );
-		id1.type = ISAKMP_ID_IPV4_ADDR;
-		id1.addr1 = tunnel->saddr_l.saddr4.sin_addr;
+	memset( &id1, 0, sizeof( id1 ) );
+	id1.type = ISAKMP_ID_IPV4_ADDR;
+	id1.addr1 = tunnel->saddr_l.saddr4.sin_addr;
 
-		memset( &id2, 0, sizeof( id2 ) );
-		id2.type = ISAKMP_ID_IPV4_ADDR;
-		id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
+	memset( &id2, 0, sizeof( id2 ) );
+	id2.type = ISAKMP_ID_IPV4_ADDR;
+	id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
-		policy_create( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
-	}
+	policy_create( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
 
 	//
 	// build the client id
@@ -330,24 +328,21 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	}
 
 	//
-	// if we added none policies, remove
-	// them now
+	// remove our gateway NONE policies
 	//
 
+	memset( &id1, 0, sizeof( id1 ) );
+	id1.type = ISAKMP_ID_IPV4_ADDR;
+	id1.addr1 = tunnel->saddr_l.saddr4.sin_addr;
+
+	memset( &id2, 0, sizeof( id2 ) );
+	id2.type = ISAKMP_ID_IPV4_ADDR;
+	id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
+
+	policy_remove( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
+
 	if( tunnel->force_all )
-	{
-		memset( &id1, 0, sizeof( id1 ) );
-		id1.type = ISAKMP_ID_IPV4_ADDR;
-		id1.addr1 = tunnel->saddr_l.saddr4.sin_addr;
-
-		memset( &id2, 0, sizeof( id2 ) );
-		id2.type = ISAKMP_ID_IPV4_ADDR;
-		id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
-
-		policy_remove( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
-
 		tunnel->force_all = false;
-	}
 
 	return true;
 }

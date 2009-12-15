@@ -1626,6 +1626,21 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 
 	if( vendopts.flag.unity )
 	{
+		cfg->attr_add_v( APPLICATION_VERSION,
+			UNITY_APP_VERSION_STRING,
+			strlen( UNITY_APP_VERSION_STRING ) );
+
+		log.txt( LLOG_DEBUG,
+			"ii : - Application Version = %s\n",
+			UNITY_APP_VERSION_STRING );
+
+		cfg->attr_add_v( UNITY_FW_TYPE,
+			unity_fwtype.buff(),
+			unity_fwtype.size() );
+
+		log.txt( LLOG_DEBUG,
+			"ii : - Firewall Type = CISCO-UNKNOWN\n" );
+
 		if( setmask & IPSEC_OPTS_DOMAIN )
 		{
 			if( nullmask & IPSEC_OPTS_DOMAIN )

@@ -147,6 +147,9 @@ _IKED::_IKED()
 	unsigned char chkpt[] = VEND_CHKPT;
 	vend_chkpt.set( chkpt, sizeof( chkpt ) );
 
+	unsigned char fwtype[] = UNITY_FWTYPE;
+	unity_fwtype.set( fwtype, sizeof( fwtype ) );
+
 	dump_decrypt = false;
 	dump_encrypt = false;
 

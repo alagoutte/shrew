@@ -403,6 +403,12 @@
 
 // unity configuration attributes
 
+#ifdef WIN32
+#define UNITY_APP_VERSION_STRING	"Cisco Systems VPN Client 4.8.01.0300:WinNT"
+#else
+#define UNITY_APP_VERSION_STRING	"Cisco Systems VPN Client 4.8.01.0640:Linux"
+#endif
+
 #define UNITY_BANNER				28672	// variable
 #define UNITY_SAVE_PASSWD			28673	// basic
 #define UNITY_DEF_DOMAIN			28674	// variable
