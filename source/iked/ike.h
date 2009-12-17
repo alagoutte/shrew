@@ -406,7 +406,7 @@
 #ifdef WIN32
 #define UNITY_APP_VERSION_STRING	"Cisco Systems VPN Client 4.8.01.0300:WinNT"
 #else
-#define UNITY_APP_VERSION_STRING	"Cisco Systems VPN Client 4.8.01.0640:Linux"
+#define UNITY_APP_VERSION_STRING	"Cisco Systems VPN Client 4.8.01 (0640):Linux"
 #endif
 
 #define UNITY_BANNER				28672	// variable
