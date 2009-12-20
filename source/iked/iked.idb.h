@@ -827,7 +827,7 @@ typedef class _IDB_CFG : public IDB_XCH
 	IKE_ATTR *	attr_get( long index );
 	bool		attr_has( unsigned short atype );
 	bool		attr_add_b( unsigned short atype, unsigned short adata );
-	bool		attr_add_v( unsigned short atype, void * vdata, size_t size );
+	bool		attr_add_v( unsigned short atype, const void * vdata, size_t size );
 
 	long		attr_count();						// get attribute count
 	void		attr_reset();						// reset attribute list

@@ -2094,7 +2094,8 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 			{
 				if( attr->vdata.size() )
 				{
-					BDATA appver =  attr->vdata;
+					BDATA appver;
+					appver = attr->vdata;
 					appver.add( "", 1 );
 
 					log.txt( LLOG_DEBUG,
