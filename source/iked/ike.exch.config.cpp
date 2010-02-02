@@ -321,7 +321,7 @@ long _IKED::process_config_recv( IDB_PH1 * ph1, PACKET_IKE & packet, unsigned ch
 
 		if( cfg->tunnel->peer->xconf_mode == CONFIG_MODE_PUSH )
 			if( !( cfg->xstate & CSTATE_RECV_XCONF ) )
-				if( !config_client_xconf_pull_recv( cfg, ph1 ) )
+				if( !config_client_xconf_push_recv( cfg, ph1 ) )
 					break;
 
 		//
