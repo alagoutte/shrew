@@ -706,12 +706,20 @@ bool _CONFIG::file_import_pcf( const char * path, bool & need_certs )
 	//
 
 	long auth_type = 1;
+	bool idtype_set = false;
 
 	BDATA	name;
 	BDATA	data;
 
 	while( read_line_pcf( fp, name, data ) )
 	{
+ 		//
+		// Skip invalid name or value lengths
+		//
+
+		if( ( name.size() <= 1 ) || ( data.size() <= 1 ) )
+			continue;
+
 		//
 		// Convert the appropriate values
 		//
@@ -749,6 +757,7 @@ bool _CONFIG::file_import_pcf( const char * path, bool & need_certs )
 
 		if( !strcasecmp( name.text(), "GroupPwd" ) && data.size() )
 		{
+			idtype_set = true;
 			data.size( data.size() - 1 );
 			if( !data.hex_decode() )
 				goto parse_fail;
@@ -841,6 +850,29 @@ bool _CONFIG::file_import_pcf( const char * path, bool & need_certs )
 
 		if( !strcasecmp( name.text(), "Username" ) && data.size() )
 			set_string( "client-saved-username", data.text(), data.size() );
+	}
+
+	//
+	// add local identity type for pcf
+	// files without a GroupName line
+	//
+
+	if( !idtype_set )
+	{
+		switch( auth_type )
+		{
+			case 1:	// mutual-psk-xauth
+				set_string( "ident-client-type", "address", 6 );
+				break;
+
+			case 3: // mutual-rsa-xauth
+			case 5: // hybrid-grp-xauth
+				set_string( "ident-client-type", "asn1dn", 6 );
+				break;
+
+			default:
+				goto parse_fail;
+		}
 	}
 
 	fclose( fp );

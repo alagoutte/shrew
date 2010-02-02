@@ -244,11 +244,13 @@ typedef class _ikeaTopology : public QDialog, public Ui::ikeaTopology
 	{
 		setupUi( this );
 
-		connect( buttonOk, SIGNAL( clicked() ), this, SLOT( accept() ) );
+		connect( buttonOk, SIGNAL( clicked() ), this, SLOT( verify() ) );
 		connect( buttonCancel, SIGNAL( clicked() ), this, SLOT( reject() ) );
 	}
 
 	private slots:
+
+	bool verify();
 
 }ikeaTopology;
 

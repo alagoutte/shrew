@@ -42,6 +42,7 @@ add_executable(
 	main.cpp
 	root.cpp
 	site.cpp
+	topology.cpp
 	${UIH_FILES}
 	${CXX_FILES}
 	${QRC_FILES} )
