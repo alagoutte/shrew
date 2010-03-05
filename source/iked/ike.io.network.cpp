@@ -71,6 +71,7 @@ long _IKED::loop_ike_nwork()
 		{
 			log.txt( LLOG_ERROR, "!! : hard socket error\n" );
 			socket_done();
+			Sleep( 1000 );
 			continue;
 		}
 

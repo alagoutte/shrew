@@ -1228,6 +1228,7 @@ long _ITH_IPCS::inbound( const char * path, IPCCONN & ipcconn )
 			result = IPCERR_WAKEUP;
 			break;
 
+		case ERROR_GEN_FAILURE:
 		case ERROR_BROKEN_PIPE:
 		case ERROR_INVALID_HANDLE:
 			result = IPCERR_CLOSED;
