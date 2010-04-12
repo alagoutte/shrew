@@ -40,8 +40,8 @@ qt4_add_resources(
 add_executable(
 	qikea
 	../ikec/config.cpp
-	main.cpp
 	ikea.cpp
+	main.cpp
 	root.cpp
 	site.cpp
 	topology.cpp

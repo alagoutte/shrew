@@ -40,8 +40,8 @@ qt4_add_resources(
 
 add_executable(
 	qikec
-	main.cpp
 	ikec.cpp
+	main.cpp
 	root.cpp
 	../ikec/config.cpp
 	${UIH_FILES}
