@@ -29,8 +29,16 @@ set_target_properties(
 	VERSION ${RELVER}
 	SOVERSION ${RELVER} )
 
-# install support
+if( APPLE )
+
+	set_property(
+		TARGET ss_ith
+		PROPERTY FRAMEWORK ON )
+
+endif( APPLE )
 
 install(
         TARGETS ss_ith
-        LIBRARY DESTINATION lib )
+        LIBRARY DESTINATION lib
+		FRAMEWORK DESTINATION "/Library/Frameworks" )
+

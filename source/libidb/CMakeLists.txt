@@ -28,8 +28,15 @@ set_target_properties(
 	VERSION ${RELVER}
 	SOVERSION ${RELVER} )
 
-# install support
+if( APPLE )
+
+	set_property(
+		TARGET ss_idb
+		PROPERTY FRAMEWORK ON )
+
+endif( APPLE )
 
 install(
 	TARGETS ss_idb
-	LIBRARY DESTINATION lib )
+	LIBRARY DESTINATION lib
+	FRAMEWORK DESTINATION "/Library/Frameworks" )

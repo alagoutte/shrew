@@ -58,11 +58,50 @@ target_link_libraries(
 	pthread
 	${QT_LIBRARIES} )
 
-# install support
+if( APPLE )
+
+	set_property(
+		TARGET ikea-qt
+		PROPERTY MACOSX_BUNDLE ON )
+
+	set(
+		MACOSX_BUNDLE_BUNDLE_NAME
+		"Shrew Soft VPN Access Manager" )
+
+	set(
+		MACOSX_BUNDLE_GUI_IDENTIFIER
+		"net.shrew.vpn.ikea" )
+
+	set(
+		MACOSX_BUNDLE_ICON_FILE
+		"ikea.png" )
+
+	set(
+		MACOSX_BUNDLE_LONG_VERSION_STRING
+		${RELVER} )
+
+	set(
+		MACOSX_BUNDLE_SHORT_VERSION_STRING
+		${RELVER} )
+
+	add_custom_target(
+		ikea-qt-bundle-resources
+		COMMAND mkdir -p
+			${CMAKE_CURRENT_BINARY_DIR}/ikea-qt.app/Contents/Resources
+		COMMAND cp
+			${CMAKE_CURRENT_BINARY_DIR}/png/${MACOSX_BUNDLE_ICON_FILE}
+			${CMAKE_CURRENT_BINARY_DIR}/ikea-qt.app/Contents/Resources/${MACOSX_BUNDLE_ICON_FILE} )
+
+	add_dependencies(
+		ikea-qt
+		ProjectName ikea-qt-bundle-resources )
+
+endif( APPLE )
 
 install(
 	TARGETS ikea-qt
-	RUNTIME	DESTINATION bin )
+	RUNTIME	DESTINATION bin
+	BUNDLE DESTINATION "/Applications" )
 
 install(
 	FILES ikea-qt.1
