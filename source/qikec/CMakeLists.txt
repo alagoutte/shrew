@@ -39,7 +39,7 @@ qt4_add_resources(
 	ikec.qrc )
 
 add_executable(
-	ikec-qt
+	qikec
 	main.cpp
 	ikec.cpp
 	root.cpp
@@ -49,7 +49,7 @@ add_executable(
 	${QRC_FILES} )
 
 target_link_libraries(
-	ikec-qt
+	qikec
 	ss_ike
 	ss_idb
 	ss_ith
@@ -61,7 +61,7 @@ target_link_libraries(
 if( APPLE )
 
 	set_property(
-		TARGET ikec-qt
+		TARGET qikec
 		PROPERTY MACOSX_BUNDLE ON )
 
 	set(
@@ -85,24 +85,24 @@ if( APPLE )
 		${RELVER} )
 
 	add_custom_target(
-		ikec-qt-bundle-resources
+		qikec-bundle-resources
 		COMMAND mkdir -p
-			${CMAKE_CURRENT_BINARY_DIR}/ikec-qt.app/Contents/Resources
+			${CMAKE_CURRENT_BINARY_DIR}/qikec.app/Contents/Resources
 		COMMAND cp
 			${CMAKE_CURRENT_BINARY_DIR}/png/${MACOSX_BUNDLE_ICON_FILE}
-			${CMAKE_CURRENT_BINARY_DIR}/ikec-qt.app/Contents/Resources/${MACOSX_BUNDLE_ICON_FILE} )
+			${CMAKE_CURRENT_BINARY_DIR}/qikec.app/Contents/Resources/${MACOSX_BUNDLE_ICON_FILE} )
 
 	add_dependencies(
-		ikec-qt
-		ProjectName ikec-qt-bundle-resources )
+		qikec
+		ProjectName qikec-bundle-resources )
 
 endif( APPLE )
 
 install(
-	TARGETS ikec-qt
+	TARGETS qikec
 	RUNTIME	DESTINATION bin
 	BUNDLE DESTINATION "/Applications" )
 
 install(
-	FILES ikec-qt.1
+	FILES qikec.1
 	DESTINATION ${PATH_MAN}/man1 )

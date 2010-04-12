@@ -441,8 +441,8 @@ if( QTGUI )
 		STATUS 
 		"Enabled Client QT GUI support ..." )
 
-	add_subdirectory( source/ikea-qt )
-	add_subdirectory( source/ikec-qt )
+	add_subdirectory( source/qikea )
+	add_subdirectory( source/qikec )
 
 endif( QTGUI )
 

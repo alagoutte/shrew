@@ -38,10 +38,10 @@ qt4_add_resources(
 	ikea.qrc )
 
 add_executable(
-	ikea-qt
+	qikea
 	../ikec/config.cpp
-	ikea.cpp
 	main.cpp
+	ikea.cpp
 	root.cpp
 	site.cpp
 	topology.cpp
@@ -50,7 +50,7 @@ add_executable(
 	${QRC_FILES} )
 
 target_link_libraries(
-	ikea-qt
+	qikea
 	ss_idb
 	ss_ith
 	ss_log
@@ -61,7 +61,7 @@ target_link_libraries(
 if( APPLE )
 
 	set_property(
-		TARGET ikea-qt
+		TARGET qikea
 		PROPERTY MACOSX_BUNDLE ON )
 
 	set(
@@ -85,24 +85,24 @@ if( APPLE )
 		${RELVER} )
 
 	add_custom_target(
-		ikea-qt-bundle-resources
+		qikea-bundle-resources
 		COMMAND mkdir -p
-			${CMAKE_CURRENT_BINARY_DIR}/ikea-qt.app/Contents/Resources
+			${CMAKE_CURRENT_BINARY_DIR}/qikea.app/Contents/Resources
 		COMMAND cp
 			${CMAKE_CURRENT_BINARY_DIR}/png/${MACOSX_BUNDLE_ICON_FILE}
-			${CMAKE_CURRENT_BINARY_DIR}/ikea-qt.app/Contents/Resources/${MACOSX_BUNDLE_ICON_FILE} )
+			${CMAKE_CURRENT_BINARY_DIR}/qikea.app/Contents/Resources/${MACOSX_BUNDLE_ICON_FILE} )
 
 	add_dependencies(
-		ikea-qt
-		ProjectName ikea-qt-bundle-resources )
+		qikea
+		ProjectName qikea-bundle-resources )
 
 endif( APPLE )
 
 install(
-	TARGETS ikea-qt
+	TARGETS qikea
 	RUNTIME	DESTINATION bin
 	BUNDLE DESTINATION "/Applications" )
 
 install(
-	FILES ikea-qt.1
+	FILES qikea.1
 	DESTINATION ${PATH_MAN}/man1 )
