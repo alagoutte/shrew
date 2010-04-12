@@ -73,7 +73,11 @@
 #  include <sys/param.h>
 #  include <sys/socket.h>
 #  include <net/if.h>
-#  include <net/if_tap.h>
+#  ifndef __APPLE__
+#   include <net/if_tap.h>
+#  else
+#   include "compat/tun_ioctls.h"
+#  endif
 # endif
 # ifdef __FreeBSD__
 #  include <sys/linker.h>

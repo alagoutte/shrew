@@ -24,6 +24,10 @@ add_library(
 	libip.queue.cpp
 	libip.route.cpp )
 
+target_link_libraries(
+	ss_ip
+	ss_idb )
+
 set_target_properties(
 	ss_ip
 	PROPERTIES

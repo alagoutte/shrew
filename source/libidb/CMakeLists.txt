@@ -18,6 +18,11 @@ add_library(
 	libidb.cpp
 	base64.cpp )
 
+target_link_libraries(
+	ss_idb
+	ss_ith
+	ss_log )
+
 set_target_properties(
 	ss_idb PROPERTIES
 	VERSION ${RELVER}

@@ -73,9 +73,16 @@ target_link_libraries(
 	ss_ip
 	ss_log
 	ss_pfk
-	crypt
 	crypto
 	pthread )
+
+if( !APPLE )
+
+target_link_libraries(
+	iked
+	crypt )
+
+endif( !APPLE )
 
 # LDAP support option
 

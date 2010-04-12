@@ -1530,6 +1530,7 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 			}
 
 #ifdef OPT_NATT
+# ifndef __APPLE__
 
 			switch( proposal->encap )
 			{
@@ -1565,7 +1566,32 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 				}
 			}
 
-#endif
+# else // __APPLE__
+
+			switch( proposal->encap )
+			{
+				case ISAKMP_ENCAP_TUNNEL:
+					if( ph2->tunnel->natt_version == IPSEC_NATT_CISCO )
+						sainfo.sa.flags |= SADB_X_EXT_NATT;
+					break;
+
+				case ISAKMP_ENCAP_VXX_UDP_TUNNEL:
+				case ISAKMP_ENCAP_RFC_UDP_TUNNEL:
+				case ISAKMP_ENCAP_VXX_UDP_TRANSPORT:
+				case ISAKMP_ENCAP_RFC_UDP_TRANSPORT:
+					sainfo.sa.flags |= SADB_X_EXT_NATT;
+					break;
+			}
+
+			if( sainfo.sa.flags & SADB_X_EXT_NATT )
+			{
+				sainfo.sa.flags |= SADB_X_EXT_NATT_KEEPALIVE;
+				get_sockport( saddr_l.saddr, sainfo.sa.natt_port );
+				sainfo.sa.natt_port = ntohs( sainfo.sa.natt_port );
+			}
+
+# endif // __APPLE__
+#endif // OPT_NATT
 
 			break;
 		}
@@ -1724,9 +1750,16 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 		"ii : - akey = %i bits\n"
 		"ii : - hard = %i\n"
 		"ii : - soft = %i\n"
+#ifdef OPT_NATT
+# ifndef __APPLE__
 		"ii : - natt = %s\n"
 		"ii : - nsrc = %i\n"
 		"ii : - ndst = %i\n",
+# else
+		"ii : - natt = %s\n"
+		"ii : - port = %i\n",
+# endif // __APPLE__
+#endif // OPT_NATT
 		ntohl( sainfo.sa.spi ),
 		txtid_src,
 		txtid_dst,
@@ -1736,9 +1769,16 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 		sainfo.akey.length * 8,
 		long( sainfo.ltime_hard.addtime ),
 		long( sainfo.ltime_soft.addtime ),
+#ifdef OPT_NATT
+# ifndef __APPLE__
 		pfki.name( NAME_NTTYPE, sainfo.natt.type ),
 		ntohs( sainfo.natt.port_src ),
 		ntohs( sainfo.natt.port_dst ) );
+# else
+		pfki.name( NAME_NTTYPE, UDP_ENCAP_ESPINUDP ),
+		ntohs( sainfo.sa.natt_port ) );
+# endif // __APPLE__
+#endif // OPT_NATT
 
 	pfki.send_update( sainfo );
 

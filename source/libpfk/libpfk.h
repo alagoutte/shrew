@@ -111,7 +111,7 @@
 # define SADB_X_EALG_CAST128CBC	6
 #endif
 
-#ifndef __FreeBSD__
+# ifndef __FreeBSD__
 
 // Linux and NetBSD compat
 
@@ -130,9 +130,57 @@
 #define PFKEY_ADDR_SADDR(ext) \
         ((struct sockaddr *)((caddr_t)(ext) + sizeof(struct sadb_address)))
 
+# endif	// __FreeBSD__
+
+# ifdef __APPLE__
+
+# endif // __APPLE__
+
+#endif	// UNIX
+
+//
+// these socket options are required for NAT-T
+// but not always defined in userland headers
+//
+
+#ifdef OPT_NATT
+
+#ifndef SOL_UDP
+#define SOL_UDP 17
 #endif
 
+#ifndef UDP_ENCAP
+#define UDP_ENCAP 100
 #endif
+
+#ifndef UDP_ENCAP_ESPINUDP_NON_IKE
+#define UDP_ENCAP_ESPINUDP_NON_IKE 1
+#endif
+
+#ifndef UDP_ENCAP_ESPINUDP
+#define UDP_ENCAP_ESPINUDP 2
+#endif
+
+#ifdef __APPLE__
+
+#define SADB_X_EXT_NATT				2
+#define SADB_X_EXT_NATT_KEEPALIVE	4
+
+struct sadb_sa_natt
+{
+	struct sadb_sa	sa;
+	u_int16_t		sadb_sa_natt_port;
+	u_int16_t		sadb_reserved0;
+	u_int32_t		sadb_reserved1;
+};
+
+#endif
+
+#endif // OPT_NATT
+
+//
+// common to all platforms
+//
 
 #include <stdio.h>
 #include "export.h"
@@ -161,6 +209,12 @@ typedef struct _PFKI_SA
 	u_int8_t	auth;
 	u_int8_t	encrypt;
 	u_int32_t	flags;
+
+#if defined( OPT_NATT ) && defined( __APPLE__ )
+
+	u_int16_t	natt_port;
+
+#endif
 
 }PFKI_SA;
 
@@ -218,6 +272,8 @@ typedef struct _PFKI_SP
 
 }PFKI_SP;
 
+#if defined( OPT_NATT ) && !defined( __APPLE__ )
+
 typedef struct _PFKI_NATT
 {
 	u_int8_t	type;
@@ -226,6 +282,8 @@ typedef struct _PFKI_NATT
 	u_int16_t	fraglen;
 
 }PFKI_NATT;
+
+#endif
 
 typedef struct _PFKI_SAINFO
 {
@@ -243,8 +301,13 @@ typedef struct _PFKI_SAINFO
 	PFKI_LTIME	ltime_soft;
 	PFKI_KEY	ekey;
 	PFKI_KEY	akey;
-	PFKI_NATT	natt;
 	PFKI_RANGE	range;
+
+#if defined( OPT_NATT ) && !defined( __APPLE__ )
+
+	PFKI_NATT	natt;
+
+#endif
 
 }PFKI_SAINFO;
 
@@ -323,8 +386,13 @@ typedef class DLX _PFKI  : private _ITH_IPCC, public IDB_ENTRY
 	long	read_key_e( PFKI_MSG & msg, PFKI_KEY & ekey );
 	long	read_address_src( PFKI_MSG & msg, PFKI_ADDR & addr );
 	long	read_address_dst( PFKI_MSG & msg, PFKI_ADDR & addr );
-	long	read_natt( PFKI_MSG & msg, PFKI_NATT & natt );
 	long	read_policy( PFKI_MSG & msg, PFKI_SPINFO & spinfo );
+
+#if defined( OPT_NATT ) && !defined( __APPLE__ )
+
+	long	read_natt( PFKI_MSG & msg, PFKI_NATT & natt );
+
+#endif
 
 	const char *	name( long type, long value );
 

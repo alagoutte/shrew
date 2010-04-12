@@ -943,7 +943,16 @@ long _PFKI::send_sainfo( u_int8_t sadb_msg_type, PFKI_SAINFO & sainfo, bool serv
 {
 	PFKI_MSG msg;
 
+#if defined( OPT_NATT ) && defined( __APPLE__ )
+
+	sadb_sa_natt * xsa;
+
+#else
+
 	sadb_sa * xsa;
+
+#endif
+
 	sadb_x_sa2 * xsa2;
 	sadb_address *xas, *xad;
 	sadb_lifetime *xlh, *xls, *xlc;
@@ -971,6 +980,23 @@ long _PFKI::send_sainfo( u_int8_t sadb_msg_type, PFKI_SAINFO & sainfo, bool serv
 			if( ( sadb_msg_type == SADB_GETSPI ) && !serv )
 				break;
 
+#if defined( OPT_NATT ) && defined( __APPLE__ )
+
+			result = buff_add_ext( msg, ( sadb_ext ** ) &xsa, sizeof( sadb_sa_natt ) );
+			if( result != IPCERR_OK )
+				return result;
+
+			xsa->sa.sadb_sa_exttype = SADB_EXT_SA;
+			xsa->sa.sadb_sa_spi = sainfo.sa.spi;
+			xsa->sa.sadb_sa_replay = sainfo.sa.replay;
+			xsa->sa.sadb_sa_state = sainfo.sa.state;
+			xsa->sa.sadb_sa_auth = sainfo.sa.auth;
+			xsa->sa.sadb_sa_encrypt = sainfo.sa.encrypt;
+			xsa->sa.sadb_sa_flags = sainfo.sa.flags;
+			xsa->sadb_sa_natt_port = sainfo.sa.natt_port;
+
+#else
+
 			result = buff_add_ext( msg, ( sadb_ext ** ) &xsa, sizeof( sadb_sa ) );
 			if( result != IPCERR_OK )
 				return result;
@@ -982,6 +1008,8 @@ long _PFKI::send_sainfo( u_int8_t sadb_msg_type, PFKI_SAINFO & sainfo, bool serv
 			xsa->sadb_sa_auth = sainfo.sa.auth;
 			xsa->sadb_sa_encrypt = sainfo.sa.encrypt;
 			xsa->sadb_sa_flags = sainfo.sa.flags;
+
+#endif
 
 			break;
 	}
@@ -1184,7 +1212,7 @@ long _PFKI::send_sainfo( u_int8_t sadb_msg_type, PFKI_SAINFO & sainfo, bool serv
 			break;
 	}
 
-#ifdef OPT_NATT
+#if defined( OPT_NATT ) && !defined( __APPLE__ )
 
 	//
 	// natt extension
@@ -1591,10 +1619,12 @@ long _PFKI::read_address_dst( PFKI_MSG & msg, PFKI_ADDR & addr )
 	return IPCERR_OK;
 }
 
+#ifndef __APPLE__
+
 long _PFKI::read_natt( PFKI_MSG & msg, PFKI_NATT & natt )
 {
 
-#ifdef OPT_NATT
+# ifdef OPT_NATT
 
 	sadb_x_nat_t_type * xnt;
 	sadb_x_nat_t_port * xnps, * xnpd;
@@ -1621,13 +1651,15 @@ long _PFKI::read_natt( PFKI_MSG & msg, PFKI_NATT & natt )
 
 	return IPCERR_OK;
 
-#else
+# else
 
 	return IPCERR_FAILED;
 
-#endif
+# endif // OPT_NATT
 
 }
+
+#endif // __APPLE__
 
 long _PFKI::read_policy( PFKI_MSG & msg, PFKI_SPINFO & spinfo )
 {

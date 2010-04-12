@@ -21,6 +21,11 @@ add_library(
 	ss_ike SHARED
 	libike.cpp )
 
+target_link_libraries(
+	ss_ike
+	ss_idb
+	ss_ith )
+
 set_target_properties(
 	ss_ike PROPERTIES
 	VERSION ${RELVER}

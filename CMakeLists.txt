@@ -60,6 +60,16 @@ set(
 	/usr )
 
 #
+# Apple OSX Target Constants
+#
+
+if( APPLE )
+	set(
+		CMAKE_OSX_ARCHITECTURES
+		"i386" )
+endif( APPLE )
+
+#
 # Path Option Checks
 #
 
@@ -310,24 +320,33 @@ endif( DEBUG )
 
 if( NATT )
 
-	check_c_source_compiles(
-		"
-		#ifdef __linux__
-		# include <inttypes.h>
-		# include <linux/pfkeyv2.h>
-		#else
-		# include <sys/types.h>
-		# include <net/pfkeyv2.h>
-                #endif
+	if( NOT APPLE )
 
-		int main()
-		{
-			struct sadb_x_nat_t_type test;
+		check_c_source_compiles(
+			"
+			#ifdef __linux__
+			# include <inttypes.h>
+			# include <linux/pfkeyv2.h>
+			#else
+			# include <sys/types.h>
+			# include <net/pfkeyv2.h>
+			#endif
 
-			return 0;
-		}
-		"
-		NATT_FOUND )
+			int main()
+			{
+				struct sadb_x_nat_t_type test;
+				return 0;
+			}
+			"
+			NATT_FOUND )
+
+	else( NOT APPLE )
+
+		set(
+			NATT_FOUND
+			TRUE )
+
+	endif( NOT APPLE )
 
 	if( NOT NATT_FOUND )
 
@@ -402,9 +421,11 @@ if( QTGUI )
 
 	add_definitions( -DQT_THREAD_SUPPORT )
 
-	find_package( Qt4 )
+	find_package(
+		Qt4
+		COMPONENTS QtCore QtGui REQUIRED )
 
-	set( QT_USE_QTMAIN 1 )
+#	set( QT_USE_QTMAIN 1 )
 
 	if( NOT QT_QTGUI_FOUND )
 
@@ -419,8 +440,6 @@ if( QTGUI )
 	message(
 		STATUS 
 		"Enabled Client QT GUI support ..." )
-
-	add_definitions( ${QT_DEFINITIONS} )
 
 	add_subdirectory( source/ikea-qt )
 	add_subdirectory( source/ikec-qt )

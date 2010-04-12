@@ -18,6 +18,10 @@ add_library(
 	ss_pfk SHARED
 	libpfk.cpp )
 
+target_link_libraries(
+	ss_pfk
+	ss_idb )
+
 set_target_properties(
 	ss_pfk PROPERTIES
 	VERSION ${RELVER}

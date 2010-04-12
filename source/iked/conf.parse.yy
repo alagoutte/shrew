@@ -816,10 +816,14 @@ peer_line
 	EOS
   |	NATT_MODE FORCE DRAFT
 	{
-#ifdef OPT_NATT
+#if defined( OPT_NATT ) && !defined( __APPLE )
 		peer->natt_mode = IPSEC_NATT_FORCE_DRAFT;
 #else
+# ifndef __APPLE__
 		error( @$, std::string( "iked was compiled without NATT support" ) );
+# else
+		error( @$, std::string( "your platform does not support NAT v00/01" ) );
+# endif
 #endif
 	}
 	EOS

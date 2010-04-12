@@ -19,6 +19,8 @@ link_directories(
 	${IKE_SOURCE_DIR}/source/libip
 	${QT_LIBRARY_DIR} )
 
+include( ${QT_USE_FILE} )
+
 qt4_wrap_ui(
 	UIH_FILES
 	about.ui
@@ -54,8 +56,6 @@ target_link_libraries(
 	ss_log
 	crypto
 	pthread
-	QtCore
-	QtGui
 	${QT_LIBRARIES} )
 
 # install support

@@ -15,6 +15,10 @@ add_library(
 	ss_log SHARED
 	liblog.cpp )
 
+target_link_libraries(
+	ss_log
+	ss_ith )
+
 set_target_properties(
 	ss_log PROPERTIES
 	VERSION ${RELVER}

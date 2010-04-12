@@ -45,10 +45,6 @@
 // UNIX socket code
 //
 
-#ifndef SOL_UDP
-#define SOL_UDP 17
-#endif
-
 long _IKED::socket_init()
 {
 	return LIBIKE_OK;
@@ -161,7 +157,7 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool natt )
 		return LIBIKE_SOCKET;
 	}
 
-#ifdef OPT_NATT
+#if defined( OPT_NATT ) && !defined( __APPLE__ )
 
 	if( natt )
 	{
@@ -506,7 +502,7 @@ bool _IKED::vnet_get( VNET_ADAPTER ** adapter )
 	if( !*adapter )
 		return false;
 
-#ifdef __FreeBSD__
+#if defined( __FreeBSD__ ) || defined( __APPLE__ )
 
 	// find existing device
 
