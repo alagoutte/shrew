@@ -10,7 +10,7 @@
                 <string>-F</string>
         </array>
 	<key>RunAtLoad</key>
-	<false/>
+	<true/>
 	<key>KeepAlive</key>
 	<false/>
 	<key>UserName</key>

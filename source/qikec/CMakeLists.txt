@@ -7,12 +7,6 @@
 #        : Copyright 2007, Shrew Soft Inc
 #
 
-set( APPNAME qikec )
-
-if( APPLE )
-	set( APPNAME "Shrew Soft VPN Connect" )
-endif( APPLE )
-
 include_directories(
 	${IKE_SOURCE_DIR}/source/
 	${IKE_SOURCE_DIR}/source/ikec
@@ -45,7 +39,7 @@ qt4_add_resources(
 	ikec.qrc )
 
 add_executable(
-	${APPNAME}
+	qikec
 	ikec.cpp
 	main.cpp
 	root.cpp
@@ -55,7 +49,7 @@ add_executable(
 	${QRC_FILES} )
 
 target_link_libraries(
-	${APPNAME}
+	qikec
 	ss_ike
 	ss_idb
 	ss_ith
@@ -66,17 +60,13 @@ target_link_libraries(
 
 if( APPLE )
 
-	set_property(
-		TARGET ${APPNAME}
-		PROPERTY MACOSX_BUNDLE ON )
-
 	set(
 		MACOSX_BUNDLE_BUNDLE_NAME
-		${APPNAME} )
+		"Shrew Soft VPN Client Connect" )
 
 	set(
 		MACOSX_BUNDLE_GUI_IDENTIFIER
-		"net.shrew.vpn.ikec" )
+		"net.shrew.vpn.qikec" )
 
 	set(
 		MACOSX_BUNDLE_ICON_FILE
@@ -90,22 +80,30 @@ if( APPLE )
 		MACOSX_BUNDLE_SHORT_VERSION_STRING
 		${RELVER} )
 
+	set_property(
+		TARGET qikec
+		PROPERTY MACOSX_BUNDLE ON )
+
+	set_property(
+		TARGET qikec
+		PROPERTY OUTPUT_NAME ${MACOSX_BUNDLE_BUNDLE_NAME} )
+
 	add_custom_target(
 		qikec-bundle-resources
 		COMMAND mkdir -p
-			${CMAKE_CURRENT_SOURCE_DIR}/${APPNAME}.app/Contents/Resources
+			${CMAKE_CURRENT_SOURCE_DIR}/${MACOSX_BUNDLE_BUNDLE_NAME}.app/Contents/Resources
 		COMMAND cp
 			${CMAKE_CURRENT_SOURCE_DIR}/png/${MACOSX_BUNDLE_ICON_FILE}
-			${CMAKE_CURRENT_SOURCE_DIR}/${APPNAME}.app/Contents/Resources/${MACOSX_BUNDLE_ICON_FILE} )
+			${CMAKE_CURRENT_SOURCE_DIR}/${MACOSX_BUNDLE_BUNDLE_NAME}.app/Contents/Resources/${MACOSX_BUNDLE_ICON_FILE} )
 
 	add_dependencies(
-		${APPNAME}
+		qikec
 		ProjectName qikec-bundle-resources )
 
 endif( APPLE )
 
 install(
-	TARGETS ${APPNAME}
+	TARGETS qikec
 	RUNTIME	DESTINATION bin
 	BUNDLE DESTINATION "/Applications" )
 

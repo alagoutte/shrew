@@ -76,6 +76,7 @@
 #  ifndef __APPLE__
 #   include <net/if_tap.h>
 #  else
+#   include <sys/sysctl.h>
 #   include "compat/tun_ioctls.h"
 #  endif
 # endif

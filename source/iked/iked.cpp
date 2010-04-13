@@ -261,6 +261,21 @@ long _IKED::init( long setlevel )
 	socket_init();
 
 	//
+	// setup natt port on OSX systems
+	//
+
+#ifdef __APPLE__
+
+	int natt_port = LIBIKE_NATT_PORT;
+
+	sysctlbyname(
+		"net.inet.ipsec.esp_port",
+		NULL, NULL,
+		&natt_port, sizeof( natt_port ) );
+
+#endif
+
+	//
 	// default socket initialization
 	//
 
