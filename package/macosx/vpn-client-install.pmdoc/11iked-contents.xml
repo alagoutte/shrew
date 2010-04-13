@@ -1,1 +1,1 @@
-<pkg-contents spec="1.12"><f n="iked.conf.sample" o="mgrooms" g="staff" p="33188" pt="/Users/mgrooms/ike/head/source/iked/iked.conf.sample" m="false" t="file"/></pkg-contents>
+<pkg-contents spec="1.12"><f n="iked.conf.sample" o="root" g="wheel" p="33188" pt="/Users/mgrooms/ike/head/source/iked/iked.conf.sample" m="false" t="file"><mod>group</mod><mod>owner</mod></f></pkg-contents>

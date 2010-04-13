@@ -1,1 +1,1 @@
-<pkg-contents spec="1.12"/>
+<pkg-contents spec="1.12"><f n="Shrew Soft VPN Client Connect.app" o="root" g="admin" p="16877" pt="/Users/mgrooms/ike/head/source/qikec/Shrew Soft VPN Client Connect.app" m="true" t="file"><f n="Contents" o="root" g="admin" p="16877"><f n="Info.plist" o="root" g="admin" p="33188"/><f n="MacOS" o="root" g="admin" p="16877"><f n="Shrew Soft VPN Client Connect" o="root" g="admin" p="33261"/></f><f n="Resources" o="root" g="admin" p="16877"><f n="qikec.icns" o="root" g="admin" p="33188"/></f></f></f></pkg-contents>
