@@ -36,9 +36,17 @@ set_target_properties(
 
 if( APPLE )
 
+	set(
+		MACOSX_BUNDLE_BUNDLE_NAME
+		"ShrewSoftIp" )
+
 	set_property(
 		TARGET ss_ip
 		PROPERTY FRAMEWORK ON )
+
+	set_property(
+		TARGET ss_ip
+		PROPERTY OUTPUT_NAME ${MACOSX_BUNDLE_BUNDLE_NAME} )
 
 endif( APPLE )
 

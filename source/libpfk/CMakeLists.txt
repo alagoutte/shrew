@@ -29,9 +29,17 @@ set_target_properties(
 
 if( APPLE )
 
+	set(
+		MACOSX_BUNDLE_BUNDLE_NAME
+		"ShrewSoftPfkey" )
+
 	set_property(
 		TARGET ss_pfk
 		PROPERTY FRAMEWORK ON )
+
+	set_property(
+		TARGET ss_pfk
+		PROPERTY OUTPUT_NAME ${MACOSX_BUNDLE_BUNDLE_NAME} )
 
 endif( APPLE )
 

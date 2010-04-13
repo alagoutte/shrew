@@ -31,9 +31,17 @@ set_target_properties(
 
 if( APPLE )
 
+	set(
+		MACOSX_BUNDLE_BUNDLE_NAME
+		"ShrewSoftIth" )
+
 	set_property(
 		TARGET ss_ith
 		PROPERTY FRAMEWORK ON )
+
+	set_property(
+		TARGET ss_ith
+		PROPERTY OUTPUT_NAME ${MACOSX_BUNDLE_BUNDLE_NAME} )
 
 endif( APPLE )
 

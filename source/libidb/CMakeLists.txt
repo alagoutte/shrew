@@ -30,9 +30,17 @@ set_target_properties(
 
 if( APPLE )
 
+	set(
+		MACOSX_BUNDLE_BUNDLE_NAME
+		"ShrewSoftIdb" )
+
 	set_property(
 		TARGET ss_idb
 		PROPERTY FRAMEWORK ON )
+
+	set_property(
+		TARGET ss_idb
+		PROPERTY OUTPUT_NAME ${MACOSX_BUNDLE_BUNDLE_NAME} )
 
 endif( APPLE )
 

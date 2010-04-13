@@ -185,12 +185,12 @@ void _ikeaRoot::siteConnect()
 	args << i->text();
 
 	QProcess * proc = new QProcess( this );
-	proc->start( "ikec-qt", args );
+	proc->start( "qikec", args );
 
 #else
 
 	QStringList args;
-	args << "/Applications/Shrew Soft VPN Connect.app";
+	args << "/Applications/Shrew Soft VPN Client Connect.app";
 	args << "--args";
 	args << "-r";
 	args << i->text();

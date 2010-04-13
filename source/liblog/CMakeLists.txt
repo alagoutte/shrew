@@ -26,9 +26,17 @@ set_target_properties(
 
 if( APPLE )
 
+	set(
+		MACOSX_BUNDLE_BUNDLE_NAME
+		"ShrewSoftLog" )
+
 	set_property(
 		TARGET ss_log
 		PROPERTY FRAMEWORK ON )
+
+	set_property(
+		TARGET ss_log
+		PROPERTY OUTPUT_NAME ${MACOSX_BUNDLE_BUNDLE_NAME} )
 
 endif( APPLE )
 

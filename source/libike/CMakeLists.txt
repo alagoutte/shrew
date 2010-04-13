@@ -33,9 +33,17 @@ set_target_properties(
 
 if( APPLE )
 
+	set(
+		MACOSX_BUNDLE_BUNDLE_NAME
+		"ShrewSoftIke" )
+
 	set_property(
 		TARGET ss_ike
 		PROPERTY FRAMEWORK ON )
+
+	set_property(
+		TARGET ss_ike
+		PROPERTY OUTPUT_NAME ${MACOSX_BUNDLE_BUNDLE_NAME} )
 
 endif( APPLE )
 
