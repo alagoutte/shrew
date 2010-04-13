@@ -178,12 +178,28 @@ void _ikeaRoot::siteConnect()
 
 	// launch ikec with site name as parameter
 
+#ifndef __APPLE__
+
 	QStringList args;
 	args << "-r";
 	args << i->text();
 
 	QProcess * proc = new QProcess( this );
 	proc->start( "ikec-qt", args );
+
+#else
+
+	QStringList args;
+	args << "/Applications/Shrew Soft VPN Connect.app";
+	args << "--args";
+	args << "-r";
+	args << i->text();
+
+	QProcess * proc = new QProcess( this );
+	proc->start( "open", args );
+
+#endif
+
 }
 
 void _ikeaRoot::siteAdd()

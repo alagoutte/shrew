@@ -7,6 +7,12 @@
 #        : Copyright 2007, Shrew Soft Inc
 #
 
+set( APPNAME qikea )
+
+if( APPLE )
+	set( APPNAME "Shrew Soft VPN Access Manager" )
+endif( APPLE )
+
 include_directories(
 	${IKE_SOURCE_DIR}/source/
 	${IKE_SOURCE_DIR}/source/ikec
@@ -38,7 +44,7 @@ qt4_add_resources(
 	ikea.qrc )
 
 add_executable(
-	qikea
+	${APPNAME}
 	../ikec/config.cpp
 	ikea.cpp
 	main.cpp
@@ -50,7 +56,7 @@ add_executable(
 	${QRC_FILES} )
 
 target_link_libraries(
-	qikea
+	${APPNAME}
 	ss_idb
 	ss_ith
 	ss_log
@@ -61,12 +67,12 @@ target_link_libraries(
 if( APPLE )
 
 	set_property(
-		TARGET qikea
+		TARGET ${APPNAME}
 		PROPERTY MACOSX_BUNDLE ON )
 
 	set(
 		MACOSX_BUNDLE_BUNDLE_NAME
-		"Shrew Soft VPN Access Manager" )
+		${APPNAME} )
 
 	set(
 		MACOSX_BUNDLE_GUI_IDENTIFIER
@@ -74,7 +80,7 @@ if( APPLE )
 
 	set(
 		MACOSX_BUNDLE_ICON_FILE
-		"ikea.png" )
+		"qikea.icns" )
 
 	set(
 		MACOSX_BUNDLE_LONG_VERSION_STRING
@@ -87,19 +93,19 @@ if( APPLE )
 	add_custom_target(
 		qikea-bundle-resources
 		COMMAND mkdir -p
-			${CMAKE_CURRENT_BINARY_DIR}/qikea.app/Contents/Resources
+			${CMAKE_CURRENT_SOURCE_DIR}/${APPNAME}.app/Contents/Resources
 		COMMAND cp
-			${CMAKE_CURRENT_BINARY_DIR}/png/${MACOSX_BUNDLE_ICON_FILE}
-			${CMAKE_CURRENT_BINARY_DIR}/qikea.app/Contents/Resources/${MACOSX_BUNDLE_ICON_FILE} )
+			${CMAKE_CURRENT_SOURCE_DIR}/png/${MACOSX_BUNDLE_ICON_FILE}
+			${CMAKE_CURRENT_SOURCE_DIR}/${APPNAME}.app/Contents/Resources/${MACOSX_BUNDLE_ICON_FILE} )
 
 	add_dependencies(
-		qikea
+		${APPNAME}
 		ProjectName qikea-bundle-resources )
 
 endif( APPLE )
 
 install(
-	TARGETS qikea
+	TARGETS ${APPNAME}
 	RUNTIME	DESTINATION bin
 	BUNDLE DESTINATION "/Applications" )
 
