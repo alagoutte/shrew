@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# copy the sample iked.conf file to the active file
+/usr/bin/sudo /bin/cp /etc/iked.conf.sample /etc/iked.conf
+
+# setup iked for control under launchd
+/usr/bin/sudo /bin/launchctl load /Library/LaunchDaemons/net.shrew.iked.plist
+/usr/bin/sudo /bin/launchctl start net.shrew.iked

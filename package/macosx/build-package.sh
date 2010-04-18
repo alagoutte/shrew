@@ -2,25 +2,26 @@
 
 rm -f ./vpn-client-install.dmg
 
-VOLNAME="Shrew Soft VPN Client Install"
-mkdir "./$VOLNAME"
+/usr/local/bin/freeze vpn-client-install.packproj
 
-/Developer/usr/bin/packagemaker -v -d ./vpn-client-install.pmdoc -o "./$VOLNAME/vpn-client-install.mpkg"
+VOLNAME="Shrew Soft VPN Client Install"
+mv build "$VOLNAME"
+
 cp ../../LICENSE.TXT "./$VOLNAME"
 
 /usr/bin/hdiutil create -ov -format UDRW -srcfolder "./$VOLNAME" ./vpn-client-install.dmg
 
-mkdir ./tmp
+mkdir ./vol
 
-/usr/bin/hdiutil attach ./vpn-client-install.dmg -readwrite -noautoopen -mountpoint ./tmp/
-/bin/cp ./vpn-client-install.icns ./tmp/.VolumeIcon.icns
-/Developer/Tools/SetFile -a -C ./tmp
+/usr/bin/hdiutil attach ./vpn-client-install.dmg -readwrite -noautoopen -mountpoint ./vol/
+/bin/cp ./vpn-client-volume.icns ./vol/.VolumeIcon.icns
+/Developer/Tools/SetFile -a -C ./vol
 
-/usr/bin/hdiutil detach ./tmp/
-rmdir ./tmp
+/usr/bin/hdiutil detach ./vol/
+rmdir ./vol
 
 /usr/bin/hdiutil convert ./vpn-client-install.dmg -format UDZO -o ./vpn-client-install-ro.dmg
-/bin/mv ./vpn-client-install-ro.dmg ./vpn-client-install.dmg
+/bin/mv -f ./vpn-client-install-ro.dmg ./vpn-client-install.dmg
 
 rm -fr "./$VOLNAME"
 
