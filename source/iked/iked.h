@@ -93,7 +93,7 @@
 #endif
 
 #ifdef OPT_LDAP
-#include <ldap.h>
+# include <ldap.h>
 #endif
 
 #include "version.h"
@@ -110,7 +110,7 @@
 #include "xconf.h"
 
 #ifdef OPT_DTP
-#include "libdtp.h"
+# include "libdtp.h"
 #endif
 
 //

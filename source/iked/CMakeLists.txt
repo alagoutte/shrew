@@ -76,13 +76,13 @@ target_link_libraries(
 	crypto
 	pthread )
 
-if( !APPLE )
+if( FUNC_LIB_CRYPT )
 
 target_link_libraries(
 	iked
 	crypt )
 
-endif( !APPLE )
+endif( FUNC_LIB_CRYPT )
 
 # LDAP support option
 

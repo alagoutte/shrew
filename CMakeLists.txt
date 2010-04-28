@@ -161,6 +161,12 @@ endif( KRNINC )
 # PreRequisite Checks
 #
 
+check_library_exists(
+	"crypt"
+	"crypt"
+	""
+	FUNC_LIB_CRYPT )
+
 find_path(
 	PATH_INC_CRYPTO
 	NAMES "openssl/evp.h"

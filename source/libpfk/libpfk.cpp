@@ -1619,13 +1619,10 @@ long _PFKI::read_address_dst( PFKI_MSG & msg, PFKI_ADDR & addr )
 	return IPCERR_OK;
 }
 
-#ifndef __APPLE__
+#if defined( OPT_NATT ) && !defined( __APPLE__ )
 
 long _PFKI::read_natt( PFKI_MSG & msg, PFKI_NATT & natt )
 {
-
-# ifdef OPT_NATT
-
 	sadb_x_nat_t_type * xnt;
 	sadb_x_nat_t_port * xnps, * xnpd;
 
@@ -1650,16 +1647,9 @@ long _PFKI::read_natt( PFKI_MSG & msg, PFKI_NATT & natt )
 	natt.port_dst = xnpd->sadb_x_nat_t_port_port;
 
 	return IPCERR_OK;
-
-# else
-
-	return IPCERR_FAILED;
-
-# endif // OPT_NATT
-
 }
 
-#endif // __APPLE__
+# endif // OPT_NATT && !__APPLE__
 
 long _PFKI::read_policy( PFKI_MSG & msg, PFKI_SPINFO & spinfo )
 {

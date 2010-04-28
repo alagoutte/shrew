@@ -1749,8 +1749,10 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 		"ii : - auth = %s\n"
 		"ii : - akey = %i bits\n"
 		"ii : - hard = %i\n"
+#ifndef OPT_NATT
+		"ii : - soft = %i\n",
+#else
 		"ii : - soft = %i\n"
-#ifdef OPT_NATT
 # ifndef __APPLE__
 		"ii : - natt = %s\n"
 		"ii : - nsrc = %i\n"
@@ -1768,8 +1770,10 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 		pfki.name( NAME_SAAUTH, sainfo.sa.auth ),
 		sainfo.akey.length * 8,
 		long( sainfo.ltime_hard.addtime ),
+#ifndef OPT_NATT
+		long( sainfo.ltime_soft.addtime ) );
+#else
 		long( sainfo.ltime_soft.addtime ),
-#ifdef OPT_NATT
 # ifndef __APPLE__
 		pfki.name( NAME_NTTYPE, sainfo.natt.type ),
 		ntohs( sainfo.natt.port_src ),
