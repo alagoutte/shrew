@@ -524,6 +524,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 							break;
 						}
 
+						peer->contact = IPSEC_CONTACT_CLIENT;
 						peer->psk = psk;
 						peer->cert_r = cert_r;
 						peer->cert_l = cert_l;
