@@ -536,7 +536,7 @@ typedef class DLX _IPROUTE
 
 #ifdef WIN32
 	bool	iface_metric( unsigned long & metric, unsigned long index );
-	bool	iface_2_addr( in_addr & iface, unsigned long index );
+	bool	iface_2_addr( in_addr & iface, in_addr & gateway, unsigned long index );
 	bool	addr_2_iface( unsigned long & index, in_addr iface );
 #endif	
 
