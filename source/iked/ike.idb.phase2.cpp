@@ -50,11 +50,11 @@ bool _ITH_EVENT_PH2SOFT::func()
 	iked.log.txt( LLOG_INFO,
 			"ii : phase2 sa will expire in %i seconds\n", diff );
 
-	if( ph2->nailed_plcyid )
+	if( ph2->nailed )
 		iked.pfkey_init_phase2(
 			true,
 			IPSEC_POLICY_IPSEC,
-			ph2->nailed_plcyid,
+			ph2->plcyid_out,
 			0 );
 
 	ph2->status( XCH_STATUS_EXPIRING, XCH_NORMAL, 0 );
@@ -246,7 +246,10 @@ _IDB_PH2::_IDB_PH2( IDB_TUNNEL * set_tunnel, bool set_initiator, uint32_t set_ms
 	memset( &cookies, 0, sizeof( cookies ) );
 	seqid_in = 0;
 	seqid_out = 0;
-	nailed_plcyid = 0;
+	plcyid_in = 0;
+	plcyid_out = 0;
+
+	nailed = false;
 	spicount = 0;
 	dhgr_id = 0;
 

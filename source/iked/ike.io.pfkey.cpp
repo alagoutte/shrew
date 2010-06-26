@@ -525,11 +525,30 @@ long _IKED::pfkey_init_phase2( bool nailed, u_int16_t plcytype, u_int32_t plcyid
 	}
 
 	//
-	// configure client nailed policy id
+	// store the policy ids
+	//
+
+	ph2->plcyid_in = policy_in->sp.id;
+	ph2->plcyid_out = policy_out->sp.id;
+
+	//
+	// configure client nailed policy
 	//
 
 	if( nailed )
-		ph2->nailed_plcyid = policy_out->sp.id;
+		ph2->nailed = true;
+
+	//
+	// if the tunnel uses shared policy level, we
+	// use a remote ID of 0.0.0.0/0 regardless of
+	// the sa ID value
+	//
+
+	if( tunnel->peer->plcy_level == POLICY_LEVEL_SHARED )
+	{
+		idd.addr1.s_addr = 0;
+		idd.addr2.s_addr = 0;
+	}
 
 	//
 	// configure the phase2 network ids

@@ -1316,11 +1316,11 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 				IPSEC_DIR_OUTBOUND,
 				IPSEC_POLICY_IPSEC,
 				NULL,
+				&ph2->plcyid_out,
 				NULL,
-				&ph2->tunnel->saddr_l,
-				&ph2->tunnel->saddr_r,
-				&ph2->ph2id_ls,
-				&ph2->ph2id_ld ) )
+				NULL,
+				NULL,
+				NULL ) )
 		{
 			log.txt( LLOG_ERROR, 
 				"ii : phase2 rejected, no matching outbound policy found\n"
@@ -1402,6 +1402,8 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 			return LIBIKE_FAILED;
 		}
 
+		ph2->plcyid_in = policy_in->sp.id;
+
 		//
 		// locate outbound ipsec policy
 		//
@@ -1432,6 +1434,8 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 			packet.notify = ISAKMP_N_INVALID_ID_INFORMATION;
 			return LIBIKE_FAILED;
 		}
+
+		ph2->plcyid_out = policy_out->sp.id;
 
 		//
 		// compare the protocol parameters

@@ -2437,8 +2437,6 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 				{
 					if( attr->vdata.size() )
 					{
-						BDATA fwtype =  attr->vdata;
-
 						log.txt( LLOG_DEBUG,
 							"ii : - Firewall Type = %i bytes\n",
 							attr->vdata.size() );

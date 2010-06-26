@@ -204,6 +204,32 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	}
 
 	//
+	// determine ipsec policy level value
+	//
+
+	u_int8_t ipsec_level = IPSEC_LEVEL_DEFAULT;
+
+	switch( tunnel->peer->plcy_level )
+	{
+		case POLICY_LEVEL_USE:
+			ipsec_level = IPSEC_LEVEL_USE;
+			break;
+
+		case POLICY_LEVEL_SHARED:
+		case POLICY_LEVEL_REQUIRE:
+			ipsec_level = IPSEC_LEVEL_REQUIRE;
+			break;
+
+		case POLICY_LEVEL_UNIQUE:
+			ipsec_level = IPSEC_LEVEL_UNIQUE;
+			break;
+	}
+
+	log.txt( LLOG_DEBUG,
+		"ii : generating IPSEC security policies at %s level\n",
+		pfki.name( NAME_SPLEVEL, ipsec_level ) );
+
+	//
 	// if we have a empty remote toplology
 	// list, add a single all-networks id
 	// and flag the tunnel as force all
@@ -238,7 +264,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	id2.type = ISAKMP_ID_IPV4_ADDR;
 	id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
-	policy_create( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
+	policy_create( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, true );
 
 	//
 	// build the client id
@@ -259,9 +285,9 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	while( tunnel->idlist_excl.get( id2, index++ ) )
 	{
 		if( initiator )
-			policy_create( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
+			policy_create( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, true );
 		else
-			policy_create( tunnel, IPSEC_POLICY_DISCARD, id2, id1, true );
+			policy_create( tunnel, IPSEC_POLICY_DISCARD, IPSEC_LEVEL_DEFAULT, id2, id1, true );
 	}
 
 	//
@@ -274,9 +300,9 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	while( tunnel->idlist_incl.get( id2, index++ ) )
 	{
 		if( initiator )
-			policy_create( tunnel, IPSEC_POLICY_IPSEC, id1, id2, true );
+			policy_create( tunnel, IPSEC_POLICY_IPSEC, ipsec_level, id1, id2, true );
 		else
-			policy_create( tunnel, IPSEC_POLICY_IPSEC, id2, id1, true );
+			policy_create( tunnel, IPSEC_POLICY_IPSEC, ipsec_level, id2, id1, true );
 	}
 
 	return true;
@@ -284,6 +310,28 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 
 bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 {
+	//
+	// determine ipsec policy level value
+	//
+
+	u_int8_t ipsec_level = IPSEC_LEVEL_DEFAULT;
+
+	switch( tunnel->peer->plcy_level )
+	{
+		case POLICY_LEVEL_USE:
+			ipsec_level = IPSEC_LEVEL_USE;
+			break;
+
+		case POLICY_LEVEL_SHARED:
+		case POLICY_LEVEL_REQUIRE:
+			ipsec_level = IPSEC_LEVEL_REQUIRE;
+			break;
+
+		case POLICY_LEVEL_UNIQUE:
+			ipsec_level = IPSEC_LEVEL_UNIQUE;
+			break;
+	}
+
 	//
 	// build the client id
 	//
@@ -307,9 +355,9 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	while( tunnel->idlist_incl.get( id2, index++ ) )
 	{
 		if( initiator )
-			policy_remove( tunnel, IPSEC_POLICY_IPSEC, id1, id2, true );
+			policy_remove( tunnel, IPSEC_POLICY_IPSEC, ipsec_level, id1, id2, true );
 		else
-			policy_remove( tunnel, IPSEC_POLICY_IPSEC, id2, id1, true );
+			policy_remove( tunnel, IPSEC_POLICY_IPSEC, ipsec_level, id2, id1, true );
 	}
 
 	//
@@ -322,9 +370,9 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	while( tunnel->idlist_excl.get( id2, index++ ) )
 	{
 		if( initiator )
-			policy_remove( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
+			policy_remove( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, true );
 		else
-			policy_remove( tunnel, IPSEC_POLICY_DISCARD, id2, id1, true );
+			policy_remove( tunnel, IPSEC_POLICY_DISCARD, IPSEC_LEVEL_DEFAULT, id2, id1, true );
 	}
 
 	//
@@ -339,7 +387,7 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	id2.type = ISAKMP_ID_IPV4_ADDR;
 	id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
-	policy_remove( tunnel, IPSEC_POLICY_NONE, id1, id2, true );
+	policy_remove( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, true );
 
 	if( tunnel->force_all )
 		tunnel->force_all = false;
@@ -349,6 +397,28 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 
 bool _IKED::policy_dhcp_create( IDB_TUNNEL * tunnel )
 {
+	//
+	// determine ipsec policy level value
+	//
+
+	u_int8_t ipsec_level = IPSEC_LEVEL_DEFAULT;
+
+	switch( tunnel->peer->plcy_level )
+	{
+		case POLICY_LEVEL_USE:
+			ipsec_level = IPSEC_LEVEL_USE;
+			break;
+
+		case POLICY_LEVEL_SHARED:
+		case POLICY_LEVEL_REQUIRE:
+			ipsec_level = IPSEC_LEVEL_REQUIRE;
+			break;
+
+		case POLICY_LEVEL_UNIQUE:
+			ipsec_level = IPSEC_LEVEL_UNIQUE;
+			break;
+	}
+
 	//
 	// create our DHCP over IPsec policies
 	//
@@ -369,11 +439,33 @@ bool _IKED::policy_dhcp_create( IDB_TUNNEL * tunnel )
 	dst.port = htons( UDP_PORT_DHCPS );
 	dst.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
-	return policy_create( tunnel, IPSEC_POLICY_IPSEC, src, dst, false );
+	return policy_create( tunnel, IPSEC_POLICY_IPSEC, ipsec_level, src, dst, false );
 }
 
 bool _IKED::policy_dhcp_remove( IDB_TUNNEL * tunnel )
 {
+	//
+	// determine ipsec policy level value
+	//
+
+	u_int8_t ipsec_level = IPSEC_LEVEL_DEFAULT;
+
+	switch( tunnel->peer->plcy_level )
+	{
+		case POLICY_LEVEL_USE:
+			ipsec_level = IPSEC_LEVEL_USE;
+			break;
+
+		case POLICY_LEVEL_SHARED:
+		case POLICY_LEVEL_REQUIRE:
+			ipsec_level = IPSEC_LEVEL_REQUIRE;
+			break;
+
+		case POLICY_LEVEL_UNIQUE:
+			ipsec_level = IPSEC_LEVEL_UNIQUE;
+			break;
+	}
+
 	//
 	// remove our DHCP over IPsec policies
 	//
@@ -394,10 +486,10 @@ bool _IKED::policy_dhcp_remove( IDB_TUNNEL * tunnel )
 	dst.port = htons( UDP_PORT_DHCPS );
 	dst.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
-	return policy_remove( tunnel, IPSEC_POLICY_IPSEC, src, dst, false );
+	return policy_remove( tunnel, IPSEC_POLICY_IPSEC, ipsec_level, src, dst, false );
 }
 
-bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route )
+bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, u_int8_t level, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route )
 {
 	char txtid_src[ LIBIKE_MAX_TEXTP2ID ];
 	char txtid_dst[ LIBIKE_MAX_TEXTP2ID ];
@@ -419,7 +511,7 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	{
 		spinfo.xforms[ 0 ].proto = PROTO_IP_ESP;
 		spinfo.xforms[ 0 ].mode = IPSEC_MODE_TUNNEL;
-		spinfo.xforms[ 0 ].level = IPSEC_LEVEL_UNIQUE;
+		spinfo.xforms[ 0 ].level = level;
 		spinfo.xforms[ 0 ].reqid = policyid++;
 
 		cpy_sockaddr( tunnel->saddr_r.saddr, spinfo.xforms[ 0 ].saddr_src, false );
@@ -474,7 +566,7 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	{
 		spinfo.xforms[ 0 ].proto = PROTO_IP_ESP;
 		spinfo.xforms[ 0 ].mode = IPSEC_MODE_TUNNEL;
-		spinfo.xforms[ 0 ].level = IPSEC_LEVEL_UNIQUE;
+		spinfo.xforms[ 0 ].level = level;
 		spinfo.xforms[ 0 ].reqid = policyid++;
 
 		cpy_sockaddr( tunnel->saddr_l.saddr, spinfo.xforms[ 0 ].saddr_src, false );
@@ -598,7 +690,7 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1,
 	return true;
 }
 
-bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route )
+bool _IKED::policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, u_int8_t level, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route )
 {
 	char txtid_src[ LIBIKE_MAX_TEXTP2ID ];
 	char txtid_dst[ LIBIKE_MAX_TEXTP2ID ];

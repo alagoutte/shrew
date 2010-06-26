@@ -512,6 +512,12 @@
 #define POLICY_MODE_COMPAT		1
 #define POLICY_MODE_CONFIG		2
 
+#define POLICY_LEVEL_AUTO		0
+#define POLICY_LEVEL_USE		1
+#define POLICY_LEVEL_REQUIRE	2
+#define POLICY_LEVEL_UNIQUE		3
+#define POLICY_LEVEL_SHARED		4
+
 //
 // IKE structures and classes
 //
@@ -620,6 +626,7 @@ typedef struct _IKE_PEER
 	unsigned char	idtype_r;
 
 	long			plcy_mode;
+	long			plcy_level;
 	long			xconf_mode;
 
 }IKE_PEER;

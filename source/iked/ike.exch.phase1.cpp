@@ -1369,6 +1369,23 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 		}
 
 		//
+		// determine the policy level if auto
+		//
+
+		if( ph1->tunnel->peer->plcy_level == POLICY_LEVEL_AUTO )
+		{
+			//
+			// unity compatible default to shared level
+			// and all others defult to unique
+			//
+
+			if( ph1->vendopts_r.flag.unity )
+				ph1->tunnel->peer->plcy_level = POLICY_LEVEL_SHARED;
+			else
+				ph1->tunnel->peer->plcy_level = POLICY_LEVEL_UNIQUE;
+		}
+
+		//
 		// if we are to generate a policy
 		// list before config, do this now
 		//

@@ -616,8 +616,8 @@ typedef class _IKED
 	bool	policy_list_create( IDB_TUNNEL * tunnel, bool initiator );
 	bool	policy_list_remove( IDB_TUNNEL * tunnel, bool initiator );
 
-	bool	policy_create( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route );
-	bool	policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route );
+	bool	policy_create( IDB_TUNNEL * tunnel, u_int16_t type, u_int8_t level, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route );
+	bool	policy_remove( IDB_TUNNEL * tunnel, u_int16_t type, u_int8_t level, IKE_PH2ID & id1, IKE_PH2ID & id2, bool route );
 
 	// proposal helper functions
 
