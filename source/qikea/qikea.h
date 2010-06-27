@@ -39,8 +39,8 @@
  *
  */
 
-#ifndef _IKEA_H_
-#define _IKEA_H_
+#ifndef _QIKEA_H_
+#define _QIKEA_H_
 
 #include <pwd.h>
 #include <fcntl.h>
@@ -65,17 +65,17 @@
 #define	CONFLICT_OVERWRITE	100
 #define	CONFLICT_CONTINUE	101
 
-typedef class _ikeaRoot : public QMainWindow, public Ui::ikeaRoot
+typedef class _qikeaRoot : public QMainWindow, public Ui::qikeaRoot
 {
 	Q_OBJECT
 
 	QActionGroup *	actionGroupView;
-	QMenu *		menuContext;
-	QMenu *		menuContextView;
+	QMenu *			menuContext;
+	QMenu *			menuContextView;
 
 	public:
 
-	_ikeaRoot( QWidget * parent = NULL ) : QMainWindow( parent )
+	_qikeaRoot( QWidget * parent = NULL ) : QMainWindow( parent )
 	{
 		setupUi( this );
 
@@ -129,15 +129,15 @@ typedef class _ikeaRoot : public QMainWindow, public Ui::ikeaRoot
 
 	void showAbout();
 
-}ikeaRoot;
+}qikeaRoot;
 
-typedef class _ikeaSite : public QDialog, public Ui::ikeaSite
+typedef class _qikeaSite : public QDialog, public Ui::qikeaSite
 {
 	Q_OBJECT
 
 	public:
 	
-	_ikeaSite( QWidget * parent = NULL ) : QDialog( parent )
+	_qikeaSite( QWidget * parent = NULL ) : QDialog( parent )
 	{
 		setupUi( this );
 		init();
@@ -215,15 +215,15 @@ typedef class _ikeaSite : public QDialog, public Ui::ikeaSite
 	void inputCertFile();
 	void inputPKeyFile();
 
-}ikeaSite;
+}qikeaSite;
 
-typedef class _ikeaConflict : public QDialog, public Ui::ikeaConflict
+typedef class _qikeaConflict : public QDialog, public Ui::qikeaConflict
 {
 	Q_OBJECT
 
 	public:
 	
-	_ikeaConflict( QWidget * parent = NULL ) : QDialog( parent )
+	_qikeaConflict( QWidget * parent = NULL ) : QDialog( parent )
 	{
 		setupUi( this );
 
@@ -233,15 +233,15 @@ typedef class _ikeaConflict : public QDialog, public Ui::ikeaConflict
 
 	private slots:
 
-}ikeaConflict;
+}qikeaConflict;
 
-typedef class _ikeaTopology : public QDialog, public Ui::ikeaTopology
+typedef class _qikeaTopology : public QDialog, public Ui::qikeaTopology
 {
 	Q_OBJECT
 
 	public:
 	
-	_ikeaTopology( QWidget * parent = NULL ) : QDialog( parent )
+	_qikeaTopology( QWidget * parent = NULL ) : QDialog( parent )
 	{
 		setupUi( this );
 
@@ -253,15 +253,15 @@ typedef class _ikeaTopology : public QDialog, public Ui::ikeaTopology
 
 	bool verify();
 
-}ikeaTopology;
+}qikeaTopology;
 
-typedef class _ikeaAbout : public QDialog, public Ui::ikeaAbout
+typedef class _qikeaAbout : public QDialog, public Ui::qikeaAbout
 {
 	Q_OBJECT
 
 	public:
 	
-	_ikeaAbout( QWidget * parent = NULL ) : QDialog( parent )
+	_qikeaAbout( QWidget * parent = NULL ) : QDialog( parent )
 	{
 		setupUi( this );
 
@@ -270,30 +270,30 @@ typedef class _ikeaAbout : public QDialog, public Ui::ikeaAbout
 
 	private slots:
 
-}ikeaAbout;
+}qikeaAbout;
 
-typedef class _IKEA
+typedef class _QIKEA
 {
 	protected:
 
-	ikeaRoot * r;
+	qikeaRoot * r;
 
 	public:
 
 	QString sites;
 	QString certs;
 
-	_IKEA();
-	~_IKEA();
+	_QIKEA();
+	~_QIKEA();
 
 	const char * site_path();
 	const char * cert_path();
 
-	bool init( ikeaRoot * setRoot );
+	bool init( qikeaRoot * setRoot );
 
-}IKEA;
+}QIKEA;
 
-extern IKEA ikea;
+extern QIKEA qikea;
 
 void update_site( CONFIG * config, const char * path, long & version );
 

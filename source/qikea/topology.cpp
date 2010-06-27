@@ -39,9 +39,9 @@
  *
  */
 
-#include "ikea.h"
+#include "qikea.h"
 
-bool ikeaTopology::verify()
+bool _qikeaTopology::verify()
 {
 	QString Address = lineEditAddress->text();
 	Address = Address.replace( ' ', "" );

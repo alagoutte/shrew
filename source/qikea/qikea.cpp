@@ -39,7 +39,7 @@
  *
  */
 
-#include "ikea.h"
+#include "qikea.h"
 
 void update_site( CONFIG * config, const char * path, long & version )
 {
@@ -91,25 +91,25 @@ void update_site( CONFIG * config, const char * path, long & version )
 	config->file_write( path );
 }
 
-_IKEA::_IKEA()
+_QIKEA::_QIKEA()
 {
 }
 
-_IKEA::~_IKEA()
+_QIKEA::~_QIKEA()
 {
 }
 
-const char * _IKEA::site_path()
+const char * _QIKEA::site_path()
 {
 	return sites.toAscii().constData();
 }
 
-const char * _IKEA::cert_path()
+const char * _QIKEA::cert_path()
 {
 	return certs.toAscii().constData();
 }
 
-bool _IKEA::init( ikeaRoot * setRoot )
+bool _QIKEA::init( qikeaRoot * setRoot )
 {
 	QDir qdir;
 
@@ -123,17 +123,17 @@ bool _IKEA::init( ikeaRoot * setRoot )
 
 	// create sites directory
 
-	ikea.sites = QDir::homePath() + "/.ike/sites";
-	qdir.mkdir( ikea.sites );
+	qikea.sites = QDir::homePath() + "/.ike/sites";
+	qdir.mkdir( qikea.sites );
 
 	// create certs directory
 
-	ikea.certs = QDir::homePath() + "/.ike/certs";
-	qdir.mkdir( ikea.certs );
+	qikea.certs = QDir::homePath() + "/.ike/certs";
+	qdir.mkdir( qikea.certs );
 
 	// read site list
 
-	qdir.setPath( ikea.sites );
+	qdir.setPath( qikea.sites );
 	qdir.setFilter( QDir::Files | QDir::NoSymLinks );
 
 	QFileInfoList infoList = qdir.entryInfoList();
@@ -144,7 +144,7 @@ bool _IKEA::init( ikeaRoot * setRoot )
 	{
 		QFileInfo fileInfo = infoList.at( i );
 		QString fileName = fileInfo.fileName();
-		QString filePath = ikea.sites + "/" + fileName;
+		QString filePath = qikea.sites + "/" + fileName;
 
 		CONFIG config;
 		if( config.file_read( filePath.toAscii().constData() ) )

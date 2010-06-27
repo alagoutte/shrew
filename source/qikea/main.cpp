@@ -39,25 +39,25 @@
  *
  */
 
-#include "ikea.h"
+#include "qikea.h"
 
-IKEA ikea;
+QIKEA qikea;
 
 int main( int argc, char ** argv )
 {
-	Q_INIT_RESOURCE(ikea);
+	Q_INIT_RESOURCE(qikea);
 
 	QApplication a( argc, argv );
 
 	// iniitialize our root window
 
-	ikeaRoot r;
+	qikeaRoot r;
 	r.show();
 
 	// initialize our ikea config
 	// and populate our site list
 
-	ikea.init( &r );
+	qikea.init( &r );
     
 	a.connect( &a, SIGNAL( lastWindowClosed() ), &a, SLOT( quit() ) );
     

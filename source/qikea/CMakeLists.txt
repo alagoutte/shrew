@@ -31,17 +31,17 @@ qt4_wrap_ui(
 
 qt4_wrap_cpp(
 	CXX_FILES
-	ikea.h )
+	qikea.h )
 
 qt4_add_resources(
 	QRC_FILES
-	ikea.qrc )
+	qikea.qrc )
 
 add_executable(
 	qikea
 	../ikec/config.cpp
-	ikea.cpp
 	main.cpp
+	qikea.cpp
 	root.cpp
 	site.cpp
 	topology.cpp

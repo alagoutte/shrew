@@ -39,7 +39,7 @@
  *
  */
 
-#include "ikea.h"
+#include "qikea.h"
 
 bool file_to_bdata( QString path, BDATA & bdata )
 {
@@ -100,14 +100,14 @@ void filename_mangle( QString & path, QString & name )
 	}
 }
 
-void _ikeaRoot::fileConflict( QString & path, QString & name )
+void _qikeaRoot::fileConflict( QString & path, QString & name )
 {
 	QString tmpName = name;
 	QString tmpPath = path + "/" + name;
 
 	while( QFile::exists( tmpPath ) )
 	{
-		ikeaConflict fc( this );
+		qikeaConflict fc( this );
 		fc.lineConflictName->setText( name );
 
 		if( fc.exec() == QDialog::Rejected )
@@ -118,7 +118,7 @@ void _ikeaRoot::fileConflict( QString & path, QString & name )
 	}
 }
 
-void _ikeaRoot::siteContext( const QPoint & pos )
+void _qikeaRoot::siteContext( const QPoint & pos )
 {
 	QListWidgetItem * i = listWidgetSites->itemAt( pos );
 
@@ -160,17 +160,17 @@ void _ikeaRoot::siteContext( const QPoint & pos )
 	menuContext->popup( mpos );
 }
 
-void _ikeaRoot::showViewLarge()
+void _qikeaRoot::showViewLarge()
 {
 	listWidgetSites->setViewMode( QListView::IconMode );
 }
 
-void _ikeaRoot::showViewSmall()
+void _qikeaRoot::showViewSmall()
 {
 	listWidgetSites->setViewMode( QListView::ListMode );
 }
 
-void _ikeaRoot::siteConnect()
+void _qikeaRoot::siteConnect()
 {
 	QListWidgetItem * i = listWidgetSites->currentItem();
 	if( i == NULL )
@@ -202,9 +202,9 @@ void _ikeaRoot::siteConnect()
 
 }
 
-void _ikeaRoot::siteAdd()
+void _qikeaRoot::siteAdd()
 {
-	ikeaSite s( this );
+	qikeaSite s( this );
 	if( s.exec() != QDialog::Accepted )
 		return;
 
@@ -218,11 +218,11 @@ void _ikeaRoot::siteAdd()
 
 	// mangle name if duplicate
 
-	filename_mangle( ikea.sites, siteName );
+	filename_mangle( qikea.sites, siteName );
 
 	// write site config
 
-	QString sitePath = ikea.sites + "/" + siteName;
+	QString sitePath = qikea.sites + "/" + siteName;
 	config.file_write( sitePath.toAscii() );
 
 	// create icon for site
@@ -239,7 +239,7 @@ void _ikeaRoot::siteAdd()
 	listWidgetSites->editItem( i );
 }
 
-void _ikeaRoot::siteModify()
+void _qikeaRoot::siteModify()
 {
 	QListWidgetItem * i = listWidgetSites->currentItem();
 	if( i == NULL )
@@ -247,14 +247,14 @@ void _ikeaRoot::siteModify()
 
 	// load site config
 
-	QString filePath = ikea.sites + "/" + i->text();
+	QString filePath = qikea.sites + "/" + i->text();
 
 	CONFIG config;
 	config.file_read( filePath.toAscii() );
 
 	// create site modal dialog
 
-	ikeaSite s( this );
+	qikeaSite s( this );
 	s.load( config );
 
 	if( s.exec() == QDialog::Accepted )
@@ -266,7 +266,7 @@ void _ikeaRoot::siteModify()
 	}
 }
 
-void _ikeaRoot::siteDelete()
+void _qikeaRoot::siteDelete()
 {
 	QListWidgetItem * i = listWidgetSites->currentItem();
 	if( i == NULL )
@@ -279,13 +279,13 @@ void _ikeaRoot::siteDelete()
 		QMessageBox::Yes, QMessageBox::Cancel ) != QMessageBox::Yes )
 		return;
 
-	QString filePath = ikea.sites + "/" + i->text();
+	QString filePath = qikea.sites + "/" + i->text();
 
 	unlink( filePath.toAscii() );
 	delete i;
 }
 
-void _ikeaRoot::siteRename()
+void _qikeaRoot::siteRename()
 {
 	QListWidgetItem * i = listWidgetSites->currentItem();
 	if( i == NULL )
@@ -294,7 +294,7 @@ void _ikeaRoot::siteRename()
 	listWidgetSites->editItem( i );
 }
 
-void _ikeaRoot::siteRenamed( QListWidgetItem * i )
+void _qikeaRoot::siteRenamed( QListWidgetItem * i )
 {
 	QString oldName = i->data( Qt::UserRole ).toString();
 	QString modName = i->text();
@@ -308,10 +308,10 @@ void _ikeaRoot::siteRenamed( QListWidgetItem * i )
 		return;
 	}
 
-	filename_mangle( ikea.sites, modName );
+	filename_mangle( qikea.sites, modName );
 
-	QString oldPath = ikea.sites + "/" + oldName;
-	QString modPath = ikea.sites + "/" + modName;
+	QString oldPath = qikea.sites + "/" + oldName;
+	QString modPath = qikea.sites + "/" + modName;
 
 	printf( "name = %s\n", ( const char * ) modName.toAscii() );
 	printf( "path = %s\n", ( const char * ) modPath.toAscii() );
@@ -321,7 +321,7 @@ void _ikeaRoot::siteRenamed( QListWidgetItem * i )
 	i->setData( Qt::UserRole, modName );
 }
 
-void _ikeaRoot::siteImport()
+void _qikeaRoot::siteImport()
 {
 	// get the input path
 
@@ -359,9 +359,9 @@ void _ikeaRoot::siteImport()
 	{
 		QString tmpName = name;
 
-		fileConflict( ikea.certs, tmpName );
+		fileConflict( qikea.certs, tmpName );
 
-		QString tmpPath = ikea.certs + "/" + tmpName;
+		QString tmpPath = qikea.certs + "/" + tmpName;
 
 		bdata_to_file( data, tmpPath );
 
@@ -374,9 +374,9 @@ void _ikeaRoot::siteImport()
 	{
 		QString tmpName = name;
 
-		fileConflict( ikea.certs, tmpName );
+		fileConflict( qikea.certs, tmpName );
 
-		QString tmpPath = ikea.certs + "/" + tmpName;
+		QString tmpPath = qikea.certs + "/" + tmpName;
 
 		bdata_to_file( data, tmpPath );
 
@@ -389,9 +389,9 @@ void _ikeaRoot::siteImport()
 	{
 		QString tmpName = name;
 
-		fileConflict( ikea.certs, tmpName );
+		fileConflict( qikea.certs, tmpName );
 
-		QString tmpPath = ikea.certs + "/" + tmpName;
+		QString tmpPath = qikea.certs + "/" + tmpName;
 
 		bdata_to_file( data, tmpPath );
 
@@ -406,11 +406,11 @@ void _ikeaRoot::siteImport()
 
 	// mangle name if duplicate
 
-	filename_mangle( ikea.sites, fileName );
+	filename_mangle( qikea.sites, fileName );
 
 	// save the site config
 
-	QString filePath = ikea.sites + "/" + fileName;
+	QString filePath = qikea.sites + "/" + fileName;
 	config.file_write( filePath.toAscii() );
 
 	// update the site version if required
@@ -449,7 +449,7 @@ void _ikeaRoot::siteImport()
 	listWidgetSites->editItem( i );
 }
 
-void _ikeaRoot::siteExport()
+void _qikeaRoot::siteExport()
 {
 	QListWidgetItem * i = listWidgetSites->currentItem();
 	if( i == NULL )
@@ -457,7 +457,7 @@ void _ikeaRoot::siteExport()
 
 	// load site config
 
-	QString filePath = ikea.sites + "/" + i->text();
+	QString filePath = qikea.sites + "/" + i->text();
 
 	CONFIG config;
 	config.file_read( filePath.toAscii() );
@@ -523,9 +523,9 @@ void _ikeaRoot::siteExport()
 	config.file_write( savePath.toAscii() );
 }
 
-void _ikeaRoot::showAbout()
+void _qikeaRoot::showAbout()
 {
-	ikeaAbout a( this );
+	qikeaAbout a( this );
 	QString Major, Minor, Build;
 	Major.setNum( CLIENT_VER_MAJ );
 	Minor.setNum( CLIENT_VER_MIN );

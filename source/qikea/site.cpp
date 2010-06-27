@@ -39,7 +39,7 @@
  *
  */
 
-#include "ikea.h"
+#include "qikea.h"
 
 #define EXCH_AGGR_MODE		0
 #define EXCH_MAIN_MODE		1
@@ -148,7 +148,7 @@ bool string_to_dhgrp( QString & string, long & dhgrp )
 	return true;
 }
 
-void ikeaSite::init()
+void _qikeaSite::init()
 {
 	comboBoxConfigMethod->setCurrentIndex( 1 );
 
@@ -195,9 +195,9 @@ void ikeaSite::init()
 	updatePolicy();
 }
 
-void ikeaSite::policyAdd()
+void _qikeaSite::policyAdd()
 {
-	ikeaTopology t( this );
+	qikeaTopology t( this );
 	if( t.exec() == QDialog::Rejected )
 		return;
 
@@ -227,7 +227,7 @@ void ikeaSite::policyAdd()
 	}
 }
 
-void ikeaSite::policyModify()
+void _qikeaSite::policyModify()
 {
 	QTreeWidgetItem * i = treeWidgetPolicies->currentItem();
 	if( i == NULL )
@@ -241,7 +241,7 @@ void ikeaSite::policyModify()
 	address = address.replace( ' ', "" );
 	netmask = netmask.replace( ' ', "" );
 
-	ikeaTopology t( this );
+	qikeaTopology t( this );
 
 	t.lineEditAddress->setText( address );
 	t.lineEditNetmask->setText( netmask );
@@ -278,14 +278,14 @@ void ikeaSite::policyModify()
 	}
 }
 
-void ikeaSite::policyDelete()
+void _qikeaSite::policyDelete()
 {
 	QTreeWidgetItem * i = treeWidgetPolicies->currentItem();
 	if( i != NULL )
 		delete i;
 }
 
-bool ikeaSite::load( CONFIG & config )
+bool _qikeaSite::load( CONFIG & config )
 {
 	QString string;
 	char text[ MAX_CONFSTRING ];
@@ -799,7 +799,7 @@ bool ikeaSite::load( CONFIG & config )
 	return true;
 }
 
-bool ikeaSite::save( CONFIG & config )
+bool _qikeaSite::save( CONFIG & config )
 {
 	// remote name or address
 
@@ -1355,7 +1355,7 @@ bool ikeaSite::save( CONFIG & config )
 	return true;
 }
 
-bool ikeaSite::verify()
+bool _qikeaSite::verify()
 {
 	QString errmsg;
 
@@ -1542,23 +1542,23 @@ bool ikeaSite::verify()
 	return true;
 }
 
-void ikeaSite::updateConfigMethod()
+void _qikeaSite::updateConfigMethod()
 {
 	updateGeneral( true, true );
 }
 
 
-void ikeaSite::updateAddressMethod()
+void _qikeaSite::updateAddressMethod()
 {
 	updateGeneral( false, true );
 }
 
-void ikeaSite::updateAddressAuto()
+void _qikeaSite::updateAddressAuto()
 {
 	updateGeneral( false, false );
 }
 
-void ikeaSite::updateGeneral( bool adflt, bool mdflt )
+void _qikeaSite::updateGeneral( bool adflt, bool mdflt )
 {
 	QString amode = comboBoxAddressMethod->currentText();
 
@@ -1672,7 +1672,7 @@ void ikeaSite::updateGeneral( bool adflt, bool mdflt )
 	updateNameResolution();
 }
 
-void ikeaSite::updateClient()
+void _qikeaSite::updateClient()
 {
 	long aconf = comboBoxConfigMethod->currentIndex();
 
@@ -1729,7 +1729,7 @@ void ikeaSite::updateClient()
 		checkBoxBanner->setEnabled( true );
 }
 
-void ikeaSite::updateNameResolution()
+void _qikeaSite::updateNameResolution()
 {
 	long aconf = comboBoxConfigMethod->currentIndex();
 
@@ -1803,7 +1803,7 @@ void ikeaSite::updateNameResolution()
 	}
 }
 
-void ikeaSite::updateAuthMethod()
+void _qikeaSite::updateAuthMethod()
 {
 	// authentication method
 
@@ -1888,7 +1888,7 @@ void ikeaSite::updateAuthMethod()
 	}
 }
 
-void ikeaSite::updateAuthentication()
+void _qikeaSite::updateAuthentication()
 {
 	// grab the current local and remote id types
 
@@ -1988,7 +1988,7 @@ void ikeaSite::updateAuthentication()
 	updateRemoteID();
 }
 
-void ikeaSite::updateLocalID()
+void _qikeaSite::updateLocalID()
 {
 	QString type = comboBoxLocalIDType->currentText();
 
@@ -2038,7 +2038,7 @@ void ikeaSite::updateLocalID()
 		lineEditLocalIDData->setEnabled( !checkBoxLocalIDOption->isChecked() );
 }
 
-void ikeaSite::updateRemoteID()
+void _qikeaSite::updateRemoteID()
 {
 	QString type = comboBoxRemoteIDType->currentText();
 
@@ -2088,7 +2088,7 @@ void ikeaSite::updateRemoteID()
 		lineEditRemoteIDData->setEnabled( !checkBoxRemoteIDOption->isChecked() );
 }
 
-void ikeaSite::updatePhase1()
+void _qikeaSite::updatePhase1()
 {
 	// exchange mode
 
@@ -2169,7 +2169,7 @@ void ikeaSite::updatePhase1()
 	updateAuthentication();
 }
 
-void ikeaSite::updatePhase2()
+void _qikeaSite::updatePhase2()
 {
 	// transform type
 
@@ -2213,7 +2213,7 @@ void ikeaSite::updatePhase2()
 		combobox_setbytext( text, comboBoxP2Keylen );
 }
 
-void ikeaSite::updatePolicy()
+void _qikeaSite::updatePolicy()
 {
 	// policy configuration
 
@@ -2254,7 +2254,7 @@ void ikeaSite::updatePolicy()
 	}
 }
 
-void ikeaSite::selectLocalID()
+void _qikeaSite::selectLocalID()
 {                        
 	lineEditLocalIDData->clear();
 	checkBoxLocalIDOption->setChecked( true );
@@ -2262,7 +2262,7 @@ void ikeaSite::selectLocalID()
 	updateLocalID();
 }
 
-void ikeaSite::selectRemoteID()
+void _qikeaSite::selectRemoteID()
 {
 	lineEditRemoteIDData->clear();
 	checkBoxRemoteIDOption->setChecked( true );
@@ -2270,7 +2270,7 @@ void ikeaSite::selectRemoteID()
 	updateRemoteID();
 }
 
-void ikeaSite::inputCAFile()
+void _qikeaSite::inputCAFile()
 {
 	QString types(
 		"OpenSSL Files (*.key *.pem *.crt *.crt);;"
@@ -2279,14 +2279,14 @@ void ikeaSite::inputCAFile()
 
 	QString filePath = QFileDialog::getOpenFileName(
 				this, "Select CA File",
-				ikea.cert_path(),
+				qikea.cert_path(),
 				types );
 
 	if( filePath.length() )
 		lineEditCAFile->setText( filePath );
 }
 
-void ikeaSite::inputCertFile()
+void _qikeaSite::inputCertFile()
 {
 	QString types(
 		"OpenSSL Files (*.key *.pem *.crt *.crt);;"
@@ -2295,7 +2295,7 @@ void ikeaSite::inputCertFile()
 
 	QString filePath = QFileDialog::getOpenFileName(
 				this, "Select CA File",
-				ikea.cert_path(),
+				qikea.cert_path(),
 				types );
 
 	if( filePath.length() )
@@ -2303,7 +2303,7 @@ void ikeaSite::inputCertFile()
 }
 
 
-void ikeaSite::inputPKeyFile()
+void _qikeaSite::inputPKeyFile()
 {
 	QString types(
 		"OpenSSL Files (*.key *.pem *.crt *.crt);;"
@@ -2312,7 +2312,7 @@ void ikeaSite::inputPKeyFile()
 
 	QString filePath = QFileDialog::getOpenFileName(
 				this, "Select CA File",
-				ikea.cert_path(),
+				qikea.cert_path(),
 				types );
 
 	if( filePath.length() )

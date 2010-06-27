@@ -1,6 +1,6 @@
 <ui version="4.0" >
- <class>ikeaTopology</class>
- <widget class="QDialog" name="ikeaTopology" >
+ <class>qikeaTopology</class>
+ <widget class="QDialog" name="qikeaTopology" >
   <property name="geometry" >
    <rect>
     <x>0</x>
@@ -13,7 +13,7 @@
    <string>Tolology Entry</string>
   </property>
   <property name="windowIcon" >
-   <iconset resource="ikea.qrc" >
+   <iconset>
     <normaloff>:/png/site_mod.png</normaloff>:/png/site_mod.png</iconset>
   </property>
   <layout class="QVBoxLayout" >

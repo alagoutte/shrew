@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ui version="4.0">
+<ui version="4.0" >
  <author>Matthew Grooms</author>
- <class>ikeaRoot</class>
- <widget class="QMainWindow" name="ikeaRoot">
-  <property name="geometry">
+ <class>qikeaRoot</class>
+ <widget class="QMainWindow" name="qikeaRoot" >
+  <property name="geometry" >
    <rect>
     <x>0</x>
     <y>0</y>
@@ -11,278 +10,278 @@
     <height>270</height>
    </rect>
   </property>
-  <property name="windowTitle">
+  <property name="windowTitle" >
    <string>Shrew Soft VPN Access Manager</string>
   </property>
-  <property name="windowIcon">
-   <iconset resource="ikea.qrc">
+  <property name="windowIcon" >
+   <iconset>
     <normaloff>:/png/ikea.png</normaloff>:/png/ikea.png</iconset>
   </property>
-  <property name="styleSheet">
-   <string/>
+  <property name="styleSheet" >
+   <string notr="true" />
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout">
+  <widget class="QWidget" name="centralwidget" >
+   <layout class="QVBoxLayout" >
     <item>
-     <widget class="QListWidget" name="listWidgetSites">
-      <property name="contextMenuPolicy">
+     <widget class="QListWidget" name="listWidgetSites" >
+      <property name="contextMenuPolicy" >
        <enum>Qt::CustomContextMenu</enum>
       </property>
-      <property name="editTriggers">
+      <property name="editTriggers" >
        <set>QAbstractItemView::EditKeyPressed</set>
       </property>
-      <property name="movement">
+      <property name="movement" >
        <enum>QListView::Static</enum>
       </property>
-      <property name="resizeMode">
+      <property name="resizeMode" >
        <enum>QListView::Adjust</enum>
       </property>
-      <property name="viewMode">
+      <property name="viewMode" >
        <enum>QListView::IconMode</enum>
       </property>
-      <property name="uniformItemSizes">
+      <property name="uniformItemSizes" >
        <bool>true</bool>
       </property>
-      <property name="sortingEnabled">
+      <property name="sortingEnabled" >
        <bool>true</bool>
       </property>
      </widget>
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
+  <widget class="QMenuBar" name="menubar" >
+   <property name="geometry" >
     <rect>
      <x>0</x>
      <y>0</y>
      <width>380</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
+   <widget class="QMenu" name="menuFile" >
+    <property name="title" >
      <string>&amp;File</string>
     </property>
-    <addaction name="actionConnect"/>
-    <addaction name="separator"/>
-    <addaction name="actionImport"/>
-    <addaction name="actionExport"/>
-    <addaction name="separator"/>
-    <addaction name="actionExit"/>
+    <addaction name="actionConnect" />
+    <addaction name="separator" />
+    <addaction name="actionImport" />
+    <addaction name="actionExport" />
+    <addaction name="separator" />
+    <addaction name="actionExit" />
    </widget>
-   <widget class="QMenu" name="menuEdit">
-    <property name="title">
+   <widget class="QMenu" name="menuEdit" >
+    <property name="title" >
      <string>&amp;Edit</string>
     </property>
-    <addaction name="actionAdd"/>
-    <addaction name="actionDelete"/>
-    <addaction name="actionRename"/>
-    <addaction name="separator"/>
-    <addaction name="actionModify"/>
+    <addaction name="actionAdd" />
+    <addaction name="actionDelete" />
+    <addaction name="actionRename" />
+    <addaction name="separator" />
+    <addaction name="actionModify" />
    </widget>
-   <widget class="QMenu" name="menuHelp">
-    <property name="title">
+   <widget class="QMenu" name="menuHelp" >
+    <property name="title" >
      <string>&amp;Help</string>
     </property>
-    <addaction name="actionAbout"/>
+    <addaction name="actionAbout" />
    </widget>
-   <widget class="QMenu" name="menuView">
-    <property name="title">
+   <widget class="QMenu" name="menuView" >
+    <property name="title" >
      <string>&amp;View</string>
     </property>
-    <addaction name="actionViewLarge"/>
-    <addaction name="actionViewSmall"/>
-    <addaction name="separator"/>
+    <addaction name="actionViewLarge" />
+    <addaction name="actionViewSmall" />
+    <addaction name="separator" />
    </widget>
-   <addaction name="menuFile"/>
-   <addaction name="menuEdit"/>
-   <addaction name="menuView"/>
-   <addaction name="menuHelp"/>
+   <addaction name="menuFile" />
+   <addaction name="menuEdit" />
+   <addaction name="menuView" />
+   <addaction name="menuHelp" />
   </widget>
-  <widget class="QToolBar" name="toolBar">
-   <property name="focusPolicy">
+  <widget class="QToolBar" name="toolBar" >
+   <property name="focusPolicy" >
     <enum>Qt::TabFocus</enum>
    </property>
-   <property name="windowTitle">
+   <property name="windowTitle" >
     <string>toolBar</string>
    </property>
-   <property name="autoFillBackground">
+   <property name="autoFillBackground" >
     <bool>false</bool>
    </property>
-   <property name="movable">
+   <property name="movable" >
     <bool>true</bool>
    </property>
-   <property name="iconSize">
+   <property name="iconSize" >
     <size>
      <width>32</width>
      <height>32</height>
     </size>
    </property>
-   <property name="toolButtonStyle">
+   <property name="toolButtonStyle" >
     <enum>Qt::ToolButtonTextBesideIcon</enum>
    </property>
-   <attribute name="toolBarArea">
+   <attribute name="toolBarArea" >
     <enum>TopToolBarArea</enum>
    </attribute>
-   <attribute name="toolBarBreak">
+   <attribute name="toolBarBreak" >
     <bool>false</bool>
    </attribute>
-   <addaction name="actionConnect"/>
-   <addaction name="separator"/>
-   <addaction name="actionAdd"/>
-   <addaction name="actionModify"/>
-   <addaction name="actionDelete"/>
+   <addaction name="actionConnect" />
+   <addaction name="separator" />
+   <addaction name="actionAdd" />
+   <addaction name="actionModify" />
+   <addaction name="actionDelete" />
   </widget>
-  <action name="actionConnect">
-   <property name="icon">
-    <iconset resource="ikea.qrc">
+  <action name="actionConnect" >
+   <property name="icon" >
+    <iconset>
      <normaloff>:/png/site_con.png</normaloff>:/png/site_con.png</iconset>
    </property>
-   <property name="text">
+   <property name="text" >
     <string>&amp;Connect</string>
    </property>
-   <property name="iconText">
+   <property name="iconText" >
     <string>Connect</string>
    </property>
-   <property name="toolTip">
+   <property name="toolTip" >
     <string>Connect using this site configuration</string>
    </property>
   </action>
-  <action name="actionAdd">
-   <property name="icon">
-    <iconset resource="ikea.qrc">
+  <action name="actionAdd" >
+   <property name="icon" >
+    <iconset>
      <normaloff>:/png/site_add.png</normaloff>:/png/site_add.png</iconset>
    </property>
-   <property name="text">
+   <property name="text" >
     <string>&amp;Add</string>
    </property>
-   <property name="iconText">
+   <property name="iconText" >
     <string>Add</string>
    </property>
-   <property name="toolTip">
+   <property name="toolTip" >
     <string>Add a new site configuration</string>
    </property>
   </action>
-  <action name="actionDelete">
-   <property name="icon">
-    <iconset resource="ikea.qrc">
+  <action name="actionDelete" >
+   <property name="icon" >
+    <iconset>
      <normaloff>:/png/site_del.png</normaloff>:/png/site_del.png</iconset>
    </property>
-   <property name="text">
+   <property name="text" >
     <string>&amp;Delete</string>
    </property>
-   <property name="iconText">
+   <property name="iconText" >
     <string>Delete</string>
    </property>
-   <property name="toolTip">
+   <property name="toolTip" >
     <string>Delete this site configuration</string>
    </property>
   </action>
-  <action name="actionModify">
-   <property name="icon">
-    <iconset resource="ikea.qrc">
+  <action name="actionModify" >
+   <property name="icon" >
+    <iconset>
      <normaloff>:/png/site_mod.png</normaloff>:/png/site_mod.png</iconset>
    </property>
-   <property name="text">
+   <property name="text" >
     <string>&amp;Modify</string>
    </property>
-   <property name="iconText">
+   <property name="iconText" >
     <string>Modify</string>
    </property>
-   <property name="toolTip">
+   <property name="toolTip" >
     <string>Modify this site configuration</string>
    </property>
   </action>
-  <action name="actionImport">
-   <property name="text">
+  <action name="actionImport" >
+   <property name="text" >
     <string>Import</string>
    </property>
   </action>
-  <action name="actionExport">
-   <property name="text">
+  <action name="actionExport" >
+   <property name="text" >
     <string>Export</string>
    </property>
   </action>
-  <action name="actionExit">
-   <property name="text">
+  <action name="actionExit" >
+   <property name="text" >
     <string>Exit</string>
    </property>
   </action>
-  <action name="actionRename">
-   <property name="text">
+  <action name="actionRename" >
+   <property name="text" >
     <string>Rename</string>
    </property>
   </action>
-  <action name="actionAbout">
-   <property name="text">
+  <action name="actionAbout" >
+   <property name="text" >
     <string>About</string>
    </property>
   </action>
-  <action name="actionLarge_Icons">
-   <property name="text">
+  <action name="actionLarge_Icons" >
+   <property name="text" >
     <string>Large Icons</string>
    </property>
   </action>
-  <action name="actionViewLarge">
-   <property name="checkable">
+  <action name="actionViewLarge" >
+   <property name="checkable" >
     <bool>true</bool>
    </property>
-   <property name="checked">
+   <property name="checked" >
     <bool>true</bool>
    </property>
-   <property name="text">
+   <property name="text" >
     <string>Large Icons</string>
    </property>
-   <property name="iconText">
+   <property name="iconText" >
     <string>&amp;Large Icons</string>
    </property>
-   <property name="toolTip">
+   <property name="toolTip" >
     <string>Large Icon View</string>
    </property>
   </action>
-  <action name="actionViewSmall">
-   <property name="checkable">
+  <action name="actionViewSmall" >
+   <property name="checkable" >
     <bool>true</bool>
    </property>
-   <property name="text">
+   <property name="text" >
     <string>Small Icons</string>
    </property>
-   <property name="iconText">
+   <property name="iconText" >
     <string>&amp;Small Icons</string>
    </property>
-   <property name="toolTip">
+   <property name="toolTip" >
     <string>Small Icon View</string>
    </property>
   </action>
-  <action name="actionViewDetail">
-   <property name="text">
+  <action name="actionViewDetail" >
+   <property name="text" >
     <string>Details</string>
    </property>
-   <property name="iconText">
+   <property name="iconText" >
     <string>&amp;Details</string>
    </property>
-   <property name="toolTip">
+   <property name="toolTip" >
     <string>Detailed View</string>
    </property>
   </action>
-  <action name="actionViewToolBar">
-   <property name="checkable">
+  <action name="actionViewToolBar" >
+   <property name="checkable" >
     <bool>true</bool>
    </property>
-   <property name="checked">
+   <property name="checked" >
     <bool>true</bool>
    </property>
-   <property name="text">
+   <property name="text" >
     <string>Toolbar</string>
    </property>
-   <property name="iconText">
+   <property name="iconText" >
     <string>&amp;Toolbar</string>
    </property>
   </action>
  </widget>
- <layoutdefault spacing="0" margin="0"/>
+ <layoutdefault spacing="0" margin="0" />
  <resources>
-  <include location="ikea.qrc"/>
+  <include location="ikea.qrc" />
  </resources>
  <connections/>
 </ui>
