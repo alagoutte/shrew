@@ -934,6 +934,25 @@ long _IKEC::func( void * )
 		}
 	}
 
+	// policy type
+
+	peer.plcy_level = POLICY_LEVEL_AUTO;
+
+	if( config.get_string( "policy-level", text, MAX_CONFSTRING, 0 ) )
+	{
+		if( !strcmp( "use", text ) )
+			peer.plcy_level = POLICY_LEVEL_USE;
+
+		if( !strcmp( "require", text ) )
+			peer.plcy_level = POLICY_LEVEL_REQUIRE;
+
+		if( !strcmp( "unique", text ) )
+			peer.plcy_level = POLICY_LEVEL_UNIQUE;
+
+		if( !strcmp( "shared", text ) )
+			peer.plcy_level = POLICY_LEVEL_SHARED;
+	}
+
 	// nailed policy enable
 
 	numb = 0;

@@ -200,6 +200,7 @@ typedef class _ikeaSite : public QDialog, public Ui::ikeaSite
 	void updateGeneral( bool adflt, bool mdflt );
 	void updateClient();
 	void updateNameResolution();
+	void updateAuthMethod();
 	void updateAuthentication();
 	void updateLocalID();
 	void updateRemoteID();

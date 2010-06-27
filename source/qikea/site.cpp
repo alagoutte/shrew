@@ -554,6 +554,8 @@ bool ikeaSite::load( CONFIG & config )
 			comboBoxAuthMethod->setCurrentIndex( 5 );
 	}
 
+	updateAuthMethod();
+
 	// local identity type
 	//
 	// NOTE : Requires phase1 exchange type & authentication mode
@@ -733,6 +735,12 @@ bool ikeaSite::load( CONFIG & config )
 
 	if( config.get_number( "phase2-life-kbytes", &numb ) )
 		lineEditP2LifeData->setText( QString::number( numb, 10 ) );
+
+	// // policy level option ( default auto )
+
+	if( config.get_string( "policy-level",
+		text, MAX_CONFSTRING, 0 ) )
+		combobox_setbytext( text, comboBoxPolicyLevel );
 
 	// policy nailed sa option ( defailt off )
 
@@ -1283,6 +1291,12 @@ bool ikeaSite::save( CONFIG & config )
 		comboBoxP2Compress->currentText().toAscii(),
 		comboBoxP2Compress->currentText().length() );
 
+	// policy level option
+
+	config.set_string( "policy-level",
+		comboBoxPolicyLevel->currentText().toAscii(),
+		comboBoxPolicyLevel->currentText().length() );
+
 	// policy nailed sa option
 
 	if( !checkBoxPolicyNailed->isChecked() )
@@ -1789,15 +1803,11 @@ void ikeaSite::updateNameResolution()
 	}
 }
 
-void ikeaSite::updateAuthentication()
+void ikeaSite::updateAuthMethod()
 {
 	// authentication method
 
 	long auth = comboBoxAuthMethod->currentIndex();
-
-	// local identity
-
-	QString locid = comboBoxLocalIDType->currentText();
 
 	switch( auth )
 	{
@@ -1843,18 +1853,6 @@ void ikeaSite::updateAuthentication()
 		}
 	}
 
-	// attempt to select old value, reset on failure
-
-	if( !combobox_setbytext( locid, comboBoxLocalIDType ) )
-	{
-		lineEditLocalIDData->clear();
-		checkBoxLocalIDOption->setChecked( true );
-	}
-
-	// remote identity
-
-	QString rmtid = comboBoxRemoteIDType->currentText();
-
 	switch( auth )
 	{
 		case AUTH_HYBRID_RSA_XAUTH:
@@ -1888,8 +1886,26 @@ void ikeaSite::updateAuthentication()
 			break;
 		}
 	}
+}
 
-	// attempt to select old value, reset on failure
+void ikeaSite::updateAuthentication()
+{
+	// grab the current local and remote id types
+
+	QString locid = comboBoxLocalIDType->currentText();
+	QString rmtid = comboBoxRemoteIDType->currentText();
+
+	// update the authentication method
+
+	updateAuthMethod();
+
+	// attempt to re-select the id types
+
+	if( !combobox_setbytext( locid, comboBoxLocalIDType ) )
+	{
+		lineEditLocalIDData->clear();
+		checkBoxLocalIDOption->setChecked( true );
+	}
 
 	if( !combobox_setbytext( rmtid, comboBoxRemoteIDType ) )
 	{
