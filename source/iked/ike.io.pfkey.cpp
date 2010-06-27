@@ -338,7 +338,7 @@ bool _IKED::ph2id_paddr( IKE_PH2ID & ph2id, PFKI_ADDR & paddr )
 	return false;
 }
 
-long _IKED::pfkey_init_phase2( bool nailed, u_int16_t plcytype, u_int32_t plcyid, u_int32_t seq )
+long _IKED::pfkey_init_phase2( bool nail, u_int16_t plcytype, u_int32_t plcyid, u_int32_t seq )
 {
 	//
 	// locate oubound policy by id
@@ -370,7 +370,7 @@ long _IKED::pfkey_init_phase2( bool nailed, u_int16_t plcytype, u_int32_t plcyid
 	// in the form of an aquire
 	//
 
-	if( policy_out->flags & PFLAG_NAILED )
+	if( ( policy_out->flags & PFLAG_NAILED ) && !nail )
 	{
 		log.txt( LLOG_INFO, "ii : ignoring init phase2 by acquire, tunnel is nailed\n" );
 
@@ -532,11 +532,10 @@ long _IKED::pfkey_init_phase2( bool nailed, u_int16_t plcytype, u_int32_t plcyid
 	ph2->plcyid_out = policy_out->sp.id;
 
 	//
-	// configure client nailed policy
+	// store the nailed sa option
 	//
 
-	if( nailed )
-		ph2->nailed = true;
+	ph2->nailed = nail;
 
 	//
 	// if the tunnel uses shared policy level, we
