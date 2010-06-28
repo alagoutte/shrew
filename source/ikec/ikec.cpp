@@ -213,6 +213,20 @@ bool _IKEC::auto_connect()
 	return autoconnect;
 }
 
+bool _IKEC::user_credentials()
+{
+	char text[ MAX_CONFSTRING ];
+
+	if( config.get_string( "auth-method", text, MAX_CONFSTRING, 0 ) )
+		if( !strcmp( "hybrid-rsa-xauth", text ) ||
+			!strcmp( "hybrid-grp-xauth", text ) ||
+			!strcmp( "mutual-rsa-xauth", text ) ||
+			!strcmp( "mutual-psk-xauth", text ) )
+			return true;
+
+	return false;
+}
+
 bool _IKEC::vpn_connect( bool wait_input )
 {
 	if( cstate != IKEC_STATE_DISCONNECTED )

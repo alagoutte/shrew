@@ -108,6 +108,8 @@ typedef class _IKEC : public ITH_EXEC
 	IKEC_STATE	state();
 
 	bool		auto_connect();
+	bool		user_credentials();
+
 	bool		vpn_connect( bool wait_input );
 	bool		vpn_disconnect();
 

@@ -68,6 +68,9 @@ bool _QIKEC::init( int argc, char ** argv, qikecRoot * setRoot )
 		r->lineEditPassword->setText( password.text() );
 	}
 
+	if( !user_credentials() )
+		r->groupBoxCredentials->hide();
+
 	return true;
 }
 
