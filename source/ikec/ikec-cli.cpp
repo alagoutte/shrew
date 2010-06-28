@@ -48,40 +48,20 @@ const char * prompt( EditLine * e )
 
 bool _IKEC_CLI::get_username()
 {
-	read_str( username );
+	if( !auto_connect() )
+		read_str( username );
 }
 
 bool _IKEC_CLI::get_password()
 {
-	read_pwd( password, "<< : enter xauth password : " );
+	if( !auto_connect() )
+		read_pwd( password, "<< : enter xauth password : " );
 }
 
 bool _IKEC_CLI::get_filepass( BDATA & path )
 {
 	log( 0, "file password required for %s\n", path.text() );
 	read_pwd( fpass, "<< : enter file password : " );
-}
-
-bool _IKEC_CLI::set_state()
-{
-	switch( cstate )
-	{
-		case IKEC_STATE_DISCONNECTED:
-			log( 0, "disconnected\n" );
-			break;
-
-		case IKEC_STATE_CONNECTING:
-			log( 0, "connecting\n" );
-			break;
-
-		case IKEC_STATE_CONNECTED:
-			log( 0, "connected\n" );
-			break;
-
-		case IKEC_STATE_DISCONNECTING:
-			log( 0, "disconnecting\n" );
-			break;
-	}
 }
 
 bool _IKEC_CLI::set_stats()
@@ -92,12 +72,20 @@ bool _IKEC_CLI::set_status( long & status, BDATA & text )
 {
 	switch( status )
 	{
-		case STATUS_ENABLED:
+		case STATUS_DISCONNECTED:
+			log( status, "tunnel disabled\n" );
+			break;
+
+		case STATUS_CONNECTING:
+			log( status, "bringing up tunnel ...\n" );
+			break;
+
+		case STATUS_CONNECTED:
 			log( status, "tunnel enabled\n" );
 			break;
 
-		case STATUS_DISABLED:
-			log( status, "tunnel disabled\n" );
+		case STATUS_DISCONNECTING:
+			log( status, "bringing down tunnel\n" );
 			break;
 
 		case STATUS_BANNER:

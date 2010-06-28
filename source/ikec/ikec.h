@@ -68,13 +68,13 @@ typedef class _IKEC : public ITH_EXEC
 
 	ITH_COND	connecting;
 
-	IKE_PEER	peer;
+	IKE_PEER		peer;
 	IKE_XCONF       xconf;
 	IKE_PROPOSAL    proposal_isakmp;
 	IKE_PROPOSAL    proposal_esp;
 	IKE_PROPOSAL    proposal_ipcomp;
-	IKEI		ikei;
-	IKEI_STATS	stats;
+	IKEI			ikei;
+	IKEI_STATS		stats;
 
 	BDATA	sites;
 	BDATA	fspec;
@@ -82,12 +82,12 @@ typedef class _IKEC : public ITH_EXEC
 	BDATA	fpass;
 	BDATA	username;
 	BDATA	password;
+	bool	autoconnect;
 
 	virtual bool	get_username() = 0;
 	virtual bool	get_password() = 0;
 	virtual bool	get_filepass( BDATA & path ) = 0;
 
-	virtual bool	set_state() = 0;
 	virtual bool	set_stats() = 0;
 	virtual bool	set_status( long & status, BDATA & text ) = 0;
 
@@ -106,8 +106,10 @@ typedef class _IKEC : public ITH_EXEC
 	bool		save( BDATA & name );
 
 	IKEC_STATE	state();
-	bool		connect( bool wait_input );
-	bool		disconnect();
+
+	bool		auto_connect();
+	bool		vpn_connect( bool wait_input );
+	bool		vpn_disconnect();
 
 	virtual bool	log( long code, const char * format, ... ) = 0;
 

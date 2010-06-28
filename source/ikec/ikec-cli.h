@@ -60,7 +60,6 @@ typedef class _IKEC_CLI : public _IKEC
 	virtual bool get_password();
 	virtual bool get_filepass( BDATA & path );
 
-	virtual bool set_state();
 	virtual bool set_stats();
 	virtual bool set_status( long & status, BDATA & text );
 

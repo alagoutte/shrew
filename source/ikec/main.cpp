@@ -61,6 +61,11 @@ int main( int argc, char ** argv )
 	if( !ikec.opts( argc, argv ) )
 		return -1;
 
+	// autoconnect if requested
+
+	if( ikec.auto_connect() )
+		ikec.vpn_connect( true );
+
 	// process user input
 
 	bool exit = false;
@@ -74,11 +79,11 @@ int main( int argc, char ** argv )
 		switch( next )
 		{
 			case 'c': // <c> connect
-				ikec.connect( true );
+				ikec.vpn_connect( true );
 				break;
 
 			case 'd': // <d> disconnect
-				ikec.disconnect();
+				ikec.vpn_disconnect();
 				break;
 
 			case 'h': // <h> help

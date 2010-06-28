@@ -630,7 +630,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						process_phase1_send( ph1 );
 						ph1->dec( true );
 
-						msg.set_enable( true );
+						msg.set_status( STATUS_CONNECTING, "tunnel connecting ...\n" );
 						ikei->send_message( msg );
 					}
 					else
@@ -640,7 +640,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						if( tunnel != NULL )
 							tunnel->close = XCH_FAILED_USERREQ;
 
-						msg.set_enable( false );
+						msg.set_status( STATUS_DISCONNECTING, "tunnel disconnecting ...\n" );
 						ikei->send_message( msg );
 					}
 
@@ -754,7 +754,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 				// tunnel is enabled
 				//
 
-				msg.set_status( STATUS_ENABLED, "tunnel enabled\n" );
+				msg.set_status( STATUS_CONNECTED, "tunnel connected\n" );
 				ikei->send_message( msg );
 
 				tunnel->tstate |= TSTATE_VNET_ENABLE;
@@ -939,7 +939,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 	// close the client interface
 	//
 
-	msg.set_status( STATUS_DISABLED, "tunnel disabled\n" );
+	msg.set_status( STATUS_DISCONNECTED, "tunnel disconnected\n" );
 	ikei->send_message( msg );
 	ikei->detach();
 

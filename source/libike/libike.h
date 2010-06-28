@@ -98,12 +98,14 @@
 #define CFGSTR_CRED_RID				9
 #define CFGSTR_SPLIT_DOMAIN			10
 
-#define STATUS_ENABLED				1
-#define STATUS_DISABLED				2
-#define STATUS_BANNER				3
-#define STATUS_INFO					4
-#define STATUS_WARN					5
-#define STATUS_FAIL					6
+#define STATUS_DISCONNECTED			1
+#define STATUS_CONNECTING			2
+#define STATUS_CONNECTED			3
+#define STATUS_DISCONNECTING		4
+#define STATUS_BANNER				5
+#define STATUS_INFO					6
+#define STATUS_WARN					7
+#define STATUS_FAIL					8
 
 typedef struct _IKEI_HEADER
 {

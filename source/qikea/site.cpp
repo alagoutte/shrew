@@ -1134,7 +1134,7 @@ bool _qikeaSite::save( CONFIG & config )
 	QString rmtid = comboBoxRemoteIDType->currentText();
 
 	if( !rmtid.compare( IDTXT_ANY ) )
-		config.set_string( "any",
+		config.set_string( "ident-server-type",
 			"any", strlen( "any" ) );
 
 	if( !rmtid.compare( IDTXT_ASN1 ) )

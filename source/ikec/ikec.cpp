@@ -50,6 +50,7 @@ _IKEC::_IKEC()
 	memset( &stats, 0, sizeof( stats ) );
 
 	cstate = IKEC_STATE_DISCONNECTED;
+	autoconnect = false;
 
 	// locate user home directory
 
@@ -83,7 +84,8 @@ bool _IKEC::opts( int argc, char ** argv )
 	// read our command line args
 
 	bool syntax_error = false;
-	bool auto_connect = false;
+
+	BDATA name;
 
 	for( int argi = 1; argi < argc; argi++ )
 	{
@@ -97,12 +99,8 @@ bool _IKEC::opts( int argc, char ** argv )
 				break;
 			}
 
-			BDATA name;
 			name.set(
 				argv[ argi ], strlen( argv[ argi ] ) );
-
-			if( !load( name ) )
-				return false;
 
 			continue;
 		}
@@ -143,7 +141,7 @@ bool _IKEC::opts( int argc, char ** argv )
 
 		if( !strcmp( argv[ argi ], "-a" ) )
 		{
-			auto_connect = true;
+			autoconnect = true;
 			continue;
 		}
 
@@ -152,6 +150,9 @@ bool _IKEC::opts( int argc, char ** argv )
 		syntax_error = true;
 		break;
 	}
+
+	if( !name.size() )
+		syntax_error = true;
 
 	// handle any syntax errors
 
@@ -162,16 +163,18 @@ bool _IKEC::opts( int argc, char ** argv )
 
 		log( STATUS_INFO,
 			"ikec -r \"name\" [ -u <user> ][ -p <pass> ][ -a ]\n"
-			"  -r\tsite configuration path\n"
-			"  -u\tconnection user name\n"
-			"  -p\tconnection user password\n"
-			"  -a\tauto connect\n" );
+			" -r\tsite configuration path\n"
+			" -u\tconnection user name\n"
+			" -p\tconnection user password\n"
+			" -a\tauto connect\n" );
 
 		return false;
 	}
 
-	if( auto_connect )
-		connect( true );
+	// load the configuration file
+
+	if( !load( name ) )
+		return false;
 
 	return !syntax_error;
 }
@@ -197,7 +200,7 @@ bool _IKEC::load( BDATA & name )
 		return false;
 	}
 
-	log( 0, "config loaded for site \'%s\'\n",
+	log( STATUS_INFO, "config loaded for site \'%s\'\n",
 		fspec.text() );
 
 	config.set_id( fspec.text() );
@@ -205,7 +208,12 @@ bool _IKEC::load( BDATA & name )
 	return true;
 }
 
-bool _IKEC::connect( bool wait_input )
+bool _IKEC::auto_connect()
+{
+	return autoconnect;
+}
+
+bool _IKEC::vpn_connect( bool wait_input )
 {
 	if( cstate != IKEC_STATE_DISCONNECTED )
 	{
@@ -231,7 +239,7 @@ bool _IKEC::connect( bool wait_input )
 		connecting.wait( -1 );
 }
 
-bool _IKEC::disconnect()
+bool _IKEC::vpn_disconnect()
 {
 	if( cstate == IKEC_STATE_DISCONNECTED )
 	{
@@ -921,15 +929,12 @@ long _IKEC::func( void * )
 			{
 				// static domain configuration
 
-				if( !config.get_string( "client-dns-suffix", text, MAX_CONFSTRING, 0 ) )
+				if( config.get_string( "client-dns-suffix", text, MAX_CONFSTRING, 0 ) )
 				{
-					log( STATUS_FAIL, "config error : client-dns-suffix undefined\n" );
-					return -1;
+					strncpy( xconf.nscfg.dnss_suffix, text, CONF_STRLEN );
+
+					xconf.opts |= IPSEC_OPTS_DOMAIN;
 				}
-
-				strncpy( xconf.nscfg.dnss_suffix, text, CONF_STRLEN );
-
-				xconf.opts |= IPSEC_OPTS_DOMAIN;
 			}
 		}
 	}
@@ -999,13 +1004,6 @@ long _IKEC::func( void * )
 	}
 
 	log( STATUS_INFO, "attached to key daemon ...\n" );
-
-	//
-	// ---------- UPDATE STATE ----------
-	//
-
-	cstate = IKEC_STATE_CONNECTING;
-	set_state();
 
 	//
 	// send the peer configuration message
@@ -1430,24 +1428,6 @@ long _IKEC::func( void * )
 		switch( msg.header.type )
 		{
 			//
-			// enable message
-			//
-
-			case IKEI_MSGID_ENABLE:
-			
-				if( msg.get_enable( &msgres ) != IPCERR_OK )
-					break;
-
-				if( msgres )
-					cstate = IKEC_STATE_CONNECTED;
-				else
-					cstate = IKEC_STATE_DISCONNECTING;
-
-				set_state();
-
-				break;
-
-			//
 			// status message
 			//
 
@@ -1455,6 +1435,25 @@ long _IKEC::func( void * )
 			{
 				if( msg.get_status( &status, &btext ) != IPCERR_OK )
 					break;
+
+				switch( status )
+				{
+					case STATUS_DISCONNECTED:
+						cstate = IKEC_STATE_DISCONNECTED;
+						break;
+
+					case STATUS_CONNECTING:
+						cstate = IKEC_STATE_CONNECTING;
+						break;
+
+					case STATUS_CONNECTED:
+						cstate = IKEC_STATE_CONNECTED;
+						break;
+
+					case STATUS_DISCONNECTING:
+						cstate = IKEC_STATE_DISCONNECTING;
+						break;
+				}
 
 				set_status( status, btext );
 
@@ -1482,13 +1481,6 @@ long _IKEC::func( void * )
 	ikei.detach();
 
 	log( STATUS_INFO, "detached from key daemon ...\n" );
-
-	//
-	// ---------- UPDATE STATE ----------
-	//
-
-	cstate = IKEC_STATE_DISCONNECTED;
-	set_state();
 
 	return 0;
 }
