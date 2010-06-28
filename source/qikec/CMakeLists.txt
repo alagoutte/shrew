@@ -32,17 +32,18 @@ qt4_wrap_ui(
 
 qt4_wrap_cpp(
 	CXX_FILES
-	ikec.h )
+	qikec.h )
 
 qt4_add_resources(
 	QRC_FILES
-	ikec.qrc )
+	qikec.qrc )
 
 add_executable(
 	qikec
-	ikec.cpp
 	main.cpp
+	qikec.cpp
 	root.cpp
+	../ikec/ikec.cpp
 	../ikec/config.cpp
 	${UIH_FILES}
 	${CXX_FILES}

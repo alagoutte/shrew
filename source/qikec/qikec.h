@@ -39,8 +39,8 @@
  *
  */
 
-#ifndef _IKEC_H_
-#define _IKEC_H_
+#ifndef _QIKEC_H_
+#define _QIKEC_H_
 
 #include <unistd.h>
 #include <signal.h>
@@ -54,41 +54,18 @@
 #include <QThread>
 #include <QFileInfo>
 
-#include "libike.h"
-#include "../ikec/config.h"
+#include "config.h"
+#include "ikec.h"
 #include "ui_root.h"
 #include "ui_banner.h"
 #include "ui_filepass.h"
 
-#define EVENT_RUNNING		QEvent::Type( QEvent::User + 1 )
-#define EVENT_ENABLE		QEvent::Type( QEvent::User + 2 )
-#define EVENT_STATUS		QEvent::Type( QEvent::User + 3 )
-#define EVENT_STATS		QEvent::Type( QEvent::User + 4 )
-#define EVENT_FILEPASS		QEvent::Type( QEvent::User + 5 )
-
-class RunningEvent : public QEvent
-{
-	public:
-
-	bool running;
-
-	RunningEvent( bool value ) : QEvent( EVENT_RUNNING )
-	{
-		running = value;
-	}
-};
-
-class EnableEvent : public QEvent
-{
-	public:
-
-	bool enabled;
-
-	EnableEvent( bool value ) : QEvent( EVENT_ENABLE )
-	{
-		enabled = value;
-	}
-};
+#define EVENT_STATUS		QEvent::Type( QEvent::User + 1 )
+#define EVENT_STATE			QEvent::Type( QEvent::User + 2 )
+#define EVENT_STATS			QEvent::Type( QEvent::User + 3 )
+#define EVENT_USERNAME		QEvent::Type( QEvent::User + 4 )
+#define EVENT_PASSWORD		QEvent::Type( QEvent::User + 5 )
+#define EVENT_FILEPASS		QEvent::Type( QEvent::User + 6 )
 
 class StatusEvent : public QEvent
 {
@@ -116,6 +93,43 @@ class StatsEvent : public QEvent
 	}
 };
 
+class TextData
+{
+	public:
+
+	QString	text;
+	int		result;
+
+	TextData()
+	{
+		result = -1;
+	}
+};
+
+class UsernameEvent : public QEvent
+{
+	public:
+
+	TextData * data;
+	
+	UsernameEvent( TextData * value ) : QEvent( EVENT_USERNAME )
+	{
+		data = value;
+	}
+};
+
+class PasswordEvent : public QEvent
+{
+	public:
+
+	TextData * data;
+	
+	PasswordEvent( TextData * value ) : QEvent( EVENT_PASSWORD )
+	{
+		data = value;
+	}
+};
+
 class FilePassData
 {
 	public:
@@ -134,21 +148,21 @@ class FilePassEvent : public QEvent
 {
 	public:
 
-	FilePassData *	PassData;
+	FilePassData * data;
 
-	FilePassEvent( FilePassData * CallData ) : QEvent( EVENT_FILEPASS )
+	FilePassEvent( FilePassData * value ) : QEvent( EVENT_FILEPASS )
 	{
-		PassData = CallData;
+		data = value;
 	}
 };
 
-typedef class _ikecRoot : public QMainWindow, public Ui::ikecRoot
+typedef class _qikecRoot : public QMainWindow, public Ui::ikecRoot
 {
 	Q_OBJECT
 
 	public:
 
-	_ikecRoot( QWidget * parent = NULL ) : QMainWindow( parent )
+	_qikecRoot( QWidget * parent = NULL ) : QMainWindow( parent )
 	{
 		setupUi( this );
 
@@ -165,30 +179,30 @@ typedef class _ikecRoot : public QMainWindow, public Ui::ikecRoot
 	void siteConnect();
 	void siteDisconnect();
 
-}ikecRoot;
+}qikecRoot;
 
-typedef class _ikecBanner : public QDialog, public Ui::ikecBanner
+typedef class _qikecBanner : public QDialog, public Ui::ikecBanner
 {
 	Q_OBJECT
 
 	public:
 
-	_ikecBanner( QWidget * parent = NULL ) : QDialog( parent )
+	_qikecBanner( QWidget * parent = NULL ) : QDialog( parent )
 	{
 		setupUi( this );
 
 		connect( buttonOk, SIGNAL( clicked() ), this, SLOT( accept() ) );
 	}
 
-}ikecBanner;
+}qikecBanner;
 
-typedef class _ikecFilePass : public QDialog, public Ui::ikecFilePass
+typedef class _qikecFilePass : public QDialog, public Ui::ikecFilePass
 {
 	Q_OBJECT
 
 	public:
 
-	_ikecFilePass( QWidget * parent = NULL ) : QDialog( parent )
+	_qikecFilePass( QWidget * parent = NULL ) : QDialog( parent )
 	{
 		setupUi( this );
 
@@ -196,49 +210,30 @@ typedef class _ikecFilePass : public QDialog, public Ui::ikecFilePass
 		connect( buttonCancel, SIGNAL( clicked() ), this, SLOT( reject() ) );
 	}
 
-}ikecFilePass;
+}qikecFilePass;
 
-typedef class _IKEC : public QThread
+typedef class _QIKEC : public _IKEC, public QThread
 {
-	friend class _ikecRoot;
+	friend class _qikecRoot;
 	
 	protected:
 
-	char	fspec[ 255 ];
-	char	fpath[ 1024 ];
-	char	sites[ 1024 ];
-
-	ikecRoot * r;
-
-	IKE_PEER	peer;
-	IKE_XCONF       xconf;
-	IKE_PROPOSAL    proposal_isakmp;
-	IKE_PROPOSAL    proposal_esp;
-	IKE_PROPOSAL    proposal_ipcomp;
-	IKEI		ikei;
-
-	void	run();
+	qikecRoot * r;
 
 	public:
 
-	CONFIG	config;
-	bool	active;
+	virtual bool get_username();
+	virtual bool get_password();
+	virtual bool get_filepass( BDATA & path );
 
-	QString	username;
-	QString	password;
+	virtual bool set_stats();
+	virtual bool set_status( long & status, BDATA & text );
 
-	_IKEC();
-	~_IKEC();
+	bool			init( int argc, char ** argv, qikecRoot * setr );
+	virtual bool	log( long code, const char * format, ... );
 
-	bool	init( ikecRoot * setr );
-	bool	log( long code, const char * format, ... );
+}QIKEC;
 
-	char *	file_spec( char * name = NULL );
-	char *	file_path();
-	char *	site_path();
-
-}IKEC;
-
-extern IKEC ikec;
+extern QIKEC qikec;
 
 #endif

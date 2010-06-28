@@ -41,36 +41,114 @@
 
 #include "qikec.h"
 
-QIKEC qikec;
-
-int main( int argc, char ** argv )
+bool _QIKEC::init( int argc, char ** argv, qikecRoot * setRoot )
 {
-	signal( SIGPIPE, SIG_IGN );
+	// store our root window
 
-	// init the app
+	r = setRoot;
 
-	QApplication a( argc, argv );
+	// load our command line options
 
-	// create our root window
+	if( !qikec.opts( argc, argv ) )
+	{
+		r->lineEditUsername->setEnabled( false );
+		r->lineEditPassword->setEnabled( false );
+		r->pushButtonConnect->setEnabled( false );
+	}
 
-	qikecRoot r;
+	if( username.size() )
+	{
+		username.add( "", 1 );
+		r->lineEditUsername->setText( username.text() );
+	}
 
-	// init our ikec object
+	if( password.size() )
+	{
+		password.add( "", 1 );
+		r->lineEditPassword->setText( password.text() );
+	}
 
-	qikec.init( argc, argv, &r );
+	return true;
+}
 
-	// show the root window
+bool _QIKEC::get_username()
+{
+	TextData data;
+	QApplication::postEvent( r, new UsernameEvent( &data ) );
+	while( data.result == -1 )
+		msleep( 10 );
 
-	r.show();
+	if( !data.text.length() )
+		return false;
 
-	// autoconnect if requested
+	username.del();
+	username.set(
+		( const char * ) data.text.toAscii(), data.text.length() );
 
-	if( qikec.auto_connect() )
-		qikec.vpn_connect( false );
+	return true;
+}
 
-	// connect application close signal to slot
+bool _QIKEC::get_password()
+{
+	TextData data;
+	QApplication::postEvent( r, new PasswordEvent( &data ) );
+	while( data.result == -1 )
+		msleep( 10 );
 
-	a.connect( &a, SIGNAL( lastWindowClosed() ), &a, SLOT( quit() ) );
+	if( !data.text.length() )
+		return false;
 
-	return a.exec();
+	password.del();
+	password.set(
+		( const char * ) data.text.toAscii(), data.text.length() );
+
+	return true;
+}
+
+bool _QIKEC::get_filepass( BDATA & path )
+{
+	log( LOG_INFO, "file password required for %s\n", path.text() );
+
+	FilePassData PassData;
+	PassData.filepath = path.text();
+
+	QApplication::postEvent( r, new FilePassEvent( &PassData ) );
+	while( PassData.result == -1 )
+		msleep( 10 );
+
+	if( PassData.result == QDialog::Rejected )
+		return false;
+
+	QString text = PassData.password;
+	fpass.set(
+		( const char * ) text.toAscii(), text.length() );
+
+	return true;
+}
+
+bool _QIKEC::set_status( long & status, BDATA & text )
+{
+	log( status, text.text() );
+
+	return true;
+}
+
+bool _QIKEC::set_stats()
+{
+	QApplication::postEvent( r, new StatsEvent( stats ) );
+
+	return true;
+}
+
+bool _QIKEC::log( long code, const char * format, ... )
+{
+	char buff[ 1024 ];
+	memset( buff, 0, sizeof( buff ) );
+	va_list list;
+	va_start( list, format );
+	vsnprintf( buff, sizeof( buff ), format, list );
+
+	QApplication::postEvent( r, new StatusEvent( buff, code ) );
+
+	return true;
 }

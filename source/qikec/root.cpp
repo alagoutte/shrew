@@ -39,52 +39,10 @@
  *
  */
 
-#include "ikec.h"
+#include "qikec.h"
 
-void ikecRoot::customEvent( QEvent * e )
+void _qikecRoot::customEvent( QEvent * e )
 {
-	if( e->type() == EVENT_RUNNING )
-	{
-		RunningEvent * event = ( RunningEvent * ) e;
-
-		if( event->running )
-		{
-			textLabelStatusValue->setText( "Connecting" );
-
-			lineEditUsername->setEnabled( false );
-			lineEditPassword->setEnabled( false );
-
-			pushButtonConnect->setEnabled( false );
-			pushButtonConnect->setText( "Connect" );
-
-			pushButtonExit->setEnabled( true );
-			pushButtonExit->setText( "Cancel" );
-		}
-		else
-		{
-			textLabelStatusValue->setText( "Disconnected" );
-
-			lineEditUsername->setEnabled( true );
-			lineEditPassword->setEnabled( true );
-
-			pushButtonConnect->setEnabled( true );
-			pushButtonConnect->setText( "Connect" );
-
-			pushButtonExit->setEnabled( true );
-			pushButtonExit->setText( "Exit" );
-		}
-	}
-
-	if( e->type() == EVENT_ENABLE )
-	{
-		EnableEvent * event = ( EnableEvent * ) e;
-
-		if( event->enabled )
-			textBrowserStatus->insertPlainText( "bringing up tunnel ...\n" );
-		else
-			textBrowserStatus->insertPlainText( "bringing down tunnel ...\n" );
-	}
-
 	if( e->type() == EVENT_STATUS )
 	{
 		StatusEvent * event = ( StatusEvent * ) e;
@@ -112,34 +70,57 @@ void ikecRoot::customEvent( QEvent * e )
 		{
 			case STATUS_BANNER:
 			{
-				ikecBanner b( this );
+				qikecBanner b( this );
 				b.textBrowserMOTD->setText( event->text );
 				b.exec();
 
 				break;
 			}
 
-			case STATUS_ENABLED:
-
-				textLabelStatusValue->setText( "Connected" );
-
+			case STATUS_DISCONNECTED:
+				textLabelStatusValue->setText( "Disconnected" );
+				lineEditUsername->setEnabled( true );
+				lineEditPassword->setEnabled( true );
 				pushButtonConnect->setEnabled( true );
-				pushButtonConnect->setText( "Disconnect" );
-
-				pushButtonExit->setEnabled( false );
-				pushButtonExit->setText( "Cancel" );
-
-				textBrowserStatus->insertPlainText( event->text );
-
+				pushButtonConnect->setText( "Connect" );
+				pushButtonExit->setEnabled( true );
+				pushButtonExit->setText( "Exit" );
+				textBrowserStatus->insertPlainText( "tunnel disabled\n" );
 				break;
 
-			case STATUS_DISABLED:
+			case STATUS_CONNECTING:
+				textLabelStatusValue->setText( "Connecting" );
+				lineEditUsername->setEnabled( false );
+				lineEditPassword->setEnabled( false );
+				pushButtonConnect->setEnabled( false );
+				pushButtonConnect->setText( "Connect" );
+				pushButtonExit->setEnabled( true );
+				pushButtonExit->setText( "Cancel" );
+				textBrowserStatus->insertPlainText( "bringing up tunnel ...\n" );
+				break;
+
+			case STATUS_CONNECTED:
+				textLabelStatusValue->setText( "Connected" );
+				pushButtonConnect->setEnabled( true );
+				pushButtonConnect->setText( "Disconnect" );
+				pushButtonExit->setEnabled( false );
+				pushButtonExit->setText( "Exit" );
+				textBrowserStatus->insertPlainText( "tunnel enabled\n" );
+				break;
+
+			case STATUS_DISCONNECTING:
+				textLabelStatusValue->setText( "Disconnecting" );
+				pushButtonConnect->setEnabled( false );
+				pushButtonConnect->setText( "Disconnect" );
+				pushButtonExit->setEnabled( false );
+				pushButtonExit->setText( "Exit" );
+				textBrowserStatus->insertPlainText( "bringing down tunnel ...\n" );
+				break;
+
 			case STATUS_INFO:
 			case STATUS_WARN:
 			case STATUS_FAIL:
-
 				textBrowserStatus->insertPlainText( event->text );
-
 				break;
 
 			default:
@@ -209,57 +190,76 @@ void ikecRoot::customEvent( QEvent * e )
 			textLabelDPDValue->setText( "Disabled" );
 	}
 
+	if( e->type() == EVENT_USERNAME )
+	{
+		UsernameEvent * event = ( UsernameEvent * ) e;
+		event->data->text = lineEditUsername->text();
+		event->data->result = 0;
+	}
+
+	if( e->type() == EVENT_PASSWORD )
+	{
+		PasswordEvent * event = ( PasswordEvent * ) e;
+		event->data->text = lineEditPassword->text();
+		event->data->result = 0;
+
+		lineEditPassword->clear();
+	}
+
 	if( e->type() == EVENT_FILEPASS )
 	{
 		FilePassEvent * event = ( FilePassEvent * ) e;
 
-		ikecFilePass fp;
-		QFileInfo pathInfo( event->PassData->filepath );
+		qikecFilePass fp;
+		QFileInfo pathInfo( event->data->filepath );
 		fp.setWindowTitle( "Password for " + pathInfo.fileName() );
-		event->PassData->result = fp.exec();
-		event->PassData->password = fp.lineEditPassword->text();
+		event->data->result = fp.exec();
+		event->data->password = fp.lineEditPassword->text();
 	}
 }
 
-void ikecRoot::siteConnect()
+void _qikecRoot::siteConnect()
 {
-	if( ikec.active )
+	if( qikec.state() != IKEC_STATE_DISCONNECTED )
 	{
-		ikec.ikei.wakeup();
+		// call ikec disconnect function
+
+		qikec.vpn_disconnect();
 	}
 	else
 	{
-		// if enabled, verify that a valid
-		// username and password was supplied
+		// verify that a valid username and password was supplied
 
 		if( !groupBoxCredentials->isHidden() )
 		{
 			if( !lineEditUsername->text().length() ||
-			    !lineEditPassword->text().length() )
+				!lineEditPassword->text().length() )
 			{
-				textBrowserStatus->insertPlainText( 
+				qikec.log( STATUS_FAIL,
 					"please enter a valid username and password\n" );
 				return;
 			}
 		}
 
-		// store username and password
+		// call ikec connect function
 
-		ikec.username = lineEditUsername->text();
-		ikec.password = lineEditPassword->text();
-
-		// start our thread
-
-		ikec.start();
+		qikec.vpn_connect( false );
 	}
 }
 
 
-void ikecRoot::siteDisconnect()
+void _qikecRoot::siteDisconnect()
 {
-	if( ikec.active )
-		ikec.ikei.wakeup();
-	else
-		close();
-}
+	if( qikec.state() != IKEC_STATE_DISCONNECTED )
+	{
+		// call ikec disconnect function
 
+		qikec.vpn_disconnect();
+	}
+	else
+	{
+		// close the application
+
+		close();
+	}
+}
