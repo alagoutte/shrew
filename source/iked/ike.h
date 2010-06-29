@@ -644,7 +644,7 @@ typedef struct _IKE_XAUTH
 
 typedef struct _IKE_NSCFG
 {
-	bool		dhcp_dnss;						// dns server list from dhcp
+	bool		dnss_from_dhcp;					// dns server list obtained from dhcp
 	in_addr		dnss_list[ IPSEC_DNSS_MAX ];	// dns server list
 	uint32_t	dnss_count;						// dns server count
 	uint32_t	dnss_nodyn;						// dns dynamic update disabled
