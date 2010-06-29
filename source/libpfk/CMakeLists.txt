@@ -45,6 +45,6 @@ endif( APPLE )
 
 install(
 	TARGETS ss_pfk
-	LIBRARY DESTINATION lib
+	LIBRARY DESTINATION ${PATH_LIB}
 	FRAMEWORK DESTINATION "/Library/Frameworks" )
 

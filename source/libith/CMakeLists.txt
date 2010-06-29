@@ -47,6 +47,6 @@ endif( APPLE )
 
 install(
         TARGETS ss_ith
-        LIBRARY DESTINATION lib
+        LIBRARY DESTINATION ${PATH_LIB}
 		FRAMEWORK DESTINATION "/Library/Frameworks" )
 

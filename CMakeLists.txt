@@ -89,19 +89,22 @@ message(
 
 if( ETCDIR )
 
-	set(	PATH_ETC
+	set(
+		PATH_ETC
 		${ETCDIR} )
 
 else( ETCDIR )
 
 	if( EXISTS ${CMAKE_INSTALL_PREFIX}/etc )
 
-		set(	PATH_ETC
+		set(
+			PATH_ETC
 			"${CMAKE_INSTALL_PREFIX}/etc" )
 
 	else( EXISTS ${CMAKE_INSTALL_PREFIX}/etc )
 		
-		set(	PATH_ETC
+		set(
+			PATH_ETC
 			"/etc" )
 
 	endif( EXISTS ${CMAKE_INSTALL_PREFIX}/etc )
@@ -112,11 +115,40 @@ message(
 	STATUS
 	"Using etc path ${PATH_ETC} ..." )
 
+if( LIBDIR )
+
+	set(
+		PATH_LIB
+		${LIBDIR} )
+
+else( LIBDIR )
+
+	if( EXISTS ${CMAKE_INSTALL_PREFIX}/lib )
+
+		set(
+			PATH_LIB
+			"${CMAKE_INSTALL_PREFIX}/lib" )
+
+	else( EXISTS ${CMAKE_INSTALL_PREFIX}/lib )
+
+		set(
+			PATH_LIB
+			"/usr/lib" )
+
+	endif( EXISTS ${CMAKE_INSTALL_PREFIX}/lib )
+
+endif( LIBDIR )
+
+message(
+	STATUS
+	"Using lib path ${PATH_LIB} ..." )
+
 # man path
 
 if( MANDIR )
 
-	set(	PATH_MAN
+	set(
+		PATH_MAN
 		${MANDIR} )
 
 else( MANDIR )
@@ -129,12 +161,14 @@ else( MANDIR )
 
 	if( PATH_MAN )
 
-		set(	PATH_MAN
+		set(
+			PATH_MAN
 			"${PATH_MAN}/man" )
 
 	else( PATH_MAN )
 
-		set(	PATH_MAN
+		set(
+			PATH_MAN
 			"${CMAKE_INSTALL_PREFIX}/man" )
 
 	endif( PATH_MAN )
@@ -313,6 +347,9 @@ OPTION( NATT   "include NAT Traversal support" )
 OPTION( LDAP   "include LDAP Authentication support" )
 OPTION( QTGUI  "include Client QT GUI support" )
 OPTION( TESTS  "include library test programs" )
+OPTION( ETCDIR "custom etc install path" )
+OPTION( LIBDIR "custom library install path" )
+OPTION( MANDIR "custom man page install path" )
 
 # Debug Symbols Option
 

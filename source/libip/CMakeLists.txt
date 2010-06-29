@@ -52,5 +52,5 @@ endif( APPLE )
 
 install(
 	TARGETS ss_ip
-	LIBRARY DESTINATION lib
+	LIBRARY DESTINATION ${PATH_LIB}
 	FRAMEWORK DESTINATION "/Library/Frameworks" )

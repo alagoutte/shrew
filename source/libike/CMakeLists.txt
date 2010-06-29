@@ -49,5 +49,5 @@ endif( APPLE )
 
 install(
 	TARGETS ss_ike
-	LIBRARY DESTINATION lib
+	LIBRARY DESTINATION ${PATH_LIB}
 	FRAMEWORK DESTINATION "/Library/Frameworks" )
