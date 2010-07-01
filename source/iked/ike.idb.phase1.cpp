@@ -836,7 +836,7 @@ bool _IDB_PH1::frag_add( unsigned char * data, unsigned long size, long index, b
 bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 {
 	bool frag_done = false;
-	int	frag_index = 1;
+	int  frag_index = 1;
 
 	//
 	// check to see if we have a
@@ -850,12 +850,12 @@ bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 		// and look for the next index
 		//
 
-		int count = frags.count();
-		int index = 0;
+		int list_count = frags.count();
+		int list_index = 0;
 
-		for( ; index < count; index++ )
+		for( ; list_index < list_count; frag_index++ )
 		{
-			IKE_FRAG * frag = static_cast<IKE_FRAG*>( frags.get_entry( index ) );
+			IKE_FRAG * frag = static_cast<IKE_FRAG*>( frags.get_entry( list_index ) );
 
 			//
 			// does this match our next index
@@ -879,6 +879,13 @@ bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 				//
 
 				frag_index++;
+
+				//
+				// reset the fragement list index
+				//
+
+				list_index = -1;
+
 				continue;
 			}
 		}
@@ -890,7 +897,7 @@ bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 		// complete packet yet
 		//
 
-		if( index == count )
+		if( list_index == list_count )
 			return false;
 	}
 
@@ -910,12 +917,12 @@ bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 		// and look for the next index
 		//
 
-		int count = frags.count();
-		int index = 0;
+		int list_count = frags.count();
+		int list_index = 0;
 
-		for( ; index < count; index++ )
+		for( ; list_index < list_count; list_index++ )
 		{
-			IKE_FRAG * frag = static_cast<IKE_FRAG*>( frags.get_entry( index ) );
+			IKE_FRAG * frag = static_cast<IKE_FRAG*>( frags.get_entry( list_index ) );
 
 			//
 			// does this match our next index
@@ -945,6 +952,13 @@ bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 				//
 
 				frag_index++;
+
+				//
+				// reset the fragement list index
+				//
+
+				list_index = -1;
+
 				continue;
 			}
 		}
