@@ -239,7 +239,6 @@ long _IKED::loop_ike_nwork()
 					packet_ike,
 					saddr_src,
 					saddr_dst );
-
 			}
 		}
 	}

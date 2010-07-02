@@ -132,6 +132,12 @@ long _IKED::payload_get_frag( PACKET_IKE & packet, IDB_PH1 * ph1, bool & complet
 		return LIBIKE_DECODE;
 	}
 
+	log.txt( LLOG_DEBUG,
+		"ii : - frag index = %i\n"
+		"ii : - frag size = %i\n",
+		index,
+		size );
+
 	//
 	// add to our ph1 fragment list
 	//

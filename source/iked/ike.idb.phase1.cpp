@@ -853,7 +853,7 @@ bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 		int list_count = frags.count();
 		int list_index = 0;
 
-		for( ; list_index < list_count; frag_index++ )
+		for( ; list_index < list_count; list_index++ )
 		{
 			IKE_FRAG * frag = static_cast<IKE_FRAG*>( frags.get_entry( list_index ) );
 
@@ -972,4 +972,3 @@ bool _IDB_PH1::frag_get( PACKET_IKE & packet )
 
 	return true;
 }
-
