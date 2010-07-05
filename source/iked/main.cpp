@@ -282,6 +282,50 @@ void daemon_stop( int sig_num )
 	iked.halt();
 }
 
+bool daemon_pidfile_create( char * pidpath )
+{
+	if( !pidpath[ 0 ] )
+		return false;
+
+	//
+	// read the pid file
+	//
+
+	pid_t pid = -1;
+
+	FILE * fp = fopen( pidpath, "r" );
+	if( fp != NULL )
+	{
+		fscanf( fp, "%d", &pid );
+		fclose( fp );
+	}
+
+	if( getpgid( pid ) != -1 )
+	{
+		printf( "process already running as pid %d\n", pid );
+		return false;
+	}
+
+	fp = fopen( pidpath, "w" );
+	if( fp != NULL )
+	{
+		fprintf( fp, "%d", getpid() );
+		fclose( fp );
+		return true;
+	}
+
+	printf( "unable to open pid file path \'%s\'\n", pidpath );
+	return false;
+}
+
+void daemon_pidfile_remove( char * pidpath )
+{
+	if( !pidpath[ 0 ] )
+		return;
+
+	unlink( pidpath );
+}
+
 #endif
 
 int main( int argc, char * argv[], char * envp[] )
@@ -390,12 +434,26 @@ int main( int argc, char * argv[], char * envp[] )
 	//
 
 	bool service = true;
+	char pidpath[ MAX_PATH ] = { 0 };
 
-	for( long count = 1; count < argc; count++ )
+	for( long argi = 1; argi < argc; argi++ )
 	{
-		if( !strcmp( argv[ count ], "-F" ) )
+		if( !strcmp( argv[ argi ], "-F" ) )
 			service = false;
 
+		if( !strcmp( argv[ argi ], "-p" ) )
+		{
+			if( ( argc - argi ) < 2 )
+			{
+				printf( "you must specify a path following the -p option\n" );
+				return -1;
+			}
+
+			strncpy( pidpath, argv[ ++argi ], MAX_PATH );
+
+			if( !daemon_pidfile_create( pidpath ) )
+				return -1;
+		}
 	}
 
 	//
@@ -424,6 +482,12 @@ int main( int argc, char * argv[], char * envp[] )
 	//
 
 	iked.loop();
+
+	//
+	// remove our pidfile
+	//
+
+	daemon_pidfile_remove( pidpath );
 
 #endif
 
