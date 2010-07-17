@@ -1379,7 +1379,7 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 			// and all others defult to unique
 			//
 
-			if( ph1->vendopts_r.flag.unity )
+			if( ph1->vendopts_r.flag.unity && !ph1->vendopts_r.flag.kame )
 				ph1->tunnel->peer->plcy_level = POLICY_LEVEL_SHARED;
 			else
 				ph1->tunnel->peer->plcy_level = POLICY_LEVEL_UNIQUE;
