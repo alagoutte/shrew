@@ -78,7 +78,7 @@ long _IKED::socket_dhcp_create( IDB_TUNNEL * tunnel )
 	//
 
 	struct sockaddr_in saddr = tunnel->saddr_l.saddr4;
-	saddr.sin_port = htons( UDP_PORT_DHCPC );
+	saddr.sin_port = htons( UDP_PORT_DHCPS );
 
 	if( bind( tunnel->dhcp_sock, ( sockaddr * ) &saddr, sizeof( saddr ) ) < 0 )
 	{
@@ -233,10 +233,6 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		// create dhcp discover packet
 		//
 
-		in_addr src, dst;
-		memcpy( &src, &tunnel->saddr_l.saddr4.sin_addr, sizeof( src ) );
-		memcpy( &dst, &tunnel->saddr_r.saddr4.sin_addr, sizeof( dst ) );
-
 		PACKET packet;
 
 		DHCP_HEADER dhcp_head;
@@ -247,6 +243,10 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		dhcp_head.htype = tunnel->dhcp_hwtype;	// bootp hardware type
 		dhcp_head.hlen = 6;						// hardware address length
 		dhcp_head.xid = tunnel->dhcp_xid;		// transaction id
+
+		dhcp_head.hops = 1;                     // router IP ( fake relay )
+		dhcp_head.giaddr =                      // ...
+			tunnel->saddr_l.saddr4.sin_addr.s_addr;
 
 		dhcp_head.chaddr[ 0 ] = 0x40;			// locally administered unicast MAC
 		memcpy(									// local hardware address id
@@ -287,10 +287,6 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		// create dhcp request packet
 		//
 
-		in_addr src, dst;
-		memcpy( &src, &tunnel->saddr_l.saddr4.sin_addr, sizeof( src ) );
-		memcpy( &dst, &tunnel->saddr_r.saddr4.sin_addr, sizeof( dst ) );
-
 		PACKET packet;
 
 		DHCP_HEADER dhcp_head;
@@ -301,6 +297,10 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		dhcp_head.htype = tunnel->dhcp_hwtype;	// bootp hardware type
 		dhcp_head.hlen = 6;						// hardware address length
 		dhcp_head.xid = tunnel->dhcp_xid;		// transaction id
+
+		dhcp_head.hops = 1;                     // router IP ( fake relay )
+		dhcp_head.giaddr =                      // ...
+			tunnel->saddr_l.saddr4.sin_addr.s_addr;
 
 		dhcp_head.chaddr[ 0 ] = 0x40;			// locally administered unicast MAC
 		memcpy(									// local hardware address id
