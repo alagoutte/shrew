@@ -266,6 +266,23 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 
 	policy_create( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, true );
 
+	IPROUTE_ENTRY entry;
+	memset( &entry, 0, sizeof( entry ) );
+	entry.addr = tunnel->saddr_r.saddr4.sin_addr;
+
+	if( iproute.best( entry ) )
+	{
+		memset( &id1, 0, sizeof( id1 ) );
+		id1.type = ISAKMP_ID_IPV4_ADDR;
+		id1.addr1 = tunnel->xconf.addr;
+
+		memset( &id2, 0, sizeof( id2 ) );
+		id2.type = ISAKMP_ID_IPV4_ADDR;
+		id2.addr1 = entry.next;
+
+		policy_create( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, false );
+	}
+
 	//
 	// build the client id
 	//
@@ -388,6 +405,23 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
 
 	policy_remove( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, true );
+
+	IPROUTE_ENTRY entry;
+	memset( &entry, 0, sizeof( entry ) );
+	entry.addr = tunnel->saddr_r.saddr4.sin_addr;
+
+	if( iproute.best( entry ) )
+	{
+		memset( &id1, 0, sizeof( id1 ) );
+		id1.type = ISAKMP_ID_IPV4_ADDR;
+		id1.addr1 = tunnel->xconf.addr;
+
+		memset( &id2, 0, sizeof( id2 ) );
+		id2.type = ISAKMP_ID_IPV4_ADDR;
+		id2.addr1 = entry.next;
+
+		policy_remove( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, false );
+	}
 
 	if( tunnel->force_all )
 		tunnel->force_all = false;
