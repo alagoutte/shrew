@@ -60,7 +60,12 @@ long _IKED::socket_dhcp_create( IDB_TUNNEL * tunnel )
 	// create dhcp hw address id
 	//
 
-	rand_bytes( &tunnel->dhcp_hwaddr, 5 );
+	tunnel->dhcp_hwaddr[ 0 ] = 0x40;			// locally administered unicast MAC
+	tunnel->dhcp_hwaddr[ 1 ] = dhcp_seed[ 1 ];
+	tunnel->dhcp_hwaddr[ 2 ] = dhcp_seed[ 2 ] ^ tunnel->saddr_r.saddr4.sin_addr.S_un.S_un_b.s_b1;
+	tunnel->dhcp_hwaddr[ 3 ] = dhcp_seed[ 3 ] ^ tunnel->saddr_r.saddr4.sin_addr.S_un.S_un_b.s_b2;
+	tunnel->dhcp_hwaddr[ 4 ] = dhcp_seed[ 4 ] ^ tunnel->saddr_r.saddr4.sin_addr.S_un.S_un_b.s_b3;
+	tunnel->dhcp_hwaddr[ 5 ] = dhcp_seed[ 5 ] ^ tunnel->saddr_r.saddr4.sin_addr.S_un.S_un_b.s_b4;
 
 	//
 	// create dhcp socket
@@ -248,10 +253,9 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		dhcp_head.giaddr =                      // ...
 			tunnel->saddr_l.saddr4.sin_addr.s_addr;
 
-		dhcp_head.chaddr[ 0 ] = 0x40;			// locally administered unicast MAC
 		memcpy(									// local hardware address id
-			dhcp_head.chaddr + 1,
-			tunnel->dhcp_hwaddr, 5 );
+			dhcp_head.chaddr,					// ...
+			tunnel->dhcp_hwaddr, 6 );			// ...
 
 		packet.add(
 			&dhcp_head,
@@ -302,10 +306,9 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		dhcp_head.giaddr =                      // ...
 			tunnel->saddr_l.saddr4.sin_addr.s_addr;
 
-		dhcp_head.chaddr[ 0 ] = 0x40;			// locally administered unicast MAC
 		memcpy(									// local hardware address id
-			dhcp_head.chaddr + 1,
-			tunnel->dhcp_hwaddr, 5 );
+			dhcp_head.chaddr,					// ...
+			tunnel->dhcp_hwaddr, 6 );			// ...
 
 		packet.add(
 			&dhcp_head,

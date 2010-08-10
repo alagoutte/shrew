@@ -487,6 +487,8 @@ typedef class _IKED
 	_IKED_XAUTH_LOCAL	xauth_local;
 	_IKED_XCONF_LOCAL	xconf_local;
 
+	uint8_t	dhcp_seed[ 6 ];		// DHCP MAC seed value
+
 #ifdef OPT_LDAP
 
 	IKED_XAUTH_LDAP		xauth_ldap;
