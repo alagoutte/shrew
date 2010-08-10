@@ -60,12 +60,14 @@ long _IKED::socket_dhcp_create( IDB_TUNNEL * tunnel )
 	// create dhcp hw address id
 	//
 
+	uint32_t peer_addr = tunnel->saddr_r.saddr4.sin_addr.s_addr;
+
 	tunnel->dhcp_hwaddr[ 0 ] = 0x40;			// locally administered unicast MAC
 	tunnel->dhcp_hwaddr[ 1 ] = dhcp_seed[ 1 ];
-	tunnel->dhcp_hwaddr[ 2 ] = dhcp_seed[ 2 ] ^ tunnel->saddr_r.saddr4.sin_addr.S_un.S_un_b.s_b1;
-	tunnel->dhcp_hwaddr[ 3 ] = dhcp_seed[ 3 ] ^ tunnel->saddr_r.saddr4.sin_addr.S_un.S_un_b.s_b2;
-	tunnel->dhcp_hwaddr[ 4 ] = dhcp_seed[ 4 ] ^ tunnel->saddr_r.saddr4.sin_addr.S_un.S_un_b.s_b3;
-	tunnel->dhcp_hwaddr[ 5 ] = dhcp_seed[ 5 ] ^ tunnel->saddr_r.saddr4.sin_addr.S_un.S_un_b.s_b4;
+	tunnel->dhcp_hwaddr[ 2 ] = dhcp_seed[ 2 ] ^ ( ( peer_addr >> 0 ) & 0xff );
+	tunnel->dhcp_hwaddr[ 3 ] = dhcp_seed[ 3 ] ^ ( ( peer_addr >> 8 ) & 0xff ); 
+	tunnel->dhcp_hwaddr[ 4 ] = dhcp_seed[ 4 ] ^ ( ( peer_addr >> 16 ) & 0xff );
+	tunnel->dhcp_hwaddr[ 5 ] = dhcp_seed[ 5 ] ^ ( ( peer_addr >> 24 ) & 0xff );
 
 	//
 	// create dhcp socket

@@ -249,6 +249,71 @@ long _IKED::init( long setlevel )
 	}
 
 	//
+	// load our dhcp seed file
+	//
+
+#ifdef UNIX
+
+	bool dhcp_seed_loaded = false;
+
+	FILE * fp = fopen( path_dhcp, "r" );
+	if( fp != NULL )
+	{
+		unsigned int seed[ 6 ];
+		if( fscanf( fp, "%02x:%02x:%02x:%02x:%x:%02x",
+			&seed[ 0 ],
+			&seed[ 1 ],
+			&seed[ 2 ],
+			&seed[ 3 ],
+			&seed[ 4 ],
+			&seed[ 5 ] ) == 6 )
+		{
+			dhcp_seed[ 0 ] = ( char ) seed[ 0 ];
+			dhcp_seed[ 1 ] = ( char ) seed[ 1 ];
+			dhcp_seed[ 2 ] = ( char ) seed[ 2 ];
+			dhcp_seed[ 3 ] = ( char ) seed[ 3 ];
+			dhcp_seed[ 4 ] = ( char ) seed[ 4 ];
+			dhcp_seed[ 5 ] = ( char ) seed[ 5 ];
+			dhcp_seed_loaded = true;
+		}
+
+		fclose( fp );
+	}
+
+	if( dhcp_seed_loaded == false )
+	{
+		FILE * fp = fopen( path_dhcp, "w" );
+		if( fp != NULL )
+		{
+			rand_bytes( dhcp_seed, 6 );
+			unsigned int seed[ 6 ];
+			seed[ 0 ] = dhcp_seed[ 0 ];
+			seed[ 1 ] = dhcp_seed[ 1 ];
+			seed[ 2 ] = dhcp_seed[ 2 ];
+			seed[ 3 ] = dhcp_seed[ 3 ];
+			seed[ 4 ] = dhcp_seed[ 4 ];
+			seed[ 5 ] = dhcp_seed[ 5 ];
+
+			if( fprintf( fp, "%02x:%02x:%02x:%02x:%02x:%02x",
+				seed[ 0 ],
+				seed[ 1 ],
+				seed[ 2 ],
+				seed[ 3 ],
+				seed[ 4 ],
+				seed[ 5 ] ) != 18 )
+				dhcp_seed_loaded = true;
+			else
+				log.txt( LLOG_ERROR, "!! : failed to write dhcp seed to %s\n", path_dhcp );
+
+			fclose( fp );
+		}
+		else
+			log.txt( LLOG_ERROR, "!! : failed to create dhcp seed to %s\n", path_dhcp );
+	}
+
+#endif
+
+	//
 	// initialize our vnet interface
 	//
 

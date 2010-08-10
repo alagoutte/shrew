@@ -402,6 +402,7 @@ typedef class _IKED
 	char	path_log[ MAX_PATH ];		// logfile path
 	char	path_decrypt[ MAX_PATH ];	// decrypted pcap path
 	char	path_encrypt[ MAX_PATH ];	// encrypted pcap path
+	char	path_dhcp[ MAX_PATH ];		// dhcp seed
 	
 	long	level;				// logging level
 	long	logflags;			// logging options
