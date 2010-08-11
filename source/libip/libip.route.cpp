@@ -209,6 +209,10 @@ bool rtmsg_recv( int s, int seq, IPROUTE_ENTRY * route )
 		( rtmsg.hdr.rtm_version != RTM_VERSION ) )
 		return false;
 
+	route->local = true;
+	if( rtmsg.hdr.rtm_flags & RTF_GATEWAY )
+		route->local = false;
+
 	char *	cp = rtmsg.msg;
 
 	for( int i = 1; i; i <<= 1 )
@@ -495,6 +499,9 @@ bool _IPROUTE::increment( in_addr addr, in_addr mask )
 		return true;
 
 	if( route.mask.s_addr != mask.s_addr )
+		return true;
+
+	if( route.local )
 		return true;
 
 	//
