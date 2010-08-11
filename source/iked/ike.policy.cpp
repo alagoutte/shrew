@@ -546,7 +546,9 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, u_int8_t level, 
 		spinfo.xforms[ 0 ].proto = PROTO_IP_ESP;
 		spinfo.xforms[ 0 ].mode = IPSEC_MODE_TUNNEL;
 		spinfo.xforms[ 0 ].level = level;
-		spinfo.xforms[ 0 ].reqid = policyid++;
+
+		if( level == IPSEC_LEVEL_UNIQUE )
+			spinfo.xforms[ 0 ].reqid = policyid++;
 
 		cpy_sockaddr( tunnel->saddr_r.saddr, spinfo.xforms[ 0 ].saddr_src, false );
 		cpy_sockaddr( tunnel->saddr_l.saddr, spinfo.xforms[ 0 ].saddr_dst, false );
@@ -601,7 +603,9 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, u_int8_t level, 
 		spinfo.xforms[ 0 ].proto = PROTO_IP_ESP;
 		spinfo.xforms[ 0 ].mode = IPSEC_MODE_TUNNEL;
 		spinfo.xforms[ 0 ].level = level;
-		spinfo.xforms[ 0 ].reqid = policyid++;
+
+		if( level == IPSEC_LEVEL_UNIQUE )
+			spinfo.xforms[ 0 ].reqid = policyid++;
 
 		cpy_sockaddr( tunnel->saddr_l.saddr, spinfo.xforms[ 0 ].saddr_src, false );
 		cpy_sockaddr( tunnel->saddr_r.saddr, spinfo.xforms[ 0 ].saddr_dst, false );
