@@ -1373,6 +1373,20 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 		IDB_POLICY * policy_in;
 		IDB_POLICY * policy_out;
 
+		IKE_PH2ID * ph2id_rs = &ph2->ph2id_rs;
+		IKE_PH2ID * ph2id_rd = &ph2->ph2id_rd;
+
+		//
+		// if we are using the shared policy
+		// level, we match the first policies
+		// for the peer using the destination
+		// id value only. The source id value
+		// is irrelevant as it is generic.
+		//
+
+		if( ph2->tunnel->peer->plcy_level == POLICY_LEVEL_SHARED )
+			ph2id_rs = NULL;
+
 		//
 		// locate inbound ipsec policy
 		//
@@ -1386,8 +1400,8 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 				NULL,
 				&ph2->tunnel->saddr_r,
 				&ph2->tunnel->saddr_l,
-				&ph2->ph2id_rs,
-				&ph2->ph2id_rd ) )
+				ph2id_rs,
+				ph2id_rd ) )
 		{
 			log.txt( LLOG_ERROR, 
 				"ii : phase2 rejected, no matching inbound policy found\n"
@@ -1417,8 +1431,8 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 				NULL,
 				&ph2->tunnel->saddr_l,
 				&ph2->tunnel->saddr_r,
-				&ph2->ph2id_rd,
-				&ph2->ph2id_rs ) )
+				ph2id_rd,
+				ph2id_rs ) )
 		{
 			log.txt( LLOG_ERROR, 
 				"ii : phase2 rejected, no matching outbound policy found\n"
