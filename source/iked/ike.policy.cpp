@@ -270,7 +270,7 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 	memset( &entry, 0, sizeof( entry ) );
 	entry.addr = tunnel->saddr_r.saddr4.sin_addr;
 
-	if( iproute.best( entry ) )
+	if( iproute.best( entry ) && !entry.local )
 	{
 		memset( &id1, 0, sizeof( id1 ) );
 		id1.type = ISAKMP_ID_IPV4_ADDR;
@@ -410,7 +410,7 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	memset( &entry, 0, sizeof( entry ) );
 	entry.addr = tunnel->saddr_r.saddr4.sin_addr;
 
-	if( iproute.best( entry ) )
+	if( iproute.best( entry ) && !entry.local )
 	{
 		memset( &id1, 0, sizeof( id1 ) );
 		id1.type = ISAKMP_ID_IPV4_ADDR;
