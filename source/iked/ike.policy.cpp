@@ -643,7 +643,7 @@ bool _IKED::policy_create( IDB_TUNNEL * tunnel, u_int16_t type, u_int8_t level, 
 	if( tunnel->peer->nailed )
 		policy->flags |= PFLAG_NAILED;
 
-	if( tunnel->tstate & TSTATE_POLICY_INIT )
+	if( ( type == IPSEC_POLICY_IPSEC ) && ( tunnel->tstate & TSTATE_POLICY_INIT ) )
 	{
 		policy->flags |= PFLAG_INITIAL;
 		tunnel->tstate &= ~TSTATE_POLICY_INIT;
