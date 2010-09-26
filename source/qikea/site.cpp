@@ -320,6 +320,8 @@ bool _qikeaSite::load( CONFIG & config )
 			comboBoxConfigMethod->setCurrentIndex( 3 );
 	}
 
+	// update dialog
+
 	updateGeneral( false, false );
 
 	// local adapter mode ( default virtual )
@@ -518,17 +520,9 @@ bool _qikeaSite::load( CONFIG & config )
 		}
 	}
 
-	// phase1 exchange type ( default main )
+	// update dialog
 
-	if( config.get_string( "phase1-exchange",
-		text, MAX_CONFSTRING, 0 ) )
-	{
-		if( !strcmp( text, "aggressive" ) )
-			comboBoxP1Exchange->setCurrentIndex( EXCH_AGGR_MODE );
-
-		if( !strcmp( text, "main" ) )
-			comboBoxP1Exchange->setCurrentIndex( EXCH_MAIN_MODE );
-	}
+	updateGeneral( false, false );
 
 	// authentication mode ( default hybrid rsa xauth )
 
@@ -554,11 +548,11 @@ bool _qikeaSite::load( CONFIG & config )
 			comboBoxAuthMethod->setCurrentIndex( 5 );
 	}
 
+	// update dialog
+
 	updateAuthMethod();
 
 	// local identity type
-	//
-	// NOTE : Requires phase1 exchange type & authentication mode
 
 	if( config.get_string( "ident-client-type",
 		text, MAX_CONFSTRING, 0 ) )
@@ -644,6 +638,26 @@ bool _qikeaSite::load( CONFIG & config )
 		psk.add( "", 1 );
 		lineEditPSK->setText( psk.text() );
 	}
+
+	// update dialog
+
+	updateAuthentication();
+
+	// phase1 exchange type ( default main )
+
+	if( config.get_string( "phase1-exchange",
+		text, MAX_CONFSTRING, 0 ) )
+	{
+		if( !strcmp( text, "aggressive" ) )
+			comboBoxP1Exchange->setCurrentIndex( EXCH_AGGR_MODE );
+
+		if( !strcmp( text, "main" ) )
+			comboBoxP1Exchange->setCurrentIndex( EXCH_MAIN_MODE );
+	}
+
+	// update dialog
+
+	updatePhase1();
 
 	// phase1 dh group ( default auto )
 
@@ -736,7 +750,7 @@ bool _qikeaSite::load( CONFIG & config )
 	if( config.get_number( "phase2-life-kbytes", &numb ) )
 		lineEditP2LifeData->setText( QString::number( numb, 10 ) );
 
-	// // policy level option ( default auto )
+	// policy level option ( default auto )
 
 	if( config.get_string( "policy-level",
 		text, MAX_CONFSTRING, 0 ) )
@@ -790,8 +804,6 @@ bool _qikeaSite::load( CONFIG & config )
 
 	// update dialog
 
-	updateGeneral( false, false );
-	updateAuthentication();
 	updatePhase1();
 	updatePhase2();
 	updatePolicy();
