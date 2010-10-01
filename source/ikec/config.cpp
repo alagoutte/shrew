@@ -756,14 +756,7 @@ bool _CONFIG::file_import_pcf( const char * path, bool & need_certs )
 		}
 
 		if( !strcasecmp( name.text(), "GroupPwd" ) && data.size() )
-		{
-			idtype_set = true;
-			data.size( data.size() - 1 );
-			if( !data.hex_decode() )
-				goto parse_fail;
-
 			set_binary( "auth-mutual-psk", data );
-		}
 
 		if( !strcasecmp( name.text(), "enc_GroupPwd" ) && data.size() )
 		{
