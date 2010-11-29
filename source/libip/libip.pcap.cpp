@@ -97,8 +97,8 @@ void _PCAP_DUMP::close()
 {
 	if( fp != NULL )
 	{
-		fflush( fp );
-		fclose( fp );
+//		fflush( fp );
+//		fclose( fp );
 		fp = NULL;
 	}
 }
