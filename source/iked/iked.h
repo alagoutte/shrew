@@ -434,7 +434,12 @@ typedef class _IKED
 	ITH_LOCK	lock_net;
 	ITH_LOCK	lock_idb;
 
+#ifdef UNIX
+
 	IDB_LIST	list_socket;		// socket list
+	int			wake_socket[2];		// wakeup socket
+
+#endif
 
 	IDB_LIST			idb_list_netgrp;
 	IDB_LIST_PEER		idb_list_peer;

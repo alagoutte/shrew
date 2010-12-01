@@ -461,6 +461,7 @@ int main( int argc, char * argv[], char * envp[] )
 	//
 
 	signal( SIGINT, daemon_stop );
+	signal( SIGTERM, daemon_stop );
 	signal( SIGPIPE, SIG_IGN );
 
 	//

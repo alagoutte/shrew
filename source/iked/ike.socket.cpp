@@ -47,6 +47,8 @@
 
 long _IKED::socket_init()
 {
+	socketpair( AF_UNIX, SOCK_STREAM, 0, wake_socket );
+	fcntl( wake_socket[ 0 ], F_SETFL, O_NONBLOCK );
 	return LIBIKE_OK;
 }
 
@@ -58,41 +60,6 @@ void _IKED::socket_done()
 		close( sock_info->sock );
 		delete sock_info;
 	}
-}
-
-long _IKED::socket_select( unsigned long timeout )
-{
-	struct timeval tv;
-	tv.tv_sec = 0;
-	tv.tv_usec = timeout * 1000;
-
-	fd_set fdset;
-	FD_ZERO( &fdset ); 
-
-	lock_net.lock();
-
-	long count = list_socket.count();
-	long index = 0;
-	int  hival = 0;
-
-	for( ; index < count; index++ )
-	{
-		SOCK_INFO * sock_info = static_cast<SOCK_INFO*>( list_socket.get_entry( index ) );
-
-		FD_SET( sock_info->sock, &fdset );
-
-		if( hival < sock_info->sock )
-			hival = sock_info->sock;
-	}
-
-	long result = select( hival + 1, &fdset, NULL, NULL, &tv );
-
-	lock_net.unlock();
-
-	if( result < 0 )
-		return LIBIKE_SOCKET;
-
-	return result;
 }
 
 long _IKED::socket_create( IKE_SADDR & saddr, bool natt )
@@ -145,12 +112,6 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool natt )
 
 #endif
 
-	if( fcntl( sock_info->sock, F_SETFL, O_NONBLOCK ) == -1 )
-	{
-		log.txt( LLOG_ERROR, "!! : socket set non-blocking mode failed\n" );
-		return LIBIKE_SOCKET;
-	}
-
 	if( bind( sock_info->sock, &sock_info->saddr.saddr, sizeof( sock_info->saddr.saddr4 ) ) < 0 )
 	{
 		log.txt( LLOG_ERROR, "!! : socket bind failed\n" );
@@ -201,6 +162,12 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool natt )
 	}
 
 	return LIBIKE_OK;
+}
+
+void _IKED::socket_wakeup()
+{
+	char c;
+	send( wake_socket[ 1 ], &c, 1, 0 );
 }
 
 long _IKED::socket_lookup_addr( IKE_SADDR & saddr_r, IKE_SADDR & saddr_l )
@@ -283,6 +250,37 @@ long _IKED::header( PACKET_IP & packet, ETH_HEADER & header )
 
 long _IKED::recv_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 {
+	fd_set fdset;
+	FD_ZERO( &fdset );
+
+	lock_net.lock();
+
+	long count = list_socket.count();
+	long index = 0;
+	int  hival = wake_socket[ 0 ];
+
+	FD_SET( wake_socket[ 0 ], &fdset );
+
+	for( ; index < count; index++ )
+	{
+		SOCK_INFO * sock_info = static_cast<SOCK_INFO*>( list_socket.get_entry( index ) );
+
+		FD_SET( sock_info->sock, &fdset );
+
+		if( hival < sock_info->sock )
+			hival = sock_info->sock;
+	}
+
+	long result = select( hival + 1, &fdset, NULL, NULL, NULL );
+
+	lock_net.unlock();
+
+	if( result < 0 )
+		return LIBIKE_SOCKET;
+
+	if( FD_ISSET( wake_socket[ 0 ], &fdset ) )
+		return LIBIKE_SOCKET;
+
 	//
 	// recv packet data
 	//
@@ -292,12 +290,12 @@ long _IKED::recv_ip( PACKET_IP & packet, ETH_HEADER * ethhdr )
 
 	socklen_t	flen = sizeof( from.saddr4 );
 
-	long count = list_socket.count();
-	long index = 0;
-
-	for( ; index < count; index++ )
+	for( index = 0; index < count; index++ )
 	{
 		SOCK_INFO * sock_info = static_cast<SOCK_INFO*>( list_socket.get_entry( index ) );
+
+		if( FD_ISSET( sock_info->sock, &fdset ) == 0 )
+			continue;
 
 		unsigned char buff[ RAWNET_BUFF_SIZE ];
 		unsigned char ctrl[ 256 ];

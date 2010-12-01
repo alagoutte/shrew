@@ -52,23 +52,23 @@ void _IKED::loop_ref_inc( const char * name )
 	log.txt( LLOG_INFO, "ii : %s process thread begin ...\n", name );
 
 	lock_run.lock();
-
-	if( loopcount++ == 0 )
-		cond_run.reset();
-
+	long tempcount = loopcount++;
 	lock_run.unlock();
+
+	if( tempcount == 0 )
+		cond_run.reset();
 }
 
 void _IKED::loop_ref_dec( const char * name )
 {
+	log.txt( LLOG_INFO, "ii : %s process thread exit ...\n", name );
+
 	lock_run.lock();
-
-	if( --loopcount == 0 )
-		cond_run.alert();
-
+	long tempcount = --loopcount;
 	lock_run.unlock();
 
-	log.txt( LLOG_INFO, "ii : %s process thread exit ...\n", name );
+	if( tempcount == 0 )
+		cond_run.alert();
 }
 
 _IKED::_IKED()
@@ -417,13 +417,17 @@ void _IKED::loop()
 	ith_timer.run();
 
 	//
+	// wait for all threads to exit
+	//
+
+	cond_run.wait( -1 );
+
+	//
 	// cleanup
 	//
 
 	socket_done();
-
 	ikes.done();
-
 	log.close();
 }
 
@@ -453,8 +457,6 @@ long _IKED::halt()
 	ikes.wakeup();
 	pfki.wakeup();
 	socket_wakeup();
-
-	cond_run.wait( -1 );
 
 	return LIBIKE_OK;
 }
