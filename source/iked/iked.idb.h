@@ -60,6 +60,8 @@ typedef class _IDB_LIST_BDATA : public IDB_LIST
 
 	BDATA name;
 
+	virtual ~_IDB_LIST_BDATA();
+
 	bool	add( BDATA & bdata );
 	bool	get( BDATA & bdata, long index );
 
@@ -81,6 +83,8 @@ typedef class _IDB_LIST_PROPOSAL : public IDB_LIST
 {
 	public:
 
+	virtual ~_IDB_LIST_PROPOSAL();
+
 	bool	add( IKE_PROPOSAL * proposal, bool pnext );
 	bool	get( IKE_PROPOSAL ** proposal, long pindex, uint8_t proto = 0 );
 
@@ -101,6 +105,8 @@ typedef class _IDB_ENTRY_NOTIFY : public IDB_ENTRY, public IKE_NOTIFY
 typedef class _IDB_LIST_NOTIFY : public IDB_LIST
 {
 	public:
+
+	virtual ~_IDB_LIST_NOTIFY();
 
 	bool	add( IKE_NOTIFY & notify );
 	bool	get( IKE_NOTIFY & notify, long index );
@@ -124,6 +130,8 @@ typedef class _IDB_LIST_CERT : public IDB_LIST
 {
 	public:
 
+	virtual ~_IDB_LIST_CERT();
+
 	bool	add( uint8_t & type, BDATA & data );
 	bool	get( uint8_t & type, BDATA & data, long index );
 
@@ -142,6 +150,8 @@ typedef class _IDB_LIST_PH2ID : public IDB_LIST, public IDB_ENTRY
 	public:
 
 	BDATA name;
+
+	virtual ~_IDB_LIST_PH2ID();
 
 	bool	add( IKE_PH2ID & ph2id );
 	bool	get( IKE_PH2ID & ph2id, long index );
@@ -167,6 +177,8 @@ typedef class _IDB_LIST_NETMAP : public IDB_LIST
 	public:
 
 	BDATA name;
+
+	virtual ~_IDB_LIST_NETMAP();
 
 	bool	add( IDB_LIST_PH2ID * idlist, long mode, BDATA * group );
 	bool	del( IDB_ENTRY_NETMAP * netmap );

@@ -45,6 +45,15 @@
 // basic data list
 //
 
+_IDB_LIST_BDATA::~_IDB_LIST_BDATA()
+{
+	for( long index = 0; index < count(); index++ )
+	{
+		IDB_ENTRY_BDATA * bentry = static_cast<IDB_ENTRY_BDATA*>( get_entry( index ) );
+		delete bentry;
+	}
+}
+
 bool _IDB_LIST_BDATA::add( BDATA & bdata )
 {
 	IDB_ENTRY_BDATA * bentry = new IDB_ENTRY_BDATA;
@@ -70,6 +79,15 @@ bool _IDB_LIST_BDATA::get( BDATA & bdata, long index )
 //==============================================================================
 // IKE proposal list
 //
+
+_IDB_LIST_PROPOSAL::~_IDB_LIST_PROPOSAL()
+{
+	for( long index = 0; index < count(); index++ )
+	{
+		IDB_ENTRY_PROPOSAL * pentry = static_cast<IDB_ENTRY_PROPOSAL*>( get_entry( index ) );
+		delete pentry;
+	}
+}
 
 bool _IDB_LIST_PROPOSAL::add( IKE_PROPOSAL * proposal, bool pnext )
 {
@@ -225,6 +243,15 @@ bool _IDB_LIST_PROPOSAL::nextt( IKE_PROPOSAL ** proposal, long & tindex )
 // IKE notification list
 //
 
+_IDB_LIST_NOTIFY::~_IDB_LIST_NOTIFY()
+{
+	for( long index = 0; index < count(); index++ )
+	{
+		IDB_ENTRY_NOTIFY * nentry = static_cast<IDB_ENTRY_NOTIFY*>( get_entry( index ) );
+		delete nentry;
+	}
+}
+
 bool _IDB_LIST_NOTIFY::add( IKE_NOTIFY & notify )
 {
 	IDB_ENTRY_NOTIFY * nentry = new IDB_ENTRY_NOTIFY;
@@ -261,6 +288,15 @@ bool _IDB_LIST_NOTIFY::get( IKE_NOTIFY & notify, long index )
 // IKE certificate list
 //
 
+_IDB_LIST_CERT::~_IDB_LIST_CERT()
+{
+	for( long index = 0; index < count(); index++ )
+	{
+		IDB_ENTRY_CERT * centry = static_cast<IDB_ENTRY_CERT*>( get_entry( index ) );
+		delete centry;
+	}
+}
+
 bool _IDB_LIST_CERT::add( uint8_t & type, BDATA & data )
 {
 	IDB_ENTRY_CERT * centry = new IDB_ENTRY_CERT;
@@ -289,6 +325,15 @@ bool _IDB_LIST_CERT::get( uint8_t & type, BDATA & data, long index )
 // phase2 ID list
 //
 
+_IDB_LIST_PH2ID::~_IDB_LIST_PH2ID()
+{
+	for( long index = 0; index < count(); index++ )
+	{
+		IDB_ENTRY_PH2ID * ientry = static_cast<IDB_ENTRY_PH2ID*>( get_entry( index ) );
+		delete ientry;
+	}
+}
+
 bool _IDB_LIST_PH2ID::add( IKE_PH2ID & ph2id )
 {
 	IDB_ENTRY_PH2ID * ientry = new IDB_ENTRY_PH2ID;
@@ -314,6 +359,15 @@ bool _IDB_LIST_PH2ID::get( IKE_PH2ID & ph2id, long index )
 //==============================================================================
 // network map list ( list of phase2 ID lists )
 //
+
+_IDB_LIST_NETMAP::~_IDB_LIST_NETMAP()
+{
+	for( long index = 0; index < count(); index++ )
+	{
+		IDB_ENTRY_NETMAP * nentry = static_cast<IDB_ENTRY_NETMAP*>( get_entry( index ) );
+		delete nentry;
+	}
+}
 
 bool _IDB_LIST_NETMAP::add( IDB_LIST_PH2ID * idlist, long mode, BDATA * group )
 {
