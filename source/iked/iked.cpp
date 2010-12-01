@@ -73,7 +73,6 @@ void _IKED::loop_ref_dec( const char * name )
 
 _IKED::_IKED()
 {
-	state = DSTATE_ACTIVE;
 	peercount = 0;
 	loopcount = 0;
 	tunnelid = 2;
@@ -434,6 +433,12 @@ long _IKED::halt()
 		"ii : halt signal received, shutting down\n" );
 
 	//
+	// exit event timer loop
+	//
+
+	ith_timer.end();
+
+	//
 	// remove all top level db objects
 	//
 
@@ -445,18 +450,11 @@ long _IKED::halt()
 	// terminate all thread loops
 	//
 
-	state = DSTATE_TERMINATE;
-
 	ikes.wakeup();
 	pfki.wakeup();
+	socket_wakeup();
 
 	cond_run.wait( -1 );
-
-	//
-	// exit event timer loop
-	//
-
-	ith_timer.end();
 
 	return LIBIKE_OK;
 }

@@ -288,10 +288,6 @@ namespace yy{ class conf_parser; };
 #define PFLAG_NAILED			0x00000002		// negotiate persistent SAs
 #define PFLAG_INITIAL			0x00000004		// negotiate an initial SA
 
-#define DSTATE_ACTIVE			0
-#define DSTATE_TERMINATE		1
-#define DSTATE_INACTIVE			2
-
 #define RLEVEL_DAEMON			2
 
 #define FILE_OK					0
@@ -409,7 +405,6 @@ typedef class _IKED
 
 	long	peercount;			// peer reference count
 	long	loopcount;			// loop reference count
-	long	state;				// daemon run state
 
 	long	tunnelid;			// next tunnel id
 	short	policyid;			// next request id
@@ -509,7 +504,7 @@ typedef class _IKED
 	long	socket_init();
 	void	socket_done();
 	long	socket_create( IKE_SADDR & saddr, bool natt );
-	long	socket_select( unsigned long timeout );
+	void	socket_wakeup();
 	long	socket_lookup_addr( IKE_SADDR & saddr_l, IKE_SADDR & saddr_r );
 	long	socket_lookup_port( IKE_SADDR & saddr_l, bool natt );
 

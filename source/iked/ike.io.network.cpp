@@ -59,51 +59,21 @@ long _IKED::loop_ike_nwork()
 
 	loop_ref_inc( "network" );
 
-	while( state == DSTATE_ACTIVE )
+	ETH_HEADER	eth_header;
+	PACKET_IP	packet_ip;
+
+	while( true )
 	{
-		//
-		// wait for packet availablility
-		//
-
-		long result = socket_select( 500 );
-
-		if( result == LIBIKE_SOCKET )
-		{
-			log.txt( LLOG_ERROR, "!! : hard socket error\n" );
-			socket_done();
-			Sleep( 1000 );
-			continue;
-		}
-
-		if( result <= 0 )
-			continue;
-
-		//
-		// process inbound ike packets
-		//
-
-		IKE_SADDR saddr_src;
-		IKE_SADDR saddr_dst;
-
-		memset( &saddr_src, 0, sizeof( saddr_src ) );
-		memset( &saddr_dst, 0, sizeof( saddr_dst ) );
-
-		saddr_src.saddr4.sin_family = AF_INET;
-		saddr_dst.saddr4.sin_family = AF_INET;
-
-		unsigned char proto;
-
 		//
 		// attempt to recv packet
 		//
 
-		ETH_HEADER eth_header;
-
-		PACKET_IP packet_ip;
-
-		result = recv_ip(
+		long result = recv_ip(
 					packet_ip,
 					&eth_header );
+
+		if( result == LIBIKE_SOCKET )
+			break;
 
 		if( result == LIBIKE_NODATA )
 			continue;
@@ -120,6 +90,17 @@ long _IKED::loop_ike_nwork()
 		//
 		// read the ip header
 		//
+
+		IKE_SADDR saddr_src;
+		IKE_SADDR saddr_dst;
+
+		memset( &saddr_src, 0, sizeof( saddr_src ) );
+		memset( &saddr_dst, 0, sizeof( saddr_dst ) );
+
+		saddr_src.saddr4.sin_family = AF_INET;
+		saddr_dst.saddr4.sin_family = AF_INET;
+
+		unsigned char proto;
 
 		packet_ip.read(
 			saddr_src.saddr4.sin_addr,

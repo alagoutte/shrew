@@ -283,6 +283,7 @@ typedef class DLX _ITH_IPCC
 	HANDLE	hmutex_recv;
 
 	HANDLE	hevent_send;
+	HANDLE	hevent_recv;
 	HANDLE	hevent_wake;
 
 #endif

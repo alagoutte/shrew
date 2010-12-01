@@ -61,7 +61,7 @@ long _IKED::loop_ike_pfkey()
 
 	PFKI_MSG msg;
 
-	while( state == DSTATE_ACTIVE )
+	while( true )
 	{
 		//
 		// read the next pfkey message
@@ -104,6 +104,9 @@ long _IKED::loop_ike_pfkey()
 
 			continue;
 		}
+
+		if( result == IPCERR_WAKEUP )
+			break;
 
 		if( result != IPCERR_OK )
 			continue;
