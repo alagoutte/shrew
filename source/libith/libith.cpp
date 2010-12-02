@@ -1158,18 +1158,28 @@ long _ITH_IPCS::init( const char * path, bool admin )
 void _ITH_IPCS::done()
 {
 	if( acl != NULL )
+	{
 		LocalFree( acl );
+		acl = NULL;
+	}
 
 	if( sid_client != NULL )
+	{
 		FreeSid( sid_client );
+		sid_client = NULL;
+	}
 
 	if( sid_server != NULL )
+	{
 		FreeSid( sid_server );
+		sid_server = NULL;
+	}
 
 	if( conn != INVALID_HANDLE_VALUE )
+	{
 		CloseHandle( conn );
-
-	conn = INVALID_HANDLE_VALUE;
+		conn = INVALID_HANDLE_VALUE;
+	}
 }
 
 long _ITH_IPCS::inbound( const char * path, IPCCONN & ipcconn )
