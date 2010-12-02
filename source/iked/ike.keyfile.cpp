@@ -600,6 +600,7 @@ STACK_OF( X509 ) * build_cert_stack( IDB_LIST_CERT & certs, BDATA & leaf )
 				continue;
 
 			unsigned long hash2 = X509_issuer_name_hash( x509_cert2 );
+			X509_free( x509_cert2 );
 
 			if( hash1 == hash2 )
 				break;
@@ -608,7 +609,10 @@ STACK_OF( X509 ) * build_cert_stack( IDB_LIST_CERT & certs, BDATA & leaf )
 		if( index2 < certs.count() )
 			sk_X509_push( chain, x509_cert1 );	
 		else
+		{
 			leaf = cert1;
+			X509_free( x509_cert1 );
+		}
 	}
 
 	return chain;
@@ -706,21 +710,8 @@ bool _IKED::cert_verify( IDB_LIST_CERT & certs, BDATA & ca, BDATA & cert )
 			//
 
 			result = X509_verify_cert( store_ctx );
-			X509_STORE_CTX_cleanup( store_ctx );
+			X509_STORE_CTX_free( store_ctx );
 		}
-
-		X509_free( x509_cert );
-	}
-
-	//
-	// destroy certificate chain
-	//
-
-	while( sk_X509_num( chain ) > 0 )
-	{
-		x509_cert = sk_X509_pop( chain );
-		if( x509_cert == NULL )
-			break;
 
 		X509_free( x509_cert );
 	}
@@ -729,6 +720,7 @@ bool _IKED::cert_verify( IDB_LIST_CERT & certs, BDATA & ca, BDATA & cert )
 	// cleanup
 	//
 
+	sk_X509_pop_free( chain, X509_free );
 	X509_free( x509_ca );
 	X509_STORE_free( store );
 
