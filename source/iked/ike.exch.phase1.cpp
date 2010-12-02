@@ -1042,10 +1042,13 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 								psk_hash.size( ph1->hash_size );
 
 								HMAC_CTX ctx_prf;
-								HMAC_Init( &ctx_prf, ph1->skeyid.buff(), ( int ) ph1->skeyid.size(), ph1->evp_hash );
+								HMAC_CTX_init( &ctx_prf );
+
+								HMAC_Init_ex( &ctx_prf, ph1->skeyid.buff(), ( int ) ph1->skeyid.size(), ph1->evp_hash, NULL );
 								HMAC_Update( &ctx_prf, ph1->tunnel->peer->psk.buff(), ph1->tunnel->peer->psk.size() );
 								HMAC_Final( &ctx_prf, psk_hash.buff(), NULL );
-								HMAC_cleanup( &ctx_prf );
+
+								HMAC_CTX_cleanup( &ctx_prf );
 
 								//
 								// add the notification payload
@@ -1645,11 +1648,9 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 		case XAUTH_AUTH_RESP_PSK:
 		{
 			HMAC_CTX ctx_prf;
-			HMAC_Init(
-				&ctx_prf,
-				ph1->tunnel->peer->psk.buff(),
-				( int ) ph1->tunnel->peer->psk.size(),
-				ph1->evp_hash );
+			HMAC_CTX_init( &ctx_prf );
+
+			HMAC_Init_ex( &ctx_prf, ph1->tunnel->peer->psk.buff(), ( int ) ph1->tunnel->peer->psk.size(), ph1->evp_hash, NULL );
 
 			if( ph1->initiator )
 			{
@@ -1663,7 +1664,8 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 			}
 
 			HMAC_Final( &ctx_prf, skeyid_data, NULL );
-			HMAC_cleanup( &ctx_prf );
+
+			HMAC_CTX_cleanup( &ctx_prf );
 
 			break;
 		}
@@ -1694,10 +1696,13 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 			}
 
 			HMAC_CTX ctx_prf;
-			HMAC_Init( &ctx_prf, nonce.buff(), ( int ) nonce.size(), ph1->evp_hash );
+			HMAC_CTX_init( &ctx_prf );
+
+			HMAC_Init_ex( &ctx_prf, nonce.buff(), ( int ) nonce.size(), ph1->evp_hash, NULL );
 			HMAC_Update( &ctx_prf, shared.buff(), shared.size() );
 			HMAC_Final( &ctx_prf, skeyid_data, NULL );
-			HMAC_cleanup( &ctx_prf );
+
+			HMAC_CTX_cleanup( &ctx_prf );
 
 			break;
 		}	
@@ -1717,13 +1722,14 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	//
 
 	HMAC_CTX ctx_prf;
-	HMAC_Init( &ctx_prf, ph1->skeyid.buff(), ( int ) ph1->skeyid.size(), ph1->evp_hash );
+	HMAC_CTX_init( &ctx_prf );
+
+	HMAC_Init_ex( &ctx_prf, ph1->skeyid.buff(), ( int ) ph1->skeyid.size(), ph1->evp_hash, NULL );
 	HMAC_Update( &ctx_prf, shared.buff(), shared.size() );
 	HMAC_Update( &ctx_prf, ph1->cookies.i, ISAKMP_COOKIE_SIZE );
 	HMAC_Update( &ctx_prf, ph1->cookies.r, ISAKMP_COOKIE_SIZE );
 	HMAC_Update( &ctx_prf, ( unsigned char * ) "\0", 1 );
 	HMAC_Final( &ctx_prf, skeyid_data, NULL );
-	HMAC_cleanup( &ctx_prf );
 
 	ph1->skeyid_d.set( skeyid_data, skeyid_size );
 
@@ -1738,14 +1744,13 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	// compute SKEYID_a
 	//
 
-	HMAC_Init( &ctx_prf, ph1->skeyid.buff(), ( int ) ph1->skeyid.size(), ph1->evp_hash );
+	HMAC_Init_ex( &ctx_prf, ph1->skeyid.buff(), ( int ) ph1->skeyid.size(), ph1->evp_hash, NULL );
 	HMAC_Update( &ctx_prf, skeyid_data, skeyid_size );
 	HMAC_Update( &ctx_prf, shared.buff(), shared.size() );
 	HMAC_Update( &ctx_prf, ph1->cookies.i, ISAKMP_COOKIE_SIZE );
 	HMAC_Update( &ctx_prf, ph1->cookies.r, ISAKMP_COOKIE_SIZE );
 	HMAC_Update( &ctx_prf, ( unsigned char * ) "\1", 1 );
 	HMAC_Final( &ctx_prf, skeyid_data, NULL );
-	HMAC_cleanup( &ctx_prf );
 
 	ph1->skeyid_a.set( skeyid_data, skeyid_size );
 
@@ -1760,14 +1765,13 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 	// compute SKEYID_e
 	//
 
-	HMAC_Init( &ctx_prf, ph1->skeyid.buff(), ( int ) ph1->skeyid.size(), ph1->evp_hash );
+	HMAC_Init_ex( &ctx_prf, ph1->skeyid.buff(), ( int ) ph1->skeyid.size(), ph1->evp_hash, NULL );
 	HMAC_Update( &ctx_prf, skeyid_data, skeyid_size );
 	HMAC_Update( &ctx_prf, shared.buff(), shared.size() );
 	HMAC_Update( &ctx_prf, ph1->cookies.i, ISAKMP_COOKIE_SIZE );
 	HMAC_Update( &ctx_prf, ph1->cookies.r, ISAKMP_COOKIE_SIZE );
 	HMAC_Update( &ctx_prf, ( unsigned char * ) "\2", 1 );
 	HMAC_Final( &ctx_prf, skeyid_data, NULL );
-	HMAC_cleanup( &ctx_prf );
 
 	ph1->skeyid_e.set( skeyid_data, skeyid_size );
 
@@ -1808,18 +1812,16 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 
 		// create extended key data
 
-		HMAC_Init( &ctx_prf, skeyid_data, skeyid_size, ph1->evp_hash );
+		HMAC_Init_ex( &ctx_prf, skeyid_data, skeyid_size, ph1->evp_hash, NULL );
 		HMAC_Update( &ctx_prf, ( unsigned char * ) "\0", 1 );
 		HMAC_Final( &ctx_prf, key_data, NULL );
 
 		for( long size = skeyid_size; size < key_size; size += skeyid_size )
 		{
-			HMAC_Init( &ctx_prf, skeyid_data, skeyid_size, ph1->evp_hash );
+			HMAC_Init_ex( &ctx_prf, skeyid_data, skeyid_size, ph1->evp_hash, NULL );
 			HMAC_Update( &ctx_prf, key_data + size - skeyid_size, skeyid_size );
 			HMAC_Final( &ctx_prf, key_data + size, NULL );
 		}
-
-		HMAC_cleanup( &ctx_prf );
 	}
 	else
 	{
@@ -1827,6 +1829,8 @@ long _IKED::phase1_gen_keys( IDB_PH1 * ph1 )
 
 		memcpy( key_data, skeyid_data, key_size );
 	}
+
+	HMAC_CTX_cleanup( &ctx_prf );
 
 	if( proposal->ciph_kl )
 		key_size = ( proposal->ciph_kl + 7 ) / 8;
@@ -1891,7 +1895,9 @@ long _IKED::phase1_gen_hash_i( IDB_PH1 * sa, BDATA & hash )
 	hash.size( sa->hash_size );
 
 	HMAC_CTX ctx_prf;
-	HMAC_Init( &ctx_prf, sa->skeyid.buff(), ( int ) sa->skeyid.size(), sa->evp_hash );
+	HMAC_CTX_init( &ctx_prf );
+
+	HMAC_Init_ex( &ctx_prf, sa->skeyid.buff(), ( int ) sa->skeyid.size(), sa->evp_hash, NULL );
 
 	if( sa->initiator )
 	{
@@ -1909,7 +1915,8 @@ long _IKED::phase1_gen_hash_i( IDB_PH1 * sa, BDATA & hash )
 	HMAC_Update( &ctx_prf, sa->hda.buff(), sa->hda.size() );
 	HMAC_Update( &ctx_prf, sa->idi.buff(), sa->idi.size() );
 	HMAC_Final( &ctx_prf, hash.buff(), NULL );
-	HMAC_cleanup( &ctx_prf );
+
+	HMAC_CTX_cleanup( &ctx_prf );
 
 	log.bin(
 		LLOG_DEBUG,
@@ -1930,7 +1937,9 @@ long _IKED::phase1_gen_hash_r( IDB_PH1 * sa, BDATA & hash )
 	hash.size( sa->hash_size );
 
 	HMAC_CTX ctx_prf;
-	HMAC_Init( &ctx_prf, sa->skeyid.buff(), ( int ) sa->skeyid.size(), sa->evp_hash );
+	HMAC_CTX_init( &ctx_prf );
+
+	HMAC_Init_ex( &ctx_prf, sa->skeyid.buff(), ( int ) sa->skeyid.size(), sa->evp_hash, NULL );
 
 	if( sa->initiator )
 	{
@@ -1948,7 +1957,8 @@ long _IKED::phase1_gen_hash_r( IDB_PH1 * sa, BDATA & hash )
 	HMAC_Update( &ctx_prf, sa->hda.buff(), sa->hda.size() );
 	HMAC_Update( &ctx_prf, sa->idr.buff(), sa->idr.size() );
 	HMAC_Final( &ctx_prf, hash.buff(), NULL );
-	HMAC_cleanup( &ctx_prf );
+
+	HMAC_CTX_cleanup( &ctx_prf );
 
 	log.bin(
 		LLOG_DEBUG,
