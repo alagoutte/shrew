@@ -374,6 +374,9 @@ bool _ITH_EXEC::exec( void * arg )
 		&help,
 		param );
 
+	pthread_detach(
+		thread );
+
 	return true;
 }
 
@@ -393,6 +396,12 @@ _ITH_TIMER::_ITH_TIMER()
 
 _ITH_TIMER::~_ITH_TIMER()
 {
+	while( head != NULL )
+	{
+		ITH_ENTRY * next = head->next;
+		delete head;
+		head = next;
+	}
 }
 
 #ifdef WIN32
