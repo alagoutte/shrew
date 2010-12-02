@@ -276,13 +276,13 @@ bool _ITH_COND::wait( long msecs )
 
 void _ITH_COND::alert()
 {
-	char c;
+	char c = 0;
 	long result = send( conn_wake[ 1 ], &c, 1, 0 );
 }
 
 void _ITH_COND::reset()
 {
-	char c;
+	char c = 0;
 	long result = recv( conn_wake[ 0 ], &c, 1, 0 );
 }
 
@@ -553,9 +553,7 @@ void _ITH_TIMER::run()
 
 			if( entry->event->func() )
 				add( entry->event );
-			else
-				delete entry;
-
+			delete entry;
 			lock.lock();
 		}
 	}
