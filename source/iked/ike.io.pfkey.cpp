@@ -45,7 +45,7 @@
 // ike pfkey io thread
 //
 
-long ITH_PFKEY::func( void * arg )
+long ITH_PFKEY::iked_func( void * arg )
 {
 	IKED * iked = ( IKED * ) arg;
 	return iked->loop_ike_pfkey();

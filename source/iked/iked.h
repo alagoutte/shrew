@@ -317,27 +317,36 @@ typedef struct _VNET_ADAPTER
 
 #endif
 
-typedef class _ITH_IKES : public _ITH_EXEC
+typedef class _IKED_EXEC : public _ITH_EXEC
 {
+	public:
+
 	virtual long func( void * arg );
+	virtual long iked_func( void * arg ) = 0;
+
+}IKED_EXEC;
+
+typedef class _ITH_IKES : public _IKED_EXEC
+{
+	virtual long iked_func( void * arg );
 
 }ITH_IKES;
 
-typedef class _ITH_IKEC : public _ITH_EXEC
+typedef class _ITH_IKEC : public _IKED_EXEC
 {
-	virtual long func( void * arg );
+	virtual long iked_func( void * arg );
 
 }ITH_IKEC;
 
-typedef class _ITH_NWORK : public _ITH_EXEC
+typedef class _ITH_NWORK : public _IKED_EXEC
 {
-	virtual long func( void * arg );
+	virtual long iked_func( void * arg );
 
 }ITH_NWORK;
 
-typedef class _ITH_PFKEY : public _ITH_EXEC
+typedef class _ITH_PFKEY : public _IKED_EXEC
 {
-	virtual long func( void * arg );
+	virtual long iked_func( void * arg );
 
 }ITH_PFKEY;
 

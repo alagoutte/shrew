@@ -41,6 +41,18 @@
 
 #include "crypto.h"
 
+void crypto_init()
+{
+	OpenSSL_add_all_algorithms();
+}
+
+void crypto_done()
+{
+	ERR_free_strings();
+	EVP_cleanup();
+	CRYPTO_cleanup_all_ex_data();
+}
+
 static unsigned char group1[] =
 {
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xC9, 0x0F, 0xDA, 0xA2,

@@ -553,6 +553,7 @@ void _ITH_TIMER::run()
 
 			if( entry->event->func() )
 				add( entry->event );
+
 			delete entry;
 			lock.lock();
 		}

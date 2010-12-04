@@ -45,7 +45,7 @@
 // ike client io thread
 //
 
-long ITH_IKES::func( void * arg )
+long ITH_IKES::iked_func( void * arg )
 {
 	IKED * iked = ( IKED * ) arg;
 	return iked->loop_ipc_server();
@@ -82,7 +82,7 @@ long _IKED::loop_ipc_server()
 	return true;
 }
 
-long ITH_IKEC::func( void * arg )
+long ITH_IKEC::iked_func( void * arg )
 {
 	IKEI * ikei = ( IKEI * ) arg;
 	long result = iked.loop_ipc_client( ikei );

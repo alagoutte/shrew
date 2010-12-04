@@ -45,7 +45,7 @@
 // ike network io thread
 //
 
-long ITH_NWORK::func( void * arg )
+long ITH_NWORK::iked_func( void * arg )
 {
 	IKED * iked = ( IKED * ) arg;
 	return iked->loop_ike_nwork();

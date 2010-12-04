@@ -41,6 +41,16 @@
 
 #include "iked.h"
 
+long _IKED_EXEC::func( void * arg )
+{
+	bool result = iked_func( arg );
+
+	// openssl thread cleanup
+	ERR_remove_state( 0 );
+
+	return result;
+}
+
 bool _IKED::rand_bytes( void * buff, long size )
 {
 	RAND_pseudo_bytes( ( unsigned char * ) buff, size );
@@ -176,10 +186,10 @@ long _IKED::init( long setlevel )
 	}
 
 	//
-	// ititialize openssl
+	// ititialize openssl libcrypto
 	//
 
-	OpenSSL_add_all_algorithms();
+	crypto_init();
 
 	//
 	// open our log ( debug and echo )
@@ -429,6 +439,12 @@ void _IKED::loop()
 	socket_done();
 	ikes.done();
 	log.close();
+
+	//
+	// cleanup openssl libcrypto
+	//
+
+	crypto_done();
 }
 
 long _IKED::halt()

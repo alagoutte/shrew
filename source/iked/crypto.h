@@ -51,6 +51,9 @@
 #include "openssl/err.h"
 #include "openssl/rand.h"
 
+void crypto_init();
+void crypto_done();
+
 bool dh_init( long group, DH ** dh_data, long * dh_size );
 
 #endif
