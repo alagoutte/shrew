@@ -43,7 +43,7 @@
 
 long _IKED_EXEC::func( void * arg )
 {
-	bool result = iked_func( arg );
+	long result = iked_func( arg );
 
 	// openssl thread cleanup
 	ERR_remove_state( 0 );
