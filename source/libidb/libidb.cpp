@@ -589,7 +589,7 @@ bool _IDB_LIST::del_entry( IDB_ENTRY * entry )
 	
 	int trailing_pointers = entry_num - index - 1;
 	if( trailing_pointers )
-		memcpy(
+		memmove(
 			&entry_list[ index ],
 			&entry_list[ index + 1 ],
 			trailing_pointers * sizeof( IDB_ENTRY * ) );
@@ -620,7 +620,7 @@ IDB_ENTRY * _IDB_LIST::del_entry( int index )
 	
 	int trailing_pointers = entry_num - index - 1;
 	if( trailing_pointers )
-		memcpy(
+		memmove(
 			&entry_list[ index ],
 			&entry_list[ index + 1 ],
 			trailing_pointers * sizeof( IDB_ENTRY * ) );
