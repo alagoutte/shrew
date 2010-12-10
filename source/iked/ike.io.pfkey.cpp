@@ -69,6 +69,9 @@ long _IKED::loop_ike_pfkey()
 
 		long result = pfki.recv_message( msg );
 
+		if( result == IPCERR_WAKEUP )
+			break;
+
 		if( result == IPCERR_CLOSED )
 		{
 			pfki.detach();
@@ -104,9 +107,6 @@ long _IKED::loop_ike_pfkey()
 
 			continue;
 		}
-
-		if( result == IPCERR_WAKEUP )
-			break;
 
 		if( result != IPCERR_OK )
 			continue;

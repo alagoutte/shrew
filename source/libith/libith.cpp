@@ -772,8 +772,8 @@ VOID WINAPI io_recv_complete( DWORD result, DWORD size, LPOVERLAPPED olapp )
 
 long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 {
-	if( conn == INVALID_HANDLE_VALUE )
-		return IPCERR_CLOSED;
+//	if( conn == INVALID_HANDLE_VALUE )
+//		return IPCERR_CLOSED;
 
 	DWORD dwsize = ( DWORD ) size;
 
@@ -800,7 +800,15 @@ long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 
 	if( !result )
 	{
+		result = WaitForSingleObject( hevent_wake, 0 );
+		if( result == WAIT_OBJECT_0 )
+			ResetEvent( hevent_wake );
+
 		ReleaseMutex( hmutex_recv );
+
+		if( result == WAIT_OBJECT_0 )
+			return IPCERR_WAKEUP;
+
 		return IPCERR_CLOSED;
 	}
 
@@ -883,8 +891,8 @@ VOID WINAPI io_send_complete( DWORD result, DWORD size, LPOVERLAPPED olapp )
 
 long _ITH_IPCC::io_send( void * data, size_t size, size_t & sent )
 {
-	if( conn == INVALID_HANDLE_VALUE )
-		return IPCERR_CLOSED;
+//	if( conn == INVALID_HANDLE_VALUE )
+//		return IPCERR_CLOSED;
 
 	DWORD dwsize = ( DWORD ) sent;
 
@@ -911,7 +919,15 @@ long _ITH_IPCC::io_send( void * data, size_t size, size_t & sent )
 
 	if( !result )
 	{
+		result = WaitForSingleObject( hevent_wake, 0 );
+		if( result == WAIT_OBJECT_0 )
+			ResetEvent( hevent_wake );
+
 		ReleaseMutex( hmutex_send );
+
+		if( result == WAIT_OBJECT_0 )
+			return IPCERR_WAKEUP;
+
 		return IPCERR_CLOSED;
 	}
 
