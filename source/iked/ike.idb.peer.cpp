@@ -171,14 +171,14 @@ void _IDB_PEER::end()
 		IDB_TUNNEL * tunnel = iked.idb_list_tunnel.get( tunnel_index );
 
 		if( tunnel->peer == this )
-                {
-                        tunnel->inc( false );
+		{
+			tunnel->inc( false );
 
-                        if( tunnel->dec( false, true ) )
-                        {
-                                tunnel_index--;
-                                tunnel_count--;
-                        }
-                }
+			if( tunnel->dec( false, true ) )
+			{
+					tunnel_index--;
+					tunnel_count--;
+			}
+		}
 	}
 }
