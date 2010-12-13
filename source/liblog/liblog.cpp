@@ -256,7 +256,7 @@ void _LOG::txt( long level, const char * fmt, ... )
 		size_t	tused = 0;
 
 		vsprintf_s( tbuff, LOG_MAX_TXT, fmt, list );
-		sprintf_s( fbuff, tsize, tbuff );
+		sprintf_s( fbuff, tsize, "%s", tbuff );
 
 		write_buff( fbuff, tused );
 	}
