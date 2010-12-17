@@ -654,33 +654,6 @@ bool _ITH_TIMER::del( ITH_EVENT * event )
 // shared platform functions
 //
 
-long _ITH_IPCC::io_recv( void *data, size_t size )
-{
-	char * buff = ( char * ) data;
-	size_t rcvd = 0;
-	size_t temp = 0;
-
-	while( size > rcvd )
-	{
-		temp = size - rcvd;
-		long result = io_recv( buff + rcvd, temp, temp );
-
-		switch( result )
-		{
-			case IPCERR_OK:
-			case IPCERR_BUFFER:
-				break;
-
-			default:
-				return result;
-		}
-
-		rcvd += temp;
-	}
-
-	return IPCERR_OK;
-}
-
 long _ITH_IPCC::io_send( void *data, size_t size )
 {
 	char * buff = ( char * ) data;
@@ -709,6 +682,33 @@ long _ITH_IPCC::io_send( void *data, size_t size )
 	return IPCERR_OK;
 }
 
+long _ITH_IPCC::io_recv( void *data, size_t size )
+{
+	char * buff = ( char * ) data;
+	size_t rcvd = 0;
+	size_t temp = 0;
+
+	while( size > rcvd )
+	{
+		temp = size - rcvd;
+		long result = io_recv( buff + rcvd, temp, temp );
+
+		switch( result )
+		{
+			case IPCERR_OK:
+			case IPCERR_BUFFER:
+				break;
+
+			default:
+				return result;
+		}
+
+		rcvd += temp;
+	}
+
+	return IPCERR_OK;
+}
+
 #ifdef WIN32
 
 //
@@ -721,8 +721,6 @@ _ITH_IPCC::_ITH_IPCC()
 	hmutex_send = CreateMutex( NULL, false, NULL );
 
 	hevent_wake = CreateEvent( NULL, true, false, NULL );
-	hevent_send = CreateEvent( NULL, true, false, NULL );
-	hevent_recv = CreateEvent( NULL, true, false, NULL );
 
 	conn = INVALID_HANDLE_VALUE;
 }
@@ -730,12 +728,6 @@ _ITH_IPCC::_ITH_IPCC()
 _ITH_IPCC::~_ITH_IPCC()
 {
 	detach();
-
-	if( hevent_send != NULL )
-	{
-		CloseHandle( hevent_send );
-		hevent_send = NULL;
-	}
 
 	if( hevent_wake != NULL )
 	{
@@ -762,12 +754,128 @@ void _ITH_IPCC::io_conf( IPCCONN sconn )
 	conn = sconn;
 }
 
+VOID WINAPI io_send_complete( DWORD result, DWORD size, LPOVERLAPPED olapp )
+{
+	// nothing to do
+}
+
+long _ITH_IPCC::io_send( void * data, size_t size, size_t & sent )
+{
+//	if( conn == INVALID_HANDLE_VALUE )
+//		return IPCERR_CLOSED;
+
+	DWORD dwsize = ( DWORD ) sent;
+
+	WaitForSingleObject( hmutex_send, INFINITE );
+
+	// windows does not always set
+	// the GetLastError value to
+	// success after ReadFileEx but
+	// the documentation says you
+	// should check it for errors
+
+	SetLastError( ERROR_SUCCESS );
+
+	memset( &olapp_send, 0, sizeof( olapp_send ) );
+
+	long result = WriteFileEx(
+					conn,
+					data,
+					dwsize,
+					&olapp_send,
+					io_send_complete );
+
+	if( !result )
+	{
+		result = WaitForSingleObject( hevent_wake, 0 );
+//		if( result == WAIT_OBJECT_0 )
+//			ResetEvent( hevent_wake );
+
+		ReleaseMutex( hmutex_send );
+
+		if( result == WAIT_OBJECT_0 )
+			return IPCERR_WAKEUP;
+
+		return IPCERR_CLOSED;
+	}
+
+	result = GetLastError();
+
+	switch( result )
+	{
+		case ERROR_SUCCESS:
+
+			//
+			// wait in an alertable state until
+			// the operation completes or until
+			// the wake event is signaled
+			//
+
+			result = WaitForSingleObjectEx(
+				hevent_wake,
+				INFINITE,
+				true );
+
+			if( result == WAIT_OBJECT_0 )
+			{
+//				ResetEvent( hevent_wake );
+
+				// cancel the current overlaped
+				// request and give it a chance
+				// to complete in a wait state
+
+				CancelIo( conn );
+
+				ReleaseMutex( hmutex_recv );
+
+				return IPCERR_WAKEUP;
+			}
+
+			GetOverlappedResult(
+				conn,
+				&olapp_send,
+				&dwsize,
+				true );
+
+			result = GetLastError();
+			break;
+	}
+
+	switch( result )
+	{
+		case ERROR_SUCCESS:
+			result = IPCERR_OK;
+			break;
+
+		case ERROR_MORE_DATA:
+			result = IPCERR_BUFFER;
+			break;
+
+		case ERROR_OPERATION_ABORTED:
+//			ResetEvent( hevent_wake );
+//			result = IPCERR_WAKEUP;
+//			break;
+
+		case ERROR_BROKEN_PIPE:
+		case ERROR_INVALID_HANDLE:
+			result = IPCERR_CLOSED;
+			break;
+
+		default:
+			result = IPCERR_NODATA;
+			break;
+	}
+
+	sent = dwsize;
+
+	ReleaseMutex( hmutex_send );
+
+	return result;
+}
+
 VOID WINAPI io_recv_complete( DWORD result, DWORD size, LPOVERLAPPED olapp )
 {
-	// set the event so the calling
-	// thread will continue
-
-	SetEvent( olapp->hEvent );
+	// nothing to do
 }
 
 long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
@@ -776,10 +884,6 @@ long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 //		return IPCERR_CLOSED;
 
 	DWORD dwsize = ( DWORD ) size;
-
-	OVERLAPPED olapp;
-	memset( &olapp, 0, sizeof( olapp ) );
-	olapp.hEvent = hevent_recv;
 
 	WaitForSingleObject( hmutex_recv, INFINITE );
 
@@ -791,11 +895,13 @@ long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 
 	SetLastError( ERROR_SUCCESS );
 
+	memset( &olapp_recv, 0, sizeof( olapp_recv ) );
+
 	long result = ReadFileEx(
 					conn,
 					data,
 					dwsize,
-					&olapp,
+					&olapp_recv,
 					io_recv_complete );
 
 	if( !result )
@@ -818,27 +924,35 @@ long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 	{
 		case ERROR_SUCCESS:
 
-			HANDLE handles[ 2 ] = { hevent_recv, hevent_wake };
+			//
+			// wait in an alertable state until
+			// the operation completes or until
+			// the wake event is signaled
+			//
 
-			result = WaitForMultipleObjectsEx(
-				2,
-				handles,
-				false,
+			result = WaitForSingleObjectEx(
+				hevent_wake,
 				INFINITE,
 				true );
 
-			if( result == WAIT_OBJECT_0 + 1 )
+			if( result == WAIT_OBJECT_0 )
 			{
+				ResetEvent( hevent_wake );
+
 				// cancel the current overlaped
 				// request and give it a chance
 				// to complete in a wait state
 
 				CancelIo( conn );
+
+				ReleaseMutex( hmutex_recv );
+
+				return IPCERR_WAKEUP;
 			}
 
 			GetOverlappedResult(
 				conn,
-				&olapp,
+				&olapp_recv,
 				&dwsize,
 				true );
 
@@ -849,7 +963,6 @@ long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 	switch( result )
 	{
 		case ERROR_SUCCESS:
-//			assert( size == dwsize );
 			result = IPCERR_OK;
 			break;
 
@@ -858,9 +971,9 @@ long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 			break;
 
 		case ERROR_OPERATION_ABORTED:
-			ResetEvent( hevent_wake );
-			result = IPCERR_WAKEUP;
-			break;
+//			ResetEvent( hevent_wake );
+//			result = IPCERR_WAKEUP;
+//			break;
 
 		case ERROR_BROKEN_PIPE:
 		case ERROR_INVALID_HANDLE:
@@ -874,123 +987,7 @@ long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 
 	rcvd = dwsize;
 
-	ResetEvent( hevent_recv );
 	ReleaseMutex( hmutex_recv );
-
-	return result;
-}
-
-VOID WINAPI io_send_complete( DWORD result, DWORD size, LPOVERLAPPED olapp )
-{
-	// set the event so the calling
-	// thread will continue
-
-	SetEvent( olapp->hEvent );
-}
-
-
-long _ITH_IPCC::io_send( void * data, size_t size, size_t & sent )
-{
-//	if( conn == INVALID_HANDLE_VALUE )
-//		return IPCERR_CLOSED;
-
-	DWORD dwsize = ( DWORD ) sent;
-
-	OVERLAPPED olapp;
-	memset( &olapp, 0, sizeof( olapp ) );
-	olapp.hEvent = hevent_send;
-
-	WaitForSingleObject( hmutex_send, INFINITE );
-
-	// windows does not always set
-	// the GetLastError value to
-	// success after ReadFileEx but
-	// the documentation says you
-	// should check it for errors
-
-	SetLastError( ERROR_SUCCESS );
-
-	long result = WriteFileEx(
-					conn,
-					data,
-					dwsize,
-					&olapp,
-					io_send_complete );
-
-	if( !result )
-	{
-		result = WaitForSingleObject( hevent_wake, 0 );
-		if( result == WAIT_OBJECT_0 )
-			ResetEvent( hevent_wake );
-
-		ReleaseMutex( hmutex_send );
-
-		if( result == WAIT_OBJECT_0 )
-			return IPCERR_WAKEUP;
-
-		return IPCERR_CLOSED;
-	}
-
-	result = GetLastError();
-
-	switch( result )
-	{
-		case ERROR_SUCCESS:
-
-			WaitForSingleObjectEx(
-				hevent_send,
-				INFINITE,
-				true );
-
-			if( result == 1 )
-			{
-				// cancel the current overlaped
-				// request and give it a chance
-				// to complete in a wait state
-
-				CancelIo( conn );
-			}
-
-			GetOverlappedResult(
-				conn,
-				&olapp,
-				&dwsize,
-				true );
-
-			result = GetLastError();
-			break;
-	}
-
-	switch( result )
-	{
-		case ERROR_SUCCESS:
-//			assert( size == dwsize );
-			result = IPCERR_OK;
-			break;
-
-		case ERROR_MORE_DATA:
-			result = IPCERR_BUFFER;
-			break;
-
-		case ERROR_OPERATION_ABORTED:
-			ResetEvent( hevent_wake );
-			result = IPCERR_WAKEUP;
-			break;
-
-		case ERROR_BROKEN_PIPE:
-		case ERROR_INVALID_HANDLE:
-			result = IPCERR_CLOSED;
-			break;
-
-		default:
-			result = IPCERR_NODATA;
-			break;
-	}
-
-	sent = dwsize;
-
-	ResetEvent( hevent_send );
-	ReleaseMutex( hmutex_send );
 
 	return result;
 }
@@ -1350,6 +1347,17 @@ void _ITH_IPCC::io_conf( IPCCONN sconn )
 	conn = sconn;
 }
 
+long _ITH_IPCC::io_send( void * data, size_t size, size_t & sent )
+{
+	long result = send( conn, data, size, 0 );
+	if( result < 0 )
+		return IPCERR_FAILED;
+
+	sent = result;
+
+	return IPCERR_OK;
+}
+
 long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 {
 	fd_set fds;
@@ -1387,17 +1395,6 @@ long _ITH_IPCC::io_recv( void * data, size_t size, size_t & rcvd )
 	}
 
 	return IPCERR_NODATA;
-}
-
-long _ITH_IPCC::io_send( void * data, size_t size, size_t & sent )
-{
-	long result = send( conn, data, size, 0 );
-	if( result < 0 )
-		return IPCERR_FAILED;
-
-	sent = result;
-
-	return IPCERR_OK;
 }
 
 long _ITH_IPCC::attach( const char * path, long timeout )

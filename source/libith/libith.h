@@ -282,9 +282,10 @@ typedef class DLX _ITH_IPCC
 	HANDLE	hmutex_send;
 	HANDLE	hmutex_recv;
 
-	HANDLE	hevent_send;
-	HANDLE	hevent_recv;
 	HANDLE	hevent_wake;
+
+	OVERLAPPED olapp_send;
+	OVERLAPPED olapp_recv;
 
 #endif
 
@@ -299,11 +300,11 @@ typedef class DLX _ITH_IPCC
 
 	void	io_conf( IPCCONN sconn );
 
-	long	io_recv( void * data, size_t size );
-	long	io_recv( void * data, size_t size, size_t & rcvd );
-
 	long	io_send( void * data, size_t size );
 	long	io_send( void * data, size_t size, size_t & sent );
+
+	long	io_recv( void * data, size_t size );
+	long	io_recv( void * data, size_t size, size_t & rcvd );
 
 	public:
 
