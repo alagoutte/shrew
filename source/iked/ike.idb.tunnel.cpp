@@ -52,7 +52,7 @@ bool _ITH_EVENT_TUNDHCP::func()
 	// retry timeout
 	//
 
-	if( retry > 8 )
+	if( tunnel->close || ( retry > 6 ) )
 	{
 		tunnel->close = XCH_FAILED_DHCPCONFIG;
 		tunnel->ikei->wakeup();
@@ -61,14 +61,17 @@ bool _ITH_EVENT_TUNDHCP::func()
 		return false;
 	}
 
-	iked.process_dhcp_recv( tunnel );
+	//
+	// check renew time
+	//
 
 	time_t current = time( NULL );
+
 	if( current > renew )
-	{
-		renew = current;
+		iked.process_dhcp_recv( tunnel );
+
+	if( current > renew )
 		iked.process_dhcp_send( tunnel );
-	}
 
 	return true;
 }

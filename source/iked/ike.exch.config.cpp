@@ -896,9 +896,9 @@ bool _IKED::config_client_xconf_pull_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 
 		log.txt( LLOG_INFO, "ii : received config pull response\n" );
 
-		long getmask = 0;
+		long getbits = 0;
 		config_xconf_get( cfg,
-			getmask,
+			getbits,
 			cfg->tunnel->xconf.rqst,
 			ph1->vendopts_r );
 
@@ -906,7 +906,7 @@ bool _IKED::config_client_xconf_pull_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 		// add negotiated options
 		//
 
-		cfg->tunnel->xconf.opts |= cfg->tunnel->xconf.rqst & getmask;
+		cfg->tunnel->xconf.opts |= cfg->tunnel->xconf.rqst & getbits;
 
 		cfg->xstate |= CSTATE_RECV_XCONF;
 
@@ -993,9 +993,9 @@ bool _IKED::config_client_xconf_push_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 
 		log.txt( LLOG_INFO, "ii : received config push request\n" );
 
-		long getmask = 0;
+		long getbits = 0;
 		config_xconf_get( cfg,
-			getmask,
+			getbits,
 			cfg->tunnel->xconf.rqst,
 			ph1->vendopts_r );
 
@@ -1003,7 +1003,7 @@ bool _IKED::config_client_xconf_push_recv( IDB_CFG * cfg, IDB_PH1 * ph1 )
 		// add negotiated options
 		//
 
-		cfg->tunnel->xconf.opts |= cfg->tunnel->xconf.rqst & getmask;
+		cfg->tunnel->xconf.opts |= cfg->tunnel->xconf.rqst & getbits;
 
 		//
 		// config is now mature
@@ -1420,8 +1420,7 @@ bool _IKED::config_server_xconf_push_send( IDB_CFG * cfg, IDB_PH1 * ph1 )
 	return false;
 }
 
-
-long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VENDOPTS vendopts )
+long _IKED::config_xconf_set( IDB_CFG * cfg, long setbits, long setmask, VENDOPTS vendopts )
 {
 	//
 	// the modecfg draft defines valid lengths
@@ -1446,9 +1445,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 	// standard attributes
 	//
 
-	if( setmask & IPSEC_OPTS_ADDR )
+	if( setbits & IPSEC_OPTS_ADDR )
 	{
-		if( nullmask & IPSEC_OPTS_ADDR )
+		if( setmask & IPSEC_OPTS_ADDR )
 		{
 			cfg->attr_add_v( INTERNAL_IP4_ADDRESS,
 				null_ptr, null_len );
@@ -1483,9 +1482,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 		}
 	}
 
-	if( setmask & IPSEC_OPTS_MASK )
+	if( setbits & IPSEC_OPTS_MASK )
 	{
-		if( nullmask & IPSEC_OPTS_MASK )
+		if( setmask & IPSEC_OPTS_MASK )
 		{
 			cfg->attr_add_v( INTERNAL_IP4_NETMASK,
 				null_ptr, null_len );
@@ -1507,9 +1506,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 		}
 	}
 
-	if( setmask & IPSEC_OPTS_DNSS )
+	if( setbits & IPSEC_OPTS_DNSS )
 	{
-		if( nullmask & IPSEC_OPTS_DNSS )
+		if( setmask & IPSEC_OPTS_DNSS )
 		{
 			cfg->attr_add_v( INTERNAL_IP4_DNS,
 				null_ptr, null_len );
@@ -1536,9 +1535,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 		}
 	}
 
-	if( setmask & IPSEC_OPTS_NBNS )
+	if( setbits & IPSEC_OPTS_NBNS )
 	{
-		if( nullmask & IPSEC_OPTS_NBNS )
+		if( setmask & IPSEC_OPTS_NBNS )
 		{
 			cfg->attr_add_v( INTERNAL_IP4_NBNS,
 				null_ptr, null_len );
@@ -1571,9 +1570,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 
 	if( !vendopts.flag.unity )
 	{
-		if( setmask & IPSEC_OPTS_SPLITNET )
+		if( setbits & IPSEC_OPTS_SPLITNET )
 		{
-			if( nullmask & IPSEC_OPTS_SPLITNET )
+			if( setmask & IPSEC_OPTS_SPLITNET )
 			{
 				cfg->attr_add_v( INTERNAL_IP4_SUBNET, NULL, 0 );
 
@@ -1626,9 +1625,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 
 	if( vendopts.flag.unity )
 	{
-		if( setmask & IPSEC_OPTS_DOMAIN )
+		if( setbits & IPSEC_OPTS_DOMAIN )
 		{
-			if( nullmask & IPSEC_OPTS_DOMAIN )
+			if( setmask & IPSEC_OPTS_DOMAIN )
 			{
 				cfg->attr_add_v( UNITY_DEF_DOMAIN, NULL, 0 );
 				log.txt( LLOG_DEBUG,
@@ -1646,9 +1645,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 			}
 		}
 
-		if( setmask & IPSEC_OPTS_SPLITDNS )
+		if( setbits & IPSEC_OPTS_SPLITDNS )
 		{
-			if( nullmask & IPSEC_OPTS_SPLITDNS )
+			if( setmask & IPSEC_OPTS_SPLITDNS )
 			{
 				cfg->attr_add_v( UNITY_SPLIT_DOMAIN, NULL, 0 );
 				log.txt( LLOG_DEBUG, "ii : - Split DNS Domain\n" );
@@ -1675,9 +1674,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 			}
 		}
 
-		if( setmask & IPSEC_OPTS_SPLITNET )
+		if( setbits & IPSEC_OPTS_SPLITNET )
 		{
-			if( nullmask & IPSEC_OPTS_SPLITNET )
+			if( setmask & IPSEC_OPTS_SPLITNET )
 			{
 				cfg->attr_add_v( UNITY_SPLIT_INCLUDE, NULL, 0 );
 				cfg->attr_add_v( UNITY_SPLIT_EXCLUDE, NULL, 0 );
@@ -1760,9 +1759,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 			}
 		}
 
-		if( setmask & IPSEC_OPTS_BANNER )
+		if( setbits & IPSEC_OPTS_BANNER )
 		{
-			if( nullmask & IPSEC_OPTS_BANNER )
+			if( setmask & IPSEC_OPTS_BANNER )
 			{
 				cfg->attr_add_v( UNITY_BANNER, NULL, 0 );
 				log.txt( LLOG_DEBUG,
@@ -1782,9 +1781,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 			}
 		}
 
-		if( setmask & IPSEC_OPTS_PFS )
+		if( setbits & IPSEC_OPTS_PFS )
 		{
-			if( nullmask & IPSEC_OPTS_PFS )
+			if( setmask & IPSEC_OPTS_PFS )
 			{
 				cfg->attr_add_v( UNITY_PFS, NULL, 0 );
 				log.txt( LLOG_DEBUG,
@@ -1801,9 +1800,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 			}
 		}
 
-		if( setmask & IPSEC_OPTS_SAVEPW )
+		if( setbits & IPSEC_OPTS_SAVEPW )
 		{
-			if( nullmask & IPSEC_OPTS_SAVEPW )
+			if( setmask & IPSEC_OPTS_SAVEPW )
 			{
 				cfg->attr_add_v( UNITY_SAVE_PASSWD, NULL, 0 );
 				log.txt( LLOG_DEBUG,
@@ -1820,9 +1819,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 			}
 		}
 
-		if( setmask & IPSEC_OPTS_CISCO_UDP )
+		if( setbits & IPSEC_OPTS_CISCO_UDP )
 		{
-			if( nullmask & IPSEC_OPTS_CISCO_UDP )
+			if( setmask & IPSEC_OPTS_CISCO_UDP )
 			{
 				cfg->attr_add_v( UNITY_NATT_PORT, NULL, 0 );
 				log.txt( LLOG_DEBUG,
@@ -1880,9 +1879,9 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 			macaddr[ 4 ],
 			macaddr[ 5 ] );
 
-		if( setmask & IPSEC_OPTS_DOMAIN )
+		if( setbits & IPSEC_OPTS_DOMAIN )
 		{
-			if( nullmask & IPSEC_OPTS_DOMAIN )
+			if( setmask & IPSEC_OPTS_DOMAIN )
 			{
 				cfg->attr_add_v( CHKPT_DEF_DOMAIN,
 					null_ptr, null_len );
@@ -1906,7 +1905,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long & setmask, long nullmask, VEND
 	return LIBIKE_OK;
 }
 
-long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VENDOPTS vendopts )
+long _IKED::config_xconf_get( IDB_CFG * cfg, long & getbits, long getmask, VENDOPTS vendopts )
 {
 	long count = cfg->attr_count();
 	long index = 0;
@@ -1925,9 +1924,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 		{
 			case INTERNAL_IP4_ADDRESS:
 			{
-				getmask |= IPSEC_OPTS_ADDR;
+				getbits |= IPSEC_OPTS_ADDR;
 
-				if( ( readmask & IPSEC_OPTS_ADDR ) && attr->vdata.size() )
+				if( ( getmask & IPSEC_OPTS_ADDR ) && attr->vdata.size() )
 				{
 					if( attr->vdata.size() != 4 )
 					{
@@ -1957,9 +1956,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 
 			case INTERNAL_IP4_NETMASK:
 			{
-				getmask |= IPSEC_OPTS_MASK;
+				getbits |= IPSEC_OPTS_MASK;
 
-				if( ( readmask & IPSEC_OPTS_MASK ) && attr->vdata.size() )
+				if( ( getmask & IPSEC_OPTS_MASK ) && attr->vdata.size() )
 				{
 					if( attr->vdata.size() != 4 )
 					{
@@ -1989,9 +1988,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 
 			case INTERNAL_IP4_DNS:
 			{
-				getmask |= IPSEC_OPTS_DNSS;
+				getbits |= IPSEC_OPTS_DNSS;
 
-				if( ( readmask & IPSEC_OPTS_DNSS ) && attr->vdata.size() )
+				if( ( getmask & IPSEC_OPTS_DNSS ) && attr->vdata.size() )
 				{
 					if( cfg->tunnel->xconf.nscfg.dnss_count < IPSEC_DNSS_MAX )
 					{
@@ -2026,9 +2025,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 
 			case INTERNAL_IP4_NBNS:
 			{
-				getmask |= IPSEC_OPTS_NBNS;
+				getbits |= IPSEC_OPTS_NBNS;
 
-				if( ( readmask & IPSEC_OPTS_NBNS ) && attr->vdata.size() )
+				if( ( getmask & IPSEC_OPTS_NBNS ) && attr->vdata.size() )
 				{
 					if( cfg->tunnel->xconf.nscfg.nbns_count < IPSEC_NBNS_MAX )
 					{
@@ -2063,9 +2062,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 
 			case INTERNAL_ADDRESS_EXPIRY:
 			{
-				getmask |= IPSEC_OPTS_ADDR;
+				getbits |= IPSEC_OPTS_ADDR;
 
-				if( ( readmask & IPSEC_OPTS_ADDR ) && attr->vdata.size() )
+				if( ( getmask & IPSEC_OPTS_ADDR ) && attr->vdata.size() )
 				{
 					if( attr->vdata.size() != 4 )
 					{
@@ -2124,9 +2123,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 			{
 				case INTERNAL_IP4_SUBNET:
 				{
-					getmask |= IPSEC_OPTS_SPLITNET;
+					getbits |= IPSEC_OPTS_SPLITNET;
 
-					if( ( readmask & IPSEC_OPTS_SPLITNET ) && attr->vdata.size() )
+					if( ( getmask & IPSEC_OPTS_SPLITNET ) && attr->vdata.size() )
 					{
 						int net_count = int( attr->vdata.size() / sizeof( IKE_SUBNET ) );
 						int net_index = 0;
@@ -2186,9 +2185,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 			{
 				case UNITY_DEF_DOMAIN:
 				{
-					getmask |= IPSEC_OPTS_DOMAIN;
+					getbits |= IPSEC_OPTS_DOMAIN;
 
-					if( ( readmask & IPSEC_OPTS_DOMAIN ) && attr->vdata.size() )
+					if( ( getmask & IPSEC_OPTS_DOMAIN ) && attr->vdata.size() )
 					{
 						size_t nlen = attr->vdata.size();
 						if( nlen > ( CONF_STRLEN - 1 ) )
@@ -2212,9 +2211,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 
 				case UNITY_SPLIT_DOMAIN:
 				{
-					getmask |= IPSEC_OPTS_SPLITDNS;
+					getbits |= IPSEC_OPTS_SPLITDNS;
 
-					if( ( readmask & IPSEC_OPTS_SPLITDNS ) && attr->vdata.size() )
+					if( ( getmask & IPSEC_OPTS_SPLITDNS ) && attr->vdata.size() )
 					{
 						attr->vdata.add( 0, 1 );
 
@@ -2241,7 +2240,7 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 							dnslen += tmplen;
 							dnsstr += tmplen;
 
-							if( readmask & IPSEC_OPTS_SPLITDNS )
+							if( getmask & IPSEC_OPTS_SPLITDNS )
 								cfg->tunnel->domains.add( domain );
 						}
 					}
@@ -2254,9 +2253,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 				case UNITY_SPLIT_INCLUDE:
 				case UNITY_SPLIT_EXCLUDE:
 				{
-					getmask |= IPSEC_OPTS_SPLITNET;
+					getbits |= IPSEC_OPTS_SPLITNET;
 
-					if( ( readmask & IPSEC_OPTS_SPLITNET ) && attr->vdata.size() )
+					if( ( getmask & IPSEC_OPTS_SPLITNET ) && attr->vdata.size() )
 					{
 						int net_count = int( attr->vdata.size() / sizeof( IKE_UNITY_NET ) );
 						int net_index = 0;
@@ -2343,9 +2342,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 
 				case UNITY_BANNER:
 				{
-					getmask |= IPSEC_OPTS_BANNER;
+					getbits |= IPSEC_OPTS_BANNER;
 
-					if( ( readmask & IPSEC_OPTS_BANNER ) && attr->vdata.size() )
+					if( ( getmask & IPSEC_OPTS_BANNER ) && attr->vdata.size() )
 					{
 						cfg->tunnel->banner.add( 0, 1 );
 
@@ -2371,9 +2370,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 
 				case UNITY_PFS:
 				{
-					getmask |= IPSEC_OPTS_PFS;
+					getbits |= IPSEC_OPTS_PFS;
 
-					if( ( readmask & IPSEC_OPTS_PFS ) && attr->basic )
+					if( ( getmask & IPSEC_OPTS_PFS ) && attr->basic )
 					{
 						log.txt( LLOG_DEBUG,
 							"ii : - PFS Group = %d\n",
@@ -2389,9 +2388,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 
 				case UNITY_SAVE_PASSWD:
 				{
-					getmask |= IPSEC_OPTS_SAVEPW;
+					getbits |= IPSEC_OPTS_SAVEPW;
 
-					if( ( readmask & IPSEC_OPTS_SAVEPW ) && attr->basic )
+					if( ( getmask & IPSEC_OPTS_SAVEPW ) && attr->basic )
 					{
 						log.txt( LLOG_DEBUG,
 							"ii : - Save Password = %d\n",
@@ -2407,9 +2406,9 @@ long _IKED::config_xconf_get( IDB_CFG * cfg, long & getmask, long readmask, VEND
 
 				case UNITY_NATT_PORT:
 				{
-					getmask |= IPSEC_OPTS_CISCO_UDP;
+					getbits |= IPSEC_OPTS_CISCO_UDP;
 
-					if( ( readmask & IPSEC_OPTS_CISCO_UDP ) && attr->basic )
+					if( ( getmask & IPSEC_OPTS_CISCO_UDP ) && attr->basic )
 					{
 						log.txt( LLOG_DEBUG,
 							"ii : - Cisco UDP Port = %d\n",

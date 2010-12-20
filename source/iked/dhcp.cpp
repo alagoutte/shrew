@@ -132,7 +132,7 @@ long _IKED::socket_dhcp_create( IDB_TUNNEL * tunnel )
 	//
 
 	tunnel->inc( true );
-	tunnel->event_dhcp.delay = 100;
+	tunnel->event_dhcp.delay = 1000;
 
 	ith_timer.add( &tunnel->event_dhcp );
 
@@ -421,9 +421,10 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			case DHCP_OPT_MSGTYPE:
 			{
 				config.addr.s_addr = dhcp_head.yiaddr;
-				text_addr( txtaddr, config.addr );
+				config.opts |= IPSEC_OPTS_ADDR;
 
 				packet.get_byte( type );
+				text_addr( txtaddr, config.addr );
 
 				switch( type )
 				{
@@ -451,6 +452,7 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 					len -= 4;
 					text_addr( txtaddr, config.mask );
 					log.txt( LLOG_DEBUG, "ii : - IP4 Netmask = %s\n", txtaddr );
+					config.opts |= IPSEC_OPTS_MASK;
 				}
 				packet.get_null( len );
 				break;
@@ -499,6 +501,7 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 						config.nscfg.dnss_count++;
 						log.txt( LLOG_DEBUG, "ii : - IP4 DNS Server = %s\n", txtaddr );
 					}
+					config.opts |= IPSEC_OPTS_DNSS;
 				}
 				packet.get_null( len );
 				break;
@@ -514,6 +517,7 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 						config.nscfg.nbns_count++;
 						log.txt( LLOG_DEBUG, "ii : - IP4 WINS Server = %s\n", txtaddr );
 					}
+					config.opts |= IPSEC_OPTS_NBNS;
 				}
 				packet.get_null( len );
 				break;
@@ -528,10 +532,12 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 					packet.get( config.nscfg.dnss_suffix, tmp );
 					config.nscfg.dnss_suffix[ tmp ] = 0;
 					log.txt( LLOG_DEBUG, "ii : - DNS Suffix = %s\n", config.nscfg.dnss_suffix );
+					config.opts |= IPSEC_OPTS_DOMAIN;
 				}
 				packet.get_null( len - tmp );
 				break;
 			}
+
 			case DHCP_OPT_CLIENTID:
 				log.txt( LLOG_DEBUG, "ii : - clientid ( %i bytes )\n", len );
 				packet.get_null( len );
@@ -561,6 +567,7 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			//
 
 			tunnel->xconf.dhcp = config.dhcp;
+			tunnel->xconf.opts = tunnel->xconf.rqst & config.opts;
 
 			if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
 				tunnel->xconf.addr = config.addr;
@@ -591,6 +598,8 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			}
 
 			tunnel->tstate |= TSTATE_VNET_CONFIG;
+
+			tunnel->ikei->wakeup();
 		}
 	}
 
@@ -606,7 +615,6 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			// setup lease times
 			//
 
-			tunnel->event_dhcp.delay = 1000;
 			tunnel->event_dhcp.retry = 0;
 			tunnel->event_dhcp.renew = time( NULL );
 			tunnel->event_dhcp.renew += tunnel->event_dhcp.lease / 2;
