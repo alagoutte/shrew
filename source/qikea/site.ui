@@ -1804,27 +1804,27 @@
               </item>
               <item>
                <property name="text" >
-                <string>aes</string>
+                <string>esp-aes</string>
                </property>
               </item>
               <item>
                <property name="text" >
-                <string>blowfish</string>
+                <string>esp-blowfish</string>
                </property>
               </item>
               <item>
                <property name="text" >
-                <string>3des</string>
+                <string>esp-3des</string>
                </property>
               </item>
               <item>
                <property name="text" >
-                <string>des</string>
+                <string>esp-des</string>
                </property>
               </item>
               <item>
                <property name="text" >
-                <string>cast</string>
+                <string>esp-cast</string>
                </property>
               </item>
              </widget>
