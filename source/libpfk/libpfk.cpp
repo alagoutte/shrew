@@ -768,6 +768,7 @@ long _PFKI::buff_set_key( sadb_key * ext, PFKI_KEY & key )
 		return IPCERR_FAILED;
 	}
 
+	assert( PFKI_MAX_KEYLEN >= key.length );
 	memcpy( buff, key.keydata, key.length );
 
 	return IPCERR_OK;

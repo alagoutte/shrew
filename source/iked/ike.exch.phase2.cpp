@@ -1540,8 +1540,6 @@ long _IKED::phase2_chk_params( IDB_PH1 * ph1, IDB_PH2 * ph2, PACKET_IKE & packet
 	return LIBIKE_OK;
 }
 
-#define MAX_KEYSIZE ( EVP_MAX_KEY_LENGTH + HMAC_MAX_MD_CBLOCK * 2 )
-
 long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 {
 	//
@@ -1686,6 +1684,8 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2 )
 	return LIBIKE_OK;
 }
 
+#define PH2_MAX_KEYLEN ( ( EVP_MAX_KEY_LENGTH + HMAC_MAX_MD_CBLOCK ) * 2 )
+
 long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2, long dir, IKE_PROPOSAL * proposal, BDATA & shared )
 {
 	//
@@ -1793,11 +1793,10 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2, long dir, IKE_PROPOSA
 	// sa and once for the outbound sa
 	//
 
-	unsigned char key_data[ MAX_KEYSIZE ];
+	unsigned char key_data[ PH2_MAX_KEYLEN ];
 
 	long key_size = key_size_c + key_size_h;
 	long skeyid_size = ph1->hash_size;
-
 
 	//
 	// grow our key to be a multiple
@@ -1806,7 +1805,7 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2, long dir, IKE_PROPOSA
 	if( key_size % skeyid_size )
 		key_size += skeyid_size - ( key_size % skeyid_size );
 
-	assert( key_size < MAX_KEYSIZE );
+	assert( key_size < PH2_MAX_KEYLEN );
 
 	//
 	// create our extended key material

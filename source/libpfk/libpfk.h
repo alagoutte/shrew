@@ -186,7 +186,7 @@ struct sadb_sa_natt
 #include "export.h"
 
 #define PFKI_MAX_XFORMS		4
-#define PFKI_MAX_KEYLEN		32
+#define PFKI_MAX_KEYLEN		128
 
 #define NAME_MSGTYPE		1
 #define NAME_SATYPE			2
