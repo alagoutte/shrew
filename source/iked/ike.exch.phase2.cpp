@@ -1762,9 +1762,27 @@ long _IKED::phase2_gen_keys( IDB_PH1 * ph1, IDB_PH2 * ph2, long dir, IKE_PROPOSA
 
 				break;
 
-			case ISAKMP_AUTH_HMAC_SHA:
+			case ISAKMP_AUTH_HMAC_SHA1:
 
 				key_size_h = EVP_MD_size( EVP_sha1() );
+
+				break;
+
+			case ISAKMP_AUTH_HMAC_SHA2_256:
+
+				key_size_h = EVP_MD_size( EVP_sha256() );
+
+				break;
+
+			case ISAKMP_AUTH_HMAC_SHA2_384:
+
+				key_size_h = EVP_MD_size( EVP_sha384() );
+
+				break;
+
+			case ISAKMP_AUTH_HMAC_SHA2_512:
+
+				key_size_h = EVP_MD_size( EVP_sha512() );
 
 				break;
 		}

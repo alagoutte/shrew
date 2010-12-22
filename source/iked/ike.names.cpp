@@ -146,6 +146,9 @@ const char * _IKED::find_name( long type, long id )
 			static const char * xform1 = "ah-md5";
 			static const char * xform2 = "ah-sha";
 			static const char * xform3 = "ah-des";
+			static const char * xform4 = "ah-sha256";
+			static const char * xform5 = "ah-sha384";
+			static const char * xform6 = "ah-sha512";
 
 			switch( id )
 			{
@@ -157,6 +160,15 @@ const char * _IKED::find_name( long type, long id )
 
 				case ISAKMP_AH_DES:
 					return xform3;
+
+				case ISAKMP_AH_SHA256:
+					return xform4;
+
+				case ISAKMP_AH_SHA384:
+					return xform5;
+
+				case ISAKMP_AH_SHA512:
+					return xform6;
 
 				default:
 					return unknown2;
@@ -464,16 +476,19 @@ const char * _IKED::find_name( long type, long id )
 		case NAME_MAUTH:
 		{
 			static const char * hash1 = "hmac-md5";
-			static const char * hash2 = "hmac-sha";
+			static const char * hash2 = "hmac-sha1";
 			static const char * hash3 = "des-mac";
 			static const char * hash4 = "kpdk";
+			static const char * hash5 = "hmac-sha2-256";
+			static const char * hash6 = "hmac-sha2-384";
+			static const char * hash7 = "hmac-sha2-512";
 
 			switch( id )
 			{
 				case ISAKMP_AUTH_HMAC_MD5:
 					return hash1;
 
-				case ISAKMP_AUTH_HMAC_SHA:
+				case ISAKMP_AUTH_HMAC_SHA1:
 					return hash2;
 
 				case ISAKMP_AUTH_DES_MAC:
@@ -481,6 +496,15 @@ const char * _IKED::find_name( long type, long id )
 
 				case ISAKMP_AUTH_KPDK:
 					return hash4;
+
+				case ISAKMP_AUTH_HMAC_SHA2_256:
+					return hash5;
+
+				case ISAKMP_AUTH_HMAC_SHA2_384:
+					return hash6;
+
+				case ISAKMP_AUTH_HMAC_SHA2_512:
+					return hash7;
 
 				default:
 					return unknown2;
@@ -492,6 +516,9 @@ const char * _IKED::find_name( long type, long id )
 			static const char * hash1 = "md5";
 			static const char * hash2 = "sha1";
 			static const char * hash3 = "tiger";
+			static const char * hash4 = "sha2-256";
+			static const char * hash5 = "sha2-384";
+			static const char * hash6 = "sha2-512";
 
 			switch( id )
 			{
@@ -503,6 +530,15 @@ const char * _IKED::find_name( long type, long id )
 
 				case IKE_HASH_TIGER:
 					return hash3;
+
+				case IKE_HASH_SHA2_256:
+					return hash4;
+
+				case IKE_HASH_SHA2_384:
+					return hash5;
+
+				case IKE_HASH_SHA2_512:
+					return hash6;
 
 				default:
 					return unknown2;

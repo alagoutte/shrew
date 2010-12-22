@@ -769,6 +769,24 @@ bool _IDB_PH1::setup_xform( IKE_PROPOSAL * proposal )
 
 			break;
 
+		case IKE_HASH_SHA2_256:
+
+			evp_hash = EVP_sha256();
+
+			break;
+
+		case IKE_HASH_SHA2_384:
+
+			evp_hash = EVP_sha384();
+
+			break;
+
+		case IKE_HASH_SHA2_512:
+
+			evp_hash = EVP_sha512();
+
+			break;
+
 		default:
 			return false;
 	}

@@ -391,6 +391,9 @@ const char * _PFKI::name( long type, long value )
 		{
 			static const char * authtype_02 = "HMAC-MD5";
 			static const char * authtype_03 = "HMAC-SHA1";
+			static const char * authtype_04 = "HMAC-SHA2-256";
+			static const char * authtype_05 = "HMAC-SHA2-384";
+			static const char * authtype_06 = "HMAC-SHA2-512";
 
 			switch( value )
 			{
@@ -399,6 +402,15 @@ const char * _PFKI::name( long type, long value )
 
 				case SADB_AALG_SHA1HMAC:
 					return authtype_03;
+
+				case SADB_X_AALG_SHA2_256:
+					return authtype_04;
+
+				case SADB_X_AALG_SHA2_384:
+					return authtype_05;
+
+				case SADB_X_AALG_SHA2_512:
+					return authtype_06;
 
 				default:
 					return unknown;

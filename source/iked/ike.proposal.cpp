@@ -68,7 +68,10 @@ long _IKED::phase1_gen_prop( IDB_PH1 * ph1 )
 	unsigned short hlist[] =
 	{
 		IKE_HASH_MD5,
-		IKE_HASH_SHA1
+		IKE_HASH_SHA1,
+		IKE_HASH_SHA2_256,
+		IKE_HASH_SHA2_384,
+		IKE_HASH_SHA2_512,
 	};
 
 	// dh groups
@@ -650,7 +653,10 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 				unsigned char tlist[] =
 				{
 					ISAKMP_AH_MD5,
-					ISAKMP_AH_SHA
+					ISAKMP_AH_SHA,
+					ISAKMP_AH_SHA256,
+					ISAKMP_AH_SHA384,
+					ISAKMP_AH_SHA512,
 				};
 
 				//
@@ -705,7 +711,19 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 							break;
 
 						case ISAKMP_AH_SHA:
-							proposal.hash_id = ISAKMP_AUTH_HMAC_SHA;
+							proposal.hash_id = ISAKMP_AUTH_HMAC_SHA1;
+							break;
+
+						case ISAKMP_AH_SHA256:
+							proposal.hash_id = ISAKMP_AUTH_HMAC_SHA2_256;
+							break;
+
+						case ISAKMP_AH_SHA384:
+							proposal.hash_id = ISAKMP_AUTH_HMAC_SHA2_384;
+							break;
+
+						case ISAKMP_AH_SHA512:
+							proposal.hash_id = ISAKMP_AUTH_HMAC_SHA2_512;
 							break;
 					}
 
@@ -744,7 +762,10 @@ long _IKED::phase2_gen_prop( IDB_PH2 * ph2, IDB_POLICY * policy )
 				unsigned short alist[] =
 				{
 					ISAKMP_AUTH_HMAC_MD5,
-					ISAKMP_AUTH_HMAC_SHA
+					ISAKMP_AUTH_HMAC_SHA1,
+					ISAKMP_AUTH_HMAC_SHA2_256,
+					ISAKMP_AUTH_HMAC_SHA2_384,
+					ISAKMP_AUTH_HMAC_SHA2_512
 				};
 
 				//

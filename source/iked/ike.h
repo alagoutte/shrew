@@ -72,6 +72,9 @@
 #define ISAKMP_AH_MD5				2
 #define ISAKMP_AH_SHA				3
 #define ISAKMP_AH_DES				4
+#define ISAKMP_AH_SHA256			5
+#define ISAKMP_AH_SHA384			6
+#define ISAKMP_AH_SHA512			7
 
 // ipsec esp transforms
 
@@ -124,9 +127,12 @@
 // authentication algorithm values
 
 #define ISAKMP_AUTH_HMAC_MD5			1
-#define ISAKMP_AUTH_HMAC_SHA			2
+#define ISAKMP_AUTH_HMAC_SHA1			2
 #define ISAKMP_AUTH_DES_MAC				3
 #define ISAKMP_AUTH_KPDK				4
+#define ISAKMP_AUTH_HMAC_SHA2_256		5
+#define	ISAKMP_AUTH_HMAC_SHA2_384		6
+#define	ISAKMP_AUTH_HMAC_SHA2_512		7
 
 // identification types
 
@@ -295,6 +301,9 @@
 #define IKE_HASH_MD5				1
 #define IKE_HASH_SHA1				2
 #define IKE_HASH_TIGER				3
+#define	IKE_HASH_SHA2_256			4
+#define IKE_HASH_SHA2_384			5
+#define IKE_HASH_SHA2_512			6
 
 #define IKE_AUTH_PRESHARED_KEY		1
 #define IKE_AUTH_SIG_DSA			2
