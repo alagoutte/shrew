@@ -201,13 +201,16 @@ BDATA			fpass;
 %token		MSGA		"hmac"
 %token		COMP		"compress"
 %token		DHGR		"dh group"
-%token		ALG_AES		"aes"
+%token		ALG_AES			"aes"
 %token		ALG_BLOWFISH	"blowfish"
-%token		ALG_3DES	"3des"
-%token		ALG_CAST	"cast"
-%token		ALG_DES		"des"
-%token		ALG_MD5		"md5"
-%token		ALG_SHA1	"sha1"
+%token		ALG_3DES		"3des"
+%token		ALG_CAST		"cast"
+%token		ALG_DES			"des"
+%token		ALG_MD5			"md5"
+%token		ALG_SHA1		"sha1"
+%token		ALG_SHA2_256	"sha2-256"
+%token		ALG_SHA2_384	"sha2-384"
+%token		ALG_SHA2_512	"sha2-512"
 %token		ALG_DHGR	"dhgr"
 %token		ALG_DEFLATE	"deflate"
 %token		ALG_LZS		"lzs"
@@ -1387,6 +1390,21 @@ proposal_line_isakmp
 		proposal.hash_id = IKE_HASH_SHA1;
 	}
 	EOS
+  |	HASH ALG_SHA2_256
+	{
+		proposal.hash_id = IKE_HASH_SHA2_256;
+	}
+	EOS
+  |	HASH ALG_SHA2_384
+	{
+		proposal.hash_id = IKE_HASH_SHA2_384;
+	}
+	EOS
+  |	HASH ALG_SHA2_512
+	{
+		proposal.hash_id = IKE_HASH_SHA2_512;
+	}
+	EOS
   |	DHGR NUMBER
 	{
 		switch( $2 )
@@ -1447,7 +1465,25 @@ proposal_line_ah
   |	MSGA ALG_SHA1
 	{
 		proposal.xform = ISAKMP_AH_SHA;
-		proposal.hash_id = ISAKMP_AUTH_HMAC_SHA;
+		proposal.hash_id = ISAKMP_AUTH_HMAC_SHA1;
+	}
+	EOS
+  |	MSGA ALG_SHA2_256
+	{
+		proposal.xform = ISAKMP_AH_SHA256;
+		proposal.hash_id = ISAKMP_AUTH_HMAC_SHA2_256;
+	}
+	EOS
+  |	MSGA ALG_SHA2_384
+	{
+		proposal.xform = ISAKMP_AH_SHA384;
+		proposal.hash_id = ISAKMP_AUTH_HMAC_SHA2_384;
+	}
+	EOS
+  |	MSGA ALG_SHA2_512
+	{
+		proposal.xform = ISAKMP_AH_SHA512;
+		proposal.hash_id = ISAKMP_AUTH_HMAC_SHA2_512;
 	}
 	EOS
   |	DHGR NUMBER
@@ -1538,7 +1574,22 @@ proposal_line_esp
 	EOS
   |	MSGA ALG_SHA1
 	{
-		proposal.hash_id = ISAKMP_AUTH_HMAC_SHA;
+		proposal.hash_id = ISAKMP_AUTH_HMAC_SHA1;
+	}
+	EOS
+  |	MSGA ALG_SHA2_256
+	{
+		proposal.hash_id = ISAKMP_AUTH_HMAC_SHA2_256;
+	}
+	EOS
+  |	MSGA ALG_SHA2_384
+	{
+		proposal.hash_id = ISAKMP_AUTH_HMAC_SHA2_384;
+	}
+	EOS
+  |	MSGA ALG_SHA2_512
+	{
+		proposal.hash_id = ISAKMP_AUTH_HMAC_SHA2_512;
 	}
 	EOS
   |	DHGR NUMBER

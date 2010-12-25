@@ -251,6 +251,9 @@ if( yy_first_time )
 <SEC_PROP>des			{ return( token::ALG_DES ); }
 <SEC_PROP>md5			{ return( token::ALG_MD5 ); }
 <SEC_PROP>sha1			{ return( token::ALG_SHA1 ); }
+<SEC_PROP>sha2_256		{ return( token::ALG_SHA2_256 ); }
+<SEC_PROP>sha2_384		{ return( token::ALG_SHA2_384 ); }
+<SEC_PROP>sha2_512		{ return( token::ALG_SHA2_512 ); }
 <SEC_PROP>deflate		{ return( token::ALG_DEFLATE ); }
 <SEC_PROP>lzs			{ return( token::ALG_LZS ); }
 <SEC_PROP>life_sec		{ return( token::LIFE_SEC ); }
