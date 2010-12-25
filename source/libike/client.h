@@ -42,14 +42,20 @@
 #ifndef _CLIENT_H_
 #define _CLIENT_H_
 
-#include <unistd.h>
-#include <signal.h>
-#include <pwd.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
+#ifdef WIN32
+# include <winsock2.h>
+# include <windows.h>
+# include <shlobj.h>
+#else
+# include <unistd.h>
+# include <signal.h>
+# include <pwd.h>
+# include <stdarg.h>
+# include <stdlib.h>
+# include <netdb.h>
+# include <netinet/in.h>
+# include <sys/socket.h>
+#endif
 
 #include "libike.h"
 #include "config.h"

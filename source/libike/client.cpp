@@ -52,6 +52,27 @@ _CLIENT::_CLIENT()
 	cstate = CLIENT_STATE_DISCONNECTED;
 	autoconnect = false;
 
+#ifdef WIN32
+
+	// locate user appdata directory
+
+	char path_appdata[ MAX_PATH ] = { 0 };
+
+	SHGetFolderPath(
+		NULL,
+		CSIDL_APPDATA,
+		NULL,
+		SHGFP_TYPE_DEFAULT,
+		path_appdata );
+
+	// create site path
+
+	sites.del();
+	sites.add( path_appdata, strlen( path_appdata ) );
+	sites.add( "/shrewsoft/sites", strlen( "/shrewsoft/sites" ) );
+
+#else
+
 	// locate user home directory
 
 	struct passwd * pwd = getpwuid( getuid() );
@@ -68,6 +89,9 @@ _CLIENT::_CLIENT()
 	sites.add( "/.ike/sites", strlen( "/.ike/sites" ) );
 
 	endpwent();
+
+#endif
+
 }
 
 _CLIENT::~_CLIENT()
@@ -253,6 +277,8 @@ bool _CLIENT::vpn_connect( bool wait_input )
 
 	if( wait_input )
 		connecting.wait( -1 );
+
+	return true;
 }
 
 bool _CLIENT::vpn_disconnect()
@@ -274,6 +300,8 @@ bool _CLIENT::vpn_disconnect()
 	}
 	
 	ikei.wakeup();
+
+	return true;
 }
 
 long _CLIENT::func( void * )
@@ -965,7 +993,7 @@ long _CLIENT::func( void * )
 
 				if( config.get_string( "client-dns-suffix", text, MAX_CONFSTRING, 0 ) )
 				{
-					strncpy( xconf.nscfg.dnss_suffix, text, CONF_STRLEN );
+					strncpy_s( xconf.nscfg.dnss_suffix, text, CONF_STRLEN );
 
 					xconf.opts |= IPSEC_OPTS_DOMAIN;
 				}
