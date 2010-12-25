@@ -55,6 +55,7 @@
 # include <netdb.h>
 # include <netinet/in.h>
 # include <sys/socket.h>
+# include "compat/winstring.h"
 #endif
 
 #include "libike.h"

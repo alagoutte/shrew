@@ -483,7 +483,7 @@ long _CLIENT::func( void * )
 
 	if( !config.get_string( "ident-client-type", text, MAX_CONFSTRING, 0 ) )
 	{
-		log( STATUS_FAIL, "config error : auth-client-type undefined\n" );
+		log( STATUS_FAIL, "config error : ident-client-type undefined\n" );
 		return -1;
 	}
 
@@ -517,7 +517,7 @@ long _CLIENT::func( void * )
 
 	if( !config.get_string( "ident-server-type", text, MAX_CONFSTRING, 0 ) )
 	{
-		log( STATUS_FAIL, "config error : auth-server-idtype undefined\n" );
+		log( STATUS_FAIL, "config error : ident-server-idtype undefined\n" );
 		return -1;
 	}
 

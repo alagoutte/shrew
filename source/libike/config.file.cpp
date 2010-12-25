@@ -99,6 +99,9 @@ bool _CONFIG_MANAGER::file_load_vpn( CONFIG * config, const char * path )
 		{
 			next = fgetc( fp );
 
+			if( next == '\r' )
+				continue;
+
 			if( ( next == '\n' ) ||
 				( next == EOF ) )
 				break;
@@ -113,6 +116,7 @@ bool _CONFIG_MANAGER::file_load_vpn( CONFIG * config, const char * path )
 			case 's':
 			{
 				config->add_string( name.text(), data.text(), data.size() );
+				printf( "string='%s'\n", data.text() );
 				break;
 			}
 

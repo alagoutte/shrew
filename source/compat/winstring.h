@@ -63,9 +63,16 @@ inline int sprintf_s( char * buffer, size_t sizeOfBuffer, const char * format, .
 	return vsnprintf( buffer, sizeOfBuffer, format, list );
 }
 
-inline int strcpy_s( char * strDestination, size_t numberOfElements, const char * strSource )
+inline int strcpy_s( char * strDestination, size_t sizeInBytes, const char * strSource )
 {
-	strncpy( strDestination, strSource, numberOfElements );
+	strncpy( strDestination, strSource, sizeInBytes );
+
+	return 0;
+}
+
+inline int strncpy_s( char * strDestination, const char * strSource, size_t sizeInBytes )
+{
+	strncpy( strDestination, strSource, sizeInBytes );
 
 	return 0;
 }
