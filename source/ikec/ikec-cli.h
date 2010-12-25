@@ -46,9 +46,9 @@
 
 #include <histedit.h>
 
-#include "ikec.h"
+#include "client.h"
 
-typedef class _IKEC_CLI : public _IKEC
+typedef class _IKEC_CLI : public _CLIENT
 {
 	protected:
 

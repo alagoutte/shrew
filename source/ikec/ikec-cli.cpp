@@ -205,19 +205,19 @@ void _IKEC_CLI::show_stats()
 
 	switch( cstate )
 	{
-		case IKEC_STATE_DISCONNECTED:
+		case CLIENT_STATE_DISCONNECTED:
 			state = state_disconnected;
 			break;
 
-		case IKEC_STATE_CONNECTING:
+		case CLIENT_STATE_CONNECTING:
 			state = state_connecting;
 			break;
 
-		case IKEC_STATE_CONNECTED:
+		case CLIENT_STATE_CONNECTED:
 			state = state_connected;
 			break;
 
-		case IKEC_STATE_DISCONNECTING:
+		case CLIENT_STATE_DISCONNECTING:
 			state = state_disconnecting;
 			break;
 	}

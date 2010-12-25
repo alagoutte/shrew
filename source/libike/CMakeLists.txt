@@ -19,6 +19,7 @@ include_directories(
 
 add_library(
 	ss_ike SHARED
+	client.cpp
 	config.cpp
 	config.file.cpp
 	libike.cpp )

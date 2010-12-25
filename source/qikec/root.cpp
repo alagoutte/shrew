@@ -220,7 +220,7 @@ void _qikecRoot::customEvent( QEvent * e )
 
 void _qikecRoot::siteConnect()
 {
-	if( qikec.state() != IKEC_STATE_DISCONNECTED )
+	if( qikec.state() != CLIENT_STATE_DISCONNECTED )
 	{
 		// call ikec disconnect function
 
@@ -250,7 +250,7 @@ void _qikecRoot::siteConnect()
 
 void _qikecRoot::siteDisconnect()
 {
-	if( qikec.state() != IKEC_STATE_DISCONNECTED )
+	if( qikec.state() != CLIENT_STATE_DISCONNECTED )
 	{
 		// call ikec disconnect function
 

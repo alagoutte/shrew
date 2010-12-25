@@ -43,7 +43,6 @@ add_executable(
 	main.cpp
 	qikec.cpp
 	root.cpp
-	../ikec/ikec.cpp
 	${UIH_FILES}
 	${CXX_FILES}
 	${QRC_FILES} )

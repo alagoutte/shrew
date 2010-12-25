@@ -54,8 +54,8 @@
 #include <QThread>
 #include <QFileInfo>
 
+#include "client.h"
 #include "config.h"
-#include "ikec.h"
 #include "ui_root.h"
 #include "ui_banner.h"
 #include "ui_filepass.h"
@@ -212,7 +212,7 @@ typedef class _qikecFilePass : public QDialog, public Ui::ikecFilePass
 
 }qikecFilePass;
 
-typedef class _QIKEC : public _IKEC, public QThread
+typedef class _QIKEC : public _CLIENT, public QThread
 {
 	friend class _qikecRoot;
 	
