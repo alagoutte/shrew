@@ -10,6 +10,7 @@
 include_directories(
 	${IKE_SOURCE_DIR}/source/
 	${IKE_SOURCE_DIR}/source/ikec
+	${IKE_SOURCE_DIR}/source/libike
 	${IKE_SOURCE_DIR}/source/libidb
 	${IKE_SOURCE_DIR}/source/libith
 	${IKE_SOURCE_DIR}/source/liblog
@@ -39,7 +40,6 @@ qt4_add_resources(
 
 add_executable(
 	qikea
-	../ikec/config.cpp
 	main.cpp
 	qikea.cpp
 	root.cpp
@@ -51,6 +51,7 @@ add_executable(
 
 target_link_libraries(
 	qikea
+	ss_ike
 	ss_idb
 	ss_ith
 	ss_log

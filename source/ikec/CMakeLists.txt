@@ -23,7 +23,6 @@ link_directories(
 
 add_executable(
 	ikec
-	config.cpp
 	main.cpp
 	ikec.cpp
 	ikec-cli.cpp )

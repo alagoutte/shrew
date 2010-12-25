@@ -16,9 +16,11 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define DLX	__declspec( dllexport )
+#ifdef WIN32
+# include <winsock2.h>
+# include <aclapi.h>
+#endif
 
-#include <windows.h>
 #include <stdio.h>
 #include "libidb.h"
 
@@ -52,7 +54,7 @@ typedef class DLX _CONFIG : public IDB_LIST
 
 	BDATA		id;
 
-	CFGDAT *	get_data( long type, char * key, bool add = false );
+	CFGDAT *	get_data( long type, const char * key, bool add = false );
 
 	public:
 
@@ -61,22 +63,23 @@ typedef class DLX _CONFIG : public IDB_LIST
 
 	_CONFIG & operator = ( _CONFIG & value );
 
-	virtual bool	set_id( char * id );
-	virtual char *	get_id();
+	bool	set_id( const char * id );
+	char *	get_id();
 
-	virtual void	del( char * key );
-	virtual void	del_all();
+	void	del( const char * key );
+	void	del_all();
 
-	virtual bool	add_string( char * key, char * val, size_t size );
-	virtual bool	set_string( char * key, char * val, size_t size );
-	virtual bool	get_string( char * key, char * val, size_t size, int index );
-	virtual long	has_string( char * key, char * val, size_t size );
+	bool	add_string( const char * key, const char * val, size_t size );
+	bool	set_string( const char * key, const char * val, size_t size );
+	long	has_string( const char * key, const char * val, size_t size );
+	bool	get_string( const char * key, char * val, size_t size, int index );
+    bool    get_string( const char * key, BDATA & val, int index );
 
-	virtual bool	set_number( char * key, long val );
-	virtual bool	get_number( char * key, long * val );
+	bool	set_number( const char * key, long val );
+	bool	get_number( const char * key, long * val );
 
-	virtual bool	set_binary( char * key, BDATA & val );
-	virtual bool	get_binary( char * key, BDATA & val );
+	bool	set_binary( const char * key, BDATA & val );
+	bool	get_binary( const char * key, BDATA & val );
 
 }CONFIG;
 
@@ -91,10 +94,10 @@ typedef class DLX _CONFIG_MANAGER : public IDB_LIST
 	bool registry_save_vpn( CONFIG * config );
 	bool registry_del_vpn( CONFIG * config );
 
-	bool file_enumerate( CONFIG * config, char * path, int * index );
-	bool file_load_vpn( CONFIG * config, char * path );
-	bool file_save_vpn( CONFIG * config, char * path );
-	bool file_load_pcf( CONFIG * config, char * path, bool & need_certs );
+	bool file_enumerate( CONFIG * config, const char * path, int * index );
+	bool file_load_vpn( CONFIG * config, const char * path );
+	bool file_save_vpn( CONFIG * config, const char * path );
+	bool file_load_pcf( CONFIG * config, const char * path, bool & need_certs );
 	bool file_del_vpn( CONFIG * config );
 
 }CONFIG_MANAGER;
@@ -102,5 +105,4 @@ typedef class DLX _CONFIG_MANAGER : public IDB_LIST
 bool config_cmp_number( CONFIG * config_old, CONFIG * config_new, char * key );
 bool config_cmp_string( CONFIG * config_old, CONFIG * config_new, char * key );
 
-#endif _CONFIG_H_
-
+#endif

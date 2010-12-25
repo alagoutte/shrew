@@ -18,11 +18,22 @@
 #include "openssl/hmac.h"
 #include "openssl/sha.h"
 
-bool _CONFIG_MANAGER::file_load_vpn( CONFIG * config, char * path )
+bool _CONFIG_MANAGER::file_load_vpn( CONFIG * config, const char * path )
 {
+
+#ifdef WIN32
+
 	FILE * fp;
 	if( fopen_s( &fp, path, "r" ) )
 		return false;
+
+#else
+
+	FILE * fp = fopen( path, "r" );
+	if( fp == NULL )
+		return false;
+
+#endif
 
 	while( true )
 	{
@@ -133,11 +144,22 @@ bool _CONFIG_MANAGER::file_load_vpn( CONFIG * config, char * path )
 	return false;
 }
 
-bool _CONFIG_MANAGER::file_save_vpn( CONFIG * config, char * path )
+bool _CONFIG_MANAGER::file_save_vpn( CONFIG * config, const char * path )
 {
+
+#ifdef WIN32
+
 	FILE * fp;
 	if( fopen_s( &fp, path, "w" ) )
 		return false;
+
+#else
+
+	FILE * fp = fopen( path, "w" );
+	if( fp == NULL )
+		return false;
+
+#endif
 
 	for( long index = 0; index < count(); index++ )
 	{
@@ -270,11 +292,22 @@ bool read_line_pcf( FILE * fp, BDATA & name, BDATA & data )
 	return true;
 }
 
-bool _CONFIG_MANAGER::file_load_pcf( CONFIG * config, char * path, bool & need_certs )
+bool _CONFIG_MANAGER::file_load_pcf( CONFIG * config, const char * path, bool & need_certs )
 {
+
+#ifdef WIN32
+
 	FILE * fp;
 	if( fopen_s( &fp, path, "r" ) )
 		return false;
+
+#else
+
+	FILE * fp = fopen( path, "r" );
+	if( fp == NULL )
+		return false;
+
+#endif
 
 	//
 	// set some sane defaults

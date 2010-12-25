@@ -46,6 +46,7 @@
 #include <signal.h>
 #include <pwd.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>

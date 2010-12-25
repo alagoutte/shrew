@@ -88,7 +88,9 @@ void update_site( CONFIG * config, const char * path, long & version )
 	version++;
 	printf( "updated site \'%s\' to version %li\n", config->get_id(), version );
 	config->set_number( "version", version );
-	config->file_write( path );
+
+	CONFIG_MANAGER manager;
+	manager.file_save_vpn( config, path );
 }
 
 _QIKEA::_QIKEA()
@@ -147,7 +149,9 @@ bool _QIKEA::init( qikeaRoot * setRoot )
 		QString filePath = qikea.sites + "/" + fileName;
 
 		CONFIG config;
-		if( config.file_read( filePath.toAscii().constData() ) )
+		CONFIG_MANAGER manager;
+
+		if( manager.file_load_vpn( &config, filePath.toAscii().constData() ) )
 		{
 			config.set_id( fileName.toAscii().constData() );
 

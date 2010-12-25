@@ -192,7 +192,9 @@ bool _IKEC::load( BDATA & name )
 	fpath.add( name );
 	fpath.add( "", 1 );
 
-	if( !config.file_read( fpath.text() ) )
+	CONFIG_MANAGER manager;
+
+	if( !manager.file_load_vpn( &config, fpath.text() ) )
 	{
 		log( STATUS_FAIL, "failed to load \'%s\'\n",
 			fspec.text() );
@@ -603,6 +605,15 @@ long _IKEC::func( void * )
 	if( !strcmp( "sha1", text ) )
 		proposal_isakmp.hash_id = IKE_HASH_SHA1;
 
+	if( !strcmp( "sha2-256", text ) )
+		proposal_isakmp.hash_id = IKE_HASH_SHA2_256;
+
+	if( !strcmp( "sha2-384", text ) )
+		proposal_isakmp.hash_id = IKE_HASH_SHA2_384;
+
+	if( !strcmp( "sha2-512", text ) )
+		proposal_isakmp.hash_id = IKE_HASH_SHA2_512;
+
 	// phase1 dh group description
 
 	if( !config.get_number( "phase1-dhgroup", &numb ) )
@@ -716,7 +727,16 @@ long _IKEC::func( void * )
 		proposal_esp.hash_id = ISAKMP_AUTH_HMAC_MD5;
 
 	if( !strcmp( "sha1", text ) )
-		proposal_esp.hash_id = ISAKMP_AUTH_HMAC_SHA;
+		proposal_esp.hash_id = ISAKMP_AUTH_HMAC_SHA1;
+
+	if( !strcmp( "sha2-256", text ) )
+		proposal_esp.hash_id = ISAKMP_AUTH_HMAC_SHA2_256;
+
+	if( !strcmp( "sha2-384", text ) )
+		proposal_esp.hash_id = ISAKMP_AUTH_HMAC_SHA2_384;
+
+	if( !strcmp( "sha2-512", text ) )
+		proposal_esp.hash_id = ISAKMP_AUTH_HMAC_SHA2_512;
 
 	// phase2 pfs group description
 

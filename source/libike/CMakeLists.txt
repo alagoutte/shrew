@@ -19,6 +19,8 @@ include_directories(
 
 add_library(
 	ss_ike SHARED
+	config.cpp
+	config.file.cpp
 	libike.cpp )
 
 target_link_libraries(

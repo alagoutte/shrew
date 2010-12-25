@@ -223,7 +223,9 @@ void _qikeaRoot::siteAdd()
 	// write site config
 
 	QString sitePath = qikea.sites + "/" + siteName;
-	config.file_write( sitePath.toAscii() );
+
+	CONFIG_MANAGER manager;
+	manager.file_save_vpn( &config, sitePath.toAscii() );
 
 	// create icon for site
 
@@ -250,7 +252,8 @@ void _qikeaRoot::siteModify()
 	QString filePath = qikea.sites + "/" + i->text();
 
 	CONFIG config;
-	config.file_read( filePath.toAscii() );
+	CONFIG_MANAGER manager;
+	manager.file_load_vpn( &config, filePath.toAscii() );
 
 	// create site modal dialog
 
@@ -262,7 +265,7 @@ void _qikeaRoot::siteModify()
 		// save modified site config
 
 		s.save( config );
-		config.file_write( filePath.toAscii() );
+		manager.file_save_vpn( &config, filePath.toAscii() );
 	}
 }
 
@@ -341,13 +344,14 @@ void _qikeaRoot::siteImport()
 	// load the site config
 
 	CONFIG config;
+	CONFIG_MANAGER manager;
 
 	bool need_certs = false;
 
 	if( !loadPath.contains( ".pcf", Qt::CaseInsensitive ) )
-		config.file_read( loadPath.toAscii() );
+		manager.file_load_vpn( &config, loadPath.toAscii() );
 	else
-		config.file_import_pcf( loadPath.toAscii(), need_certs );
+		manager.file_load_pcf( &config, loadPath.toAscii(), need_certs );
 
 	// modify for import
 
@@ -411,7 +415,7 @@ void _qikeaRoot::siteImport()
 	// save the site config
 
 	QString filePath = qikea.sites + "/" + fileName;
-	config.file_write( filePath.toAscii() );
+	manager.file_save_vpn( &config, filePath.toAscii() );
 
 	// update the site version if required
 
@@ -460,7 +464,8 @@ void _qikeaRoot::siteExport()
 	QString filePath = qikea.sites + "/" + i->text();
 
 	CONFIG config;
-	config.file_read( filePath.toAscii() );
+	CONFIG_MANAGER manager;
+	manager.file_load_vpn( &config, filePath.toAscii() );
 
 	// get the output path
 
@@ -520,7 +525,7 @@ void _qikeaRoot::siteExport()
 		config.set_binary( "auth-server-cert-data", data );
 	}
 
-	config.file_write( savePath.toAscii() );
+	manager.file_save_vpn( &config, savePath.toAscii() );
 }
 
 void _qikeaRoot::showAbout()

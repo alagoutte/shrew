@@ -70,4 +70,9 @@ inline int strcpy_s( char * strDestination, size_t numberOfElements, const char 
 	return 0;
 }
 
+inline int _stricmp( const char * str1, const char * str2 )
+{
+	return strcasecmp( str1, str2 );
+}
+
 #endif

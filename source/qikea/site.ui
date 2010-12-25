@@ -1622,6 +1622,21 @@
                 <string>md5</string>
                </property>
               </item>
+              <item>
+               <property name="text" >
+                <string>sha2-256</string>
+               </property>
+              </item>
+              <item>
+               <property name="text" >
+                <string>sha2-384</string>
+               </property>
+              </item>
+              <item>
+               <property name="text" >
+                <string>sha2-512</string>
+               </property>
+              </item>
              </widget>
             </item>
            </layout>
@@ -1983,6 +1998,21 @@
               <item>
                <property name="text" >
                 <string>md5</string>
+               </property>
+              </item>
+              <item>
+               <property name="text" >
+                <string>sha2-256</string>
+               </property>
+              </item>
+              <item>
+               <property name="text" >
+                <string>sha2-384</string>
+               </property>
+              </item>
+              <item>
+               <property name="text" >
+                <string>sha2-512</string>
                </property>
               </item>
              </widget>

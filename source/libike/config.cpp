@@ -18,7 +18,7 @@
 #define DELIM_NEW	','
 #define DELIM_OLD	0x255
 
-inline char * text_delim( char * text )
+inline char * text_delim( const char * text )
 {
 	char * delim;
 
@@ -29,7 +29,7 @@ inline char * text_delim( char * text )
 	return delim;
 }
 
-inline size_t text_length( char * text )
+inline size_t text_length( const char * text )
 {
 	size_t oset = 0;
 
@@ -69,7 +69,7 @@ _CONFIG::~_CONFIG()
 {
 }
 
-bool _CONFIG::set_id( char * set_id )
+bool _CONFIG::set_id( const char * set_id )
 {
 	id.del();
 	id.set( set_id, strlen( set_id ) + 1 );
@@ -108,7 +108,7 @@ _CONFIG & _CONFIG::operator = ( _CONFIG & config )
 	return *this;
 }
 
-CFGDAT * _CONFIG::get_data( long type, char * key, bool add )
+CFGDAT * _CONFIG::get_data( long type, const char * key, bool add )
 {
 	CFGDAT * cfgdat;
 
@@ -139,7 +139,7 @@ CFGDAT * _CONFIG::get_data( long type, char * key, bool add )
 	return NULL;
 }
 
-void _CONFIG::del( char * key )
+void _CONFIG::del( const char * key )
 {
 	CFGDAT * cfgdat;
 
@@ -160,7 +160,7 @@ void _CONFIG::del_all()
 	clean();
 }
 
-bool _CONFIG::add_string( char * key, char * val, size_t size )
+bool _CONFIG::add_string( const char * key, const char * val, size_t size )
 {
 	CFGDAT * cfgdat = get_data( DATA_STRING, key, true );
 	if( !cfgdat )
@@ -181,7 +181,7 @@ bool _CONFIG::add_string( char * key, char * val, size_t size )
 	return true;
 }
 
-bool _CONFIG::set_string( char * key, char * val, size_t size )
+bool _CONFIG::set_string( const char * key, const char * val, size_t size )
 {
 	del( key );
 	add_string( key, val, size );
@@ -189,38 +189,7 @@ bool _CONFIG::set_string( char * key, char * val, size_t size )
 	return true;
 }
 
-bool _CONFIG::get_string( char * key, char * val, size_t size, int index )
-{
-	CFGDAT * cfgdat = get_data( DATA_STRING, key );
-	if( !cfgdat )
-		return false;
-
-	char * strptr = cfgdat->vval.text();
-
-	for( ; index > 0; index-- )
-	{
-		char * tmpptr = text_delim( strptr );
-		if( tmpptr == NULL )
-			return false;
-
-		strptr = tmpptr + 1;
-	}
-
-	// calculate final length
-
-	size--;
-
-	size_t clen = text_length( strptr );
-	if( clen < size )
-		size = clen;
-
-	memcpy( val, strptr, size );
-	val[ size ] = 0;
-
-	return true;
-}
-
-long _CONFIG::has_string( char * key, char * val, size_t size )
+long _CONFIG::has_string( const char * key, const char * val, size_t size )
 {
 	CFGDAT * cfgdat = get_data( DATA_STRING, key );
 	if( !cfgdat )
@@ -252,7 +221,61 @@ long _CONFIG::has_string( char * key, char * val, size_t size )
 	return -1;
 }
 
-bool _CONFIG::set_number( char * key, long val )
+bool _CONFIG::get_string( const char * key, char * val, size_t size, int index )
+{
+	CFGDAT * cfgdat = get_data( DATA_STRING, key );
+	if( !cfgdat )
+		return false;
+
+	char * strptr = cfgdat->vval.text();
+
+	for( ; index > 0; index-- )
+	{
+		char * tmpptr = text_delim( strptr );
+		if( tmpptr == NULL )
+			return false;
+
+		strptr = tmpptr + 1;
+	}
+
+	// calculate final length
+
+	size--;
+
+	size_t clen = text_length( strptr );
+	if( clen < size )
+		size = clen;
+
+	memcpy( val, strptr, size );
+	val[ size ] = 0;
+
+	return true;
+}
+
+bool _CONFIG::get_string( const char * key, BDATA & val, int index )
+{
+	CFGDAT * cfgdat = get_data( DATA_STRING, key );
+	if( !cfgdat )
+		return false;
+
+	char * strptr = cfgdat->vval.text();
+
+	for( ; index > 0; index-- )
+	{
+		char * tmpptr = text_delim( strptr );
+		if( tmpptr == NULL )
+			return false;
+		strptr = tmpptr + 1;
+	}
+
+	// calculate final length
+	size_t clen = text_length( strptr );
+	val.del();
+	val.set( strptr, clen );
+	return true;
+}
+
+bool _CONFIG::set_number( const char * key, long val )
 {
 	CFGDAT * cfgdat = get_data( DATA_NUMBER, key, true );
 	if( !cfgdat )
@@ -263,7 +286,7 @@ bool _CONFIG::set_number( char * key, long val )
 	return true;
 }
 
-bool _CONFIG::get_number( char * key, long * val )
+bool _CONFIG::get_number( const char * key, long * val )
 {
 	CFGDAT * cfgdat = get_data( DATA_NUMBER, key );
 	if( !cfgdat )
@@ -274,7 +297,7 @@ bool _CONFIG::get_number( char * key, long * val )
 	return true;
 }
 
-bool _CONFIG::set_binary( char * key, BDATA & val )
+bool _CONFIG::set_binary( const char * key, BDATA & val )
 {
 	CFGDAT * cfgdat = get_data( DATA_BINARY, key, true );
 	if( !cfgdat )
@@ -285,7 +308,7 @@ bool _CONFIG::set_binary( char * key, BDATA & val )
 	return true;
 }
 
-bool _CONFIG::get_binary( char * key, BDATA & val )
+bool _CONFIG::get_binary( const char * key, BDATA & val )
 {
 	CFGDAT * cfgdat = get_data( DATA_BINARY, key );
 	if( !cfgdat )
@@ -296,7 +319,7 @@ bool _CONFIG::get_binary( char * key, BDATA & val )
 	return true;
 }
 
-bool config_cmp_number( CONFIG * config_old, CONFIG * config_new, char * key )
+bool config_cmp_number( CONFIG * config_old, CONFIG * config_new, const char * key )
 {
 	if( !config_old )
 		return false;
@@ -312,7 +335,7 @@ bool config_cmp_number( CONFIG * config_old, CONFIG * config_new, char * key )
 	return true;
 }
 
-bool config_cmp_string( CONFIG * config_old, CONFIG * config_new, char * key )
+bool config_cmp_string( CONFIG * config_old, CONFIG * config_new, const char * key )
 {
 	if( !config_old )
 		return false;
