@@ -18,9 +18,9 @@
 #define DELIM_NEW	','
 #define DELIM_OLD	0x255
 
-inline char * text_delim( const char * text )
+inline const char * text_delim( const char * text )
 {
-	char * delim;
+	const char * delim;
 
 	delim = strchr( text, DELIM_NEW );
 	if( delim == NULL )
@@ -195,8 +195,8 @@ long _CONFIG::has_string( const char * key, const char * val, size_t size )
 	if( !cfgdat )
 		return -1;
 
-	char * oldptr = cfgdat->vval.text();
-	char * newptr = cfgdat->vval.text();
+	const char * oldptr = cfgdat->vval.text();
+	const char * newptr = cfgdat->vval.text();
 
 	long index = 0;
 
@@ -227,11 +227,11 @@ bool _CONFIG::get_string( const char * key, char * val, size_t size, int index )
 	if( !cfgdat )
 		return false;
 
-	char * strptr = cfgdat->vval.text();
+	const char * strptr = cfgdat->vval.text();
 
 	for( ; index > 0; index-- )
 	{
-		char * tmpptr = text_delim( strptr );
+		const char * tmpptr = text_delim( strptr );
 		if( tmpptr == NULL )
 			return false;
 
@@ -258,11 +258,11 @@ bool _CONFIG::get_string( const char * key, BDATA & val, int index )
 	if( !cfgdat )
 		return false;
 
-	char * strptr = cfgdat->vval.text();
+	const char * strptr = cfgdat->vval.text();
 
 	for( ; index > 0; index-- )
 	{
-		char * tmpptr = text_delim( strptr );
+		const char * tmpptr = text_delim( strptr );
 		if( tmpptr == NULL )
 			return false;
 		strptr = tmpptr + 1;

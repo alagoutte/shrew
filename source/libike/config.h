@@ -16,11 +16,6 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#ifdef WIN32
-# include <winsock2.h>
-# include <aclapi.h>
-#endif
-
 #include <stdio.h>
 #include "libidb.h"
 
