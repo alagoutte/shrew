@@ -483,7 +483,7 @@ bool _CONFIG_MANAGER::file_load_pcf( CONFIG * config, const char * path, bool & 
 				&ctx_cipher,
 				pwd.buff(),
 				pwd.buff(),
-				pwd.size() );
+				( unsigned int ) pwd.size() );
 
 			pwlen -= pwd.buff()[ pwd.size() - 1 ];
 			pwd.size( pwlen );
