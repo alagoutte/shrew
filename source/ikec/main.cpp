@@ -39,11 +39,11 @@
  *
  */
 
-#include "ikec-cli.h"
+#include "ikec.h"
 
 int main( int argc, char ** argv )
 {
-	IKEC_CLI ikec;
+	IKEC ikec;
 
 	signal( SIGPIPE, SIG_IGN );
 

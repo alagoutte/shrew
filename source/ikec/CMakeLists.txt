@@ -24,7 +24,7 @@ link_directories(
 add_executable(
 	ikec
 	main.cpp
-	ikec-cli.cpp )
+	ikec.cpp )
 
 target_link_libraries(
 	ikec

@@ -39,36 +39,36 @@
  *
  */
 
-#include "ikec-cli.h"
+#include "ikec.h"
 
 const char * prompt( EditLine * e )
 {
 	return "<< : enter xauth username : ";
 }
 
-bool _IKEC_CLI::get_username()
+bool _IKEC::get_username()
 {
 	if( !auto_connect() )
 		read_str( username );
 }
 
-bool _IKEC_CLI::get_password()
+bool _IKEC::get_password()
 {
 	if( !auto_connect() )
 		read_pwd( password, "<< : enter xauth password : " );
 }
 
-bool _IKEC_CLI::get_filepass( BDATA & path )
+bool _IKEC::get_filepass( BDATA & path )
 {
 	log( 0, "file password required for %s\n", path.text() );
 	read_pwd( fpass, "<< : enter file password : " );
 }
 
-bool _IKEC_CLI::set_stats()
+bool _IKEC::set_stats()
 {
 }
 
-bool _IKEC_CLI::set_status( long & status, BDATA & text )
+bool _IKEC::set_status( long & status, BDATA & text )
 {
 	switch( status )
 	{
@@ -98,7 +98,7 @@ bool _IKEC_CLI::set_status( long & status, BDATA & text )
 	}
 }
 
-_IKEC_CLI::_IKEC_CLI()
+_IKEC::_IKEC()
 {
 	// init line editor
 	el = el_init( "ikec", stdin, stdout, stderr );
@@ -106,13 +106,13 @@ _IKEC_CLI::_IKEC_CLI()
 	el_set( el, EL_PROMPT, &prompt );
 }
 
-_IKEC_CLI::~_IKEC_CLI()
+_IKEC::~_IKEC()
 {
 	// free line editor
 	el_end( el );
 }
 
-bool _IKEC_CLI::log( long code, const char * format, ... )
+bool _IKEC::log( long code, const char * format, ... )
 {
 	switch( code )
 	{
@@ -140,12 +140,12 @@ bool _IKEC_CLI::log( long code, const char * format, ... )
 	return true;
 }
 
-bool _IKEC_CLI::read_key( char & value )
+bool _IKEC::read_key( char & value )
 {
 	return el_getc( el, &value ) != -1;
 }
 
-bool _IKEC_CLI::read_str( BDATA & value )
+bool _IKEC::read_str( BDATA & value )
 {
 	int size = 0;
 	const char * line;
@@ -163,7 +163,7 @@ bool _IKEC_CLI::read_str( BDATA & value )
 	return true;
 }
 
-bool _IKEC_CLI::read_pwd( BDATA & value, const char * prompt )
+bool _IKEC::read_pwd( BDATA & value, const char * prompt )
 {
 	//
 	// using libedit to accept password
@@ -180,7 +180,7 @@ bool _IKEC_CLI::read_pwd( BDATA & value, const char * prompt )
 	return true;
 }
 
-void _IKEC_CLI::show_stats()
+void _IKEC::show_stats()
 {
 	static char state_disconnected[] = "disconnected";
 	static char state_connecting[] = "connecting";

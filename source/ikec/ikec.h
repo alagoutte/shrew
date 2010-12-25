@@ -48,7 +48,7 @@
 
 #include "client.h"
 
-typedef class _IKEC_CLI : public _CLIENT
+typedef class _IKEC : public _CLIENT
 {
 	protected:
 
@@ -65,8 +65,8 @@ typedef class _IKEC_CLI : public _CLIENT
 
 	public:
 
-	_IKEC_CLI();
-	~_IKEC_CLI();
+	_IKEC();
+	~_IKEC();
 
 	virtual bool log( long code, const char * format, ... );
 
@@ -75,6 +75,6 @@ typedef class _IKEC_CLI : public _CLIENT
 	bool read_pwd( BDATA & value, const char * prompt );
 	void show_stats();
 
-}IKEC_CLI;
+}IKEC;
 
 #endif
