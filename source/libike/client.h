@@ -71,7 +71,7 @@ enum CLIENT_STATE
 	CLIENT_STATE_DISCONNECTING
 };
 
-typedef class _CLIENT : public ITH_EXEC
+typedef class DLX _CLIENT : public ITH_EXEC
 {
 	protected:
 
@@ -85,20 +85,20 @@ typedef class _CLIENT : public ITH_EXEC
 	IKEI			ikei;
 	IKEI_STATS		stats;
 
-	BDATA	sites;
-	BDATA	fspec;
 	BDATA	fpath;
 	BDATA	fpass;
 	BDATA	username;
 	BDATA	password;
 	bool	autoconnect;
 
+	virtual const char * app_name() = 0;
+
 	virtual bool	get_username() = 0;
 	virtual bool	get_password() = 0;
 	virtual bool	get_filepass( BDATA & path ) = 0;
 
 	virtual bool	set_stats() = 0;
-	virtual bool	set_status( long & status, BDATA & text ) = 0;
+	virtual bool	set_status( long status, BDATA * text ) = 0;
 
 	long	func( void * );
 

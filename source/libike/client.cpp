@@ -51,47 +51,6 @@ _CLIENT::_CLIENT()
 
 	cstate = CLIENT_STATE_DISCONNECTED;
 	autoconnect = false;
-
-#ifdef WIN32
-
-	// locate user appdata directory
-
-	char path_appdata[ MAX_PATH ] = { 0 };
-
-	SHGetFolderPath(
-		NULL,
-		CSIDL_APPDATA,
-		NULL,
-		SHGFP_TYPE_DEFAULT,
-		path_appdata );
-
-	// create site path
-
-	sites.del();
-	sites.add( path_appdata, strlen( path_appdata ) );
-	sites.add( "/shrewsoft/sites", strlen( "/shrewsoft/sites" ) );
-
-#else
-
-	// locate user home directory
-
-	struct passwd * pwd = getpwuid( getuid() );
-	if( pwd == NULL )
-	{
-		printf( "unable to read pwent for %i\n", getuid() );
-		exit( -1 );
-	}
-
-	// create site path
-
-	sites.del();
-	sites.add( pwd->pw_dir, strlen( pwd->pw_dir ) );
-	sites.add( "/.ike/sites", strlen( "/.ike/sites" ) );
-
-	endpwent();
-
-#endif
-
 }
 
 _CLIENT::~_CLIENT()
@@ -124,7 +83,7 @@ bool _CLIENT::opts( int argc, char ** argv )
 			}
 
 			name.set(
-				argv[ argi ], strlen( argv[ argi ] ) );
+				argv[ argi ], strlen( argv[ argi ] ) + 1 );
 
 			continue;
 		}
@@ -186,11 +145,12 @@ bool _CLIENT::opts( int argc, char ** argv )
 			"invalid parameters specified ...\n" );
 
 		log( STATUS_INFO,
-			"ikec -r \"name\" [ -u <user> ][ -p <pass> ][ -a ]\n"
+			"%s -r \"name\" [ -u <user> ][ -p <pass> ][ -a ]\n"
 			" -r\tsite configuration path\n"
 			" -u\tconnection user name\n"
 			" -p\tconnection user password\n"
-			" -a\tauto connect\n" );
+			" -a\tauto connect\n",
+			app_name() );
 
 		return false;
 	}
@@ -208,28 +168,20 @@ bool _CLIENT::load( BDATA & name )
 	if( !name.size() )
 		return false;
 	
-	fspec = name;
-	fspec.add( "", 1 );
-
-	fpath = sites;
-	fpath.add( "/", 1 );
-	fpath.add( name );
-	fpath.add( "", 1 );
+	config.set_id( name.text() );
 
 	CONFIG_MANAGER manager;
 
-	if( !manager.file_load_vpn( &config, fpath.text() ) )
+	if( !manager.file_vpn_load( config ) )
 	{
 		log( STATUS_FAIL, "failed to load \'%s\'\n",
-			fspec.text() );
+			name.text() );
 
 		return false;
 	}
 
 	log( STATUS_INFO, "config loaded for site \'%s\'\n",
-		fspec.text() );
-
-	config.set_id( fspec.text() );
+		name.text() );
 
 	return true;
 }
@@ -1061,7 +1013,7 @@ long _CLIENT::func( void * )
 
 	if( ikei.attach( 3000 ) != IPCERR_OK )
 	{
-		log( STATUS_FAIL, "failed to attach to key daemon ...\n" );
+		log( STATUS_FAIL, "failed to attach to key daemon\n" );
 		return -1;
 	}
 
@@ -1466,9 +1418,17 @@ long _CLIENT::func( void * )
 		if( result == IPCERR_NODATA )
 			continue;
 
-		if( ( result == IPCERR_FAILED ) ||
-		    ( result == IPCERR_CLOSED ) )
+		if( ( result == IPCERR_FAILED ) || ( result == IPCERR_CLOSED ) )
+		{
+			if( cstate != CLIENT_STATE_DISCONNECTED )
+			{
+				log( STATUS_FAIL, "key daemon attachment error\n" );
+				cstate = CLIENT_STATE_DISCONNECTED;
+				set_status( STATUS_DISCONNECTED, NULL );
+			}
+
 			break;
+		}
 
 		//
 		// check for user cancelation
@@ -1517,7 +1477,7 @@ long _CLIENT::func( void * )
 						break;
 				}
 
-				set_status( status, btext );
+				set_status( status, &btext );
 
 				break;
 			}
@@ -1542,7 +1502,7 @@ long _CLIENT::func( void * )
 
 	ikei.detach();
 
-	log( STATUS_INFO, "detached from key daemon ...\n" );
+	log( STATUS_INFO, "detached from key daemon\n" );
 
 	return 0;
 }

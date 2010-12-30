@@ -16,6 +16,12 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#ifdef WIN32
+# include <windows.h>
+# include <shlwapi.h>
+# include <shlobj.h>
+#endif
+
 #include <stdio.h>
 #include "libidb.h"
 
@@ -78,26 +84,36 @@ typedef class DLX _CONFIG : public IDB_LIST
 
 }CONFIG;
 
-typedef class DLX _CONFIG_MANAGER : public IDB_LIST
+typedef class DLX _CONFIG_MANAGER
 {
+	protected:
+
+	BDATA	sites_all;
+	BDATA	sites_user;
+
 	public:
+
+	_CONFIG_MANAGER();
 
 	bool config_options_load();
 
-	bool registry_enumerate( CONFIG * config, int * index );
-	bool registry_load_vpn( CONFIG * config );
-	bool registry_save_vpn( CONFIG * config );
-	bool registry_del_vpn( CONFIG * config );
+	bool registry_enumerate( CONFIG & config, int & index );
+	bool registry_vpn_load( CONFIG & config );
+	bool registry_vpn_save( CONFIG & config );
+	bool registry_vpn_del( CONFIG & config );
 
-	bool file_enumerate( CONFIG * config, const char * path, int * index );
-	bool file_load_vpn( CONFIG * config, const char * path );
-	bool file_save_vpn( CONFIG * config, const char * path );
-	bool file_load_pcf( CONFIG * config, const char * path, bool & need_certs );
-	bool file_del_vpn( CONFIG * config );
+	bool file_enumerate( CONFIG & config, int & index );
+	bool file_vpn_load( CONFIG & config );
+	bool file_vpn_load( CONFIG & config, const char * path );
+	bool file_vpn_save( CONFIG & config );
+	bool file_vpn_save( CONFIG & config, const char * path );
+	bool file_vpn_del( CONFIG & config );
+
+	bool file_pcf_load( CONFIG & config, const char * path, bool & need_certs );
 
 }CONFIG_MANAGER;
 
-bool config_cmp_number( CONFIG * config_old, CONFIG * config_new, char * key );
-bool config_cmp_string( CONFIG * config_old, CONFIG * config_new, char * key );
+bool config_cmp_number( CONFIG & config_old, CONFIG & config_new, const char * key );
+bool config_cmp_string( CONFIG & config_old, CONFIG & config_new, const char * key );
 
 #endif

@@ -4,9 +4,35 @@
  *      Shrew Soft Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, is strictly prohibited. The copywright holder of this
- * software is the sole owner and no other party should have access
- * unless explicit permission was granted by an authorized person.
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Redistributions in any form must be accompanied by information on
+ *    how to obtain complete source code for the software and any
+ *    accompanying software that uses the software.  The source code
+ *    must either be included in the distribution or be available for no
+ *    more than the cost of distribution plus a nominal fee, and must be
+ *    freely redistributable under reasonable conditions.  For an
+ *    executable file, complete source code means the source code for all
+ *    modules it contains.  It does not include source code for modules or
+ *    files that typically accompany the major components of the operating
+ *    system on which the executable file runs.
+ *
+ * THIS SOFTWARE IS PROVIDED BY SHREW SOFT INC ``AS IS'' AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+ * NON-INFRINGEMENT, ARE DISCLAIMED.  IN NO EVENT SHALL SHREW SOFT INC
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
  *
  * AUTHOR : Matthew Grooms
  *          mgrooms@shrew.net
@@ -18,7 +44,62 @@
 #include "openssl/hmac.h"
 #include "openssl/sha.h"
 
-bool _CONFIG_MANAGER::file_load_vpn( CONFIG * config, const char * path )
+bool _CONFIG_MANAGER::file_enumerate( CONFIG & config, int & index )
+{
+
+#ifdef WIN32
+
+	BDATA sites_user_spec;
+	sites_user_spec.add( sites_user );
+	sites_user_spec.add( "\\*", 3 );
+
+	WIN32_FIND_DATA ffdata;
+	int found = 0;
+	
+	HANDLE hfind = FindFirstFile( sites_user_spec.text(), &ffdata );
+	if( hfind == INVALID_HANDLE_VALUE )
+		return false;
+
+	while( true )
+	{
+		bool isdir = false;
+		if( ffdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+			isdir = true;
+
+		if( !isdir && ( found >= ( index ) ) )
+				break;
+
+		if( FindNextFile( hfind, &ffdata ) == 0 )
+			break;
+
+		if( !isdir )
+			found++;
+	}
+
+	FindClose( hfind );
+	if( found < index )
+		return false;
+
+	config.set_id( ffdata.cFileName );
+	index++;
+
+	return file_vpn_load( config );
+
+#endif
+
+}
+
+bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config )
+{
+	BDATA path;
+	path.add( sites_user );
+	path.add( "/", 1 );
+	path.add( config.get_id(), strlen( config.get_id() ) + 1 );
+
+	return file_vpn_load( config, path.text() );
+}
+
+bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config, const char * path )
 {
 
 #ifdef WIN32
@@ -115,14 +196,14 @@ bool _CONFIG_MANAGER::file_load_vpn( CONFIG * config, const char * path )
 		{
 			case 's':
 			{
-				config->add_string( name.text(), data.text(), data.size() );
+				config.add_string( name.text(), data.text(), data.size() );
 				printf( "string='%s'\n", data.text() );
 				break;
 			}
 
 			case 'n':
 			{
-				config->set_number( name.text(), atol( data.text() ) );
+				config.set_number( name.text(), atol( data.text() ) );
 				break;
 			}
 
@@ -131,7 +212,7 @@ bool _CONFIG_MANAGER::file_load_vpn( CONFIG * config, const char * path )
 				BDATA b64;
 				b64 = data;
 				b64.base64_decode();
-				config->set_binary( name.text(), b64 );
+				config.set_binary( name.text(), b64 );
 				break;
 			}
 		}
@@ -148,7 +229,17 @@ bool _CONFIG_MANAGER::file_load_vpn( CONFIG * config, const char * path )
 	return false;
 }
 
-bool _CONFIG_MANAGER::file_save_vpn( CONFIG * config, const char * path )
+bool _CONFIG_MANAGER::file_vpn_save( CONFIG & config )
+{
+	BDATA path;
+	path.add( sites_user );
+	path.add( "/", 1 );
+	path.add( config.get_id(), strlen( config.get_id() ) + 1 );
+
+	return file_vpn_save( config, path.text() );
+}
+
+bool _CONFIG_MANAGER::file_vpn_save( CONFIG & config, const char * path )
 {
 
 #ifdef WIN32
@@ -165,9 +256,9 @@ bool _CONFIG_MANAGER::file_save_vpn( CONFIG * config, const char * path )
 
 #endif
 
-	for( long index = 0; index < count(); index++ )
+	for( long index = 0; index < config.count(); index++ )
 	{
-		CFGDAT * cfgdat = static_cast<CFGDAT*>( get_entry( index ) );
+		CFGDAT * cfgdat = static_cast<CFGDAT*>( config.get_entry( index ) );
 		switch( cfgdat->type )
 		{
 			case DATA_STRING:
@@ -192,6 +283,25 @@ bool _CONFIG_MANAGER::file_save_vpn( CONFIG * config, const char * path )
 	fclose( fp );
 
 	return true;
+}
+
+bool _CONFIG_MANAGER::file_vpn_del( CONFIG & config )
+{
+	BDATA path;
+	path.add( sites_user );
+	path.add( "/", 1 );
+	path.add( config.get_id(), strlen( config.get_id() ) + 1 );
+
+#ifdef WIN32
+
+	return ( DeleteFile( path.text() ) != 0 );
+
+#else
+
+	return ( unlink( path.text() ) == 0 );
+
+#endif
+
 }
 
 bool read_line_pcf( FILE * fp, BDATA & name, BDATA & data )
@@ -296,7 +406,7 @@ bool read_line_pcf( FILE * fp, BDATA & name, BDATA & data )
 	return true;
 }
 
-bool _CONFIG_MANAGER::file_load_pcf( CONFIG * config, const char * path, bool & need_certs )
+bool _CONFIG_MANAGER::file_pcf_load( CONFIG & config, const char * path, bool & need_certs )
 {
 
 #ifdef WIN32
@@ -317,53 +427,53 @@ bool _CONFIG_MANAGER::file_load_pcf( CONFIG * config, const char * path, bool & 
 	// set some sane defaults
 	//
 
-	config->set_number( "version", 3 );
-	config->set_number( "network-ike-port", 500 );
-	config->set_number( "network-mtu-size", 1380 );
+	config.set_number( "version", 3 );
+	config.set_number( "network-ike-port", 500 );
+	config.set_number( "network-mtu-size", 1380 );
 
-	config->set_string( "client-auto-mode", "pull", 5 );
-	config->set_string( "client-iface", "virtual", 8 );
-	config->set_number( "client-addr-auto", 1 );
+	config.set_string( "client-auto-mode", "pull", 5 );
+	config.set_string( "client-iface", "virtual", 8 );
+	config.set_number( "client-addr-auto", 1 );
 
-	config->set_string( "network-natt-mode", "enable", 7 );
-	config->set_number( "network-natt-port", 4500 );
-	config->set_number( "network-natt-rate", 15 );
+	config.set_string( "network-natt-mode", "enable", 7 );
+	config.set_number( "network-natt-port", 4500 );
+	config.set_number( "network-natt-rate", 15 );
 
-	config->set_string( "network-frag-mode", "disable", 8 );
-	config->set_number( "network-frag-size", 540 );
+	config.set_string( "network-frag-mode", "disable", 8 );
+	config.set_number( "network-frag-size", 540 );
 
-	config->set_number( "network-dpd-enable", 1 );
-	config->set_number( "network-notify-enable", 1 );
-	config->set_number( "client-banner-enable", 1 );
+	config.set_number( "network-dpd-enable", 1 );
+	config.set_number( "network-notify-enable", 1 );
+	config.set_number( "client-banner-enable", 1 );
 
-	config->set_string( "auth-method", "mutual-psk-xauth", 17 );
-	config->set_string( "ident-server-type", "any", 4 );
+	config.set_string( "auth-method", "mutual-psk-xauth", 17 );
+	config.set_string( "ident-server-type", "any", 4 );
 
-	config->set_string( "phase1-exchange", "aggressive", 11 );
-	config->set_string( "phase1-cipher", "auto", 5 );
-	config->set_string( "phase1-hash", "auto", 5 );
-	config->set_number( "phase1-dhgroup", 2 );
-	config->set_number( "phase1-life-secs", 86400 );
+	config.set_string( "phase1-exchange", "aggressive", 11 );
+	config.set_string( "phase1-cipher", "auto", 5 );
+	config.set_string( "phase1-hash", "auto", 5 );
+	config.set_number( "phase1-dhgroup", 2 );
+	config.set_number( "phase1-life-secs", 86400 );
 
-	config->set_string( "phase2-transform", "auto", 5 );
-	config->set_string( "phase2-hmac", "auto", 5 );
-	config->set_number( "phase2-pfsgroup", 0 );
+	config.set_string( "phase2-transform", "auto", 5 );
+	config.set_string( "phase2-hmac", "auto", 5 );
+	config.set_number( "phase2-pfsgroup", 0 );
 
-	config->set_string( "ipcomp-transform", "disabled", 9 );
+	config.set_string( "ipcomp-transform", "disabled", 9 );
 
-	config->set_number( "client-dns-used", 1 );
-	config->set_number( "client-dns-auto", 1 );
-	config->set_number( "client-dns-suffix-auto", 1 );
-	config->set_number( "client-splitdns-used", 1 );
-	config->set_number( "client-splitdns-auto", 1 );
-	config->set_number( "client-wins-used", 1 );
-	config->set_number( "client-wins-auto", 1 );
+	config.set_number( "client-dns-used", 1 );
+	config.set_number( "client-dns-auto", 1 );
+	config.set_number( "client-dns-suffix-auto", 1 );
+	config.set_number( "client-splitdns-used", 1 );
+	config.set_number( "client-splitdns-auto", 1 );
+	config.set_number( "client-wins-used", 1 );
+	config.set_number( "client-wins-auto", 1 );
 
-	config->set_number( "phase2-life-secs", 3600 );
-	config->set_number( "phase2-life-kbytes", 0 );
+	config.set_number( "phase2-life-secs", 3600 );
+	config.set_number( "phase2-life-kbytes", 0 );
 
-	config->set_number( "policy-nailed", 0 );
-	config->set_number( "policy-list-auto", 1 );
+	config.set_number( "policy-nailed", 0 );
+	config.set_number( "policy-list-auto", 1 );
 
 	//
 	// parse the file contents
@@ -389,7 +499,7 @@ bool _CONFIG_MANAGER::file_load_pcf( CONFIG * config, const char * path, bool & 
 		//
 
 		if( !_stricmp( name.text(), "Host" ) && data.size() )
-			config->set_string( "network-host", data.text(), data.size() );
+			config.set_string( "network-host", data.text(), data.size() );
 
 		if( !_stricmp( name.text(), "AuthType" ) && data.size() )
 		{
@@ -397,15 +507,15 @@ bool _CONFIG_MANAGER::file_load_pcf( CONFIG * config, const char * path, bool & 
 			switch( auth_type )
 			{
 				case 1:
-					config->set_string( "auth-method", "mutual-psk-xauth", 17 );
+					config.set_string( "auth-method", "mutual-psk-xauth", 17 );
 					need_certs = false;
 					break;
 				case 3:
-					config->set_string( "auth-method", "mutual-rsa-xauth", 17 );
+					config.set_string( "auth-method", "mutual-rsa-xauth", 17 );
 					need_certs = true;
 					break;
 				case 5:
-					config->set_string( "auth-method", "hybrid-grp-xauth", 17 );
+					config.set_string( "auth-method", "hybrid-grp-xauth", 17 );
 					need_certs = true;
 					break;
 				default:
@@ -416,12 +526,12 @@ bool _CONFIG_MANAGER::file_load_pcf( CONFIG * config, const char * path, bool & 
 		if( !_stricmp( name.text(), "GroupName" ) && data.size() )
 		{
 			idtype_set = true;
-			config->set_string( "ident-client-type", "keyid", 6 );
-			config->set_string( "ident-client-data", data.text(), data.size() );
+			config.set_string( "ident-client-type", "keyid", 6 );
+			config.set_string( "ident-client-data", data.text(), data.size() );
 		}
 
 		if( !_stricmp( name.text(), "GroupPwd" ) && data.size() )
-			config->set_binary( "auth-mutual-psk", data );
+			config.set_binary( "auth-mutual-psk", data );
 
 		if( !_stricmp( name.text(), "enc_GroupPwd" ) && data.size() )
 		{
@@ -488,26 +598,26 @@ bool _CONFIG_MANAGER::file_load_pcf( CONFIG * config, const char * path, bool & 
 			pwlen -= pwd.buff()[ pwd.size() - 1 ];
 			pwd.size( pwlen );
 
-			config->set_binary( "auth-mutual-psk", pwd );
+			config.set_binary( "auth-mutual-psk", pwd );
 		}
 
 		if( !_stricmp( name.text(), "DHGroup" ) && data.size() )
 		{
 			long dh_group = atol( data.text() );
-			config->set_number( "phase1-dhgroup", dh_group );
+			config.set_number( "phase1-dhgroup", dh_group );
 		}
 
 		if( !_stricmp( name.text(), "EnableNat" )  && data.size() )
 		{
 			long enable_nat = atol( data.text() );
 			if( enable_nat )
-				config->set_string( "network-natt-mode", "enable", 7 );
+				config.set_string( "network-natt-mode", "enable", 7 );
 			else
-				config->set_string( "network-natt-mode", "disable", 8 );
+				config.set_string( "network-natt-mode", "disable", 8 );
 		}
 
 		if( !_stricmp( name.text(), "Username" ) && data.size() )
-			config->set_string( "client-saved-username", data.text(), data.size() );
+			config.set_string( "client-saved-username", data.text(), data.size() );
 
 	}
 
@@ -521,12 +631,12 @@ bool _CONFIG_MANAGER::file_load_pcf( CONFIG * config, const char * path, bool & 
 		switch( auth_type )
 		{
 			case 1:	// mutual-psk-xauth
-				config->set_string( "ident-client-type", "address", 6 );
+				config.set_string( "ident-client-type", "address", 6 );
 				break;
 
 			case 3: // mutual-rsa-xauth
 			case 5: // hybrid-grp-xauth
-				config->set_string( "ident-client-type", "asn1dn", 6 );
+				config.set_string( "ident-client-type", "asn1dn", 6 );
 				break;
 
 			default:
