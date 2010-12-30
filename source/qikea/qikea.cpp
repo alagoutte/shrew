@@ -41,7 +41,7 @@
 
 #include "qikea.h"
 
-void update_site( CONFIG * config, const char * path, long & version )
+void update_site( CONFIG & config, const char * path, long & version )
 {
 	switch( version )
 	{
@@ -55,12 +55,12 @@ void update_site( CONFIG * config, const char * path, long & version )
 			char text[ MAX_CONFSTRING ];
 			long size = MAX_CONFSTRING;
 
-			if( config->get_string( "auth-mutual-psk", text, size, 0 ) )
+			if( config.get_string( "auth-mutual-psk", text, size, 0 ) )
 			{
-				config->del( "auth-mutual-psk" );
+				config.del( "auth-mutual-psk" );
 				BDATA psk;
 				psk.set( text, strlen( text ) );
-				config->set_binary( "auth-mutual-psk", psk );
+				config.set_binary( "auth-mutual-psk", psk );
 			}
 
 			break;
@@ -75,10 +75,10 @@ void update_site( CONFIG * config, const char * path, long & version )
 
 			long numb;
 
-			if( config->get_number( "client-dns-enable", &numb ) )
+			if( config.get_number( "client-dns-enable", &numb ) )
 			{
-				config->del( "client-dns-enable" );
-				config->set_number( "client-dns-used", numb );
+				config.del( "client-dns-enable" );
+				config.set_number( "client-dns-used", numb );
 			}
 			
 			break;
@@ -86,11 +86,11 @@ void update_site( CONFIG * config, const char * path, long & version )
 	}
 
 	version++;
-	printf( "updated site \'%s\' to version %li\n", config->get_id(), version );
-	config->set_number( "version", version );
+	printf( "updated site \'%s\' to version %li\n", config.get_id(), version );
+	config.set_number( "version", version );
 
 	CONFIG_MANAGER manager;
-	manager.file_save_vpn( config, path );
+	manager.file_vpn_save( config );
 }
 
 _QIKEA::_QIKEA()
@@ -101,16 +101,6 @@ _QIKEA::~_QIKEA()
 {
 }
 
-const char * _QIKEA::site_path()
-{
-	return sites.toAscii().constData();
-}
-
-const char * _QIKEA::cert_path()
-{
-	return certs.toAscii().constData();
-}
-
 bool _QIKEA::init( qikeaRoot * setRoot )
 {
 	QDir qdir;
@@ -119,6 +109,28 @@ bool _QIKEA::init( qikeaRoot * setRoot )
 
 	r = setRoot;
 
+	// enumerate site configurations
+
+	CONFIG config;
+	int index = 0;
+
+	while( manager.file_enumerate( config, index ) )
+	{
+		printf( "adding entry for site file \'%s\'\n", config.get_id() );
+
+		QListWidgetItem * widgetItem = new QListWidgetItem( r->listWidgetSites );
+		widgetItem->setIcon( QIcon( ":/png/site.png" ) );
+		widgetItem->setText( config.get_id() );
+		widgetItem->setData( Qt::UserRole, config.get_id() );
+		widgetItem->setFlags( Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable );
+//		widgetItem->setRenameEnabled ( true );
+
+		config.del_all();
+	}
+
+	return true;
+
+/*
 	// create config directory
 
 	qdir.mkdir( QDir::homePath() + "/.ike" );
@@ -151,7 +163,7 @@ bool _QIKEA::init( qikeaRoot * setRoot )
 		CONFIG config;
 		CONFIG_MANAGER manager;
 
-		if( manager.file_load_vpn( &config, filePath.toAscii().constData() ) )
+		if( manager.file_vpn_load( config, filePath.toAscii().constData() ) )
 		{
 			config.set_id( fileName.toAscii().constData() );
 
@@ -160,20 +172,12 @@ bool _QIKEA::init( qikeaRoot * setRoot )
 			while( version < CLIENT_VER_CFG )
 				update_site( &config, filePath.toAscii().constData(), version );
 
-			printf( "adding entry for site file \'%s\'\n", fileName.toAscii().constData() );
-
-			QListWidgetItem * widgetItem = new QListWidgetItem( r->listWidgetSites );
-			widgetItem->setIcon( QIcon( ":/png/site.png" ) );
-			widgetItem->setText( fileName );
-			widgetItem->setData( Qt::UserRole, fileName );
-			widgetItem->setFlags( Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable );
-//			widgetItem->setRenameEnabled ( true );
 		}
 		else
 		{
 			printf( "error loading site file \'%s\'\n", fileName.toAscii().constData() );
 		}
 	}
-
+*/
 	return true;
 }

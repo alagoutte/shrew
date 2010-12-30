@@ -222,15 +222,17 @@ typedef class _QIKEC : public _CLIENT, public QThread
 
 	public:
 
-	virtual bool get_username();
-	virtual bool get_password();
-	virtual bool get_filepass( BDATA & path );
+	const char * app_name();
 
-	virtual bool set_stats();
-	virtual bool set_status( long & status, BDATA & text );
+	bool get_username();
+	bool get_password();
+	bool get_filepass( BDATA & path );
 
-	bool			init( int argc, char ** argv, qikecRoot * setr );
-	virtual bool	log( long code, const char * format, ... );
+	bool set_stats();
+	bool set_status( long status, BDATA * text );
+
+	bool init( int argc, char ** argv, qikecRoot * setr );
+	bool log( long code, const char * format, ... );
 
 }QIKEC;
 

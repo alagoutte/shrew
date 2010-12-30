@@ -42,9 +42,6 @@
 #ifndef _QIKEA_H_
 #define _QIKEA_H_
 
-#include <pwd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -280,14 +277,10 @@ typedef class _QIKEA
 
 	public:
 
-	QString sites;
-	QString certs;
-
 	_QIKEA();
 	~_QIKEA();
 
-	const char * site_path();
-	const char * cert_path();
+	CONFIG_MANAGER manager;
 
 	bool init( qikeaRoot * setRoot );
 

@@ -21,7 +21,8 @@ add_library(
 	ss_ike SHARED
 	client.cpp
 	config.cpp
-	config.file.cpp
+	manager.cpp
+	manager.file.cpp
 	libike.cpp )
 
 target_link_libraries(

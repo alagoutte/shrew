@@ -2291,7 +2291,7 @@ void _qikeaSite::inputCAFile()
 
 	QString filePath = QFileDialog::getOpenFileName(
 				this, "Select CA File",
-				qikea.cert_path(),
+				QDir::homePath(),
 				types );
 
 	if( filePath.length() )
@@ -2307,7 +2307,7 @@ void _qikeaSite::inputCertFile()
 
 	QString filePath = QFileDialog::getOpenFileName(
 				this, "Select CA File",
-				qikea.cert_path(),
+				QDir::homePath(),
 				types );
 
 	if( filePath.length() )
@@ -2324,7 +2324,7 @@ void _qikeaSite::inputPKeyFile()
 
 	QString filePath = QFileDialog::getOpenFileName(
 				this, "Select CA File",
-				qikea.cert_path(),
+				QDir::homePath(),
 				types );
 
 	if( filePath.length() )

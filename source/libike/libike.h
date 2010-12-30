@@ -48,6 +48,7 @@
 #endif
 
 #ifdef UNIX
+# include <pwd.h>
 # ifdef __linux__
 #  include <sys/un.h>
 #  include <sys/stat.h>

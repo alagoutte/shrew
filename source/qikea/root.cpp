@@ -80,30 +80,28 @@ bool bdata_to_file( BDATA & bdata, QString path )
 	return true;
 }
 
-void filename_mangle( QString & path, QString & name )
+void site_name_mangle( QString & name )
 {
 	// mangle name if duplicate
 
+	CONFIG tmpConfig;
+	QString tmpName = name;
+
 	int index = 2;
 
-	QString tmpName = name;
-	QString tmpPath = path + "/" + name;
-
-	while( QFile::exists( tmpPath ) )
+	while( qikea.manager.file_vpn_load( tmpConfig, name.toAscii() ) )
 	{
 		name  = tmpName;
 		name += QString( " (" );
 		name += QString::number( index++ );
 		name += QString( ")" );
-
-		tmpPath = path + "/" + name;
 	}
 }
 
 void _qikeaRoot::fileConflict( QString & path, QString & name )
 {
 	QString tmpName = name;
-	QString tmpPath = path + "/" + name;
+	QString tmpPath = path;
 
 	while( QFile::exists( tmpPath ) )
 	{
@@ -218,14 +216,12 @@ void _qikeaRoot::siteAdd()
 
 	// mangle name if duplicate
 
-	filename_mangle( qikea.sites, siteName );
+	site_name_mangle( siteName );
+	config.set_id( siteName.toAscii() );
 
 	// write site config
 
-	QString sitePath = qikea.sites + "/" + siteName;
-
-	CONFIG_MANAGER manager;
-	manager.file_save_vpn( &config, sitePath.toAscii() );
+	qikea.manager.file_vpn_save( config );
 
 	// create icon for site
 
@@ -249,11 +245,9 @@ void _qikeaRoot::siteModify()
 
 	// load site config
 
-	QString filePath = qikea.sites + "/" + i->text();
-
 	CONFIG config;
-	CONFIG_MANAGER manager;
-	manager.file_load_vpn( &config, filePath.toAscii() );
+	config.set_id( i->text().toAscii() );
+	qikea.manager.file_vpn_load( config );
 
 	// create site modal dialog
 
@@ -265,7 +259,7 @@ void _qikeaRoot::siteModify()
 		// save modified site config
 
 		s.save( config );
-		manager.file_save_vpn( &config, filePath.toAscii() );
+		qikea.manager.file_vpn_save( config );
 	}
 }
 
@@ -282,9 +276,10 @@ void _qikeaRoot::siteDelete()
 		QMessageBox::Yes, QMessageBox::Cancel ) != QMessageBox::Yes )
 		return;
 
-	QString filePath = qikea.sites + "/" + i->text();
+	CONFIG config;
+	config.set_id( i->text().toAscii() );
+	qikea.manager.file_vpn_del( config );
 
-	unlink( filePath.toAscii() );
 	delete i;
 }
 
@@ -311,15 +306,16 @@ void _qikeaRoot::siteRenamed( QListWidgetItem * i )
 		return;
 	}
 
-	filename_mangle( qikea.sites, modName );
+	site_name_mangle( modName );
 
-	QString oldPath = qikea.sites + "/" + oldName;
-	QString modPath = qikea.sites + "/" + modName;
+	CONFIG config;
+	config.set_id( oldName.toAscii() );
+	qikea.manager.file_vpn_load( config );
+	qikea.manager.file_vpn_del( config );
 
-	printf( "name = %s\n", ( const char * ) modName.toAscii() );
-	printf( "path = %s\n", ( const char * ) modPath.toAscii() );
+	config.set_id( modName.toAscii() );
+	qikea.manager.file_vpn_save( config );
 
-	QFile::rename( oldPath, modPath );
 	i->setText( modName );
 	i->setData( Qt::UserRole, modName );
 }
@@ -344,17 +340,15 @@ void _qikeaRoot::siteImport()
 	// load the site config
 
 	CONFIG config;
-	CONFIG_MANAGER manager;
-
 	bool need_certs = false;
 
 	if( !loadPath.contains( ".pcf", Qt::CaseInsensitive ) )
-		manager.file_load_vpn( &config, loadPath.toAscii() );
+		qikea.manager.file_vpn_load( config, loadPath.toAscii() );
 	else
-		manager.file_load_pcf( &config, loadPath.toAscii(), need_certs );
+		qikea.manager.file_pcf_load( config, loadPath.toAscii(), need_certs );
 
 	// modify for import
-
+/*
 	char	name[ 1024 ];
 	BDATA	data;
 
@@ -402,27 +396,20 @@ void _qikeaRoot::siteImport()
 		config.set_string( "auth-server-cert", tmpPath.toAscii(), tmpPath.length() );
 		config.del( "auth-server-cert-data" );
 	}
-
+*/
 	// determine file name
 
 	QFileInfo fileInfo( loadPath );
-	QString fileName = fileInfo.baseName();
+	QString siteName = fileInfo.baseName();
 
 	// mangle name if duplicate
 
-	filename_mangle( qikea.sites, fileName );
+	site_name_mangle( siteName );
 
 	// save the site config
 
-	QString filePath = qikea.sites + "/" + fileName;
-	manager.file_save_vpn( &config, filePath.toAscii() );
-
-	// update the site version if required
-
-	long version = 0;
-	config.get_number( "version", &version );
-	while( version < CLIENT_VER_CFG )
-		update_site( &config, filePath.toAscii(), version );
+	config.set_id( siteName.toAscii() );
+	qikea.manager.file_vpn_save( config );
 
 	// create icon for site
 
@@ -431,8 +418,8 @@ void _qikeaRoot::siteImport()
 		return;
 
 	i->setIcon( QIcon( ":/png/site.png" ) );
-	i->setText( fileName );
-	i->setData( Qt::UserRole, fileName );
+	i->setText( siteName );
+	i->setData( Qt::UserRole, siteName );
 	i->setFlags( Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable );
 	i->setSelected( true );
 
@@ -461,11 +448,9 @@ void _qikeaRoot::siteExport()
 
 	// load site config
 
-	QString filePath = qikea.sites + "/" + i->text();
-
 	CONFIG config;
-	CONFIG_MANAGER manager;
-	manager.file_load_vpn( &config, filePath.toAscii() );
+	config.set_id( i->text().toAscii() );
+	qikea.manager.file_vpn_load( config );
 
 	// get the output path
 
@@ -525,7 +510,7 @@ void _qikeaRoot::siteExport()
 		config.set_binary( "auth-server-cert-data", data );
 	}
 
-	manager.file_save_vpn( &config, savePath.toAscii() );
+	qikea.manager.file_vpn_save( config, savePath.toAscii() );
 }
 
 void _qikeaRoot::showAbout()

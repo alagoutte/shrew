@@ -46,6 +46,12 @@ const char * prompt( EditLine * e )
 	return "<< : enter xauth username : ";
 }
 
+const char * _IKEC::app_name()
+{
+	static const char name[] = "ikec";
+	return name;
+}
+
 bool _IKEC::get_username()
 {
 	if( !auto_connect() )
@@ -68,7 +74,7 @@ bool _IKEC::set_stats()
 {
 }
 
-bool _IKEC::set_status( long & status, BDATA & text )
+bool _IKEC::set_status( long status, BDATA * text )
 {
 	switch( status )
 	{
@@ -89,12 +95,14 @@ bool _IKEC::set_status( long & status, BDATA & text )
 			break;
 
 		case STATUS_BANNER:
-			log( status, "login banner \n\n%s\n",
-				 text.text() );
+			if( text != NULL )
+				log( status, "login banner \n\n%s\n",
+					 text->text() );
 			break;
 
 		default:
-			log( status, "%s", text.text() );
+			if( text != NULL )
+				log( status, "%s", text->text() );
 	}
 }
 

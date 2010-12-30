@@ -56,19 +56,21 @@ typedef class _IKEC : public _CLIENT
 
 	EditLine * el;
 
-	virtual bool get_username();
-	virtual bool get_password();
-	virtual bool get_filepass( BDATA & path );
+	bool get_username();
+	bool get_password();
+	bool get_filepass( BDATA & path );
 
-	virtual bool set_stats();
-	virtual bool set_status( long & status, BDATA & text );
+	bool set_stats();
+	bool set_status( long status, BDATA * text );
 
 	public:
 
 	_IKEC();
 	~_IKEC();
 
-	virtual bool log( long code, const char * format, ... );
+	const char * app_name();
+
+	bool log( long code, const char * format, ... );
 
 	bool read_key( char & value );
 	bool read_str( BDATA & value );

@@ -22,7 +22,22 @@
 # include <shlobj.h>
 #endif
 
+#ifdef UNIX
+# ifdef __linux__
+#  include <sys/un.h>
+#  include <sys/stat.h>
+# else
+#  include <sys/types.h>
+#  include <sys/un.h>
+#  include <sys/stat.h>
+# endif
+# include <pwd.h>
+# include <sys/types.h>
+# include <dirent.h>
+#endif
+
 #include <stdio.h>
+#include <stdlib.h>
 #include "libidb.h"
 
 #define MAX_CONFSTRING		256

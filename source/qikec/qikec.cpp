@@ -41,6 +41,12 @@
 
 #include "qikec.h"
 
+const char * _QIKEC::app_name()
+{
+	static const char name[] = "qikec";
+	return name;
+}
+
 bool _QIKEC::init( int argc, char ** argv, qikecRoot * setRoot )
 {
 	// store our root window
@@ -129,9 +135,9 @@ bool _QIKEC::get_filepass( BDATA & path )
 	return true;
 }
 
-bool _QIKEC::set_status( long & status, BDATA & text )
+bool _QIKEC::set_status( long status, BDATA * text )
 {
-	log( status, text.text() );
+	log( status, text->text() );
 
 	return true;
 }

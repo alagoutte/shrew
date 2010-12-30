@@ -67,7 +67,7 @@ bool _CONFIG_MANAGER::file_enumerate( CONFIG & config, int & index )
 			isdir = true;
 
 		if( !isdir && ( found >= ( index ) ) )
-				break;
+			break;
 
 		if( FindNextFile( hfind, &ffdata ) == 0 )
 			break;
@@ -81,6 +81,37 @@ bool _CONFIG_MANAGER::file_enumerate( CONFIG & config, int & index )
 		return false;
 
 	config.set_id( ffdata.cFileName );
+	index++;
+
+	return file_vpn_load( config );
+
+#else
+
+	int found = 0;
+
+	DIR * dirp = opendir( sites_user.text() );
+	if( dirp == NULL )
+		return false;
+
+	dirent * dp = NULL;
+
+	while( found <= index )
+	{
+		dp = readdir( dirp );
+		if( dp == NULL )
+			break;
+
+		if( dp->d_type & DT_DIR )
+			continue;
+
+		found++;
+	}
+
+	closedir( dirp );
+	if( dp == NULL )
+		return false;
+
+	config.set_id( dp->d_name );
 	index++;
 
 	return file_vpn_load( config );
@@ -197,7 +228,6 @@ bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config, const char * path )
 			case 's':
 			{
 				config.add_string( name.text(), data.text(), data.size() );
-				printf( "string='%s'\n", data.text() );
 				break;
 			}
 

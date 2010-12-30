@@ -82,7 +82,7 @@ _CONFIG_MANAGER::_CONFIG_MANAGER()
 
 #else
 
-	char path_sitelist[] = "/.ike/sites";
+	char path_sites[] = "/.ike/sites";
 
 	// locate user home directory
 
@@ -95,9 +95,8 @@ _CONFIG_MANAGER::_CONFIG_MANAGER()
 
 	// create site path
 
-	sites.del();
-	sites.add( pwd->pw_dir, strlen( pwd->pw_dir ) );
-	sites.add( path_sitelist, strlen( path_sitelist ) );
+	sites_user.add( pwd->pw_dir, strlen( pwd->pw_dir ) );
+	sites_user.add( path_sites, strlen( path_sites ) );
 
 	endpwent();
 
