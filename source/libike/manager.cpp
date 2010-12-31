@@ -53,7 +53,7 @@ bool _CONFIG_MANAGER::update_config( CONFIG & config )
 	{
 		switch( version )
 		{
-			case 0: // 0 to 1
+			case 0: // 0 -> 1
 			{
 				//
 				// update the auth-mutual-psk string
@@ -74,7 +74,7 @@ bool _CONFIG_MANAGER::update_config( CONFIG & config )
 				break;
 			}
 
-			case 1: // 1 to 2
+			case 1: // 1 -> 2
 			{
 				//
 				// update client-dns-enable number to
@@ -92,7 +92,7 @@ bool _CONFIG_MANAGER::update_config( CONFIG & config )
 				break;
 			}
 
-			case 2: // 2 to 3
+			case 2: // 2 -> 3
 			{
 				//
 				// update client-dns-suffix-auto
@@ -141,6 +141,15 @@ _CONFIG_MANAGER::_CONFIG_MANAGER()
 			SHGFP_TYPE_DEFAULT,
 			path_appdata ) == S_OK )
 	{
+		char path_ssoft[] = "\\Shrew Soft VPN";
+
+		BDATA ssoft;
+		ssoft.add( path_appdata, strlen( path_appdata ) );
+		ssoft.add( path_ssoft, strlen( path_ssoft ) + 1 );
+
+		if( !PathFileExists( ssoft.text() ) )
+			CreateDirectory( ssoft.text(), NULL );
+
 		char path_sites[] = "\\Shrew Soft VPN\\sites";
 
 		sites_all.add( path_appdata, strlen( path_appdata ) );
@@ -165,6 +174,15 @@ _CONFIG_MANAGER::_CONFIG_MANAGER()
 			SHGFP_TYPE_DEFAULT,
 			path_appdata ) == S_OK )
 	{
+		char path_ssoft[] = "\\Shrew Soft VPN";
+
+		BDATA ssoft;
+		ssoft.add( path_appdata, strlen( path_appdata ) );
+		ssoft.add( path_ssoft, strlen( path_ssoft ) + 1 );
+
+		if( !PathFileExists( ssoft.text() ) )
+			CreateDirectory( ssoft.text(), NULL );
+
 		char path_sites[] = "\\Shrew Soft VPN\\sites";
 
 		sites_user.add( path_appdata, strlen( path_appdata ) );

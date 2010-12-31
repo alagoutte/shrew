@@ -606,14 +606,16 @@ const char * _IKED::find_name( long type, long id )
 		case NAME_GROUP:
 		{
 			static const char * group0 = "none";
-			static const char * group1 = "modp-768";
-			static const char * group2 = "modp-1024";
-			static const char * group3 = "ecn-155";
-			static const char * group4 = "ecn-185";
-			static const char * group5 = "modp-1536";
-			static const char * group6 = "modp-2048";
-			static const char * group7 = "modp-3072";
-			static const char * group8 = "modp-4096";
+			static const char * group1 = "group1 ( modp-768 )";
+			static const char * group2 = "group2 ( modp-1024 )";
+			static const char * group3 = "group3 ( ecn-155 )";
+			static const char * group4 = "group4 ( ecn-185 )";
+			static const char * group5 = "group5 ( modp-1536 )";
+			static const char * group14 = "group14 ( modp-2048 )";
+			static const char * group15 = "group15 ( modp-3072 )";
+			static const char * group16 = "group16 ( modp-4096 )";
+			static const char * group17 = "group17 ( modp-6144 )";
+			static const char * group18 = "group18 ( modp-8192 )";
 
 			switch( id )
 			{
@@ -636,13 +638,19 @@ const char * _IKED::find_name( long type, long id )
 					return group5;
 
 				case IKE_GRP_GROUP14:
-					return group6;
+					return group14;
 
 				case IKE_GRP_GROUP15:
-					return group7;
+					return group15;
 
 				case IKE_GRP_GROUP16:
-					return group8;
+					return group16;
+
+				case IKE_GRP_GROUP17:
+					return group17;
+
+				case IKE_GRP_GROUP18:
+					return group18;
 
 				default:
 					return unknown2;

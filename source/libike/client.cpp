@@ -732,7 +732,9 @@ long _CLIENT::func( void * )
 			( numb == IKE_GRP_GROUP5 ) ||
 			( numb == IKE_GRP_GROUP14 ) ||
 			( numb == IKE_GRP_GROUP15 ) ||
-			( numb == IKE_GRP_GROUP16 ) )
+			( numb == IKE_GRP_GROUP16 ) ||
+			( numb == IKE_GRP_GROUP17 ) ||
+			( numb == IKE_GRP_GROUP18 ) )
 			proposal_esp.dhgr_id = ( unsigned short ) numb;
 	}
 

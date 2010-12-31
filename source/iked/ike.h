@@ -319,6 +319,8 @@
 #define IKE_GRP_GROUP14				14	// oakley modp 2048
 #define IKE_GRP_GROUP15				15	// oakley modp 3072
 #define IKE_GRP_GROUP16				16	// oakley modp 4096
+#define IKE_GRP_GROUP17				17	// oakley modp 6144
+#define IKE_GRP_GROUP18				18	// oakley modp 8192
 
 #define IKE_GRP_TYPE_MODP			1
 #define IKE_GRP_TYPE_ECP			2

@@ -202,7 +202,7 @@ namespace yy{ class conf_parser; };
 #define LIBIKE_MAX_TEXTP2ID		64		// max text phase2 id length
 #define LIBIKE_MAX_TEXTSPI		64		// max text phase2 id length
 #define LIBIKE_MAX_VARID		512		// max variable id length
-#define LIBIKE_MAX_DHGRP		512		// max dh group size
+#define LIBIKE_MAX_DHGRP		1024	// max dh group size
 
 #define LIBIKE_OK				0
 #define LIBIKE_FAILED			-1
