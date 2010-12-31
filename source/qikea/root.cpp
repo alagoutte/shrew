@@ -209,7 +209,7 @@ void _qikeaRoot::siteAdd()
 	// save site config
 
 	CONFIG config;
-	config.set_number( "version", CLIENT_VER_CFG );
+	config.set_number( "version", CONFIG_VERSION );
 	s.save( config );
 
 	QString siteName = s.lineEditHost->text();

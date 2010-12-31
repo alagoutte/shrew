@@ -41,58 +41,6 @@
 
 #include "qikea.h"
 
-void update_site( CONFIG & config, const char * path, long & version )
-{
-	switch( version )
-	{
-		case 0: // version 0 -> 1
-		{
-			//
-			// upgrade the auth-mutual-psk string
-			// to a binary value
-			//
-
-			char text[ MAX_CONFSTRING ];
-			long size = MAX_CONFSTRING;
-
-			if( config.get_string( "auth-mutual-psk", text, size, 0 ) )
-			{
-				config.del( "auth-mutual-psk" );
-				BDATA psk;
-				psk.set( text, strlen( text ) );
-				config.set_binary( "auth-mutual-psk", psk );
-			}
-
-			break;
-		}
-
-		case 1:	// version 1 -> 2
-		{
-			//
-			// update client-dns-enable number to
-			// client-dns-used
-			//
-
-			long numb;
-
-			if( config.get_number( "client-dns-enable", &numb ) )
-			{
-				config.del( "client-dns-enable" );
-				config.set_number( "client-dns-used", numb );
-			}
-			
-			break;
-		}
-	}
-
-	version++;
-	printf( "updated site \'%s\' to version %li\n", config.get_id(), version );
-	config.set_number( "version", version );
-
-	CONFIG_MANAGER manager;
-	manager.file_vpn_save( config );
-}
-
 _QIKEA::_QIKEA()
 {
 }

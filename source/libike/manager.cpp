@@ -193,19 +193,41 @@ _CONFIG_MANAGER::_CONFIG_MANAGER()
 		exit( -1 );
 	}
 
+	// create .ike path
+
+	char path_dotike[] = "/.ike";
+
+	BDATA dotike;
+
+	dotike.add( pwd->pw_dir, strlen( pwd->pw_dir ) );
+	dotike.add( path_dotike, strlen( path_dotike ) + 1 );
+
+	struct stat sb;
+	memset( &sb, 0, sizeof( sb ) );
+	if( stat( dotike.text(), &sb ) )
+		mkdir( dotike.text(), S_IRWXU );
+
 	// create sites path
 
 	char path_sites[] = "/.ike/sites";
 
 	sites_user.add( pwd->pw_dir, strlen( pwd->pw_dir ) );
-	sites_user.add( path_sites, strlen( path_sites ) );
+	sites_user.add( path_sites, strlen( path_sites ) + 1 );
+
+	memset( &sb, 0, sizeof( sb ) );
+	if( stat( sites_user.text(), &sb ) )
+		mkdir( sites_user.text(), S_IRWXU );
 
 	// create certss path
 
 	char path_certs[] = "/.ike/certs";
 
 	certs_user.add( pwd->pw_dir, strlen( pwd->pw_dir ) );
-	certs_user.add( path_certs, strlen( path_certs ) );
+	certs_user.add( path_certs, strlen( path_certs ) + 1 );
+
+	memset( &sb, 0, sizeof( sb ) );
+	if( stat( certs_user.text(), &sb ) )
+		mkdir( certs_user.text(), S_IRWXU );
 
 	endpwent();
 

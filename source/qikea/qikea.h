@@ -288,6 +288,4 @@ typedef class _QIKEA
 
 extern QIKEA qikea;
 
-void update_site( CONFIG * config, const char * path, long & version );
-
 #endif
