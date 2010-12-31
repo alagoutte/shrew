@@ -115,6 +115,18 @@ bool dhgrp_to_string( long & dhgrp, QString & string )
 			string = "group 15";
 			break;
 
+		case 16:
+			string = "group 16";
+			break;
+
+		case 17:
+			string = "group 17";
+			break;
+
+		case 18:
+			string = "group 18";
+			break;
+
 		default:
 			return false;
 	}
@@ -144,6 +156,15 @@ bool string_to_dhgrp( QString & string, long & dhgrp )
 
 	if( string == "group 15" )
 		dhgrp = 15;
+
+	if( string == "group 16" )
+		dhgrp = 16;
+
+	if( string == "group 17" )
+		dhgrp = 17;
+
+	if( string == "group 18" )
+		dhgrp = 18;
 
 	return true;
 }

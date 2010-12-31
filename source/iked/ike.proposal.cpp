@@ -78,6 +78,9 @@ long _IKED::phase1_gen_prop( IDB_PH1 * ph1 )
 
 	unsigned short glist[] =
 	{
+		IKE_GRP_GROUP18,
+		IKE_GRP_GROUP17,
+		IKE_GRP_GROUP16,
 		IKE_GRP_GROUP15,
 		IKE_GRP_GROUP14,
 		IKE_GRP_GROUP5,

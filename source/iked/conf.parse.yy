@@ -1433,6 +1433,14 @@ proposal_line_isakmp
 				proposal.dhgr_id = IKE_GRP_GROUP16;
 				break;
 
+			case 17:
+				proposal.dhgr_id = IKE_GRP_GROUP17;
+				break;
+
+			case 18:
+				proposal.dhgr_id = IKE_GRP_GROUP18;
+				break;
+
 			default:
 				error( @$, std::string( "invalid dhgrp id" ) );
 				break;
@@ -1512,6 +1520,14 @@ proposal_line_ah
 
 			case 16:
 				proposal.dhgr_id = IKE_GRP_GROUP16;
+				break;
+
+			case 17:
+				proposal.dhgr_id = IKE_GRP_GROUP17;
+				break;
+
+			case 18:
+				proposal.dhgr_id = IKE_GRP_GROUP18;
 				break;
 
 			default:
@@ -1618,6 +1634,14 @@ proposal_line_esp
 
 			case 16:
 				proposal.dhgr_id = IKE_GRP_GROUP16;
+				break;
+
+			case 17:
+				proposal.dhgr_id = IKE_GRP_GROUP17;
+				break;
+
+			case 18:
+				proposal.dhgr_id = IKE_GRP_GROUP18;
 				break;
 
 			default:

@@ -1398,6 +1398,21 @@
                 <string>group 15</string>
                </property>
               </item>
+              <item>
+               <property name="text" >
+                <string>group 16</string>
+               </property>
+              </item>
+              <item>
+               <property name="text" >
+                <string>group 17</string>
+               </property>
+              </item>
+              <item>
+               <property name="text" >
+                <string>group 18</string>
+               </property>
+              </item>
              </widget>
             </item>
            </layout>
@@ -2066,6 +2081,21 @@
               <item>
                <property name="text" >
                 <string>group 15</string>
+               </property>
+              </item>
+              <item>
+               <property name="text" >
+                <string>group 16</string>
+               </property>
+              </item>
+              <item>
+               <property name="text" >
+                <string>group 17</string>
+               </property>
+              </item>
+              <item>
+               <property name="text" >
+                <string>group 18</string>
                </property>
               </item>
              </widget>
