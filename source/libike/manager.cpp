@@ -41,6 +41,92 @@
 
 #include "config.h"
 
+bool _CONFIG_MANAGER::update_config( CONFIG & config )
+{
+	long version = 0;
+	config.get_number( "version", &version );
+
+	if( version >= CONFIG_VERSION )
+		return false;
+
+	while( version < CONFIG_VERSION )
+	{
+		switch( version )
+		{
+			case 0: // 0 to 1
+			{
+				//
+				// update the auth-mutual-psk string
+				// to a binary value
+				//
+
+				char text[ MAX_CONFSTRING ];
+				long size = MAX_CONFSTRING;
+
+				if( config.get_string( "auth-mutual-psk", text, size, 0 ) )
+				{
+					config.del( "auth-mutual-psk" );
+					BDATA psk;
+					psk.set( text, strlen( text ) );
+					config.set_binary( "auth-mutual-psk", psk );
+				}
+
+				break;
+			}
+
+			case 1: // 1 to 2
+			{
+				//
+				// update client-dns-enable number to
+				// client-dns-used
+				//
+
+				long numb;
+
+				if( config.get_number( "client-dns-enable", &numb ) )
+				{
+					config.del( "client-dns-enable" );
+					config.set_number( "client-dns-used", numb );
+				}
+			
+				break;
+			}
+
+			case 2: // 2 to 3
+			{
+				//
+				// update client-dns-suffix-auto
+				//
+
+				long numb1 = 0;
+				long numb2 = 1;
+
+				char text[ MAX_CONFSTRING ];
+				long size = MAX_CONFSTRING;
+
+				if( config.get_number( "client-dns-used", &numb1 ) )
+					if( numb1 )
+						if( config.get_string( "client-dns-suffix", text, size, 0 ) )
+							numb2 = 0;
+
+				config.set_number( "client-dns-suffix-auto", numb2 );
+
+				break;
+			}
+		}
+
+		version++;
+	}
+
+	//
+	// update to current version
+	//
+
+	config.set_number( "version", CONFIG_VERSION );
+
+	return true;
+}
+
 _CONFIG_MANAGER::_CONFIG_MANAGER()
 {
 

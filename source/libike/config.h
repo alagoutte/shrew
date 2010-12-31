@@ -42,6 +42,8 @@
 
 #define MAX_CONFSTRING		256
 
+#define CONFIG_VERSION	3
+
 #define DATA_STRING		1
 #define DATA_NUMBER		2
 #define DATA_BINARY		3
@@ -105,6 +107,8 @@ typedef class DLX _CONFIG_MANAGER
 
 	BDATA	sites_all;
 	BDATA	sites_user;
+
+	bool update_config( CONFIG & config );
 
 	public:
 

@@ -248,6 +248,13 @@ bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config, const char * path )
 		}
 	}
 
+	//
+	// automatically update configs
+	//
+
+	if( update_config( config ) )
+		file_vpn_save( config, path );
+
 	fclose( fp );
 
 	return true;
@@ -457,7 +464,7 @@ bool _CONFIG_MANAGER::file_pcf_load( CONFIG & config, const char * path, bool & 
 	// set some sane defaults
 	//
 
-	config.set_number( "version", 3 );
+	config.set_number( "version", CONFIG_VERSION );
 	config.set_number( "network-ike-port", 500 );
 	config.set_number( "network-mtu-size", 1380 );
 
