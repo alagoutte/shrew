@@ -144,10 +144,18 @@ _CONFIG_MANAGER::_CONFIG_MANAGER()
 		char path_sites[] = "\\Shrew Soft VPN\\sites";
 
 		sites_all.add( path_appdata, strlen( path_appdata ) );
-		sites_all.add( path_sites, strlen( path_sites ) );
+		sites_all.add( path_sites, strlen( path_sites ) + 1 );
 
 		if( !PathFileExists( sites_all.text() ) )
 			CreateDirectory( sites_all.text(), NULL );
+
+		char path_certs[] = "\\Shrew Soft VPN\\certs";
+
+		certs_all.add( path_appdata, strlen( path_appdata ) );
+		certs_all.add( path_certs, strlen( path_certs ) + 1 );
+
+		if( !PathFileExists( certs_all.text() ) )
+			CreateDirectory( certs_all.text(), NULL );
 	}
 
 	if( SHGetFolderPath(
@@ -160,15 +168,21 @@ _CONFIG_MANAGER::_CONFIG_MANAGER()
 		char path_sites[] = "\\Shrew Soft VPN\\sites";
 
 		sites_user.add( path_appdata, strlen( path_appdata ) );
-		sites_user.add( path_sites, strlen( path_sites ) );
+		sites_user.add( path_sites, strlen( path_sites ) + 1 );
 
 		if( !PathFileExists( sites_user.text() ) )
 			CreateDirectory( sites_user.text(), NULL );
+
+		char path_certs[] = "\\Shrew Soft VPN\\certs";
+
+		certs_user.add( path_appdata, strlen( path_appdata ) );
+		certs_user.add( path_certs, strlen( path_certs ) + 1 );
+
+		if( !PathFileExists( certs_user.text() ) )
+			CreateDirectory( certs_user.text(), NULL );
 	}
 
 #else
-
-	char path_sites[] = "/.ike/sites";
 
 	// locate user home directory
 
@@ -179,10 +193,19 @@ _CONFIG_MANAGER::_CONFIG_MANAGER()
 		exit( -1 );
 	}
 
-	// create site path
+	// create sites path
+
+	char path_sites[] = "/.ike/sites";
 
 	sites_user.add( pwd->pw_dir, strlen( pwd->pw_dir ) );
 	sites_user.add( path_sites, strlen( path_sites ) );
+
+	// create certss path
+
+	char path_certs[] = "/.ike/certs";
+
+	certs_user.add( pwd->pw_dir, strlen( pwd->pw_dir ) );
+	certs_user.add( path_certs, strlen( path_certs ) );
 
 	endpwent();
 

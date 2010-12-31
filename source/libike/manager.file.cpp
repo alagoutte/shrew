@@ -51,7 +51,7 @@ bool _CONFIG_MANAGER::file_enumerate( CONFIG & config, int & index )
 
 	BDATA sites_user_spec;
 	sites_user_spec.add( sites_user );
-	sites_user_spec.add( "\\*", 3 );
+	sites_user_spec.ins( "\\*", 2, sites_user_spec.size() - 1 );
 
 	WIN32_FIND_DATA ffdata;
 	int found = 0;
@@ -124,8 +124,8 @@ bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config )
 {
 	BDATA path;
 	path.add( sites_user );
-	path.add( "/", 1 );
-	path.add( config.get_id(), strlen( config.get_id() ) + 1 );
+	path.ins( "/", 1, path.size() - 1 );
+	path.ins( config.get_id(), strlen( config.get_id() ), path.size() - 1 );
 
 	return file_vpn_load( config, path.text() );
 }
@@ -270,8 +270,8 @@ bool _CONFIG_MANAGER::file_vpn_save( CONFIG & config )
 {
 	BDATA path;
 	path.add( sites_user );
-	path.add( "/", 1 );
-	path.add( config.get_id(), strlen( config.get_id() ) + 1 );
+	path.ins( "/", 1, path.size() - 1 );
+	path.ins( config.get_id(), strlen( config.get_id() ), path.size() - 1 );
 
 	return file_vpn_save( config, path.text() );
 }
@@ -326,8 +326,8 @@ bool _CONFIG_MANAGER::file_vpn_del( CONFIG & config )
 {
 	BDATA path;
 	path.add( sites_user );
-	path.add( "/", 1 );
-	path.add( config.get_id(), strlen( config.get_id() ) + 1 );
+	path.ins( "/", 1, path.size() - 1 );
+	path.ins( config.get_id(), strlen( config.get_id() ), path.size() - 1 );
 
 #ifdef WIN32
 

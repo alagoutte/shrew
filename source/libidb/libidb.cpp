@@ -352,12 +352,12 @@ bool _BDATA::ins( void * buff, size_t size, size_t oset )
 
 bool _BDATA::ins( char * buff, size_t size, size_t oset )
 {
-	return ins( ( void * ) buff, size );
+	return ins( ( void * ) buff, size, oset );
 }
 
 bool _BDATA::ins( const char * buff, size_t size, size_t oset )
 {
-	return ins( ( void * ) buff, size );
+	return ins( ( void * ) buff, size, oset );
 }
 
 bool _BDATA::add( _BDATA & bdata )

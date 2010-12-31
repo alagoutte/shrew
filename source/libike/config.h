@@ -106,7 +106,10 @@ typedef class DLX _CONFIG_MANAGER
 	protected:
 
 	BDATA	sites_all;
+	BDATA	certs_all;
+
 	BDATA	sites_user;
+	BDATA	certs_user;
 
 	bool update_config( CONFIG & config );
 
