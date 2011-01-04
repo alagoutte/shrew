@@ -281,10 +281,10 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 				case IKEI_MSGID_CFGSTR:
 				{
-					BDATA	text;
+					BDATA	data;
 					long	type;
 
-					if( msg.get_cfgstr( &type, &text ) != IPCERR_OK )
+					if( msg.get_cfgstr( &type, &data ) != IPCERR_OK )
 					{
 						log.txt( LLOG_ERROR, "!! : failed to read config string message\n" );
 						break;
@@ -300,7 +300,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : xauth username message\n" );
 
-							xuser = text;
+							xuser = data;
 
 							result = IKEI_RESULT_OK;
 							break;
@@ -314,7 +314,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : xauth password message\n" );
 
-							xpass = text;
+							xpass = data;
 
 							result = IKEI_RESULT_OK;
 							break;
@@ -328,7 +328,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : preshared key message\n" );
 
-							psk = text;
+							psk = data;
 
 							result = IKEI_RESULT_OK;
 							break;
@@ -342,7 +342,8 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						{
 							log.txt( LLOG_INFO, "<A : file password\n" );
 
-							fpass = text;
+							fpass = data;
+							fpass.add( "", 0 );
 
 							result = IKEI_RESULT_OK;
 							break;
@@ -354,24 +355,18 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 						case CFGSTR_CRED_RSA_RCRT:
 						{
-							text.add( "", 1 );
+							log.txt( LLOG_INFO, "<A : remote certificate data message\n" );
 
-							log.txt( LLOG_INFO, "<A : remote cert \'%s\' message\n", text.text() );
-
-							switch( cert_load( cert_r, text.text(), true, fpass ) )
+							switch( cert_load( cert_r, data, true, fpass ) )
 							{
 								case FILE_OK:
-									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text.text() );
+									log.txt( LLOG_DEBUG, "ii : remote certificate read complete ( %i bytes )\n", cert_r.size() );
 									result = IKEI_RESULT_OK;
 									break;
 
 								case FILE_FAIL:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text.text() );
+									log.txt( LLOG_ERROR, "!! : remote certificate read failed, requesting password\n" );
 									result = IKEI_RESULT_PASSWD;
-									break;
-
-								case FILE_PATH:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text.text() );
 									break;
 							}
 
@@ -384,24 +379,18 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 						case CFGSTR_CRED_RSA_LCRT:
 						{
-							text.add( "", 1 );
+							log.txt( LLOG_INFO, "<A : local certificate data message\n" );
 
-							log.txt( LLOG_INFO, "<A : local cert \'%s\' message\n", text.text() );
-
-							switch( cert_load( cert_l, text.text(), false, fpass ) )
+							switch( cert_load( cert_l, data, false, fpass ) )
 							{
 								case FILE_OK:
-									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text.text() );
+									log.txt( LLOG_DEBUG, "ii : local certificate read complete ( %i bytes )\n", cert_l.size() );
 									result = IKEI_RESULT_OK;
 									break;
 
 								case FILE_FAIL:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text.text() );
+									log.txt( LLOG_ERROR, "!! : local certificate read failed, requesting password\n" );
 									result = IKEI_RESULT_PASSWD;
-									break;
-
-								case FILE_PATH:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text.text() );
 									break;
 							}
 
@@ -414,24 +403,18 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 						case CFGSTR_CRED_RSA_LKEY:
 						{
-							text.add( "", 1 );
+							log.txt( LLOG_INFO, "<A : local key data message\n" );
 
-							log.txt( LLOG_INFO, "<A : local key \'%s\' message\n", text.text() );
-
-							switch( prvkey_rsa_load( cert_k, text.text(), fpass ) )
+							switch( prvkey_rsa_load( cert_k, data, fpass ) )
 							{
 								case FILE_OK:
-									log.txt( LLOG_DEBUG, "ii : \'%s\' loaded\n", text.text() );
+									log.txt( LLOG_DEBUG, "ii : local key read complete ( %i bytes )\n", cert_k.size() );
 									result = IKEI_RESULT_OK;
 									break;
 
 								case FILE_FAIL:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, requesting password\n", text.text() );
+									log.txt( LLOG_ERROR, "!! : local key read failed, requesting password\n" );
 									result = IKEI_RESULT_PASSWD;
-									break;
-
-								case FILE_PATH:
-									log.txt( LLOG_ERROR, "!! : \'%s\' load failed, invalid path\n", text.text() );
 									break;
 							}
 
@@ -445,12 +428,12 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						case CFGSTR_CRED_LID:
 						{
 							BDATA idval;
-							idval = text;
+							idval = data;
 							idval.add( 0, 1 );
 
 							log.txt( LLOG_INFO, "<A : local id \'%s\' message\n", idval.text() );
 
-							iddata_l = text;
+							iddata_l = data;
 
 							result = IKEI_RESULT_OK;
 							break;
@@ -463,12 +446,12 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						case CFGSTR_CRED_RID:
 						{
 							BDATA idval;
-							idval = text;
+							idval = data;
 							idval.add( 0, 1 );
 
 							log.txt( LLOG_INFO, "<A : remote id \'%s\' message\n", idval.text() );
 
-							iddata_r = text;
+							iddata_r = data;
 
 							result = IKEI_RESULT_OK;
 							break;
@@ -480,11 +463,11 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 						case CFGSTR_SPLIT_DOMAIN:
 						{
-							text.add( 0, 1 );
+							data.add( 0, 1 );
 
-							log.txt( LLOG_INFO, "<A : split dns \'%s\' message\n", text.text() );
+							log.txt( LLOG_INFO, "<A : split dns \'%s\' message\n", data.text() );
 
-							domains.add( text );
+							domains.add( data );
 
 							result = IKEI_RESULT_OK;
 							break;

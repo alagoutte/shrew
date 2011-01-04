@@ -1168,11 +1168,19 @@ long _CLIENT::func( void * )
 		( proposal_isakmp.auth_id == XAUTH_AUTH_INIT_RSA ) ||
 		( proposal_isakmp.auth_id == IKE_AUTH_SIG_RSA ) )
 	{
+		BDATA name;
+
 		// server certificate
 
-		if( !config.get_string( "auth-server-cert", btext, 0 ) )
+		if( !config.get_string( "auth-server-cert-name", name, 0 ) )
 		{
-			log( STATUS_FAIL, "config error : auth-server-cert undefined\n" );
+			log( STATUS_FAIL, "config error : auth-server-cert-name undefined\n" );
+			goto config_failed;
+		}
+
+		if( !config.get_binary( "auth-server-cert-data", btext ) )
+		{
+			log( STATUS_FAIL, "config error : auth-server-cert-data undefined\n" );
 			goto config_failed;
 		}
 
@@ -1189,7 +1197,7 @@ long _CLIENT::func( void * )
 
 		if( msgres == IKEI_RESULT_PASSWD )
 		{
-			if( !get_filepass( btext ) )
+			if( !get_filepass( name ) )
 			{
 				log( STATUS_FAIL, "server cert file requires password\n" );
 				goto config_failed;
@@ -1207,11 +1215,21 @@ long _CLIENT::func( void * )
 	if( ( proposal_isakmp.auth_id == XAUTH_AUTH_INIT_RSA ) ||
 		( proposal_isakmp.auth_id == IKE_AUTH_SIG_RSA ) )
 	{
+		BDATA name;
+
 		// client certificate
 
-		if( !config.get_string( "auth-client-cert", btext, 0 ) )
+		if( !config.get_string( "auth-client-cert-name", name, 0 ) )
 		{
-			log( STATUS_FAIL, "config error : auth-client-cert undefined\n" );
+			log( STATUS_FAIL, "config error : auth-client-cert-name undefined\n" );
+			goto config_failed;
+		}
+
+		name.add( "", 1 );
+
+		if( !config.get_binary( "auth-client-cert-data", btext ) )
+		{
+			log( STATUS_FAIL, "config error : auth-client-cert-data undefined\n" );
 			goto config_failed;
 		}
 
@@ -1228,7 +1246,7 @@ long _CLIENT::func( void * )
 
 		if( msgres == IKEI_RESULT_PASSWD )
 		{
-			if( !get_filepass( btext ) )
+			if( !get_filepass( name ) )
 			{
 				log( STATUS_FAIL, "client cert file requires password\n" );
 				goto config_failed;
@@ -1244,9 +1262,17 @@ long _CLIENT::func( void * )
 
 		// client private key
 
-		if( !config.get_string( "auth-client-key", btext, 0 ) )
+		if( !config.get_string( "auth-client-cert-name", name, 0 ) )
 		{
-			log( STATUS_FAIL, "config error : auth-client-key undefined\n" );
+			log( STATUS_FAIL, "config error : auth-client-cert-name undefined\n" );
+			goto config_failed;
+		}
+
+		name.add( "", 1 );
+
+		if( !config.get_binary( "auth-client-key-data", btext ) )
+		{
+			log( STATUS_FAIL, "config error : auth-client-key-data undefined\n" );
 			goto config_failed;
 		}
 
@@ -1263,7 +1289,7 @@ long _CLIENT::func( void * )
 
 		if( msgres == IKEI_RESULT_PASSWD )
 		{
-			if( !get_filepass( btext ) )
+			if( !get_filepass( name ) )
 			{
 				log( STATUS_FAIL, "client key file requires password\n" );
 				goto config_failed;

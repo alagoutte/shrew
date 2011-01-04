@@ -146,7 +146,7 @@ bool cert_load_pem( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 {
 	fseek( fp, 0, SEEK_SET );
 
-	X509 * x509 = PEM_read_X509( fp, NULL, keyfile_cb, &pass );
+	X509 * x509 = PEM_read_X509( fp, NULL, keyfile_cb, pass.buff() );
 	if( x509 == NULL )
 		return false;
 
@@ -166,15 +166,11 @@ bool cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 
 	X509 * x509 = NULL;
 
-	BDATA passnull;
-	passnull.set( pass );
-	passnull.add( 0, 1 );
-
 	if( ca )
 	{
 		STACK_OF( X509 ) * stack = NULL;
 
-		if( PKCS12_parse( p12, ( const char * ) passnull.buff(), NULL, NULL, &stack ) )
+		if( PKCS12_parse( p12, pass.text(), NULL, NULL, &stack ) )
 		{
 			if( stack != NULL )
 			{
@@ -186,7 +182,7 @@ bool cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 		}
 	}
 	else
-		PKCS12_parse( p12, ( const char * ) passnull.buff(), NULL, &x509, NULL );
+		PKCS12_parse( p12, pass.text(), NULL, &x509, NULL );
 
 	PKCS12_free( p12 );
 
@@ -220,6 +216,93 @@ long _IKED::cert_load( BDATA & cert, char * fpath, bool ca, BDATA & pass )
 		loaded = cert_load_p12( cert, fp, ca, pass );
 
 	fclose( fp );
+
+	if( !loaded )
+		return FILE_FAIL;
+
+	return FILE_OK;
+}
+
+bool cert_load_pem( BDATA & cert, BDATA & input, bool ca, BDATA & pass )
+{
+	BIO * bp = BIO_new( BIO_s_mem() );
+	if( bp == NULL )
+		return false;
+
+	if( BIO_write( bp, input.buff(), ( int ) input.size() ) < 0 )
+	{
+		BIO_free_all( bp );
+		return false;
+	}
+
+	X509 * x509 = PEM_read_bio_X509( bp, NULL, keyfile_cb, pass.buff() );
+
+	BIO_free_all( bp );
+
+	if( x509 == NULL )
+		return false;
+
+	bool converted = cert_2_bdata( cert, x509 );
+	X509_free( x509 );
+
+	return converted;
+}
+
+bool cert_load_p12( BDATA & cert, BDATA & input, bool ca, BDATA & pass )
+{
+	BIO * bp = BIO_new( BIO_s_mem() );
+	if( bp == NULL )
+		return false;
+
+	if( BIO_write( bp, input.buff(), ( int ) input.size() ) < 0 )
+	{
+		BIO_free_all( bp );
+		return false;
+	}
+
+	PKCS12 * p12 = d2i_PKCS12_bio( bp, NULL );
+
+	BIO_free_all( bp );
+
+	if( p12 == NULL )
+		return false;
+
+	X509 * x509 = NULL;
+
+	if( ca )
+	{
+		STACK_OF( X509 ) * stack = NULL;
+
+		if( PKCS12_parse( p12, ( const char * ) pass.buff(), NULL, NULL, &stack ) )
+		{
+			if( stack != NULL )
+			{
+				if( sk_X509_value( stack, 0 ) != NULL )
+					x509 = sk_X509_value( stack, 0 );
+
+				sk_X509_free( stack );
+			}
+		}
+	}
+	else
+		PKCS12_parse( p12, ( const char * ) pass.buff(), NULL, &x509, NULL );
+
+	PKCS12_free( p12 );
+
+	if( x509 == NULL )
+		return false;
+
+	bool converted = cert_2_bdata( cert, x509 );
+	X509_free( x509 );
+
+	return converted;
+}
+
+long _IKED::cert_load( BDATA & cert, BDATA & input, bool ca, BDATA & pass )
+{
+	bool loaded = cert_load_pem( cert, input, ca, pass );
+	if( !loaded )
+		loaded = cert_load_p12( cert, input, ca, pass );
 
 	if( !loaded )
 		return FILE_FAIL;
@@ -731,7 +814,7 @@ bool prvkey_rsa_load_pem( BDATA & prvkey, FILE * fp, BDATA & pass )
 {
 	fseek( fp, 0, SEEK_SET );
 
-	EVP_PKEY * evp_pkey = PEM_read_PrivateKey( fp, NULL, keyfile_cb, &pass );
+	EVP_PKEY * evp_pkey = PEM_read_PrivateKey( fp, NULL, keyfile_cb, pass.buff() );
 	if( evp_pkey == NULL )
 		return false;
 
@@ -749,12 +832,8 @@ bool prvkey_rsa_load_p12( BDATA & prvkey, FILE * fp, BDATA & pass )
 	if( p12 == NULL )
 		return false;
 
-	BDATA passnull;
-	passnull.set( pass );
-	passnull.add( 0, 1 );
-
 	EVP_PKEY * evp_pkey;
-	PKCS12_parse( p12, ( const char * ) passnull.buff(), &evp_pkey, NULL, NULL );
+	PKCS12_parse( p12, pass.text(), &evp_pkey, NULL, NULL );
 	PKCS12_free( p12 );
 
 	if( evp_pkey == NULL )
@@ -787,6 +866,75 @@ long _IKED::prvkey_rsa_load( BDATA & prvkey, char * fpath, BDATA & pass )
 		loaded = prvkey_rsa_load_p12( prvkey, fp, pass );
 
 	fclose( fp );
+
+	if( !loaded )
+		return FILE_FAIL;
+
+	return FILE_OK;
+}
+
+bool prvkey_rsa_load_pem( BDATA & prvkey, BDATA & input, BDATA & pass )
+{
+	BIO * bp = BIO_new( BIO_s_mem() );
+	if( bp == NULL )
+		return false;
+
+	if( BIO_write( bp, input.buff(), ( int ) input.size() ) < 0 )
+	{
+		BIO_free_all( bp );
+		return false;
+	}
+
+	EVP_PKEY * evp_pkey = PEM_read_bio_PrivateKey( bp, NULL, keyfile_cb, pass.buff() );
+
+	BIO_free_all( bp );
+
+	if( evp_pkey == NULL )
+		return false;
+
+	bool converted = prvkey_rsa_2_bdata( prvkey, evp_pkey->pkey.rsa );
+	EVP_PKEY_free( evp_pkey );
+
+	return converted;
+}
+
+bool prvkey_rsa_load_p12( BDATA & prvkey, BDATA & input, BDATA & pass )
+{
+	BIO * bp = BIO_new( BIO_s_mem() );
+	if( bp == NULL )
+		return false;
+
+	if( BIO_write( bp, input.buff(), ( int ) input.size() ) < 0 )
+	{
+		BIO_free_all( bp );
+		return false;
+	}
+
+	PKCS12 * p12 = d2i_PKCS12_bio( bp, NULL );
+
+	BIO_free_all( bp );
+
+	if( p12 == NULL )
+		return false;
+
+	EVP_PKEY * evp_pkey;
+	PKCS12_parse( p12, pass.text(), &evp_pkey, NULL, NULL );
+	PKCS12_free( p12 );
+
+	if( evp_pkey == NULL )
+		return false;
+
+	bool converted = prvkey_rsa_2_bdata( prvkey, evp_pkey->pkey.rsa );
+	EVP_PKEY_free( evp_pkey );
+
+	return converted;
+}
+
+long _IKED::prvkey_rsa_load( BDATA & prvkey, BDATA & input, BDATA & pass )
+{
+	bool loaded = prvkey_rsa_load_pem( prvkey, input, pass );
+	if( !loaded )
+		loaded = prvkey_rsa_load_p12( prvkey, input, pass );
 
 	if( !loaded )
 		return FILE_FAIL;

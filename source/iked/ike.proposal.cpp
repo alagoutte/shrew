@@ -68,20 +68,13 @@ long _IKED::phase1_gen_prop( IDB_PH1 * ph1 )
 	unsigned short hlist[] =
 	{
 		IKE_HASH_MD5,
-		IKE_HASH_SHA1,
-		IKE_HASH_SHA2_256,
-		IKE_HASH_SHA2_384,
-		IKE_HASH_SHA2_512,
+		IKE_HASH_SHA1
 	};
 
 	// dh groups
 
 	unsigned short glist[] =
 	{
-		IKE_GRP_GROUP18,
-		IKE_GRP_GROUP17,
-		IKE_GRP_GROUP16,
-		IKE_GRP_GROUP15,
 		IKE_GRP_GROUP14,
 		IKE_GRP_GROUP5,
 		IKE_GRP_GROUP2,

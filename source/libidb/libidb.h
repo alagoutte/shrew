@@ -109,6 +109,11 @@ typedef class DLX _BDATA
 
 	void del( bool null = false );
 
+	bool file_load( FILE * fp );
+	bool file_load( const char * path );
+	bool file_save( FILE * fp );
+	bool file_save( const char * path );
+
 }BDATA, *PBDATA;
 
 //==============================================================================

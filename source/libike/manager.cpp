@@ -41,6 +41,17 @@
 
 #include "config.h"
 
+bool file_to_name( BDATA & path, BDATA & name )
+{
+	char * lastslash = strrchr( path.text(), PATH_DELIM );
+	if( lastslash == NULL )
+		name.set( path.text(), path.size() - 1 );
+	else
+		name.set( lastslash + 1, strlen( lastslash + 1 ) );
+
+	return ( name.size() > 0 );
+}
+
 bool _CONFIG_MANAGER::update_config( CONFIG & config )
 {
 	long version = 0;
@@ -60,15 +71,11 @@ bool _CONFIG_MANAGER::update_config( CONFIG & config )
 				// to a binary value
 				//
 
-				char text[ MAX_CONFSTRING ];
-				long size = MAX_CONFSTRING;
-
-				if( config.get_string( "auth-mutual-psk", text, size, 0 ) )
+				BDATA data;
+				if( config.get_string( "auth-mutual-psk", data, 0 ) )
 				{
-					config.del( "auth-mutual-psk" );
-					BDATA psk;
-					psk.set( text, strlen( text ) );
-					config.set_binary( "auth-mutual-psk", psk );
+					data.size( data.size() - 1 );
+					config.set_binary( "auth-mutual-psk", data );
 				}
 
 				break;
@@ -100,16 +107,69 @@ bool _CONFIG_MANAGER::update_config( CONFIG & config )
 
 				long numb1 = 0;
 				long numb2 = 1;
-
-				char text[ MAX_CONFSTRING ];
-				long size = MAX_CONFSTRING;
+				BDATA data;
 
 				if( config.get_number( "client-dns-used", &numb1 ) )
 					if( numb1 )
-						if( config.get_string( "client-dns-suffix", text, size, 0 ) )
+						if( config.get_string( "client-dns-suffix", data, 0 ) )
 							numb2 = 0;
 
 				config.set_number( "client-dns-suffix-auto", numb2 );
+
+				break;
+			}
+
+			case 3: // 3 -> 4
+			{
+				//
+				// update certificate name information
+				//
+
+				BDATA path;
+				BDATA name;
+				BDATA data;
+
+				if( config.get_string( "auth-server-cert", path, 0 ) )
+				{
+					BDATA path2;
+					path2.set( path );
+					path2.add( "", 1 );
+
+					file_to_name( path2, name );
+					data.file_load( path2.text() );
+
+					config.del( "auth-server-cert" );
+					config.set_string( "auth-server-cert-name", name );
+					config.set_binary( "auth-server-cert-data", data );
+				}
+
+				if( config.get_string( "auth-client-cert", path, 0 ) )
+				{
+					BDATA path2;
+					path2.set( path );
+					path2.add( "", 1 );
+
+					file_to_name( path2, name );
+					data.file_load( path2.text() );
+
+					config.del( "auth-client-cert" );
+					config.set_string( "auth-client-cert-name", name );
+					config.set_binary( "auth-client-cert-data", data );
+				}
+
+				if( config.get_string( "auth-client-key", path, 0 ) )
+				{
+					BDATA path2;
+					path2.set( path );
+					path2.add( "", 1 );
+
+					file_to_name( path2, name );
+					data.file_load( path2.text() );
+
+					config.del( "auth-client-key" );
+					config.set_string( "auth-client-key-name", name );
+					config.set_binary( "auth-client-key-data", data );
+				}
 
 				break;
 			}

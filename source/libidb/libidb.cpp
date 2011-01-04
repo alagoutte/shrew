@@ -453,6 +453,87 @@ void _BDATA::del( bool null )
 	data_oset = 0;
 }
 
+bool _BDATA::file_load( FILE * fp )
+{
+	if( fp == NULL )
+		return false;
+
+	del();
+
+	while( true )
+	{
+		int next = fgetc( fp );
+		if( next == EOF )
+			break;
+
+		add( next, 1 );
+	}
+
+	return ( data_size > 0 );
+}
+
+bool _BDATA::file_load( const char * path )
+{
+
+#ifdef WIN32
+
+	FILE * fp;
+	if( fopen_s( &fp, path, "r" ) )
+		return false;
+
+#else
+
+	FILE * fp = fopen( path, "r" );
+	if( fp == NULL )
+		return false;
+
+#endif
+
+	bool result = file_load( fp );
+
+	fclose( fp );
+
+	return result;
+}
+
+bool _BDATA::file_save( FILE * fp )
+{
+	if( fp == NULL )
+		return false;
+
+	size_t count = data_size;
+	size_t index = 0;
+
+	for( ; index < count; index++ )
+		fputc( data_buff[ index ], fp );
+
+	return true;
+}
+
+bool _BDATA::file_save( const char * path )
+{
+
+#ifdef WIN32
+
+	FILE * fp;
+	if( fopen_s( &fp, path, "w" ) )
+		return false;
+
+#else
+
+	FILE * fp = fopen( path, "w" );
+	if( fp == NULL )
+		return false;
+
+#endif
+
+	bool result = file_save( fp );
+
+	fclose( fp );
+
+	return result;
+}
+
 //==============================================================================
 // standard IDB list classes
 //

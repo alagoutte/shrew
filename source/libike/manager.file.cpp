@@ -124,7 +124,7 @@ bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config )
 {
 	BDATA path;
 	path.add( sites_user );
-	path.ins( "/", 1, path.size() - 1 );
+	path.ins( PATH_DELIM, 1, path.size() - 1 );
 	path.ins( config.get_id(), strlen( config.get_id() ), path.size() - 1 );
 
 	return file_vpn_load( config, path.text() );
@@ -248,14 +248,14 @@ bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config, const char * path )
 		}
 	}
 
+	fclose( fp );
+
 	//
 	// automatically update configs
 	//
 
 	if( update_config( config ) )
 		file_vpn_save( config, path );
-
-	fclose( fp );
 
 	return true;
 

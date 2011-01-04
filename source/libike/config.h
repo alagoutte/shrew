@@ -40,9 +40,15 @@
 #include <stdlib.h>
 #include "libidb.h"
 
+#ifdef WIN32
+# define PATH_DELIM '\\'
+#else
+# define PATH_DELIM '/'
+#endif
+
 #define MAX_CONFSTRING		256
 
-#define CONFIG_VERSION	3
+#define CONFIG_VERSION	4
 
 #define DATA_STRING		1
 #define DATA_NUMBER		2
@@ -88,10 +94,12 @@ typedef class DLX _CONFIG : public IDB_LIST
 	void	del_all();
 
 	bool	add_string( const char * key, const char * val, size_t size );
+	bool	add_string( const char * key, BDATA & val );
 	bool	set_string( const char * key, const char * val, size_t size );
-	long	has_string( const char * key, const char * val, size_t size );
+	bool	set_string( const char * key, BDATA & val );
 	bool	get_string( const char * key, char * val, size_t size, int index );
     bool    get_string( const char * key, BDATA & val, int index );
+	long	has_string( const char * key, const char * val, size_t size );
 
 	bool	set_number( const char * key, long val );
 	bool	get_number( const char * key, long * val );

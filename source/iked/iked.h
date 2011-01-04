@@ -565,6 +565,7 @@ typedef class _IKED
 	// x.509 certificate helper functions
 
 	long	cert_load( BDATA & cert, char * fpath, bool ca, BDATA & pass );
+	long	cert_load( BDATA & cert, BDATA & input, bool ca, BDATA & pass );
 	bool	cert_desc( BDATA & cert, BDATA & text );
 	bool	cert_subj( BDATA & cert, BDATA & subj );
 	bool	asn1_text( BDATA & asn1, BDATA & text );
@@ -572,6 +573,7 @@ typedef class _IKED
 	bool	cert_verify( IDB_LIST_CERT & certs, BDATA & ca, BDATA & cert );
 
 	long	prvkey_rsa_load( BDATA & prvkey, char * fpath, BDATA & pass );
+	long	prvkey_rsa_load( BDATA & prvkey, BDATA & input, BDATA & pass );
 	bool	pubkey_rsa_read( BDATA & cert, BDATA & pubkey );
 	bool	prvkey_rsa_encrypt( BDATA & prvkey, BDATA & hash, BDATA & sign );
 	bool	pubkey_rsa_decrypt( BDATA & pubkey, BDATA & sign, BDATA & hash );
