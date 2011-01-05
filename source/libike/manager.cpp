@@ -249,7 +249,20 @@ _CONFIG_MANAGER::_CONFIG_MANAGER()
 		sites_user.add( path_sites, strlen( path_sites ) + 1 );
 
 		if( !PathFileExists( sites_user.text() ) )
+		{
 			CreateDirectory( sites_user.text(), NULL );
+
+			// migrate sites from registry
+
+			CONFIG config;
+			int	index = 0;
+
+			while( registry_enumerate( config, index ) )
+			{
+				file_vpn_save( config );
+				config.del_all();
+			}
+		}
 
 		char path_certs[] = "\\Shrew Soft VPN\\certs";
 
