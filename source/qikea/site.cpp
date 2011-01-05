@@ -641,17 +641,17 @@ bool _qikeaSite::load( CONFIG & config )
 
 	// credentials
 
-	if( config.get_string( "auth-server-cert",
+	if( config.get_string( "auth-server-cert-name",
 		text, MAX_CONFSTRING, 0 ) )
-		lineEditCAFile->setText( text );
+		lineEditCAName->setText( text );
 
-	if( config.get_string( "auth-client-cert",
+	if( config.get_string( "auth-client-cert-name",
 		text, MAX_CONFSTRING, 0 ) )
-		lineEditCertFile->setText( text );
+		lineEditCertName->setText( text );
 
-	if( config.get_string( "auth-client-key",
+	if( config.get_string( "auth-client-key-name",
 		text, MAX_CONFSTRING, 0 ) )
-		lineEditPKeyFile->setText( text );
+		lineEditPKeyName->setText( text );
 
 	BDATA psk;
 	if( config.get_binary( "auth-mutual-psk", psk ) )
@@ -1201,26 +1201,56 @@ bool _qikeaSite::save( CONFIG & config )
 
 	// credentials
 
-	if( lineEditCAFile->isEnabled() )
-		config.set_string( "auth-server-cert",
-			lineEditCAFile->text().toAscii(),
-			lineEditCAFile->text().length() );
-	else
-		config.del( "auth-server-cert" );
+	if( pathCAFile.size() )
+	{
+		config.set_string( "auth-server-cert-name",
+			lineEditCAName->text().toAscii(),
+			lineEditCAName->text().length() );
 
-	if( lineEditCertFile->isEnabled() )
-		config.set_string( "auth-client-cert",
-			lineEditCertFile->text().toAscii(),
-			lineEditCertFile->text().length() );
+		BDATA fileData;
+		fileData.file_load( pathCAFile.toAscii() );
+		config.set_binary( "auth-server-cert-data",
+			fileData );
+	}
 	else
-		config.del( "auth-client-cert" );
+	{
+		config.del( "auth-server-cert-name" );
+		config.del( "auth-server-cert-data" );
+	}
 
-	if( lineEditPKeyFile->isEnabled() )
-		config.set_string( "auth-client-key",
-			lineEditPKeyFile->text().toAscii(),
-			lineEditPKeyFile->text().length() );
+	if( pathCertFile.size() )
+	{
+		config.set_string( "auth-client-cert-name",
+			lineEditCertName->text().toAscii(),
+			lineEditCertName->text().length() );
+
+		BDATA fileData;
+		fileData.file_load( pathCertFile.toAscii() );
+		config.set_binary( "auth-client-cert-data",
+			fileData );
+	}
 	else
-		config.del( "auth-client-key" );
+	{
+		config.del( "auth-client-cert-name" );
+		config.del( "auth-client-cert-data" );
+	}
+
+	if( pathPKeyFile.size() )
+	{
+		config.set_string( "auth-client-key-name",
+			lineEditPKeyName->text().toAscii(),
+			lineEditPKeyName->text().length() );
+
+		BDATA fileData;
+		fileData.file_load( pathPKeyFile.toAscii() );
+		config.set_binary( "auth-client-key-data",
+			fileData );
+	}
+	else
+	{
+		config.del( "auth-client-key-name" );
+		config.del( "auth-client-key-data" );
+	}
 
 	if( lineEditPSK->isEnabled() )
 	{
@@ -1501,20 +1531,20 @@ bool _qikeaSite::verify()
 
 	// check cert authority file
 
-	if( lineEditCAFile->isEnabled() )
-		if( lineEditCAFile->text().length() < 1 )
+	if( toolButtonCAFile->isEnabled() )
+		if( pathCAFile.length() < 1 )
 			errmsg = "Please enter valid certificate authority file path.";
 
 	// check cert file
 
-	if( lineEditCertFile->isEnabled() )
-		if( lineEditCertFile->text().length() < 1 )
+	if( toolButtonCertFile->isEnabled() )
+		if( pathCertFile.length() < 1 )
 			errmsg = "Please enter valid certificate file path.";
 
 	// check private key file
 
-	if( lineEditPKeyFile->isEnabled() )
-		if( lineEditPKeyFile->text().length() < 1 )
+	if( toolButtonPKeyFile->isEnabled() )
+		if( pathPKeyFile.length() < 1 )
 			errmsg = "Please enter valid private key file path.";
 
 	// check pre shared key
@@ -1952,15 +1982,12 @@ void _qikeaSite::updateAuthentication()
 	{
 		case AUTH_HYBRID_RSA_XAUTH:
 		{
-			lineEditCAFile->setEnabled( true );
+			lineEditCAName->setEnabled( true );
 			toolButtonCAFile->setEnabled( true );
-			
-			lineEditCertFile->setEnabled( false );
+			lineEditCertName->setEnabled( false );
 			toolButtonCertFile->setEnabled( false );
-			
-			lineEditPKeyFile->setEnabled( false );
+			lineEditPKeyName->setEnabled( false );
 			toolButtonPKeyFile->setEnabled( false );
-			
 			lineEditPSK->setEnabled( false );
 
 			break;
@@ -1968,15 +1995,12 @@ void _qikeaSite::updateAuthentication()
 
 		case AUTH_HYBRID_GRP_XAUTH:
 		{
-			lineEditCAFile->setEnabled( true );
+			lineEditCAName->setEnabled( true );
 			toolButtonCAFile->setEnabled( true );
-			
-			lineEditCertFile->setEnabled( false );
+			lineEditCertName->setEnabled( false );
 			toolButtonCertFile->setEnabled( false );
-			
-			lineEditPKeyFile->setEnabled( false );
+			lineEditPKeyName->setEnabled( false );
 			toolButtonPKeyFile->setEnabled( false );
-			
 			lineEditPSK->setEnabled( true );
 
 			break;
@@ -1985,15 +2009,12 @@ void _qikeaSite::updateAuthentication()
 		case AUTH_MUTUAL_RSA_XAUTH:
 		case AUTH_MUTUAL_RSA:
 		{
-			lineEditCAFile->setEnabled( true );
+			lineEditCAName->setEnabled( true );
 			toolButtonCAFile->setEnabled( true );
-			
-			lineEditCertFile->setEnabled( true );
+			lineEditCertName->setEnabled( true );
 			toolButtonCertFile->setEnabled( true );
-			
-			lineEditPKeyFile->setEnabled( true );
+			lineEditPKeyName->setEnabled( true );
 			toolButtonPKeyFile->setEnabled( true );
-			
 			lineEditPSK->setEnabled( false );
 
 			break;
@@ -2002,15 +2023,12 @@ void _qikeaSite::updateAuthentication()
 		case AUTH_MUTUAL_PSK_XAUTH:
 		case AUTH_MUTUAL_PSK:
 		{
-			lineEditCAFile->setEnabled( false );
+			lineEditCAName->setEnabled( false );
 			toolButtonCAFile->setEnabled( false );
-			
-			lineEditCertFile->setEnabled( false );
+			lineEditCertName->setEnabled( false );
 			toolButtonCertFile->setEnabled( false );
-			
-			lineEditPKeyFile->setEnabled( false );
+			lineEditPKeyName->setEnabled( false );
 			toolButtonPKeyFile->setEnabled( false );
-			
 			lineEditPSK->setEnabled( true );
 
 			break;
@@ -2316,7 +2334,11 @@ void _qikeaSite::inputCAFile()
 				types );
 
 	if( filePath.length() )
-		lineEditCAFile->setText( filePath );
+	{
+		pathCAFile = filePath;
+		QFileInfo fileInfo( filePath );
+		lineEditCAName->setText( fileInfo.baseName() );
+	}
 }
 
 void _qikeaSite::inputCertFile()
@@ -2332,7 +2354,11 @@ void _qikeaSite::inputCertFile()
 				types );
 
 	if( filePath.length() )
-		lineEditCertFile->setText( filePath );
+	{
+		pathCertFile = filePath;
+		QFileInfo fileInfo( filePath );
+		lineEditCertName->setText( fileInfo.baseName() );
+	}
 }
 
 
@@ -2349,5 +2375,9 @@ void _qikeaSite::inputPKeyFile()
 				types );
 
 	if( filePath.length() )
-		lineEditPKeyFile->setText( filePath );
+	{
+		pathPKeyFile = filePath;
+		QFileInfo fileInfo( filePath );
+		lineEditPKeyName->setText( fileInfo.baseName() );
+	}
 }

@@ -132,6 +132,10 @@ typedef class _qikeaSite : public QDialog, public Ui::qikeaSite
 {
 	Q_OBJECT
 
+	QString pathCAFile;
+	QString pathCertFile;
+	QString pathPKeyFile;
+
 	public:
 	
 	_qikeaSite( QWidget * parent = NULL ) : QDialog( parent )

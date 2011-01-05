@@ -1195,7 +1195,14 @@
            <item>
             <layout class="QHBoxLayout" >
              <item>
-              <widget class="QLineEdit" name="lineEditCAFile" />
+              <widget class="QLineEdit" name="lineEditCAName" >
+               <property name="enabled" >
+                <bool>true</bool>
+               </property>
+               <property name="readOnly" >
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="QToolButton" name="toolButtonCAFile" >
@@ -1219,7 +1226,14 @@
            <item>
             <layout class="QHBoxLayout" >
              <item>
-              <widget class="QLineEdit" name="lineEditCertFile" />
+              <widget class="QLineEdit" name="lineEditCertName" >
+               <property name="enabled" >
+                <bool>true</bool>
+               </property>
+               <property name="readOnly" >
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="QToolButton" name="toolButtonCertFile" >
@@ -1243,7 +1257,17 @@
            <item>
             <layout class="QHBoxLayout" >
              <item>
-              <widget class="QLineEdit" name="lineEditPKeyFile" />
+              <widget class="QLineEdit" name="lineEditPKeyName" >
+               <property name="enabled" >
+                <bool>true</bool>
+               </property>
+               <property name="frame" >
+                <bool>true</bool>
+               </property>
+               <property name="readOnly" >
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="QToolButton" name="toolButtonPKeyFile" >
@@ -2476,11 +2500,11 @@
   <tabstop>comboBoxRemoteIDType</tabstop>
   <tabstop>lineEditRemoteIDData</tabstop>
   <tabstop>checkBoxRemoteIDOption</tabstop>
-  <tabstop>lineEditCAFile</tabstop>
+  <tabstop>lineEditCAName</tabstop>
   <tabstop>toolButtonCAFile</tabstop>
-  <tabstop>lineEditCertFile</tabstop>
+  <tabstop>lineEditCertName</tabstop>
   <tabstop>toolButtonCertFile</tabstop>
-  <tabstop>lineEditPKeyFile</tabstop>
+  <tabstop>lineEditPKeyName</tabstop>
   <tabstop>toolButtonPKeyFile</tabstop>
   <tabstop>lineEditPSK</tabstop>
   <tabstop>comboBoxP1Exchange</tabstop>

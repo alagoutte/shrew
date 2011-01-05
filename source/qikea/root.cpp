@@ -347,56 +347,6 @@ void _qikeaRoot::siteImport()
 	else
 		qikea.manager.file_pcf_load( config, loadPath.toAscii(), need_certs );
 
-	// modify for import
-/*
-	char	name[ 1024 ];
-	BDATA	data;
-
-	if( config.get_binary( "auth-client-cert-data", data ) &&
-	    config.get_string( "auth-client-cert", name, 1023, 0 ) )
-	{
-		QString tmpName = name;
-
-		fileConflict( qikea.certs, tmpName );
-
-		QString tmpPath = qikea.certs + "/" + tmpName;
-
-		bdata_to_file( data, tmpPath );
-
-		config.set_string( "auth-client-cert", tmpPath.toAscii(), tmpPath.length() );
-		config.del( "auth-client-cert-data" );
-	}
-
-	if( config.get_binary( "auth-client-key-data", data ) &&
-	    config.get_string( "auth-client-key", name, 1023, 0 ) )
-	{
-		QString tmpName = name;
-
-		fileConflict( qikea.certs, tmpName );
-
-		QString tmpPath = qikea.certs + "/" + tmpName;
-
-		bdata_to_file( data, tmpPath );
-
-		config.set_string( "auth-client-key", tmpPath.toAscii(), tmpPath.length() );
-		config.del( "auth-client-key-data" );
-	}
-
-	if( config.get_binary( "auth-server-cert-data", data ) &&
-	    config.get_string( "auth-server-cert", name, 1023, 0 ) )
-	{
-		QString tmpName = name;
-
-		fileConflict( qikea.certs, tmpName );
-
-		QString tmpPath = qikea.certs + "/" + tmpName;
-
-		bdata_to_file( data, tmpPath );
-
-		config.set_string( "auth-server-cert", tmpPath.toAscii(), tmpPath.length() );
-		config.del( "auth-server-cert-data" );
-	}
-*/
 	// determine file name
 
 	QFileInfo fileInfo( loadPath );
@@ -465,50 +415,6 @@ void _qikeaRoot::siteExport()
 
 	if( !savePath.length() )
 		return;
-
-	// modify for export
-
-	char	path[ 1024 ];
-	BDATA	data;
-
-	if( config.get_string( "auth-client-cert", path, 1023, 0 ) )
-	{
-		QString tmpPath = path;
-
-		file_to_bdata( tmpPath, data );
-
-		QFileInfo fileInfo( tmpPath );
-		QString fileName = fileInfo.fileName();
-
-		config.set_string( "auth-client-cert", fileName.toAscii(), fileName.length() );
-		config.set_binary( "auth-client-cert-data", data );
-	}
-
-	if( config.get_string( "auth-client-key", path, 1023, 0 ) )
-	{
-		QString tmpPath = path;
-
-		file_to_bdata( tmpPath, data );
-
-		QFileInfo fileInfo( tmpPath );
-		QString fileName = fileInfo.fileName();
-
-		config.set_string( "auth-client-key", fileName.toAscii(), fileName.length() );
-		config.set_binary( "auth-client-key-data", data );
-	}
-
-	if( config.get_string( "auth-server-cert", path, 1023, 0 ) )
-	{
-		QString tmpPath = path;
-
-		file_to_bdata( tmpPath, data );
-
-		QFileInfo fileInfo( tmpPath );
-		QString fileName = fileInfo.fileName();
-
-		config.set_string( "auth-server-cert", fileName.toAscii(), fileName.length() );
-		config.set_binary( "auth-server-cert-data", data );
-	}
 
 	qikea.manager.file_vpn_save( config, savePath.toAscii() );
 }
