@@ -343,7 +343,7 @@ void _qikeaRoot::siteImport()
 	bool need_certs = false;
 
 	if( !loadPath.contains( ".pcf", Qt::CaseInsensitive ) )
-		qikea.manager.file_vpn_load( config, loadPath.toAscii() );
+		qikea.manager.file_vpn_load( config, loadPath.toAscii(), false );
 	else
 		qikea.manager.file_pcf_load( config, loadPath.toAscii(), need_certs );
 
