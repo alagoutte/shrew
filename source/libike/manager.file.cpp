@@ -130,7 +130,7 @@ bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config )
 	return file_vpn_load( config, path.text() );
 }
 
-bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config, const char * path )
+bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config, const char * path, bool save_update )
 {
 
 #ifdef WIN32
@@ -254,7 +254,7 @@ bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config, const char * path )
 	// automatically update configs
 	//
 
-	if( update_config( config ) )
+	if( update_config( config ) && save_update )
 		file_vpn_save( config, path );
 
 	return true;

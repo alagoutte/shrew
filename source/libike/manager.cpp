@@ -131,44 +131,68 @@ bool _CONFIG_MANAGER::update_config( CONFIG & config )
 
 				if( config.get_string( "auth-server-cert", path, 0 ) )
 				{
-					BDATA path2;
-					path2.set( path );
-					path2.add( "", 1 );
+					if( !config.get_binary( "auth-server-cert-data", data ) )
+					{
+						BDATA path2;
+						path2.set( path );
+						path2.add( "", 1 );
 
-					file_to_name( path2, name );
-					data.file_load( path2.text() );
+						file_to_name( path2, name );
+						data.file_load( path2.text() );
 
-					config.del( "auth-server-cert" );
-					config.set_string( "auth-server-cert-name", name );
-					config.set_binary( "auth-server-cert-data", data );
+						config.del( "auth-server-cert" );
+						config.set_string( "auth-server-cert-name", name );
+						config.set_binary( "auth-server-cert-data", data );
+					}
+					else
+					{
+						config.del( "auth-server-cert" );
+						config.set_string( "auth-server-cert-name", path );
+					}
 				}
 
 				if( config.get_string( "auth-client-cert", path, 0 ) )
 				{
-					BDATA path2;
-					path2.set( path );
-					path2.add( "", 1 );
+					if( !config.get_binary( "auth-client-cert-data", data ) )
+					{
+						BDATA path2;
+						path2.set( path );
+						path2.add( "", 1 );
 
-					file_to_name( path2, name );
-					data.file_load( path2.text() );
+						file_to_name( path2, name );
+						data.file_load( path2.text() );
 
-					config.del( "auth-client-cert" );
-					config.set_string( "auth-client-cert-name", name );
-					config.set_binary( "auth-client-cert-data", data );
+						config.del( "auth-client-cert" );
+						config.set_string( "auth-client-cert-name", name );
+						config.set_binary( "auth-client-cert-data", data );
+					}
+					else
+					{
+						config.del( "auth-client-cert" );
+						config.set_string( "auth-client-cert-name", path );
+					}
 				}
 
 				if( config.get_string( "auth-client-key", path, 0 ) )
 				{
-					BDATA path2;
-					path2.set( path );
-					path2.add( "", 1 );
+					if( !config.get_binary( "auth-client-key-data", data ) )
+					{
+						BDATA path2;
+						path2.set( path );
+						path2.add( "", 1 );
 
-					file_to_name( path2, name );
-					data.file_load( path2.text() );
+						file_to_name( path2, name );
+						data.file_load( path2.text() );
 
-					config.del( "auth-client-key" );
-					config.set_string( "auth-client-key-name", name );
-					config.set_binary( "auth-client-key-data", data );
+						config.del( "auth-client-key" );
+						config.set_string( "auth-client-key-name", name );
+						config.set_binary( "auth-client-key-data", data );
+					}
+					else
+					{
+						config.del( "auth-client-key" );
+						config.set_string( "auth-client-key-name", path );
+					}
 				}
 
 				break;

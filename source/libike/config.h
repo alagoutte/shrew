@@ -134,7 +134,7 @@ typedef class DLX _CONFIG_MANAGER
 
 	bool file_enumerate( CONFIG & config, int & index );
 	bool file_vpn_load( CONFIG & config );
-	bool file_vpn_load( CONFIG & config, const char * path );
+	bool file_vpn_load( CONFIG & config, const char * path, bool save_update = true );
 	bool file_vpn_save( CONFIG & config );
 	bool file_vpn_save( CONFIG & config, const char * path );
 	bool file_vpn_del( CONFIG & config );

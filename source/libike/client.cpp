@@ -170,8 +170,6 @@ bool _CLIENT::load( BDATA & name )
 	
 	config.set_id( name.text() );
 
-	CONFIG_MANAGER manager;
-
 	if( !manager.file_vpn_load( config ) )
 	{
 		log( STATUS_FAIL, "failed to load \'%s\'\n",

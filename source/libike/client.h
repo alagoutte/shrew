@@ -75,7 +75,8 @@ typedef class DLX _CLIENT : public ITH_EXEC
 {
 	protected:
 
-	ITH_COND	connecting;
+	ITH_COND		connecting;
+	CONFIG_MANAGER	manager;
 
 	IKE_PEER		peer;
 	IKE_XCONF       xconf;
