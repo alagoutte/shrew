@@ -84,17 +84,20 @@ void site_name_mangle( QString & name )
 {
 	// mangle name if duplicate
 
-	CONFIG tmpConfig;
 	QString tmpName = name;
+
+	CONFIG tmpConfig;
+	tmpConfig.set_id( name.toAscii() );
 
 	int index = 2;
 
-	while( qikea.manager.file_vpn_load( tmpConfig, name.toAscii() ) )
+	while( qikea.manager.file_vpn_load( tmpConfig ) )
 	{
 		name  = tmpName;
 		name += QString( " (" );
 		name += QString::number( index++ );
 		name += QString( ")" );
+		tmpConfig.set_id( name.toAscii() );
 	}
 }
 
