@@ -170,7 +170,14 @@ bool _CLIENT::load( BDATA & name )
 	
 	config.set_id( name.text() );
 
-	if( !manager.file_vpn_load( config ) )
+	bool loaded = manager.file_vpn_load( config );
+	if( !loaded )
+	{
+		config.set_ispublic( true );
+		loaded = manager.file_vpn_load( config );
+	}
+
+	if( !loaded )
 	{
 		log( STATUS_FAIL, "failed to load \'%s\'\n",
 			name.text() );

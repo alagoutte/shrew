@@ -120,10 +120,64 @@ bool _CONFIG_MANAGER::file_enumerate( CONFIG & config, int & index )
 
 }
 
+bool _CONFIG_MANAGER::file_enumerate_public( CONFIG & config, int & index )
+{
+
+#ifdef WIN32
+
+	BDATA sites_user_spec;
+	sites_user_spec.add( sites_all );
+	sites_user_spec.ins( "\\*", 2, sites_user_spec.size() - 1 );
+
+	WIN32_FIND_DATA ffdata;
+	int found = 0;
+	
+	HANDLE hfind = FindFirstFile( sites_user_spec.text(), &ffdata );
+	if( hfind == INVALID_HANDLE_VALUE )
+		return false;
+
+	while( true )
+	{
+		bool isdir = false;
+		if( ffdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+			isdir = true;
+
+		if( !isdir && ( found >= ( index ) ) )
+			break;
+
+		if( FindNextFile( hfind, &ffdata ) == 0 )
+			break;
+
+		if( !isdir )
+			found++;
+	}
+
+	FindClose( hfind );
+	if( found < index )
+		return false;
+
+	config.set_id( ffdata.cFileName );
+	config.set_ispublic( true );
+	index++;
+
+	return file_vpn_load( config );
+
+#else
+
+	return false;
+
+#endif
+
+}
+
 bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config )
 {
 	BDATA path;
-	path.add( sites_user );
+	if( config.get_ispublic() )
+		path.add( sites_all );
+	else
+		path.add( sites_user );
+
 	path.ins( PATH_DELIM, 1, path.size() - 1 );
 	path.ins( config.get_id(), strlen( config.get_id() ), path.size() - 1 );
 
@@ -269,7 +323,11 @@ bool _CONFIG_MANAGER::file_vpn_load( CONFIG & config, const char * path, bool sa
 bool _CONFIG_MANAGER::file_vpn_save( CONFIG & config )
 {
 	BDATA path;
-	path.add( sites_user );
+	if( config.get_ispublic() )
+		path.add( sites_all );
+	else
+		path.add( sites_user );
+
 	path.ins( "/", 1, path.size() - 1 );
 	path.ins( config.get_id(), strlen( config.get_id() ), path.size() - 1 );
 
@@ -325,7 +383,11 @@ bool _CONFIG_MANAGER::file_vpn_save( CONFIG & config, const char * path )
 bool _CONFIG_MANAGER::file_vpn_del( CONFIG & config )
 {
 	BDATA path;
-	path.add( sites_user );
+	if( config.get_ispublic() )
+		path.add( sites_all );
+	else
+		path.add( sites_user );
+
 	path.ins( "/", 1, path.size() - 1 );
 	path.ins( config.get_id(), strlen( config.get_id() ), path.size() - 1 );
 

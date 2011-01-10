@@ -89,6 +89,7 @@ _CFGDAT::_CFGDAT()
 
 _CONFIG::_CONFIG()
 {
+	ispublic = false;
 }
 
 _CONFIG::~_CONFIG()
@@ -107,10 +108,21 @@ char * _CONFIG::get_id()
 	return id.text();
 }
 
+void _CONFIG::set_ispublic( bool val )
+{
+	ispublic = val;
+}
+
+bool _CONFIG::get_ispublic()
+{
+	return ispublic;
+}
+
 _CONFIG & _CONFIG::operator = ( _CONFIG & config )
 {
 	del_all();
 	set_id( config.get_id() );
+	set_ispublic( config.get_ispublic() );
 
 	for( long index = 0; index < config.count(); index++ )
 	{

@@ -77,6 +77,7 @@ typedef class DLX _CONFIG : public IDB_LIST
 	protected:
 
 	BDATA		id;
+	bool		ispublic;
 
 	CFGDAT *	get_data( long type, const char * key, bool add = false );
 
@@ -89,6 +90,9 @@ typedef class DLX _CONFIG : public IDB_LIST
 
 	bool	set_id( const char * id );
 	char *	get_id();
+
+	void	set_ispublic( bool val );
+	bool	get_ispublic();
 
 	void	del( const char * key );
 	void	del_all();
@@ -133,6 +137,7 @@ typedef class DLX _CONFIG_MANAGER
 	bool registry_vpn_del( CONFIG & config );
 
 	bool file_enumerate( CONFIG & config, int & index );
+	bool file_enumerate_public( CONFIG & config, int & index );
 	bool file_vpn_load( CONFIG & config );
 	bool file_vpn_load( CONFIG & config, const char * path, bool save_update = true );
 	bool file_vpn_save( CONFIG & config );
