@@ -111,6 +111,18 @@
 # define SADB_X_EALG_CAST128CBC	6
 #endif
 
+#ifndef SADB_X_AALG_SHA2_256HMAC
+# define SADB_X_AALG_SHA2_256HMAC SADB_X_AALG_SHA2_256
+#endif
+
+#ifndef SADB_X_AALG_SHA2_384HMAC
+# define SADB_X_AALG_SHA2_384HMAC SADB_X_AALG_SHA2_384
+#endif
+
+#ifndef SADB_X_AALG_SHA2_512HMAC
+# define SADB_X_AALG_SHA2_512HMAC SADB_X_AALG_SHA2_512
+#endif
+
 # ifndef __FreeBSD__
 
 // Linux and NetBSD compat

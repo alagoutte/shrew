@@ -403,13 +403,13 @@ const char * _PFKI::name( long type, long value )
 				case SADB_AALG_SHA1HMAC:
 					return authtype_03;
 
-				case SADB_X_AALG_SHA2_256:
+				case SADB_X_AALG_SHA2_256HMAC:
 					return authtype_04;
 
-				case SADB_X_AALG_SHA2_384:
+				case SADB_X_AALG_SHA2_384HMAC:
 					return authtype_05;
 
-				case SADB_X_AALG_SHA2_512:
+				case SADB_X_AALG_SHA2_512HMAC:
 					return authtype_06;
 
 				default:

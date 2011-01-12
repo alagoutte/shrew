@@ -1540,15 +1540,15 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 					break;
 
 				case ISAKMP_AUTH_HMAC_SHA2_256:
-					sainfo.sa.auth = SADB_X_AALG_SHA2_256;
+					sainfo.sa.auth = SADB_X_AALG_SHA2_256HMAC;
 					break;
 
 				case ISAKMP_AUTH_HMAC_SHA2_384:
-					sainfo.sa.auth = SADB_X_AALG_SHA2_384;
+					sainfo.sa.auth = SADB_X_AALG_SHA2_384HMAC;
 					break;
 
 				case ISAKMP_AUTH_HMAC_SHA2_512:
-					sainfo.sa.auth = SADB_X_AALG_SHA2_512;
+					sainfo.sa.auth = SADB_X_AALG_SHA2_512HMAC;
 					break;
 
 				default:
@@ -1645,15 +1645,15 @@ long _IKED::pfkey_send_update( IDB_PH2 * ph2, IKE_PROPOSAL * proposal, BDATA & e
 					break;
 
 				case ISAKMP_AH_SHA256:
-					sainfo.sa.auth = SADB_X_AALG_SHA2_256;
+					sainfo.sa.auth = SADB_X_AALG_SHA2_256HMAC;
 					break;
 
 				case ISAKMP_AH_SHA384:
-					sainfo.sa.auth = SADB_X_AALG_SHA2_384;
+					sainfo.sa.auth = SADB_X_AALG_SHA2_384HMAC;
 					break;
 
 				case ISAKMP_AH_SHA512:
-					sainfo.sa.auth = SADB_X_AALG_SHA2_512;
+					sainfo.sa.auth = SADB_X_AALG_SHA2_512HMAC;
 					break;
 
 				default:
