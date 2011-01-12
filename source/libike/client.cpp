@@ -808,23 +808,25 @@ long _CLIENT::func( void * )
 
 	if( !strcmp( "virtual", text ) || !strcmp( "random", text ) )
 	{
-		bool random = false;
+		xconf.opts |= ( IPSEC_OPTS_ADDR | IPSEC_OPTS_MASK );
+
+		// virtual adapter with assgined address
 
 		if( !strcmp( "virtual", text ) )
-			xconf.rqst |= ( IPSEC_OPTS_ADDR | IPSEC_OPTS_MASK );
-
-		if( !strcmp( "random", text ) )
 		{
-			xconf.opts |= ( IPSEC_OPTS_ADDR | IPSEC_OPTS_MASK );
-			random = true;
-		}
+			numb = 1;
+			config.get_number( "client-addr-auto", &numb );
 
-		// ip address and netmask
-
-		if( config.get_number( "client-addr-auto", &numb ) )
-		{
-			if( !numb )
+			if( numb )
 			{
+				// auto address configuration
+
+				xconf.rqst |= ( IPSEC_OPTS_ADDR | IPSEC_OPTS_MASK );
+			}
+			else
+			{
+				// static address configuration
+
 				if( !config.get_string( "client-ip-addr", text, MAX_CONFSTRING, 0 ) )
 				{
 					log( STATUS_FAIL, "config error : client-ip-addr undefined\n" );
@@ -843,10 +845,30 @@ long _CLIENT::func( void * )
 			}
 		}
 
-		// randomize address
+		// virtual adapter with randomized address
 
-		if( random )
+		if( !strcmp( "random", text ) )
 		{
+			// random address configuration
+
+			if( !config.get_string( "client-ip-addr", text, MAX_CONFSTRING, 0 ) )
+			{
+				log( STATUS_FAIL, "config error : client-ip-addr undefined\n" );
+				return -1;
+			}
+
+			xconf.addr.s_addr = inet_addr( text );
+
+			if( !config.get_string( "client-ip-mask", text, MAX_CONFSTRING, 0 ) )
+			{
+				log( STATUS_FAIL, "config error : client-ip-mask undefined\n" );
+				return -1;
+			}
+
+			xconf.mask.s_addr = inet_addr( text );
+
+			// randomize address
+
 			uint32_t addr = rand();
 			addr &= ~xconf.mask.s_addr;
 			xconf.addr.s_addr |= addr;
