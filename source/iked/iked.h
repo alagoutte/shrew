@@ -98,7 +98,6 @@
 
 #include "version.h"
 #include "liblog.h"
-#include "libike.h"
 #include "libith.h"
 #include "libpfk.h"
 #include "libike.h"
@@ -357,7 +356,6 @@ typedef class _IKED
 	friend class _ITH_NWORK;
 	friend class _ITH_PFKEY;
 
-	friend class _IDB_RC_ENTRY;
 	friend class _IDB_PEER;
 	friend class _IDB_TUNNEL;
 	friend class _IDB_POLICY;
@@ -367,6 +365,7 @@ typedef class _IKED
 	friend class _IDB_CFG;
 	friend class _IDB_INF;
 
+	friend class _IKED_RC_LIST;
 	friend class _IDB_LIST_IKED;
 	friend class _IDB_LIST_PEER;
 	friend class _IDB_LIST_TUNNEL;

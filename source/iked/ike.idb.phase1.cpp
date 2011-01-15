@@ -478,7 +478,7 @@ const char * _IDB_PH1::name()
 	return xname;
 }
 
-IDB_RC_LIST * _IDB_PH1::list()
+IKED_RC_LIST * _IDB_PH1::list()
 {
 	return &iked.idb_list_ph1;
 }

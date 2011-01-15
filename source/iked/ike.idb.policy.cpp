@@ -210,7 +210,7 @@ const char * _IDB_POLICY::name()
 	return xname;
 }
 
-IDB_RC_LIST * _IDB_POLICY::list()
+IKED_RC_LIST * _IDB_POLICY::list()
 {
 	return &iked.idb_list_policy;
 }

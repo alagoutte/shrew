@@ -42,9 +42,8 @@
 #ifndef _IDB_H_
 #define _IDB_H_
 
+#include <stdio.h>
 #include "export.h"
-#include "liblog.h"
-#include "libith.h"
 
 //==============================================================================
 // Basic data class
@@ -153,7 +152,7 @@ typedef class DLX _IDB_LIST
 	IDB_ENTRY * get_entry( int index );
 
 }IDB_LIST;
-
+/*
 //==============================================================================
 // reference counted IDB classes
 //==============================================================================
@@ -200,7 +199,7 @@ typedef class DLX _IDB_RC_ENTRY : public IDB_ENTRY
 	virtual _IDB_RC_LIST *	list() = 0;
 
 	bool add( bool lock );
-	bool inc( bool lock );
+	void inc( bool lock );
 	bool dec( bool lock, bool setdel = false );
 
 }IDB_RC_ENTRY;
@@ -214,9 +213,9 @@ typedef class DLX _IDB_RC_LIST : public IDB_LIST
 
 	virtual	void	clean();
 
-	virtual ITH_LOCK	* rc_lock() = 0;
-	virtual LOG			* rc_log() = 0;
+	virtual bool	lock() = 0;
+	virtual bool	unlock() = 0;
 
 }IDB_RC_LIST;
-
+*/
 #endif

@@ -82,6 +82,7 @@
 #endif
 
 #include "libidb.h"
+#include "libith.h"
 
 //
 // Win32 specific

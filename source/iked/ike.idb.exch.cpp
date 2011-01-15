@@ -113,7 +113,7 @@ XCH_STATUS _IDB_XCH::status( XCH_STATUS status, XCH_ERRORCODE errorcode, uint16_
 		xch_notifycode = notifycode;
 
 		if( status == XCH_STATUS_DEAD )
-			setflags( IDB_FLAG_DEAD );
+			setflags( ENTRY_FLAG_DEAD );
 	}
 
 	lock.unlock();

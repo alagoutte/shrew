@@ -266,6 +266,8 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 
 	policy_create( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, true );
 
+#ifdef WIN32
+
 	IPROUTE_ENTRY entry;
 	memset( &entry, 0, sizeof( entry ) );
 	entry.addr = tunnel->saddr_r.saddr4.sin_addr;
@@ -282,6 +284,8 @@ bool _IKED::policy_list_create( IDB_TUNNEL * tunnel, bool initiator )
 
 		policy_create( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, false );
 	}
+
+#endif
 
 	//
 	// build the client id
@@ -406,6 +410,8 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 
 	policy_remove( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, true );
 
+#ifdef WIN32
+
 	IPROUTE_ENTRY entry;
 	memset( &entry, 0, sizeof( entry ) );
 	entry.addr = tunnel->saddr_r.saddr4.sin_addr;
@@ -422,6 +428,8 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 
 		policy_remove( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, false );
 	}
+
+#endif
 
 	if( tunnel->force_all )
 		tunnel->force_all = false;

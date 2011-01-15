@@ -165,7 +165,7 @@ const char * _IDB_CFG::name()
 	return xname;
 }
 
-IDB_RC_LIST * _IDB_CFG::list()
+IKED_RC_LIST * _IDB_CFG::list()
 {
 	return &iked.idb_list_cfg;
 }

@@ -141,7 +141,7 @@ const char * _IDB_PEER::name()
 	return xname;
 }
 
-IDB_RC_LIST * _IDB_PEER::list()
+IKED_RC_LIST * _IDB_PEER::list()
 {
 	return &iked.idb_list_peer;
 }

@@ -62,7 +62,6 @@
 #include <assert.h>
 #include <string.h>
 #include <time.h>
-#include "libip.h"
 #include "libidb.h"
 #include "libith.h"
 #include "ike.h"

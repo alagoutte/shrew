@@ -394,13 +394,146 @@ bool _IDB_LIST_NETMAP::get( IDB_ENTRY_NETMAP ** nentry, long index )
 // generic iked reference counted list
 //
 
-ITH_LOCK * _IDB_LIST_IKED::rc_lock()
+_IKED_RC_ENTRY::_IKED_RC_ENTRY()
 {
-	return &iked.lock_idb;
+	idb_flags = 0;
+	idb_refcount = 0;
 }
 
-LOG * _IDB_LIST_IKED::rc_log()
+_IKED_RC_ENTRY::~_IKED_RC_ENTRY()
 {
-	return &iked.log;
 }
 
+void _IKED_RC_ENTRY::callend()
+{
+	if( !chkflags( ENTRY_FLAG_ENDCALLED ) )
+	{
+		setflags( ENTRY_FLAG_ENDCALLED );
+		end();
+	}
+}
+
+bool _IKED_RC_ENTRY::add( bool lock )
+{
+	if( lock )
+		list()->lock();
+
+	inc( false );
+
+	list()->add_entry( this );
+
+	iked.log.txt(
+		LLOG_DEBUG,
+		"DB : %s added ( obj count = %i )\n",
+		name(),
+		list()->count() );
+
+	if( lock )
+		list()->unlock();
+	
+	return true;
+}
+
+void _IKED_RC_ENTRY::inc( bool lock )
+{
+	if( lock )
+		list()->lock();
+
+	idb_refcount++;
+
+	iked.log.txt(
+		LLOG_LOUD,
+		"DB : %s ref increment ( ref count = %i, obj count = %i )\n",
+		name(),
+		idb_refcount,
+		list()->count() );
+
+	if( lock )
+		list()->unlock();
+}
+
+bool _IKED_RC_ENTRY::dec( bool lock, bool setdel )
+{
+	if( lock )
+		list()->lock();
+
+	if( setdel )
+		setflags( ENTRY_FLAG_DEAD );
+
+	if( chkflags( ENTRY_FLAG_DEAD ) )
+		callend();
+
+	assert( idb_refcount > 0 );
+
+	idb_refcount--;
+
+	if( idb_refcount || ( !chkflags( ENTRY_FLAG_DEAD ) && !chkflags( ENTRY_FLAG_IMMEDIATE ) ) )
+	{
+		iked.log.txt(
+			LLOG_LOUD,
+			"DB : %s ref decrement ( ref count = %i, obj count = %i )\n",
+			name(),
+			idb_refcount,
+			list()->count() );
+
+		if( lock )
+			list()->unlock();
+
+		return false;
+	}
+
+	list()->del_entry( this );
+
+	iked.log.txt(
+		LLOG_DEBUG,
+		"DB : %s deleted ( obj count = %i )\n",
+		name(),
+		list()->count() );
+
+	if( lock )
+		list()->unlock();
+
+	delete this;
+
+	return true;
+}
+
+_IKED_RC_LIST::_IKED_RC_LIST()
+{
+}
+
+_IKED_RC_LIST::~_IKED_RC_LIST()
+{
+}
+
+void _IKED_RC_LIST::clean()
+{
+	lock();
+
+	long obj_count = count();
+	long obj_index = 0;
+
+	for( ; obj_index < obj_count; obj_index++ )
+	{
+		IKED_RC_ENTRY * entry = static_cast<IKED_RC_ENTRY*>( get_entry( obj_index ) );
+
+		entry->inc( false );
+		if( entry->dec( false, true ) )
+		{
+			obj_index--;
+			obj_count--;
+		}
+	}
+
+	unlock();
+}
+
+bool _IKED_RC_LIST::lock()
+{
+	return iked.lock_idb.lock();
+}
+
+bool _IKED_RC_LIST::unlock()
+{
+	return iked.lock_idb.unlock();
+}

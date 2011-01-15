@@ -43,6 +43,7 @@
 #define _IKE_H_
 
 #include "libidb.h"
+#include "inttypes.h"
 
 #define CONF_STRLEN					256
 
@@ -767,46 +768,5 @@ typedef struct _PLD_DATA
 	size_t	size;
 
 }PLD_DATA;
-
-typedef class _PACKET_IKE : public _PACKET
-{
-	protected:
-
-	PLD_DATA	pld_stack[ 8 ];
-	long		pld_depth;
-
-	IKE_HEADER	header;
-
-	public:
-
-	unsigned char	notify;
-
-	_PACKET_IKE();
-	~_PACKET_IKE();
-
-	void	reset();
-
-	void		set_msgid( uint32_t msgid );
-	uint32_t	get_msgid();
-
-	bool	add_payload( bool encap, uint8_t next );
-	bool	get_payload( bool encap, uint8_t & next );
-	void	end_payload( bool decap, bool write = true );
-
-	size_t	get_payload_left();
-
-	bool	write( IKE_COOKIES & cookies,
-					uint8_t payload,
-					uint8_t exchange,
-					uint8_t flags );
-
-	bool	read( IKE_COOKIES & cookies,
-					uint8_t & payload,
-					uint8_t & exchange,
-					uint8_t & flags );
-
-	bool	done();
-
-}PACKET_IKE;
 
 #endif

@@ -382,7 +382,7 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_XCONF * set_xconf, IKE_SADDR 
 	// when the refcount reaches zero
 	//
 
-	setflags( IDB_FLAG_IMMEDIATE );
+	setflags( ENTRY_FLAG_IMMEDIATE );
 
 	tstate = 0;
 	lstate = 0;
@@ -493,7 +493,7 @@ const char * _IDB_TUNNEL::name()
 	return xname;
 }
 
-IDB_RC_LIST * _IDB_TUNNEL::list()
+IKED_RC_LIST * _IDB_TUNNEL::list()
 {
 	return &iked.idb_list_tunnel;
 }

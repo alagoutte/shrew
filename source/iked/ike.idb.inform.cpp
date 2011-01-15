@@ -51,7 +51,7 @@ const char * _IDB_INF::name()
 	return xname;
 }
 
-IDB_RC_LIST * _IDB_INF::list()
+IKED_RC_LIST * _IDB_INF::list()
 {
 	return NULL;
 }
