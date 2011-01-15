@@ -31,9 +31,12 @@
 #  include <sys/un.h>
 #  include <sys/stat.h>
 # endif
+# include <unistd.h>
 # include <pwd.h>
-# include <sys/types.h>
 # include <dirent.h>
+# include <string.h>
+//# include <sys/socket.h>
+# include "compat/winstring.h"
 #endif
 
 #include <stdio.h>

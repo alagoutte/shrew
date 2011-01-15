@@ -97,6 +97,7 @@
 #endif
 
 #include "version.h"
+#include "libip.h"
 #include "liblog.h"
 #include "libith.h"
 #include "libpfk.h"

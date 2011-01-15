@@ -54,6 +54,7 @@
 #ifdef UNIX
 # ifdef __linux__
 #  include <unistd.h>
+#  include <string.h>
 #  include <inttypes.h>
 #  include <sys/socket.h>
 #  include <sys/ioctl.h>
@@ -64,6 +65,7 @@
 #  include <linux/rtnetlink.h>
 # else
 #  include <unistd.h>
+#  include <string.h>
 #  include <netinet/in.h>
 #  include <sys/socket.h>
 #  include <net/if_dl.h>

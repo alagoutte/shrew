@@ -49,14 +49,11 @@
 #else
 # include <unistd.h>
 # include <signal.h>
-# include <pwd.h>
-# include <stdarg.h>
-# include <stdlib.h>
 # include <netdb.h>
 # include <netinet/in.h>
-# include <sys/socket.h>
-# include "compat/winstring.h"
 #endif
+
+# include <string.h>
 
 #include "libike.h"
 #include "config.h"

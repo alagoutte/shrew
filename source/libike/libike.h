@@ -49,6 +49,8 @@
 
 #ifdef UNIX
 # include <pwd.h>
+# include <arpa/inet.h>
+# include <netinet/in.h>
 # ifdef __linux__
 #  include <sys/un.h>
 #  include <sys/stat.h>
