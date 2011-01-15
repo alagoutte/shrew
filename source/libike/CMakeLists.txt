@@ -28,7 +28,8 @@ add_library(
 target_link_libraries(
 	ss_ike
 	ss_idb
-	ss_ith )
+	ss_ith
+	crypto )
 
 set_target_properties(
 	ss_ike PROPERTIES
