@@ -505,6 +505,8 @@ bool read_line_pcf( FILE * fp, BDATA & name, BDATA & data )
 	return true;
 }
 
+#ifndef OPT_DLLPROJ
+
 bool _CONFIG_MANAGER::file_pcf_load( CONFIG & config, const char * path, bool & need_certs )
 {
 
@@ -753,3 +755,5 @@ bool _CONFIG_MANAGER::file_pcf_load( CONFIG & config, const char * path, bool & 
 
 	return false;
 }
+
+#endif

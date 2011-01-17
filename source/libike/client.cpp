@@ -45,223 +45,7 @@
 // Base IKEC class
 //==============================================================================
 
-_CLIENT::_CLIENT()
-{
-	memset( &stats, 0, sizeof( stats ) );
-
-	cstate = CLIENT_STATE_DISCONNECTED;
-	autoconnect = false;
-}
-
-_CLIENT::~_CLIENT()
-{
-}
-
-CLIENT_STATE _CLIENT::state()
-{
-	return cstate;
-}
-
-bool _CLIENT::opts( int argc, char ** argv )
-{
-	// read our command line args
-
-	bool syntax_error = false;
-
-	BDATA name;
-
-	for( int argi = 1; argi < argc; argi++ )
-	{
-		// remote site name
-
-		if( !strcmp( argv[ argi ], "-r" ) )
-		{
-			if( ++argi >= argc )
-			{
-				syntax_error = true;
-				break;
-			}
-
-			name.set(
-				argv[ argi ], strlen( argv[ argi ] ) + 1 );
-
-			continue;
-		}
-
-		// remote site username
-
-		if( !strcmp( argv[ argi ], "-u" ) )
-		{
-			if( ++argi >= argc )
-			{
-				syntax_error = true;
-				break;
-			}
-
-			username.set(
-				argv[ argi ], strlen( argv[ argi ] ) );
-
-			continue;
-		}
-
-		// remote site password
-
-		if( !strcmp( argv[ argi ], "-p" ) )
-		{
-			if( ++argi >= argc )
-			{
-				syntax_error = true;
-				break;
-			}
-
-			password.set(
-				argv[ argi ], strlen( argv[ argi ] ) );
-
-			continue;
-		}
-
-		// auto connect
-
-		if( !strcmp( argv[ argi ], "-a" ) )
-		{
-			autoconnect = true;
-			continue;
-		}
-
-		// syntax error
-
-		syntax_error = true;
-		break;
-	}
-
-	if( !name.size() )
-		syntax_error = true;
-
-	// handle any syntax errors
-
-	if( syntax_error )
-	{
-		log( STATUS_FAIL,
-			"invalid parameters specified ...\n" );
-
-		log( STATUS_INFO,
-			"%s -r \"name\" [ -u <user> ][ -p <pass> ][ -a ]\n"
-			" -r\tsite configuration path\n"
-			" -u\tconnection user name\n"
-			" -p\tconnection user password\n"
-			" -a\tauto connect\n",
-			app_name() );
-
-		return false;
-	}
-
-	// load the configuration file
-
-	if( !load( name ) )
-		return false;
-
-	return !syntax_error;
-}
-
-bool _CLIENT::load( BDATA & name )
-{
-	if( !name.size() )
-		return false;
-	
-	config.set_id( name.text() );
-
-	bool loaded = manager.file_vpn_load( config );
-	if( !loaded )
-	{
-		config.set_ispublic( true );
-		loaded = manager.file_vpn_load( config );
-	}
-
-	if( !loaded )
-	{
-		log( STATUS_FAIL, "failed to load \'%s\'\n",
-			name.text() );
-
-		return false;
-	}
-
-	log( STATUS_INFO, "config loaded for site \'%s\'\n",
-		name.text() );
-
-	return true;
-}
-
-bool _CLIENT::auto_connect()
-{
-	return autoconnect;
-}
-
-bool _CLIENT::user_credentials()
-{
-	char text[ MAX_CONFSTRING ];
-
-	if( config.get_string( "auth-method", text, MAX_CONFSTRING, 0 ) )
-		if( !strcmp( "hybrid-rsa-xauth", text ) ||
-			!strcmp( "hybrid-grp-xauth", text ) ||
-			!strcmp( "mutual-rsa-xauth", text ) ||
-			!strcmp( "mutual-psk-xauth", text ) )
-			return true;
-
-	return false;
-}
-
-bool _CLIENT::vpn_connect( bool wait_input )
-{
-	if( cstate != CLIENT_STATE_DISCONNECTED )
-	{
-		log( STATUS_FAIL,
-			"tunnel connected! try disconnecting first\n" );
-
-		return false;
-	}
-
-	if( config.get_id() == NULL )
-	{
-		log( STATUS_FAIL,
-			"no site configuration loaded\n" );
-
-		return false;
-	}
-
-	connecting.reset();
-
-	exec( NULL );
-
-	if( wait_input )
-		connecting.wait( -1 );
-
-	return true;
-}
-
-bool _CLIENT::vpn_disconnect()
-{
-	if( cstate == CLIENT_STATE_DISCONNECTED )
-	{
-		log( STATUS_FAIL,
-			"tunnel disconnected! try connecting first\n" );
-
-		return false;
-	}
-
-	if( config.get_id() == NULL )
-	{
-		log( STATUS_FAIL,
-			"no site configuration loaded\n" );
-
-		return false;
-	}
-	
-	ikei.wakeup();
-
-	return true;
-}
-
-long _CLIENT::func( void * )
+bool _CLIENT::run_init()
 {
 	memset( &peer, 0, sizeof( peer ) );
 	memset( &xconf, 0, sizeof( xconf ) );
@@ -289,7 +73,7 @@ long _CLIENT::func( void * )
 	if( !config.get_string( "network-host", text, MAX_CONFSTRING, 0 ) )
 	{
 		log( STATUS_FAIL, "config error : network-host undefined\n" );
-		return -1;
+		return false;
 	}
 
 	char * host = text;
@@ -307,7 +91,7 @@ long _CLIENT::func( void * )
 		if( !hp )
 		{
 			log( STATUS_FAIL, "config error : cannot resolve address for host %s\n", host );
-			return -1;
+			return false;
 		}
 
 		peer.saddr.saddr4.sin_family = hp->h_addrtype;
@@ -319,7 +103,7 @@ long _CLIENT::func( void * )
 	if( !config.get_number( "network-ike-port", &numb ) )
 	{
 		log( STATUS_FAIL, "config error : network-ike-port undefined\n" );
-		return -1;
+		return false;
 	}
 
 	peer.saddr.saddr4.sin_port = htons( ( unsigned short ) numb );
@@ -441,7 +225,7 @@ long _CLIENT::func( void * )
 	if( !config.get_string( "ident-client-type", text, MAX_CONFSTRING, 0 ) )
 	{
 		log( STATUS_FAIL, "config error : ident-client-type undefined\n" );
-		return -1;
+		return false;
 	}
 
 	if( !strcmp( "none", text ) )
@@ -465,7 +249,7 @@ long _CLIENT::func( void * )
 	if( peer.idtype_l == 255 )
 	{
 		log( STATUS_FAIL, "config error : ident-client-type is invalid\n" );
-		return -1;
+		return false;
 	}
 
 	// server identification type
@@ -475,7 +259,7 @@ long _CLIENT::func( void * )
 	if( !config.get_string( "ident-server-type", text, MAX_CONFSTRING, 0 ) )
 	{
 		log( STATUS_FAIL, "config error : ident-server-idtype undefined\n" );
-		return -1;
+		return false;
 	}
 
 	if( !strcmp( "any", text ) )
@@ -499,7 +283,7 @@ long _CLIENT::func( void * )
 	if( peer.idtype_r == 255 )
 	{
 		log( STATUS_FAIL, "config error : ident-server-type is invalid\n" );
-		return -1;
+		return false;
 	}
 
 	//
@@ -511,7 +295,7 @@ long _CLIENT::func( void * )
 	if( !config.get_string( "phase1-exchange", text, MAX_CONFSTRING, 0 ) )
 	{
 		log( STATUS_FAIL, "config error : phase1-exchange undefined\n" );
-		return -1;
+		return false;
 	}
 
 	if( !strcmp( "main", text ) )
@@ -523,7 +307,7 @@ long _CLIENT::func( void * )
 	if( !peer.exchange )
 	{
 		log( STATUS_FAIL, "config error : phase1-exchange is invalid\n" );
-		return -1;
+		return false;
 	}
 
 	memset( &proposal_isakmp, 0, sizeof( proposal_isakmp ) );
@@ -538,7 +322,7 @@ long _CLIENT::func( void * )
 	if( !config.get_string( "phase1-cipher", text, MAX_CONFSTRING, 0 ) )
 	{
 		log( STATUS_FAIL, "config error : phase1-cipher undefined\n" );
-		return -1;
+		return false;
 	}
 
 	if( !strcmp( "auto", text ) )
@@ -567,7 +351,7 @@ long _CLIENT::func( void * )
 		if( !config.get_number( "phase1-keylen", &numb ) )
 		{
 			log( STATUS_FAIL, "config error : phase1-keylen undefined\n" );
-			return -1;
+			return false;
 		}
 
 		proposal_isakmp.ciph_kl = ( unsigned short ) numb;
@@ -578,7 +362,7 @@ long _CLIENT::func( void * )
 	if( !config.get_string( "phase1-hash", text, MAX_CONFSTRING, 0 ) )
 	{
 		log( STATUS_FAIL, "config error : phase1-hash undefined\n" );
-		return -1;
+		return false;
 	}
 
 	if( !strcmp( "auto", text ) )
@@ -604,7 +388,7 @@ long _CLIENT::func( void * )
 	if( !config.get_number( "phase1-dhgroup", &numb ) )
 	{
 		log( STATUS_FAIL, "config error : phase1-dhgroup undefined\n" );
-		return -1;
+		return false;
 	}
 
 	proposal_isakmp.dhgr_id = ( unsigned short ) numb;
@@ -614,7 +398,7 @@ long _CLIENT::func( void * )
 	if( !config.get_string( "auth-method", text, MAX_CONFSTRING, 0 ) )
 	{
 		log( STATUS_FAIL, "config error : auth-method undefined\n" );
-		return -1;
+		return false;
 	}
 
 	if( !strcmp( "hybrid-rsa-xauth", text ) )
@@ -662,7 +446,7 @@ long _CLIENT::func( void * )
 	if( !config.get_string( "phase2-transform", text, MAX_CONFSTRING, 0 ) )
 	{
 		log( STATUS_FAIL, "config error : phase2-transform undefined\n" );
-		return -1;
+		return false;
 	}
 
 	if( !strcmp( "auto", text ) )
@@ -691,7 +475,7 @@ long _CLIENT::func( void * )
 		if( !config.get_number( "phase2-keylen", &numb ) )
 		{
 			log( STATUS_FAIL, "config error : phase2-keylen undefined\n" );
-			return -1;
+			return false;
 		}
 
 		proposal_esp.ciph_kl = ( unsigned short ) numb;
@@ -702,7 +486,7 @@ long _CLIENT::func( void * )
 	if( !config.get_string( "phase2-hmac", text, MAX_CONFSTRING, 0 ) )
 	{
 		log( STATUS_FAIL, "config error : phase2-hmac undefined\n" );
-		return -1;
+		return false;
 	}
 
 	if( !strcmp( "auto", text ) )
@@ -767,7 +551,7 @@ long _CLIENT::func( void * )
 	if( !config.get_string( "ipcomp-transform", text, MAX_CONFSTRING, 0 ) )
 	{
 		log( STATUS_FAIL, "config error : ipcomp-transform undefined\n" );
-		return -1;
+		return false;
 	}
 
 	if( !strcmp( "none", text ) )
@@ -803,7 +587,7 @@ long _CLIENT::func( void * )
 	if( !config.get_string( "client-iface", text, MAX_CONFSTRING, 0 ) )
 	{
 		log( STATUS_FAIL, "config error : client-iface undefined\n" );
-		return -1;
+		return false;
 	}
 
 	if( !strcmp( "virtual", text ) || !strcmp( "random", text ) )
@@ -830,7 +614,7 @@ long _CLIENT::func( void * )
 				if( !config.get_string( "client-ip-addr", text, MAX_CONFSTRING, 0 ) )
 				{
 					log( STATUS_FAIL, "config error : client-ip-addr undefined\n" );
-					return -1;
+					return false;
 				}
 
 				xconf.addr.s_addr = inet_addr( text );
@@ -838,7 +622,7 @@ long _CLIENT::func( void * )
 				if( !config.get_string( "client-ip-mask", text, MAX_CONFSTRING, 0 ) )
 				{
 					log( STATUS_FAIL, "config error : client-ip-mask undefined\n" );
-					return -1;
+					return false;
 				}
 
 				xconf.mask.s_addr = inet_addr( text );
@@ -854,7 +638,7 @@ long _CLIENT::func( void * )
 			if( !config.get_string( "client-ip-addr", text, MAX_CONFSTRING, 0 ) )
 			{
 				log( STATUS_FAIL, "config error : client-ip-addr undefined\n" );
-				return -1;
+				return false;
 			}
 
 			xconf.addr.s_addr = inet_addr( text );
@@ -862,7 +646,7 @@ long _CLIENT::func( void * )
 			if( !config.get_string( "client-ip-mask", text, MAX_CONFSTRING, 0 ) )
 			{
 				log( STATUS_FAIL, "config error : client-ip-mask undefined\n" );
-				return -1;
+				return false;
 			}
 
 			xconf.mask.s_addr = inet_addr( text );
@@ -914,7 +698,7 @@ long _CLIENT::func( void * )
 				if( !xconf.nscfg.nbns_count )
 				{
 					log( STATUS_FAIL, "config error : client-wins-addr undefined\n" );
-					return -1;
+					return false;
 				}
 
 				xconf.opts |= IPSEC_OPTS_NBNS;
@@ -953,7 +737,7 @@ long _CLIENT::func( void * )
 				if( !xconf.nscfg.dnss_count )
 				{
 					log( STATUS_FAIL, "config error : client-dns-addr undefined\n" );
-					return -1;
+					return false;
 				}
 
 				xconf.opts |= IPSEC_OPTS_DNSS;
@@ -1043,7 +827,7 @@ long _CLIENT::func( void * )
 	if( ikei.attach( 3000 ) != IPCERR_OK )
 	{
 		log( STATUS_FAIL, "failed to attach to key daemon\n" );
-		return -1;
+		return false;
 	}
 
 	log( STATUS_INFO, "attached to key daemon ...\n" );
@@ -1456,11 +1240,28 @@ long _CLIENT::func( void * )
 
 	connecting.alert();
 
+	return true;
+
+	config_failed:
+
+	ikei.detach();
+
+	log( STATUS_INFO, "detached from key daemon\n" );
+
+	return false;
+}
+
+bool _CLIENT::run_loop()
+{
+	IKEI_MSG msg;
+
 	//
 	// ---------- FEEDBACK LOOP ----------
 	//
 
 	long status;
+	long result;
+	BDATA btext;
 
 	while( true )
 	{
@@ -1553,11 +1354,237 @@ long _CLIENT::func( void * )
 		}
 	}
 
-	config_failed:
-
 	ikei.detach();
 
 	log( STATUS_INFO, "detached from key daemon\n" );
 
+	return true;
+}
+
+
+long _CLIENT::func( void * )
+{
+	if( !run_init() )
+		return -1;
+
+	if( !run_loop() )
+		return -1;
+
 	return 0;
+}
+
+_CLIENT::_CLIENT()
+{
+	memset( &stats, 0, sizeof( stats ) );
+
+	cstate = CLIENT_STATE_DISCONNECTED;
+	autoconnect = false;
+}
+
+_CLIENT::~_CLIENT()
+{
+}
+
+CLIENT_STATE _CLIENT::state()
+{
+	return cstate;
+}
+
+bool _CLIENT::opts( int argc, char ** argv )
+{
+	// read our command line args
+
+	bool syntax_error = false;
+
+	BDATA name;
+
+	for( int argi = 1; argi < argc; argi++ )
+	{
+		// remote site name
+
+		if( !strcmp( argv[ argi ], "-r" ) )
+		{
+			if( ++argi >= argc )
+			{
+				syntax_error = true;
+				break;
+			}
+
+			name.set(
+				argv[ argi ], strlen( argv[ argi ] ) + 1 );
+
+			continue;
+		}
+
+		// remote site username
+
+		if( !strcmp( argv[ argi ], "-u" ) )
+		{
+			if( ++argi >= argc )
+			{
+				syntax_error = true;
+				break;
+			}
+
+			username.set(
+				argv[ argi ], strlen( argv[ argi ] ) );
+
+			continue;
+		}
+
+		// remote site password
+
+		if( !strcmp( argv[ argi ], "-p" ) )
+		{
+			if( ++argi >= argc )
+			{
+				syntax_error = true;
+				break;
+			}
+
+			password.set(
+				argv[ argi ], strlen( argv[ argi ] ) );
+
+			continue;
+		}
+
+		// auto connect
+
+		if( !strcmp( argv[ argi ], "-a" ) )
+		{
+			autoconnect = true;
+			continue;
+		}
+
+		// syntax error
+
+		syntax_error = true;
+		break;
+	}
+
+	if( !name.size() )
+		syntax_error = true;
+
+	// handle any syntax errors
+
+	if( syntax_error )
+	{
+		log( STATUS_FAIL,
+			"invalid parameters specified ...\n" );
+
+		log( STATUS_INFO,
+			"%s -r \"name\" [ -u <user> ][ -p <pass> ][ -a ]\n"
+			" -r\tsite configuration path\n"
+			" -u\tconnection user name\n"
+			" -p\tconnection user password\n"
+			" -a\tauto connect\n",
+			app_name() );
+
+		return false;
+	}
+
+	// load the configuration file
+
+	if( !load( name ) )
+		return false;
+
+	return !syntax_error;
+}
+
+bool _CLIENT::load( BDATA & name )
+{
+	if( !name.size() )
+		return false;
+	
+	config.set_id( name.text() );
+
+	bool loaded = manager.file_vpn_load( config );
+	if( !loaded )
+	{
+		config.set_ispublic( true );
+		loaded = manager.file_vpn_load( config );
+	}
+
+	if( !loaded )
+	{
+		log( STATUS_FAIL, "failed to load \'%s\'\n",
+			name.text() );
+
+		return false;
+	}
+
+	log( STATUS_INFO, "config loaded for site \'%s\'\n",
+		name.text() );
+
+	return true;
+}
+
+bool _CLIENT::auto_connect()
+{
+	return autoconnect;
+}
+
+bool _CLIENT::user_credentials()
+{
+	char text[ MAX_CONFSTRING ];
+
+	if( config.get_string( "auth-method", text, MAX_CONFSTRING, 0 ) )
+		if( !strcmp( "hybrid-rsa-xauth", text ) ||
+			!strcmp( "hybrid-grp-xauth", text ) ||
+			!strcmp( "mutual-rsa-xauth", text ) ||
+			!strcmp( "mutual-psk-xauth", text ) )
+			return true;
+
+	return false;
+}
+
+bool _CLIENT::vpn_connect( bool wait_input )
+{
+	if( cstate != CLIENT_STATE_DISCONNECTED )
+	{
+		log( STATUS_FAIL,
+			"tunnel connected! try disconnecting first\n" );
+
+		return false;
+	}
+
+	if( config.get_id() == NULL )
+	{
+		log( STATUS_FAIL,
+			"no site configuration loaded\n" );
+
+		return false;
+	}
+
+	connecting.reset();
+
+	exec( NULL );
+
+	if( wait_input )
+		connecting.wait( -1 );
+
+	return true;
+}
+
+bool _CLIENT::vpn_disconnect()
+{
+	if( cstate == CLIENT_STATE_DISCONNECTED )
+	{
+		log( STATUS_FAIL,
+			"tunnel disconnected! try connecting first\n" );
+
+		return false;
+	}
+
+	if( config.get_id() == NULL )
+	{
+		log( STATUS_FAIL,
+			"no site configuration loaded\n" );
+
+		return false;
+	}
+	
+	ikei.wakeup();
+
+	return true;
 }

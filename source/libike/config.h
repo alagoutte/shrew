@@ -20,6 +20,7 @@
 # include <windows.h>
 # include <shlwapi.h>
 # include <shlobj.h>
+# include <string.h>
 #endif
 
 #ifdef UNIX
@@ -134,11 +135,6 @@ typedef class DLX _CONFIG_MANAGER
 
 	bool config_options_load();
 
-	bool registry_enumerate( CONFIG & config, int & index );
-	bool registry_vpn_load( CONFIG & config );
-	bool registry_vpn_save( CONFIG & config );
-	bool registry_vpn_del( CONFIG & config );
-
 	bool file_enumerate( CONFIG & config, int & index );
 	bool file_enumerate_public( CONFIG & config, int & index );
 	bool file_vpn_load( CONFIG & config );
@@ -148,6 +144,15 @@ typedef class DLX _CONFIG_MANAGER
 	bool file_vpn_del( CONFIG & config );
 
 	bool file_pcf_load( CONFIG & config, const char * path, bool & need_certs );
+
+#ifdef WIN32
+
+	bool registry_enumerate( CONFIG & config, int & index );
+	bool registry_vpn_load( CONFIG & config );
+	bool registry_vpn_save( CONFIG & config );
+	bool registry_vpn_del( CONFIG & config );
+
+#endif
 
 }CONFIG_MANAGER;
 

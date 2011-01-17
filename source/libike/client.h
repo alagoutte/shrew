@@ -98,6 +98,9 @@ typedef class DLX _CLIENT : public ITH_EXEC
 	virtual bool	set_stats() = 0;
 	virtual bool	set_status( long status, BDATA * text ) = 0;
 
+	bool	run_init();
+	bool	run_loop();
+
 	long	func( void * );
 
 	CONFIG			config;

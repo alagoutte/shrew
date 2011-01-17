@@ -272,6 +272,8 @@ _CONFIG_MANAGER::_CONFIG_MANAGER()
 		sites_user.add( path_appdata, strlen( path_appdata ) );
 		sites_user.add( path_sites, strlen( path_sites ) + 1 );
 
+#ifndef OPT_DLLPROJ
+
 		if( !PathFileExists( sites_user.text() ) )
 		{
 			CreateDirectory( sites_user.text(), NULL );
@@ -287,6 +289,8 @@ _CONFIG_MANAGER::_CONFIG_MANAGER()
 				config.del_all();
 			}
 		}
+
+#endif
 
 		char path_certs[] = "\\Shrew Soft VPN\\certs";
 
