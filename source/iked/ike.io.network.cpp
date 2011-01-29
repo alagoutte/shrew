@@ -317,7 +317,8 @@ long _IKED::process_ike_recv( PACKET_IKE & packet, IKE_SADDR & saddr_src, IKE_SA
 				&tunnel,
 				NULL,
 				&saddr_src,
-				true ) )
+				true,
+				false ) )
 		{
 			//
 			// attempt to locate a peer

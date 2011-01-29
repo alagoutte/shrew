@@ -109,10 +109,6 @@
 #include "xauth.h"
 #include "xconf.h"
 
-#ifdef OPT_DTP
-# include "libdtp.h"
-#endif
-
 //
 // Win32 specific
 //
@@ -537,13 +533,13 @@ typedef class _IKED
 	bool	vnet_get( VNET_ADAPTER ** adapter );
 	bool	vnet_rel( VNET_ADAPTER * adapter );
 
-	bool	client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel );
-	bool	client_cleanup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel );
+	bool	client_setup( IDB_TUNNEL * tunnel );
+	bool	client_cleanup( IDB_TUNNEL * tunnel );
 
 #ifdef OPT_DTP
 
-	bool	dnsproxy_setup( DTPI & dtpi, IDB_TUNNEL * tunnel );
-	void	dnsproxy_cleanup( DTPI & dtpi );
+	bool	dnsproxy_setup( IDB_TUNNEL * tunnel );
+	void	dnsproxy_cleanup( IDB_TUNNEL * tunnel );
 
 #endif
 

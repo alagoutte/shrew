@@ -126,11 +126,6 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 	IDB_PEER *		peer = NULL;
 	IDB_TUNNEL *	tunnel = NULL;
-	VNET_ADAPTER *	adapter = NULL;
-
-#ifdef OPT_DTP
-	DTPI dtpi;
-#endif
 
 	//
 	// enter client ctrl loop
@@ -138,9 +133,10 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 	IKEI_MSG msg;
 
-	bool failure = false;
+	bool detach = false;
+	bool suspended = false;
 
-	while( !failure )
+	while( !detach )
 	{
 		long result;
 
@@ -503,7 +499,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						if( peer == NULL )
 						{
 							log.txt( LLOG_ERROR, "!! : unable to create peer object\n" );
-							failure = true;
+							detach = true;
 							break;
 						}
 
@@ -530,7 +526,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						if( !peer->add( true ) )
 						{
 							log.txt( LLOG_ERROR, "!! : unable to add peer object\n" );
-							failure = true;
+							detach = true;
 							delete peer;
 							peer = NULL;
 							break;
@@ -543,7 +539,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						if( socket_lookup_addr(	peer->saddr, saddr_l ) != LIBIKE_OK )
 						{
 							log.txt( LLOG_ERROR, "!! : no route to host\n" );
-							failure = true;
+							detach = true;
 							break;
 						}
 
@@ -554,7 +550,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						if( socket_lookup_port( saddr_l, false ) != LIBIKE_OK )
 						{
 							log.txt( LLOG_ERROR, "!! : no socket for selected address\n" );
-							failure = true;
+							detach = true;
 							break;
 						}
 
@@ -566,7 +562,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						if( tunnel == NULL )
 						{
 							log.txt( LLOG_ERROR, "!! : unable to create tunnel object\n" );
-							failure = true;
+							detach = true;
 							break;
 						}
 
@@ -598,7 +594,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						if( !tunnel->add( true ) )
 						{
 							log.txt( LLOG_ERROR, "!! : unable to add tunnel object\n" );
-							failure = true;
+							detach = true;
 							delete tunnel;
 							tunnel = NULL;
 							break;
@@ -627,7 +623,51 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						ikei->send_message( msg );
 					}
 
-					continue;
+					break;
+				}
+
+				//
+				// suspend tunnel message
+				//
+
+				case IKEI_MSGID_SUSPEND:
+				{
+					long suspend = 0;
+
+					if( msg.get_suspend( &suspend ) != IPCERR_OK )
+					{
+						log.txt( LLOG_ERROR, "!! : failed to read tunnel suspend message\n" );
+						break;
+					}
+
+					if( suspend )
+					{
+						iked.ith_timer.del( &tunnel->event_stats );
+
+						log.txt( LLOG_DEBUG, "ii : suspended client control of tunnel\n" );
+						tunnel->suspended = true;
+						tunnel->ikei = NULL;
+						suspended = true;
+						detach = true;
+					}
+					else
+					{
+						if( !iked.idb_list_tunnel.find( true, &tunnel, NULL, NULL, false, true ) )
+						{
+							log.txt( LLOG_ERROR, "!! : failed to locate suspended tunnel\n" );
+							detach = true;
+							break;
+						}
+
+						log.txt( LLOG_DEBUG, "ii : resumed client control of tunnel\n" );
+						peer = tunnel->peer;
+						tunnel->suspended = false;
+						tunnel->ikei = ikei;
+
+						ith_timer.add( &tunnel->event_stats );
+					}
+
+					break;
 				}
 
 				default:
@@ -689,24 +729,11 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 				}
 
 				//
-				// if we require a virutal adapter
-				//
-
-				if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
-				{
-					if( !vnet_get( &adapter ) )
-					{
-						log.txt( LLOG_ERROR, "ii : unable to create vnet adapter ...\n" );
-						tunnel->close = XCH_FAILED_ADAPTER;
-						break;
-					}
-				}
-
-				//
 				// setup client parameters
 				//
 
-				client_setup( adapter, tunnel );
+				if( !client_setup( tunnel ) )
+					break;
 
 				msg.set_status( STATUS_INFO, "network device configured\n" );
 				ikei->send_message( msg );
@@ -722,8 +749,15 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 				//
 
 				#ifdef OPT_DTP
-				dnsproxy_setup( dtpi, tunnel );
+				dnsproxy_setup( tunnel );
 				#endif
+
+				//
+				// tunnel is enabled
+				//
+
+				msg.set_status( STATUS_CONNECTED, "tunnel connected\n" );
+				ikei->send_message( msg );
 
 				//
 				// add the statistics event
@@ -732,13 +766,6 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 				tunnel->inc( true );
 				tunnel->event_stats.delay = 1000;
 				ith_timer.add( &tunnel->event_stats );
-
-				//
-				// tunnel is enabled
-				//
-
-				msg.set_status( STATUS_CONNECTED, "tunnel connected\n" );
-				ikei->send_message( msg );
 
 				tunnel->tstate |= TSTATE_VNET_ENABLE;
 			}
@@ -752,13 +779,14 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 	if( tunnel == NULL )
 	{
 		//
-		// peer or tunnel setup failed
+		// tunnel configuration failed
 		//
 
-		msg.set_status( STATUS_FAIL, "client configuration error\n" );
+		msg.set_status( STATUS_FAIL, "tunnel configuration failed\n" );
 		ikei->send_message( msg );
 	}
-	else
+
+	if( ( tunnel != NULL ) && !suspended )
 	{
 		//
 		// cleanup client settings
@@ -778,23 +806,13 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 		if( tunnel->peer->xconf_mode == CONFIG_MODE_DHCP )
 			iked.socket_dhcp_remove( tunnel );
 
-		if( tunnel->tstate & TSTATE_VNET_ENABLE )
-			client_cleanup( adapter, tunnel );
-
 		//
 		// cleanup dns transparent proxy
 		//
 
 		#ifdef OPT_DTP
-		dnsproxy_cleanup( dtpi );
+		dnsproxy_cleanup( tunnel );
 		#endif
-
-		//
-		// release the adapter
-		//
-
-		if( adapter != NULL )
-			vnet_rel( adapter );
 
 		//
 		// flush our arp cache
@@ -909,20 +927,23 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 		//
 
 		tunnel->dec( true, true );
+		msg.set_status( STATUS_DISCONNECTED, "tunnel disconnected\n" );
 	}
 
 	//
-	// release the peer object
+	// perform peer cleanup
 	//
 
-	if( peer != NULL )
+	if( ( peer != NULL ) && !suspended )
+	{
 		peer->dec( true, true );
+		msg.set_status( STATUS_DISCONNECTED, "peer removed\n" );
+	}
 
 	//
 	// close the client interface
 	//
 
-	msg.set_status( STATUS_DISCONNECTED, "tunnel disconnected\n" );
 	ikei->send_message( msg );
 	ikei->detach();
 

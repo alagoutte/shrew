@@ -427,8 +427,11 @@ long _IKED::process_config_send( IDB_PH1 * ph1, IDB_CFG * cfg )
 	{
 		if( cfg->tunnel->peer->xconf_mode != CONFIG_MODE_DHCP )
 		{
-			cfg->tunnel->tstate |= TSTATE_VNET_CONFIG;
-			cfg->tunnel->ikei->wakeup();
+			if( !( cfg->tunnel->tstate & TSTATE_VNET_CONFIG ) )
+			{
+				cfg->tunnel->tstate |= TSTATE_VNET_CONFIG;
+				cfg->tunnel->ikei->wakeup();
+			}
 		}
 
 		cfg->status( XCH_STATUS_MATURE, XCH_NORMAL, 0 );

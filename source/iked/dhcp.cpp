@@ -598,7 +598,6 @@ long _IKED::process_dhcp_recv( IDB_TUNNEL * tunnel )
 			}
 
 			tunnel->tstate |= TSTATE_VNET_CONFIG;
-
 			tunnel->ikei->wakeup();
 		}
 	}

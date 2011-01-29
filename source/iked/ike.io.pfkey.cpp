@@ -425,6 +425,7 @@ long _IKED::pfkey_init_phase2( bool nail, u_int16_t plcytype, u_int32_t plcyid, 
 			&tunnel,
 			NULL,
 			&dst,
+			false, 
 			false ) )
 	{
 		//

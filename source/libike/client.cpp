@@ -667,7 +667,7 @@ bool _CLIENT::run_init()
 
 	// enable wins options
 
-	if( config.get_number( "client-wins-enable", &numb ) )
+	if( config.get_number( "client-wins-used", &numb ) )
 	{
 		if( numb )
 		{
@@ -1362,10 +1362,11 @@ bool _CLIENT::run_loop()
 }
 
 
-long _CLIENT::func( void * )
+long _CLIENT::func( void * arg )
 {
-	if( !run_init() )
-		return -1;
+	if( arg == ( void * ) 1 )
+		if( !run_init() )
+			return -1;
 
 	if( !run_loop() )
 		return -1;
@@ -1379,6 +1380,7 @@ _CLIENT::_CLIENT()
 
 	cstate = CLIENT_STATE_DISCONNECTED;
 	autoconnect = false;
+	suspended = false;
 }
 
 _CLIENT::~_CLIENT()
@@ -1390,13 +1392,13 @@ CLIENT_STATE _CLIENT::state()
 	return cstate;
 }
 
-bool _CLIENT::opts( int argc, char ** argv )
+OPT_RESULT _CLIENT::read_opts( int argc, char ** argv )
 {
+	site_name.del();
+
 	// read our command line args
 
 	bool syntax_error = false;
-
-	BDATA name;
 
 	for( int argi = 1; argi < argc; argi++ )
 	{
@@ -1405,26 +1407,64 @@ bool _CLIENT::opts( int argc, char ** argv )
 		if( !strcmp( argv[ argi ], "-r" ) )
 		{
 			if( ++argi >= argc )
-			{
-				syntax_error = true;
-				break;
-			}
+				return OPT_RESULT_SYNTAX_ERROR;
 
-			name.set(
+			site_name.set(
 				argv[ argi ], strlen( argv[ argi ] ) + 1 );
 
 			continue;
 		}
+
+#ifdef WIN32
+
+		if( !strcmp( argv[ argi ], "-s" ) )
+		{
+			// this takes a few trys some times,
+			// i have no idea why. we wait up to
+			// 10 seconds for the file.
+
+			int i = 0;
+			for( ; i < 20; i++ )
+			{
+				// read suspended site name from the
+				// control file under windows temp
+
+				char temp_path[ MAX_PATH ] = { 0 };
+				char file_path[ MAX_PATH ] = { 0 };
+
+				if( SHGetFolderPath(
+						NULL,
+						CSIDL_COMMON_APPDATA,
+						NULL,
+						SHGFP_TYPE_DEFAULT,
+						temp_path ) == S_OK )
+				{
+					sprintf_s( file_path, "%s\\Shrew Soft VPN\\sscp-login-info", temp_path );
+					if( site_name.file_load( file_path ) )
+					{
+						site_name.add( "", 1 );
+						DeleteFile( file_path );
+						break;
+					}
+				}
+
+				Sleep( 500 );
+			}
+
+			if( i >= 20 )
+				return OPT_RESULT_RESUME_ERROR;
+
+			suspended = true;
+			continue;
+		}
+#endif
 
 		// remote site username
 
 		if( !strcmp( argv[ argi ], "-u" ) )
 		{
 			if( ++argi >= argc )
-			{
-				syntax_error = true;
-				break;
-			}
+				return OPT_RESULT_SYNTAX_ERROR;
 
 			username.set(
 				argv[ argi ], strlen( argv[ argi ] ) );
@@ -1437,10 +1477,7 @@ bool _CLIENT::opts( int argc, char ** argv )
 		if( !strcmp( argv[ argi ], "-p" ) )
 		{
 			if( ++argi >= argc )
-			{
-				syntax_error = true;
-				break;
-			}
+				return OPT_RESULT_SYNTAX_ERROR;
 
 			password.set(
 				argv[ argi ], strlen( argv[ argi ] ) );
@@ -1458,45 +1495,37 @@ bool _CLIENT::opts( int argc, char ** argv )
 
 		// syntax error
 
-		syntax_error = true;
-		break;
+		return OPT_RESULT_SYNTAX_ERROR;
 	}
 
-	if( !name.size() )
-		syntax_error = true;
+	// make sure we have a site name
 
-	// handle any syntax errors
+	if( !site_name.size() )
+		return OPT_RESULT_SYNTAX_ERROR;
 
-	if( syntax_error )
-	{
-		log( STATUS_FAIL,
-			"invalid parameters specified ...\n" );
-
-		log( STATUS_INFO,
-			"%s -r \"name\" [ -u <user> ][ -p <pass> ][ -a ]\n"
-			" -r\tsite configuration path\n"
-			" -u\tconnection user name\n"
-			" -p\tconnection user password\n"
-			" -a\tauto connect\n",
-			app_name() );
-
-		return false;
-	}
-
-	// load the configuration file
-
-	if( !load( name ) )
-		return false;
-
-	return !syntax_error;
+	return OPT_RESULT_SUCCESS;
 }
 
-bool _CLIENT::load( BDATA & name )
+void _CLIENT::show_help()
 {
-	if( !name.size() )
+	log( STATUS_FAIL,
+		"invalid parameters specified ...\n" );
+
+	log( STATUS_INFO,
+		"%s -r \"name\" [ -u <user> ][ -p <pass> ][ -a ]\n"
+		" -r\tsite configuration path\n"
+		" -u\tconnection user name\n"
+		" -p\tconnection user password\n"
+		" -a\tauto connect\n",
+		app_name() );
+}
+
+bool _CLIENT::config_load()
+{
+	if( !site_name.size() )
 		return false;
 	
-	config.set_id( name.text() );
+	config.set_id( site_name.text() );
 
 	bool loaded = manager.file_vpn_load( config );
 	if( !loaded )
@@ -1508,13 +1537,13 @@ bool _CLIENT::load( BDATA & name )
 	if( !loaded )
 	{
 		log( STATUS_FAIL, "failed to load \'%s\'\n",
-			name.text() );
+			site_name.text() );
 
 		return false;
 	}
 
 	log( STATUS_INFO, "config loaded for site \'%s\'\n",
-		name.text() );
+		site_name.text() );
 
 	return true;
 }
@@ -1558,7 +1587,7 @@ bool _CLIENT::vpn_connect( bool wait_input )
 
 	connecting.reset();
 
-	exec( NULL );
+	exec( ( void * ) 1 );
 
 	if( wait_input )
 		connecting.wait( -1 );
@@ -1585,6 +1614,42 @@ bool _CLIENT::vpn_disconnect()
 	}
 	
 	ikei.wakeup();
+
+	return true;
+}
+
+bool _CLIENT::vpn_suspend()
+{
+	IKEI_MSG msg;
+	msg.set_suspend( 1 );
+	if( ikei.send_message( msg ) != IPCERR_OK )
+		return false;
+
+	return true;
+}
+
+bool _CLIENT::vpn_resume()
+{
+	if( ikei.attach( 3000 ) != IPCERR_OK )
+	{
+		log( STATUS_FAIL, "failed to attach to key daemon\n" );
+		return false;
+	}
+
+	log( STATUS_INFO, "attached to key daemon ...\n" );
+
+	IKEI_MSG msg;
+	msg.set_suspend( 0 );
+	if( ikei.send_message( msg ) != IPCERR_OK )
+	{
+		log( STATUS_INFO, "failed to resume vpn connection\n" );
+		return false;
+	}
+
+	cstate = CLIENT_STATE_CONNECTED;
+	set_status( STATUS_CONNECTED, NULL );
+
+	exec( ( void * ) 0 );
 
 	return true;
 }

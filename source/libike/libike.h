@@ -77,13 +77,14 @@
 
 #define IKEI_MSGID_RESULT			1
 #define IKEI_MSGID_ENABLE			2
-#define IKEI_MSGID_STATUS			3
-#define IKEI_MSGID_PEER				4
-#define IKEI_MSGID_PROPOSAL			5
-#define IKEI_MSGID_CLIENT			6
-#define IKEI_MSGID_NETWORK			7
-#define IKEI_MSGID_CFGSTR			8
-#define IKEI_MSGID_STATS			9
+#define IKEI_MSGID_SUSPEND			3
+#define IKEI_MSGID_STATUS			4
+#define IKEI_MSGID_PEER				5
+#define IKEI_MSGID_PROPOSAL			6
+#define IKEI_MSGID_CLIENT			7
+#define IKEI_MSGID_NETWORK			8
+#define IKEI_MSGID_CFGSTR			9
+#define IKEI_MSGID_STATS			10
 
 #define IKEI_RESULT_OK				0
 #define IKEI_RESULT_FAILED			1
@@ -165,6 +166,9 @@ typedef class DLX _IKEI_MSG : public BDATA
 
 	long	get_enable( long * enable );
 	long	set_enable( long enable );
+
+	long	get_suspend( long * suspend );
+	long	set_suspend( long suspend );
 
 	long	get_peer( IKE_PEER * peer );
 	long	set_peer( IKE_PEER * peer );

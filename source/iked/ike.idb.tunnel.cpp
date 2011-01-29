@@ -290,7 +290,7 @@ bool _ITH_EVENT_TUNSTATS::func()
 	// message once every second
 	//
 
-	if( !( tunnel->close ) && ( tunnel->tstate & TSTATE_VNET_ENABLE ) )
+	if( !( tunnel->close ) )
 	{
 		tunnel->stats.peer = tunnel->saddr_r;
 		tunnel->stats.natt = tunnel->natt_version;
@@ -312,7 +312,7 @@ IDB_TUNNEL * _IDB_LIST_TUNNEL::get( int index )
 	return static_cast<IDB_TUNNEL*>( get_entry( index ) );
 }
 
-bool _IDB_LIST_TUNNEL::find( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, IKE_SADDR * saddr, bool port )
+bool _IDB_LIST_TUNNEL::find( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, IKE_SADDR * saddr, bool port, bool suspended )
 {
 	if( tunnel != NULL )
 		*tunnel = NULL;
@@ -341,6 +341,14 @@ bool _IDB_LIST_TUNNEL::find( bool lock, IDB_TUNNEL ** tunnel, long * tunnelid, I
 
 		if( saddr != NULL )
 			if( !cmp_sockaddr( tmp_tunnel->saddr_r.saddr, saddr->saddr, port ) )
+				continue;
+
+		//
+		// match suspended value
+		//
+
+		if( suspended )
+			if( !tmp_tunnel->suspended )
 				continue;
 
 		iked.log.txt( LLOG_DEBUG, "DB : tunnel found\n" );
@@ -377,6 +385,12 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_XCONF * set_xconf, IKE_SADDR 
 {
 	ikei = NULL;
 
+#ifdef OPT_DTP
+	dtpi = NULL;
+#endif
+
+	adapter = NULL;
+
 	//
 	// tunnels are removed immediately
 	// when the refcount reaches zero
@@ -387,6 +401,7 @@ _IDB_TUNNEL::_IDB_TUNNEL( IDB_PEER * set_peer, IKE_XCONF * set_xconf, IKE_SADDR 
 	tstate = 0;
 	lstate = 0;
 	close = XCH_NORMAL;
+	suspended = false;
 
 	natt_version = IPSEC_NATT_NONE;
 	dhcp_sock = INVALID_SOCKET;

@@ -171,6 +171,17 @@ long _IKEI_MSG::set_enable( long enable )
 	return set_basic( enable );
 }
 
+long _IKEI_MSG::get_suspend( long * suspend )
+{
+	return get_basic( suspend );
+}
+
+long _IKEI_MSG::set_suspend( long suspend )
+{
+	init( IKEI_MSGID_SUSPEND );
+	return set_basic( suspend );
+}
+
 long _IKEI_MSG::get_peer( IKE_PEER * peer )
 {
 	return get_struct( 0, peer, sizeof( IKE_PEER ) );

@@ -42,6 +42,10 @@
 #ifndef _IKE_IDB_H_
 #define _IKE_IDB_H_
 
+#ifdef OPT_DTP
+# include "libdtp.h"
+#endif
+
 //==============================================================================
 // standard IDB derived classes
 //==============================================================================
@@ -554,9 +558,16 @@ typedef class _IDB_TUNNEL : public IKED_RC_ENTRY
 	long		tstate;
 	long		lstate;
 	long		natt_version;
+	bool		suspended;
 
 	IDB_PEER *	peer;
 	IKEI *		ikei;
+
+#ifdef OPT_DTP
+	DTPI *		dtpi;
+#endif
+
+	VNET_ADAPTER * adapter;
 
 	IKE_SADDR	saddr_l;
 	IKE_SADDR	saddr_r;
@@ -616,7 +627,8 @@ typedef class _IDB_LIST_TUNNEL : public IKED_RC_LIST
 			IDB_TUNNEL ** tunnel,
 			long * tunnelid,
 			IKE_SADDR * saddr,
-			bool port );
+			bool port,
+			bool suspended );
 
 }IDB_LIST_TUNNEL;
 

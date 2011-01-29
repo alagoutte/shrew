@@ -60,6 +60,13 @@
 #include "export.h"
 #include "version.h"
 
+enum OPT_RESULT
+{
+	OPT_RESULT_SUCCESS,
+	OPT_RESULT_SYNTAX_ERROR,
+	OPT_RESULT_RESUME_ERROR
+};
+
 enum CLIENT_STATE
 {
 	CLIENT_STATE_DISCONNECTED,
@@ -75,6 +82,8 @@ typedef class DLX _CLIENT : public ITH_EXEC
 	ITH_COND		connecting;
 	CONFIG_MANAGER	manager;
 
+	BDATA site_name;
+
 	IKE_PEER		peer;
 	IKE_XCONF       xconf;
 	IKE_PROPOSAL    proposal_isakmp;
@@ -88,7 +97,8 @@ typedef class DLX _CLIENT : public ITH_EXEC
 	BDATA	username;
 	BDATA	password;
 	bool	autoconnect;
-
+	bool	suspended;
+	
 	virtual const char * app_name() = 0;
 
 	virtual bool	get_username() = 0;
@@ -111,9 +121,11 @@ typedef class DLX _CLIENT : public ITH_EXEC
 	_CLIENT();
 	virtual ~_CLIENT();
 
-	bool		opts( int argc, char ** argv );
-	bool		load( BDATA & name );
-	bool		save( BDATA & name );
+	OPT_RESULT	read_opts( int argc, char ** argv );
+	void		show_help();
+
+	bool		config_load();
+	bool		config_save();
 
 	CLIENT_STATE	state();
 
@@ -122,6 +134,9 @@ typedef class DLX _CLIENT : public ITH_EXEC
 
 	bool		vpn_connect( bool wait_input );
 	bool		vpn_disconnect();
+
+	bool		vpn_suspend();
+	bool		vpn_resume();
 
 	virtual bool	log( long code, const char * format, ... ) = 0;
 

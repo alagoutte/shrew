@@ -465,7 +465,18 @@ _IDB_PH1::~_IDB_PH1()
 	// derefrence our tunnel
 	//
 
-	tunnel->dec( false );
+	if( xch_errorcode != XCH_FAILED_EXPIRED )
+	{
+		//
+		// if there was an error negotiating phase1,
+		// set a tunnel close error
+		//
+
+		tunnel->close = xch_errorcode;
+		tunnel->dec( false, true );
+	}
+	else
+		tunnel->dec( false );
 }
 
 //------------------------------------------------------------------------------
@@ -639,21 +650,6 @@ void _IDB_PH1::end()
 				XCH_STATUS_MATURE,
 				NULL ) )
 			xch_errorcode = XCH_FAILED_EXPIRED;
-
-	//
-	// if this is a client tunnel and there
-	// was an error negotiating phase1, set
-	// a close error message
-	//
-
-	if( tunnel->peer->contact == IPSEC_CONTACT_CLIENT )
-	{
-		if( xch_errorcode != XCH_FAILED_EXPIRED )
-		{
-			tunnel->close = xch_errorcode;
-			tunnel->ikei->wakeup();
-		}
-	}
 }
 
 //------------------------------------------------------------------------------
