@@ -243,44 +243,96 @@ X Fix quick disconnects after negotiating with a cisco gateway
 X Add Dialup/PPP adapter support for Vista Platforms
 X Fix a critical bug in the windows libvflt ip forward caching code
 X Add proper support for multiple NAT-T hash values
-X Fix negotiation issues with Cisco PIX devices
-X Add support for Cisco Unity LOAD-BALANCE notifications
 
 2.1.5 release - Bug fix and fine tuning
 ----------------------------------------------------------------------
-X Add proper support for multiple certificate request payloads
-X Fix problems with power state transition in NDIS 5 filter driver
+X Add support for Cisco hybrid mode authentication ( mutual group )
+X Add support for Cisco PCF file import
+X Add support for auto uninstall during install of Windows package
+X Add support for the XAuth radius chap method
+X Add support for correctly handling multiple certificate requests
+X Fix Checkpoint authentication regressions
+X Fix reported link speed issue with virtual network driver
+X Fix various kernel driver related issues reported by users
+X Fix problems with resolv.conf file generation on unix platforms
+X Fix NAT-T configuration issue
 
-2.2.0 release - Remote access server support
+2.1.6 release - Bug fix and fine tuning
 ----------------------------------------------------------------------
-X Use overlapped IO to interface with the windows filter driver
-X Note the connection time and display this as a tooltip
-X Use bdata instead of openssl key struct pointer in keyfile code
-X Fix secrity flaws in the ipc server admin code
-X Validate and document support for Sidewinder gateways
+X Fix problem with direct adapter mode DNS configuration
+X Fix DHCP over IPsec via DHCP adapters by immitating a bootp relay
+X Fix DHCP pool exhaustion issue by retaining fake MAC see value
+X Fix ESP payload padding issue with Adtran gateways
+X Fix runtime creation of virtual adapter instances on Vista/7
+X Fix dropped packets issues with vflt socket wrappers
+X Fix uninstall issue that occured when Novell client was installed
+X Fix kernel driver crash due to WANLINE (PPP/PPTP) notify parsing
+X Fix various kernel driver issues blocking DTM controller tests
+X Fix a bug related to using the IKE Fragmentation extestion
+X Fix a bug in IKE push mode that called a pull handler instead
+X Use a different port for DNS proxy to avoid 3rd party conflicts
+X Add support for overlapping local and remote networks
+X Add support for shared policy generation mode
+X Add manifest files so users are prompted for elevated privileges
+X Add pid file support on Linux/BSD platforms
+X Add support for reporting the UNITY app version and firewall type
+X Improve adapter/address selection for multiple inet connections
+X Initial kernel driver versions signed by Microsoft WHQL
+
+2.1.7 release - Bug fix and fine tuning
+----------------------------------------------------------------------
+X Fix negotiation of tunnel-all ( 0.0.0.0/0 ) configurations in iked
+X Fix inbound SA negotiation with shared policy generation mode
+X Fix iproute deletion issue on Vista/7 platforms
+X Fix import of PCF files with non-encrypted password
+X Apply IPsec policy and filename promts fixed from Michael Kenny
+X Improve DNS Proxy divert rule management
+
+2.2.0 release - Major feature improvements
+----------------------------------------------------------------------
+X Add Qt4 gui components to replace Qt3 components on Linux/BSD
+X Add console based VPN Connect component on Linux/BSD ( non-gui )
+X Add initial support for Intel Mac OSX platforms w/ DMG installer
 X Add an option for selecting a randomized virtual subnet address
 X Add GUI support for multiple DNS/WINS server addresses
-X Fix problems with resolv.conf file generation on unix platforms
 X Add support for automatic stable software update checks
+X Add text that displays the connection time in system tray tooltip
+X Add support for Sidewinder 6.x, 7.x gateways ( merged to 2.1.x )
+X Add support for Netgear gateways ( merged to 2.1.x )
+X Fix secrity flaws in the ipc server admin code
 X Fix slow responsiveness duing DHCP over IPsec negotiations
-X Validate and document support for Netgear gateways
-X Add support for the XAuth Radius CHAP method
-X Fix negotiation of tunnel-all ( 0.0.0.0/0 ) configurations in iked
-X Move to Qt4 for unix client GUI components
-X Make all libs build and link as shared ojects on unix platform
-X Add support for negotiating cisco-udp encapsulation
-. Fix multiple assigned adapter addresses with DHCP over IPsec
-. Fix hibernate high utilization loop problem in iked
-. Fix problem with direct adapter mode DNS configuration
-? Fix reverse DNS lookup issues
-. Add support for Cisco PCF file import
-. Make the client config subordinate to the phase1 handle
-. Make the config exchange handle subordinate to the phase1 handle
-. Remove all references to the obsolete COMPAT policy mode
-. Fix the server mode support in iked
-. Verify support for multiple simultaneous VPN connections
-. Improve site configuration policy entry documentation
-. Update all man pages
+X Fix reverse DNS lookup issues with DNS proxy daemon
+X Make the client config subordinate to the phase1 handle
+X Use bdata instead of openssl key struct pointer in keyfile code
+X Use overlapped IO to interface with the windows filter driver
+X Fix the 500ms wakeup issue by avoiding vflt select-like calls
+X Fix all memory leaks reported by various debugging tools
+X Fix TCP LSO task offload in vflt driver on Vista/7 platforms
+X Fix WLAN virtual adapter issue reported on mailing list
+X Fix dialog color issues for windows HCB accessibility modes
+X Fix keyboard navigation to site profiles in access manager
+X Fix reported problems with DHCP over IPsec
+X Add support for newer openssl supported message auth algorithms
+X Add support for both ike and pfs dh groups 16, 17 and 18
+X Add support for unattended installations ( needs signed drivers )
+X Make all client platforms use file based site configurations
+X Make certificate data an embedded component of the site config
+X Add support for public site configurations on Windows Platforms
+. Add support for Secure Domain Login on Vista/7 platforms
+. Add support for encrypted site configuration storage
+. Fix DNS setting issues with newer Mac OSX platforms
+. Investigate PPP vs Virtual Adapter DNS preference issue
+. Improve support for automatic stable software update checks
+. Cleanup all references to the obsolete COMPAT policy mode
+. Cleanup registry based site configuration data
+. Test all rsa key file scenarios that use password protection
+
+2.2.1 release - Bug fix and fine tuning
+----------------------------------------------------------------------
+. Fix or add all documented command line options in iked
+. Fix handling of low-power-state notifications in iked on Windows
+. Add support for two factor user authentication methods
+. Apply Qt4 French translation patch from Alexis Lagoutte
 
 Near Term Goals
 ----------------------------------------------------------------------
@@ -292,7 +344,6 @@ x Validate and document support for Checkpoint gateways
 . Validate and document support for Lancom gateways
 . Cleanup libpfk, its really ugly
 . Fix static buffer usage for temporary string data
-. Add support for encrypted configuration storage
 ? Use Qt4 to build unified cross platform GUI components
 ? Add ability to drag site connections as shortcuts
 ? Add support for client connect/disconnect script execution
@@ -303,11 +354,8 @@ x Validate and document support for Checkpoint gateways
 
 Long Term Goals
 ----------------------------------------------------------------------
-. Finalized kernel drivers signed by Microsoft WHQL
-. Add support for Intel Mac OSX platforms
+. Fix the server mode support in iked
 . Write a setkey replacement based on libpfk
-. Add support for unattended installations ( needs signed drivers )
-. Secure Domain Login
 . Stateful client side firewall
 . Create lightweight kernel or userland buildable crypto library
 . Move ip security processing into the kernel
