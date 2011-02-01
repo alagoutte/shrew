@@ -653,10 +653,21 @@ bool _IKED::vnet_rel( VNET_ADAPTER * adapter )
 	return true;
 }
 
-bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
+bool _IKED::client_setup( IDB_TUNNEL * tunnel )
 {
 	if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
 	{
+		//
+		// acquire virtual adapter
+		//
+
+		if( !vnet_get( &tunnel->adapter ) )
+		{
+			log.txt( LLOG_ERROR, "ii : unable to create tap adapter ...\n" );
+
+			return false;
+		}
+
 		//
 		// open socket for configuration
 		//
@@ -676,12 +687,12 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 
 		struct ifreq ifr;
 		memset( &ifr, 0, sizeof( struct ifreq ) );
-		strncpy( ifr.ifr_name, adapter->name, IFNAMSIZ );
+		strncpy( ifr.ifr_name, tunnel->adapter->name, IFNAMSIZ );
 
 		if( ioctl( sock, SIOCGIFFLAGS, &ifr ) < 0 )
 		{
 			log.txt( LLOG_ERROR, "!! : failed to get interface flags %s for ( %s )\n",
-				adapter->name, strerror( errno ) );
+				tunnel->adapter->name, strerror( errno ) );
 
 			close( sock );
 			return false;
@@ -692,7 +703,7 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 		if( ioctl( sock, SIOCSIFFLAGS, &ifr ) < 0 )
 		{
 			log.txt( LLOG_ERROR, "!! : failed to set interface flags %s for ( %s )\n",
-				adapter->name, strerror( errno ) );
+				tunnel->adapter->name, strerror( errno ) );
 
 			close( sock );
 			return false;
@@ -757,7 +768,7 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 
 		struct ifaliasreq ifra;
 		memset( &ifra, 0, sizeof( struct ifaliasreq ) );
-		strncpy( ifra.ifra_name, adapter->name, IFNAMSIZ );
+		strncpy( ifra.ifra_name, tunnel->adapter->name, IFNAMSIZ );
 
 		struct sockaddr_in * addr = ( struct sockaddr_in * ) &( ifra.ifra_addr );
 		addr->sin_family = AF_INET;
@@ -779,7 +790,7 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 		if( ioctl( sock, SIOCAIFADDR, &ifra ) < 0 )
 		{
 			log.txt( LLOG_ERROR, "!! : failed to configure address for %s ( %s )\n",
-				adapter->name, strerror( errno ) );
+				tunnel->adapter->name, strerror( errno ) );
 
 			close( sock );
 			return false;
@@ -796,7 +807,7 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 		if( ioctl( sock, SIOCSIFMTU, &ifr ) != 0 )
 		{
 			log.txt( LLOG_ERROR, "!! : failed to configure MTU for %s ( %s )\n",
-				adapter->name, strerror( errno ) );
+				tunnel->adapter->name, strerror( errno ) );
 
 			close( sock );
 			return false;
@@ -809,7 +820,7 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 		if( ioctl( sock, SIOCGIFFLAGS, &ifr ) < 0 )
 		{
 			log.txt( LLOG_ERROR, "!! : failed to get interface flags for %s ( %s )\n",
-				adapter->name, strerror( errno ) );
+				tunnel->adapter->name, strerror( errno ) );
 
 			close( sock );
 			return false;
@@ -820,7 +831,7 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 	        if( ioctl( sock, SIOCSIFFLAGS, &ifr ) < 0 )
 		{
 			log.txt( LLOG_ERROR, "!! : failed to set interface flags for %s ( %s )\n",
-				adapter->name, strerror( errno ) );
+				tunnel->adapter->name, strerror( errno ) );
 
 			close( sock );
 			return false;
@@ -828,7 +839,8 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 
 		close( sock );
 
-		log.txt( LLOG_INFO, "ii : configured adapter %s\n", adapter->name );
+		log.txt( LLOG_INFO, "ii : configured adapter %s\n",
+			tunnel->adapter->name );
 	}
 
 	if( tunnel->xconf.opts & ( IPSEC_OPTS_DNSS | IPSEC_OPTS_DOMAIN ) )
@@ -889,7 +901,7 @@ bool _IKED::client_setup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 	return true;
 }
 
-bool _IKED::client_cleanup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
+bool _IKED::client_cleanup( IDB_TUNNEL * tunnel )
 {
 	if( tunnel->xconf.opts & ( IPSEC_OPTS_DNSS | IPSEC_OPTS_DOMAIN ) )
 	{
@@ -898,7 +910,14 @@ bool _IKED::client_cleanup( VNET_ADAPTER * adapter, IDB_TUNNEL * tunnel )
 		rename( "/etc/resolv.iked", "/etc/resolv.conf" );
 	}
 
+	if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
+	{
+		if( tunnel->adapter != NULL )
+		{
+			vnet_rel( tunnel->adapter );
+			tunnel->adapter = NULL;
+		}
+	}
+
 	return true;
 }
-
-

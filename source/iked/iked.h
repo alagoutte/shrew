@@ -144,7 +144,6 @@ namespace yy{ class conf_parser; };
 
 #endif
 
-
 //
 // IKED constants
 //
@@ -293,25 +292,6 @@ namespace yy{ class conf_parser; };
 //
 // IKED main classes and structures
 //
-
-#ifdef UNIX
-
-typedef struct _SOCK_INFO : public IDB_ENTRY
-{
-	int			sock;
-	IKE_SADDR	saddr;
-	bool		natt;
-
-}SOCK_INFO;
-
-typedef struct _VNET_ADAPTER
-{
-	int	fn;
-	char	name[ IFNAMSIZ ];
-
-}VNET_ADAPTER;
-
-#endif
 
 typedef class _IKED_EXEC : public _ITH_EXEC
 {

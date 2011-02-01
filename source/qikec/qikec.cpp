@@ -55,11 +55,24 @@ bool _QIKEC::init( int argc, char ** argv, qikecRoot * setRoot )
 
 	// load our command line options
 
-	if( !qikec.opts( argc, argv ) )
+	if( qikec.read_opts( argc, argv ) != OPT_RESULT_SUCCESS )
 	{
 		r->lineEditUsername->setEnabled( false );
 		r->lineEditPassword->setEnabled( false );
 		r->pushButtonConnect->setEnabled( false );
+
+		qikec.show_help();
+
+		return false;
+	}
+
+	if( !qikec.config_load() )
+	{
+		r->lineEditUsername->setEnabled( false );
+		r->lineEditPassword->setEnabled( false );
+		r->pushButtonConnect->setEnabled( false );
+
+		return false;
 	}
 
 	if( username.size() )

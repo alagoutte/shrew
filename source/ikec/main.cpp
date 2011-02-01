@@ -58,13 +58,21 @@ int main( int argc, char ** argv )
 
 	// read our command line args
 
-	if( !ikec.opts( argc, argv ) )
+	if( ikec.read_opts( argc, argv ) != OPT_RESULT_SUCCESS )
+	{
+		ikec.show_help();
 		return -1;
+	}
 
-	// autoconnect if requested
+	// load our site configuration
 
-	if( ikec.auto_connect() )
-		ikec.vpn_connect( true );
+	if( ikec.config_load() )
+	{
+		// autoconnect if requested
+
+		if( ikec.auto_connect() )
+			ikec.vpn_connect( true );
+	}
 
 	// process user input
 
