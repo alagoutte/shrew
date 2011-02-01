@@ -790,6 +790,14 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 	if( ( tunnel != NULL ) && !suspended )
 	{
 		//
+		// cleanup dns transparent proxy
+		//
+
+		#ifdef OPT_DTP
+		dnsproxy_cleanup( tunnel );
+		#endif
+
+		//
 		// cleanup client settings
 		//
 		// NOTE : policy cleanup must be done here to
@@ -808,12 +816,10 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 			iked.socket_dhcp_remove( tunnel );
 
 		//
-		// cleanup dns transparent proxy
+		// setup client parameters
 		//
 
-		#ifdef OPT_DTP
-		dnsproxy_cleanup( tunnel );
-		#endif
+		client_cleanup( tunnel );
 
 		//
 		// flush our arp cache
