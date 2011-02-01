@@ -647,6 +647,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						log.txt( LLOG_DEBUG, "ii : suspended client control of tunnel\n" );
 						tunnel->suspended = true;
 						tunnel->ikei = NULL;
+						tunnel->dec( true );
 						suspended = true;
 						detach = true;
 					}
