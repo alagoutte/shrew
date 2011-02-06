@@ -722,7 +722,7 @@ bool _IKED::client_setup( IDB_TUNNEL * tunnel )
 		if( ioctl( sock, SIOCSIFADDR, &ifr ) != 0 )
 		{
 			log.txt( LLOG_ERROR, "!! : failed to configure address for %s ( %s )\n",
-				adapter->name, strerror( errno ) );
+				tunnel->adapter->name, strerror( errno ) );
 
 			close( sock );
 			return false;
@@ -737,7 +737,7 @@ bool _IKED::client_setup( IDB_TUNNEL * tunnel )
 		if( ioctl( sock, SIOCSIFNETMASK, &ifr ) != 0 )
 		{
 			log.txt( LLOG_ERROR, "!! : failed to configure netmask for %s ( %s )\n",
-				adapter->name, strerror( errno ) );
+				tunnel->adapter->name, strerror( errno ) );
 
 			close( sock );
 			return false;
@@ -754,7 +754,7 @@ bool _IKED::client_setup( IDB_TUNNEL * tunnel )
 		if( ioctl( sock, SIOCSIFBRDADDR, &ifr ) != 0 )
 		{
 			log.txt( LLOG_ERROR, "!! : failed to configure broadcast address for %s ( %s )\n",
-				adapter->name, strerror( errno ) );
+				tunnel->adapter->name, strerror( errno ) );
 
 			close( sock );
 			return false;
