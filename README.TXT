@@ -184,6 +184,10 @@ for linux platforms. Please see the OPTIONS section for more details.
 
 cmake -DCMAKE_INSTALL_PREFIX=/usr -DQTGUI=YES -DETCDIR=/etc -DNATT=YES
 
+For 64 bit Linux systems, most distributions store native 64bit library files
+in a unique path. The option for this is -LIBDIR=/usr/lib64 or the appropriate
+directory path.
+
 NOTE : It may also be necessary to add the KRNINC option to specify the kernel
 header file path on older versions of Linux.
 
