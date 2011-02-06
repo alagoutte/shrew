@@ -361,7 +361,7 @@ bool _CONFIG_MANAGER::file_vpn_save( CONFIG & config, const char * path )
 				break;
 
 			case DATA_NUMBER:
-				fprintf( fp, "n:%s:%i\n", cfgdat->key.text(), cfgdat->nval );
+				fprintf( fp, "n:%s:%li\n", cfgdat->key.text(), cfgdat->nval );
 				break;
 
 			case DATA_BINARY:
