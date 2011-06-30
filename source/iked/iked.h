@@ -785,7 +785,7 @@ typedef class _IKED
 	LOG	log;	// generic log object
 
 	long	init( long setlevel );
-	long	halt();
+	long	halt( bool terminate );
 	void	loop();
 
 }IKED;

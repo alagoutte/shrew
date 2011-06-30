@@ -447,32 +447,48 @@ void _IKED::loop()
 	crypto_done();
 }
 
-long _IKED::halt()
+long _IKED::halt( bool terminate )
 {
-	log.txt( LLOG_INFO,
-		"ii : halt signal received, shutting down\n" );
+	if( terminate )
+	{
+		log.txt( LLOG_INFO,
+			"ii : hard halt signal received, shutting down\n" );
 
-	//
-	// exit event timer loop
-	//
+		//
+		// exit event timer loop
+		//
 
-	ith_timer.end();
+		ith_timer.end();
 
-	//
-	// remove all top level db objects
-	//
+		//
+		// remove all top level db objects
+		//
 
-	idb_list_peer.clean();
+		idb_list_peer.clean();
 
-	cond_idb.wait( -1 );
+		cond_idb.wait( -1 );
 
-	//
-	// terminate all thread loops
-	//
+		//
+		// terminate all thread loops
+		//
 
-	ikes.wakeup();
-	pfki.wakeup();
-	socket_wakeup();
+		ikes.wakeup();
+		pfki.wakeup();
+		socket_wakeup();
+	}
+	else
+	{
+		log.txt( LLOG_INFO,
+			"ii : soft halt signal received, closing tunnels\n" );
+
+		//
+		// remove all top level db objects
+		//
+
+		idb_list_peer.clean();
+
+		cond_idb.wait( -1 );
+	}
 
 	return LIBIKE_OK;
 }

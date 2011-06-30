@@ -129,37 +129,17 @@ void service_del( char * path )
 		printf( "!! : unable to deregister service\n" );
 }
 
-void __stdcall service_ctrl( DWORD opcode ) 
+DWORD __stdcall service_ctrl( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext ) 
 {
-	switch( opcode )
-	{ 
-		case SERVICE_CONTROL_PAUSE:
-
-			//
-			// pause daemon operation
-			//
-
-			service_status.dwCurrentState = SERVICE_PAUSED; 
-
-			break; 
-
-		case SERVICE_CONTROL_CONTINUE: 
-
-			//
-			// continue daemon operation
-			//
-
-			service_status.dwCurrentState = SERVICE_RUNNING; 
-
-			break;
-
+	switch( dwControl )
+	{
 		case SERVICE_CONTROL_STOP: 
 
 			//
 			// stop daemon operation
 			//
 
-			iked.halt();
+			iked.halt( true );
 
 			break;
 
@@ -169,7 +149,31 @@ void __stdcall service_ctrl( DWORD opcode )
 			// send service status update
 			//
 
-			break; 
+			break;
+
+		case SERVICE_CONTROL_POWEREVENT:
+
+			//
+			// power event notifications
+			//
+
+			if( dwEventType == PBT_APMSUSPEND )
+			{
+				iked.log.txt( LLOG_DEBUG,
+					"ii : SERVICE_CONTROL_POWEREVENT -> PBT_APMSUSPEND\n" );
+
+				iked.halt( false );
+			}
+
+			if( dwEventType == PBT_APMRESUMEAUTOMATIC )
+				iked.log.txt( LLOG_DEBUG,
+					"ii : SERVICE_CONTROL_POWEREVENT -> PBT_APMRESUMEAUTOMATIC\n" );
+
+			if( dwEventType == PBT_APMRESUMESUSPEND )
+				iked.log.txt( LLOG_DEBUG,
+					"ii : SERVICE_CONTROL_POWEREVENT -> PBT_APMRESUMESUSPEND\n" );
+
+			break;
 
 		default:
 
@@ -178,6 +182,7 @@ void __stdcall service_ctrl( DWORD opcode )
 			//
 
 			printf( "ii : unknown service opcode\n" );
+		    return ERROR_CALL_NOT_IMPLEMENTED;
 	} 
 
 	//
@@ -187,10 +192,10 @@ void __stdcall service_ctrl( DWORD opcode )
 	if( !SetServiceStatus( service_handle, &service_status ) )
 		printf( "ii : unable to update service status" );
 
-    return; 
+    return NO_ERROR;
 }
 
-void __stdcall service_main( DWORD argc, LPTSTR * argv ) 
+VOID __stdcall service_main( DWORD argc, LPTSTR * argv ) 
 {
 	//
 	// Register service control handler
@@ -198,15 +203,16 @@ void __stdcall service_main( DWORD argc, LPTSTR * argv )
 
 	service_status.dwServiceType        = SERVICE_WIN32;
 	service_status.dwCurrentState       = SERVICE_START_PENDING;
-	service_status.dwControlsAccepted   = SERVICE_ACCEPT_STOP;
+	service_status.dwControlsAccepted   = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_POWEREVENT;
 	service_status.dwWin32ExitCode      = 0;
 	service_status.dwServiceSpecificExitCode = 0;
 	service_status.dwCheckPoint         = 0;
 	service_status.dwWaitHint           = 0;
  
-    service_handle = RegisterServiceCtrlHandler(
+    service_handle = RegisterServiceCtrlHandlerEx(
 						SERVICE_NAME,
-						service_ctrl );
+						service_ctrl,
+						NULL );
  
 	if( service_handle == NULL )
 	{ 
@@ -214,21 +220,7 @@ void __stdcall service_main( DWORD argc, LPTSTR * argv )
 		return; 
 	} 
 
-	if( iked.init( 0 ) == LIBIKE_OK )
-	{
-		//
-		// daemon initialized
-		//
-
-		service_status.dwCurrentState	= SERVICE_RUNNING;
-		service_status.dwCheckPoint		= 0; 
-		service_status.dwWaitHint		= 0; 
-
-		SetServiceStatus( service_handle, &service_status );
-
-		printf( "ii : service started\n" );
-	}
-	else
+	if( iked.init( 0 ) != LIBIKE_OK )
 	{ 
 		//
 		// daemon initialization failed
@@ -246,6 +238,18 @@ void __stdcall service_main( DWORD argc, LPTSTR * argv )
 
 		return; 
 	}
+
+	//
+	// daemon initialized
+	//
+
+	service_status.dwCurrentState	= SERVICE_RUNNING;
+	service_status.dwCheckPoint		= 0; 
+	service_status.dwWaitHint		= 0; 
+
+	SetServiceStatus( service_handle, &service_status );
+
+	printf( "ii : service started\n" );
 
 	//
 	// run daemon main loop
@@ -279,7 +283,7 @@ void daemon_stop( int sig_num )
 	// stop daemon operation
 	//
 
-	iked.halt();
+	iked.halt( true );
 }
 
 bool daemon_pidfile_create( char * pidpath )
