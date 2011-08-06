@@ -400,16 +400,6 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	// remove our gateway NONE policies
 	//
 
-	memset( &id1, 0, sizeof( id1 ) );
-	id1.type = ISAKMP_ID_IPV4_ADDR;
-	id1.addr1 = tunnel->saddr_l.saddr4.sin_addr;
-
-	memset( &id2, 0, sizeof( id2 ) );
-	id2.type = ISAKMP_ID_IPV4_ADDR;
-	id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
-
-	policy_remove( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, true );
-
 #ifdef WIN32
 
 	IPROUTE_ENTRY entry;
@@ -430,6 +420,16 @@ bool _IKED::policy_list_remove( IDB_TUNNEL * tunnel, bool initiator )
 	}
 
 #endif
+
+	memset( &id1, 0, sizeof( id1 ) );
+	id1.type = ISAKMP_ID_IPV4_ADDR;
+	id1.addr1 = tunnel->saddr_l.saddr4.sin_addr;
+
+	memset( &id2, 0, sizeof( id2 ) );
+	id2.type = ISAKMP_ID_IPV4_ADDR;
+	id2.addr1 = tunnel->saddr_r.saddr4.sin_addr;
+
+	policy_remove( tunnel, IPSEC_POLICY_NONE, IPSEC_LEVEL_DEFAULT, id1, id2, true );
 
 	if( tunnel->force_all )
 		tunnel->force_all = false;

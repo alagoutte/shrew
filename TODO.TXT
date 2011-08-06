@@ -317,25 +317,20 @@ X Add support for both ike and pfs dh groups 16, 17 and 18
 X Add support for unattended installations ( needs signed drivers )
 X Make all client platforms use file based site configurations
 X Make certificate data an embedded component of the site config
-X Fix graceful shutdown of tunnels before suspend on Windows
 X Add support for public site configurations on Windows Platforms
+X Fix handling of low-power-state notifications in iked on Windows
 . Add support for Secure Domain Login on Vista/7 platforms
-. Add support for encrypted site configuration storage
-. Fix gui positioning bugs on windows platforms
-. Fix uninstall of security credentials provider on Vista/7
-. Fix DNS setting issues with newer Mac OSX platforms
-. Fix suspend/resume issues with Mac OSX platforms
-. Check for bugs with direct adapter and DNS disabled
-. Investigate PPP vs Virtual Adapter DNS preference issue
+. Investigate PPP with Virtual Adapter DNS preference issue
 . Improve support for automatic stable software update checks
-. Cleanup all references to the obsolete COMPAT policy mode
 . Cleanup registry based site configuration data
 . Test all rsa key file scenarios that use password protection
 
 2.2.1 release - Bug fix and fine tuning
 ----------------------------------------------------------------------
 . Fix or add all documented command line options in iked
-. Fix handling of low-power-state notifications in iked on Windows
+. Add support for encrypted site configuration storage
+. Cleanup all references to the obsolete COMPAT policy mode
+. Fix DNS setting issues with newer Mac OSX platforms
 . Add support for two factor user authentication methods
 . Apply Qt4 French translation patch from Alexis Lagoutte
 
