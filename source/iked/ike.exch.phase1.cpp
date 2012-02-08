@@ -596,7 +596,8 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				// calculate key material
 				//
 
-				phase1_gen_keys( ph1 );
+				if( phase1_gen_keys( ph1 ) != LIBIKE_OK )
+					return LIBIKE_FAILED;
 
 				//
 				// write packet header
@@ -767,7 +768,8 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				// calculate key material
 				//
 
-				phase1_gen_keys( ph1 );
+				if( phase1_gen_keys( ph1 ) != LIBIKE_OK )
+					return LIBIKE_FAILED;
 			}
 
 			//
@@ -1002,7 +1004,8 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 							// calculate key material
 							//
 
-							phase1_gen_keys( ph1 );
+							if( phase1_gen_keys( ph1 ) != LIBIKE_OK )
+								break;
 
 							//
 							// write packet header
@@ -1095,7 +1098,12 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 						if(  ( ph1->xstate & XSTATE_RECV_SI ) &&
 							!( ph1->xstate & XSTATE_SENT_SI ) )
 						{
-							phase1_gen_keys( ph1 );
+							//
+							// calculate key material
+							//
+
+							if( phase1_gen_keys( ph1 ) != LIBIKE_OK )
+								break;
 
 							//
 							// write packet header
@@ -1160,10 +1168,11 @@ long _IKED::process_phase1_send( IDB_PH1 * ph1 )
 				!( ph1->xstate & XSTATE_SENT_SA ) )
 			{
 				//
-				// generate our keys
+				// calculate key material
 				//
 
-				phase1_gen_keys( ph1 );
+				if( phase1_gen_keys( ph1 ) != LIBIKE_OK )
+					return LIBIKE_FAILED;
 
 				//
 				// write packet header

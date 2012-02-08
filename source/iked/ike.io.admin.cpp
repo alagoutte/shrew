@@ -673,7 +673,8 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 				default:
 					log.txt( LLOG_ERROR, "!! : message type is invalid ( %u )\n", msg.header.type );
-					tunnel->close = XCH_FAILED_CLIENT;
+					if( tunnel != NULL )
+						tunnel->close = XCH_FAILED_CLIENT;
 					break;
 			}
 

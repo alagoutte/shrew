@@ -87,6 +87,9 @@ _BDATA::~_BDATA()
 
 size_t _BDATA::grow( size_t new_real )
 {
+	if( new_real >= ( 1024 * 1024 ) )
+		return data_real;
+
 	if( data_real < new_real )
 	{
 		unsigned char * new_buff = new unsigned char[ new_real ];

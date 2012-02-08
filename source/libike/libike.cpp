@@ -274,8 +274,10 @@ long _IKEI::recv_message( IKEI_MSG & msg )
 	if( result == IPCERR_BUFFER )
 	{
 		msg.size( msg.header.size );
-		size = msg.size() - sizeof( IKEI_HEADER );
+		if( msg.size() < msg.header.size )
+			return IPCERR_FAILED;
 
+		size = msg.size() - sizeof( IKEI_HEADER );
 		result = io_recv( msg.buff() + sizeof( IKEI_HEADER ), size );
 	}
 
