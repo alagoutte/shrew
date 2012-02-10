@@ -1426,7 +1426,7 @@ long _ITH_IPCC::attach( const char * path, long timeout )
 
 void _ITH_IPCC::wakeup()
 {
-	char c;
+	char c = 0;
 	send( conn_wake[ 1 ], &c, 1, 0 );
 }
 
@@ -1539,7 +1539,7 @@ long _ITH_IPCS::inbound( const char * path, IPCCONN & ipcconn )
 
 void _ITH_IPCS::wakeup()
 {
-	char c;
+	char c = 0;
 	send( conn_wake[ 1 ], &c, 1, 0 );
 }
 

@@ -166,7 +166,7 @@ long _IKED::socket_create( IKE_SADDR & saddr, bool natt )
 
 void _IKED::socket_wakeup()
 {
-	char c;
+	char c = 0;
 	send( wake_socket[ 1 ], &c, 1, 0 );
 }
 
