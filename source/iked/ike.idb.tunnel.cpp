@@ -556,7 +556,7 @@ void _IDB_TUNNEL::end()
 	}
 
 	//
-	// check for config object refrences
+	// check for config object references
 	//
 
 	iked.log.txt( LLOG_INFO, "DB : removing tunnel config references\n" );
@@ -588,7 +588,7 @@ void _IDB_TUNNEL::end()
 	}
 
 	//
-	// check for phase2 object refrences
+	// check for phase2 object references
 	//
 
 	iked.log.txt( LLOG_INFO, "DB : removing tunnel phase2 references\n" );
@@ -619,7 +619,7 @@ void _IDB_TUNNEL::end()
 	}
 
 	//
-	// check for phase1 object refrences
+	// check for phase1 object references
 	//
 
 	iked.log.txt( LLOG_INFO, "DB : removing tunnel phase1 references\n" );

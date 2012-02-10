@@ -152,10 +152,10 @@ void _IDB_PEER::beg()
 
 void _IDB_PEER::end()
 {
-	iked.log.txt( LLOG_INFO, "DB : removing all peer tunnel refrences\n" );
+	iked.log.txt( LLOG_INFO, "DB : removing all peer tunnel references\n" );
 
 	//
-	// check for tunnel object refrences
+	// check for tunnel object references
 	//
 
 	long tunnel_count = iked.idb_list_tunnel.count();
