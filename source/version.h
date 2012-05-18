@@ -42,5 +42,5 @@
 #define CLIENT_VER_MAJ		2
 #define CLIENT_VER_MIN		2
 #define CLIENT_VER_BLD		0
-#define CLIENT_STABLE		0
-#define CLIENT_YEAR			2009
+#define CLIENT_RELEASE		0
+#define CLIENT_YEAR			2012
