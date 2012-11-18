@@ -4,7 +4,7 @@
 #
 # author : Matthew Grooms
 #        : mgrooms@shrew.net
-#        : Copyright 2007, Shrew Soft Inc
+#        : Copyright 2012, Shrew Soft Inc
 #
 
 project( IKE )
@@ -25,7 +25,7 @@ include( CheckLibraryExists )
 
 set(
 	RELVER
-	"2.2.0" )
+	"2.3.0" )
 
 subdirs(
 	source/iked
@@ -66,7 +66,9 @@ set(
 if( APPLE )
 	set(
 		CMAKE_OSX_ARCHITECTURES
-		"i386" )
+		"x86_64" )
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated-declarations")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 endif( APPLE )
 
 #
@@ -253,7 +255,11 @@ if( NOT PATH_LIB_EDIT )
 
 endif( NOT PATH_LIB_EDIT )
 
-find_package( Threads )
+find_package(Threads)
+
+message(
+	STATUS
+	"Using library ${CMAKE_THREAD_LIBS_INIT}" )
 
 if( NOT CMAKE_USE_PTHREADS_INIT )
 
@@ -263,11 +269,15 @@ if( NOT CMAKE_USE_PTHREADS_INIT )
 
 endif( NOT CMAKE_USE_PTHREADS_INIT )
 
-check_library_exists(
-	${CMAKE_THREAD_LIBS_INIT}
-	"pthread_mutex_timedlock"
-	""
-	FUNC_LIB_TIMEDLOCK )
+if( NOT APPLE )
+
+	check_library_exists(
+		${CMAKE_THREAD_LIBS_INIT}
+		"pthread_mutex_timedlock"
+		""
+		FUNC_LIB_TIMEDLOCK )
+
+endif( NOT APPLE )
 
 if( FUNC_LIB_TIMEDLOCK )
 
