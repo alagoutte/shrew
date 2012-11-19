@@ -56,22 +56,29 @@ bool _IKEC::get_username()
 {
 	if( !auto_connect() )
 		read_str( username );
+
+	return true;
 }
 
 bool _IKEC::get_password()
 {
 	if( !auto_connect() )
 		read_pwd( password, "<< : enter xauth password : " );
+
+	return true;
 }
 
 bool _IKEC::get_filepass( BDATA & path )
 {
 	log( 0, "file password required for %s\n", path.text() );
 	read_pwd( fpass, "<< : enter file password : " );
+
+	return true;
 }
 
 bool _IKEC::set_stats()
 {
+	return true;
 }
 
 bool _IKEC::set_status( long status, BDATA * text )
@@ -104,6 +111,8 @@ bool _IKEC::set_status( long status, BDATA * text )
 			if( text != NULL )
 				log( status, "%s", text->text() );
 	}
+
+	return true;
 }
 
 _IKEC::_IKEC()

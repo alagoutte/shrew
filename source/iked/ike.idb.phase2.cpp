@@ -158,7 +158,7 @@ bool _IDB_LIST_PH2::find( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, XCH_ST
 			long pindex = 0;
 			bool found;
 
-			while( found = tmp_ph2->plist_l.get( &proposal, pindex++ ) )
+			while( ( found = tmp_ph2->plist_l.get( &proposal, pindex++ ) ) )
 				if( proposal->spi.size == spi_l->size )
 					if( !memcmp( &proposal->spi, spi_l, spi_l->size ) )
 						break;
@@ -177,7 +177,7 @@ bool _IDB_LIST_PH2::find( bool lock, IDB_PH2 ** ph2, IDB_TUNNEL * tunnel, XCH_ST
 			long pindex = 0;
 			bool found;
 
-			while( found = tmp_ph2->plist_r.get( &proposal, pindex++ ) )
+			while( ( found = tmp_ph2->plist_r.get( &proposal, pindex++ ) ) )
 				if( proposal->spi.size == spi_r->size )
 					if( !memcmp( &proposal->spi, spi_r, spi_r->size ) )
 						break;

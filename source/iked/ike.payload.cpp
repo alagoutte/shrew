@@ -1518,24 +1518,16 @@ long _IKED::payload_add_cfglist( PACKET_IKE & packet, IDB_CFG * cfg, uint8_t nex
 	{
 		IKE_ATTR * attr = cfg->attr_get( index );
 
-		switch( attr->basic )
+		if( attr->basic )
 		{
-			case true:
-			{
-				packet.add_word( BASIC | attr->atype );
-				packet.add_word( attr->bdata );
-
-				break;
-			}
-
-			case false:
-			{
-				packet.add_word( attr->atype );
-				packet.add_word( short( attr->vdata.size() ) );
-				packet.add( attr->vdata );
-
-				break;
-			}
+			packet.add_word( BASIC | attr->atype );
+			packet.add_word( attr->bdata );
+		}
+		else
+		{
+			packet.add_word( attr->atype );
+			packet.add_word( short( attr->vdata.size() ) );
+			packet.add( attr->vdata );
 		}
 	}
 

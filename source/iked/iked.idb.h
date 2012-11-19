@@ -616,7 +616,7 @@ typedef class _IDB_TUNNEL : public IKED_RC_ENTRY
 
 	uint32_t	dhcp_xid;
 	uint8_t		dhcp_hwtype;
-	uint8_t		dhcp_hwaddr[ 5 ];
+	uint8_t		dhcp_hwaddr[ 6 ];
 	SOCKET		dhcp_sock;
 
 	ITH_EVENT_TUNDHCP	event_dhcp;

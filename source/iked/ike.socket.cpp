@@ -178,7 +178,6 @@ long _IKED::socket_lookup_addr( IKE_SADDR & saddr_r, IKE_SADDR & saddr_l )
 	//
 
 	IPROUTE_ENTRY entry;
-	memset( &entry, 0, sizeof( entry ) );
 	entry.addr = saddr_r.saddr4.sin_addr;
 
 	if( !iproute.best( entry ) )
@@ -490,6 +489,7 @@ bool _IKED::vnet_init()
 
 #endif
 
+	return false;
 }
 
 bool _IKED::vnet_get( VNET_ADAPTER ** adapter )

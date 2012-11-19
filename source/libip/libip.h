@@ -493,8 +493,14 @@ typedef class DLX _IPQUEUE : private IDB_LIST
 
 }IPQUEUE;
 
-typedef struct _IPROUTE_ENTRY : public IDB_ENTRY
+typedef class DLX _IPROUTE_ENTRY : public IDB_ENTRY
 {
+	public:
+
+	_IPROUTE_ENTRY & operator =( _IPROUTE_ENTRY & source );
+
+	_IPROUTE_ENTRY();
+
 	bool	local;
 	in_addr	iface;
 	in_addr	addr;

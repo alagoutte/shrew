@@ -69,6 +69,30 @@ void text_route( IPROUTE_ENTRY & route, char * text, bool dstonly = false )
 }
 
 //==============================================================================
+// Route entry class
+//==============================================================================
+
+_IPROUTE_ENTRY::_IPROUTE_ENTRY()
+{
+	local = false;
+	memset( &iface, 0, sizeof( in_addr ) );
+	memset( &addr, 0, sizeof( in_addr ) );
+	memset( &mask, 0, sizeof( in_addr ) );
+	memset( &next, 0, sizeof( in_addr ) );
+}
+
+_IPROUTE_ENTRY & _IPROUTE_ENTRY::operator =( _IPROUTE_ENTRY & entry )
+{
+	local = entry.local;
+	memcpy( &entry.iface, &iface, sizeof( in_addr ) );
+	memcpy( &entry.addr, &addr, sizeof( in_addr ) );
+	memcpy( &entry.mask, &mask, sizeof( in_addr ) );
+	memcpy( &entry.next, &next, sizeof( in_addr ) );
+
+    return *this;
+}
+
+//==============================================================================
 // Route list class
 //==============================================================================
 
@@ -484,7 +508,6 @@ bool _IPROUTE::increment( in_addr addr, in_addr mask )
 	//
 
 	IPROUTE_ENTRY route;
-	memset( &route, 0, sizeof( route ) );
 	route.addr = addr;
 	route.mask = mask;
 
@@ -526,7 +549,6 @@ bool _IPROUTE::decrement( in_addr addr, in_addr mask )
 	//
 
 	IPROUTE_ENTRY route;
-	memset( &route, 0, sizeof( route ) );
 	route.addr = addr;
 	route.mask = mask;
 
