@@ -25,17 +25,24 @@ be used in client mode due to lack of adequate testing. If you need to install
 a VPN Client Gateway, please use the IPsec Tools racoon daemon. Version 0.7 or
 later is highly recommended.
 
-ikea - VPN Access Manager Application ( optional )
+ikec - VPN Client Connect Application
 
-This component provides a user interface for managing remote site
+This component provides a console based user interface that represents a
+connection instance for a remote site. It allows a user to connect or
+disconnect, enter user login credentials and view the status of the remote
+access connection.
+
+qikea - VPN Access Manager Application ( optional )
+
+This component provides a GUI user interface for managing remote site
 configurations. It is also used to launch a VPN Client Connect instance for a
 given remote site.
 
-ikec - VPN Access Manager Application ( optional )
+qikec - VPN Client Connect Application ( optional )
 
-This component provides a user interface that represents a connection instance
-for a remote site. It allows a user to connect or disconnect, enter user login
-credentials and view the status of the remote access connection.
+This component provides a GUI user interface that represents a connection
+instance for a remote site. It allows a user to connect or disconnect, enter
+user login credentials and view the status of the remote access connection.
 
 
 ================================================================================
@@ -191,6 +198,30 @@ directory path.
 NOTE : It may also be necessary to add the KRNINC option to specify the kernel
 header file path on older versions of Linux.
 
+OSX
+--------------------------------------------------------------------------------
+
+Apple OSX provides native kernel support for the IPsec protocol suite. This
+software was designed to support OSX version 10.8 and later. This software
+can also be linked against a private Qt library build when gui components are
+desired. When an install step is performed, a private copy of the Qt libs
+will also be installed. All references to that library will be modified to
+utilize the private library path.
+
+The following options are recommended when running the cmake configuration
+for OSX platforms. Please see the OPTIONS section for more details.
+
+cmake -DQTGUI=YES -DNATT=YES -DCMAKE_INSTALL_PREFIX=/usr \
+      -DQT_QMAKE_EXECUTABLE=[/qt/install/path]/bin/qmake
+
+NOTE : Qt will still attempt to load plugin libraries from the original private
+Qt install path. Since these libraries will have references to the original
+Qt library framework paths ( not the copy ), the dynamic link loader may load
+multiple versions of Qt libraries and cause the application to crash. It may
+be necessary to move the private qt install path to a different location before
+executing the compiled gui applications. For example:
+
+mv /qt/install/path /qt/install/path.bak
 
 ================================================================================
 COMPILING
@@ -201,10 +232,9 @@ configure the build, you simply run cmake in the base distribution directory
 using any optional parameters you may require. For example: enter the following
 to build and install the basic software ...
 
-cmake .
+cmake [OPTIONS]
 make
 make install
-
 
 ================================================================================
 OPTIONS
@@ -232,7 +262,6 @@ cmake -DDEBUG=YES -DQTGUI=YES -DNATT=YES -DLDAP=YES
 make
 make install
 
-
 ================================================================================
 USAGE
 ================================================================================
@@ -246,9 +275,9 @@ client operation but can also be modified to allow for site to site or client
 gateway operation as well. See the iked.conf man page for more details.
 
 Once the iked process has been launched, the VPN Access Manager application
-( ikea-qt ) is used to build remote access client configurations and initiate
+( qikea ) is used to build remote access client configurations and initiate
 client connections. When the Access Manager GUI is used to initiate a client
-connection, a VPN Connect application ( ikec-qt ) process is created. This
+connection, a VPN Connect application ( qikec ) process is created. This
 process interacts with iked to initiate the connection. Alternately, a command
 line version of the VPN Connect application ( ikec ) can be used to initiate a
 connection. Please see the online documentation available at
