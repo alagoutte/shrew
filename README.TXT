@@ -219,6 +219,8 @@ QTGUI	Enable Client QT GUI
 NATT	Enable Nat Traversal Support
 LDAP	Enable LDAP Authentication Support
 ETCDIR	Custom etc configuration install path
+BINDIR  Custim user bin install path
+SBINDIR Custim user sbin install path
 LIBDIR	Custom user lirbrary install path
 MANDIR	Custom man page install path
 KRNINC	Kernel include path

@@ -40,7 +40,7 @@ target_link_libraries(
 
 install(
 	TARGETS ikec
-	RUNTIME	DESTINATION bin )
+	RUNTIME	DESTINATION ${PATH_BIN} )
 
 install(
 	FILES ikec.1

@@ -40,8 +40,8 @@ if( APPLE )
 
 endif( APPLE )
 
-
 install(
 	TARGETS ss_log
 	LIBRARY DESTINATION ${PATH_LIB}
 	FRAMEWORK DESTINATION "/Library/Frameworks" )
+

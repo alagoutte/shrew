@@ -49,4 +49,3 @@ install(
         TARGETS ss_ith
         LIBRARY DESTINATION ${PATH_LIB}
 		FRAMEWORK DESTINATION "/Library/Frameworks" )
-

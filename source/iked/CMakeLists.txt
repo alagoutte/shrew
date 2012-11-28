@@ -127,8 +127,8 @@ add_custom_command(
 # install support
 
 install(
-        TARGETS iked
-        RUNTIME DESTINATION sbin )
+	TARGETS iked
+	RUNTIME DESTINATION ${PATH_SBIN} )
 
 install(
 	FILES iked.8

@@ -109,3 +109,40 @@ install(
 install(
 	FILES qikec.1
 	DESTINATION ${PATH_MAN}/man1 )
+
+if( APPLE )
+
+#	set(
+#		MACOSX_BUNDLE_DEST_DIR
+#		"/Applications/${MACOSX_BUNDLE_BUNDLE_NAME}.app" )
+
+#	set(
+#		MACOSX_QTPLUGINS_DEST_DIR
+#		"${MACOSX_BUNDLE_DEST_DIR}/Contents/MacOS/plugins" )
+
+#	install(
+#		DIRECTORY "${QT_PLUGINS_DIR}/imageformats"
+#		DESTINATION "${MACOSX_QTPLUGINS_DEST_DIR}"
+#		COMPONENT Runtime )
+
+#	set(
+#		MACOSX_QTCONF_DEST_DIR
+#		"${MACOSX_BUNDLE_DEST_DIR}/Contents/Resources" )
+
+#	install(
+#		CODE "file( WRITE \"${MACOSX_QTCONF_DEST_DIR}/qt.conf\" \"\" )"
+#		COMPONENT Runtime )
+
+	install(
+		CODE "execute_process( COMMAND \"install_name_tool\" -change
+			${QT_LIBRARY_DIR}/QtCore.framework/Versions/4/QtCore
+			ShrewSoftQtCore.framework/Versions/4/ShrewSoftQtCore
+			\"/Applications/${MACOSX_BUNDLE_BUNDLE_NAME}.app/Contents/MacOS/${MACOSX_BUNDLE_BUNDLE_NAME}\" )" )
+
+	install(
+		CODE "execute_process( COMMAND \"install_name_tool\" -change
+			${QT_LIBRARY_DIR}/QtGui.framework/Versions/4/QtGui
+			ShrewSoftQtGui.framework/Versions/4/ShrewSoftQtGui
+			\"/Applications/${MACOSX_BUNDLE_BUNDLE_NAME}.app/Contents/MacOS/${MACOSX_BUNDLE_BUNDLE_NAME}\" )" )
+
+endif( APPLE )
