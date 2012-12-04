@@ -160,14 +160,15 @@ void _IPROUTE_LIST::clean()
 #ifndef __linux__
 
 //
-// NetBSD compatability ( obtained from FreeBSD )
+// BSD macros used to simplify route address processing
 //
 
-#ifndef SA_SIZE
-#define SA_SIZE(sa)                                             \
-    (  (!(sa) || ((struct sockaddr *)(sa))->sa_len == 0) ?      \
-        sizeof(long)            :                               \
-        1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(long) - 1) ) )
+#ifdef __APPLE__
+#define RT_ROUNDUP(a)		((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
+#endif
+
+#ifndef RT_ROUNDUP
+#define RT_ROUNDUP(a)		((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
 #endif
 
 //
@@ -177,7 +178,7 @@ void _IPROUTE_LIST::clean()
 typedef struct _RTMSG
 {
 	rt_msghdr	hdr;
-	char		msg[ 1024 ];
+	char		msg[ 2048 ];
 
 }RTMSG;
 
@@ -214,12 +215,12 @@ bool rtmsg_recv( int s, int seq, IPROUTE_ENTRY * route )
 	// read route result message
 
 	pid_t pid = getpid();
-	long l;
+	long len;
 
 	do
 	{
-		l = read( s, &rtmsg, sizeof( rtmsg ) );
-		if( l < 0 )
+		len = read( s, &rtmsg, sizeof( rtmsg ) );
+		if( len < 0 )
 		{
 			close( s );
 			return false;
@@ -229,7 +230,7 @@ bool rtmsg_recv( int s, int seq, IPROUTE_ENTRY * route )
 
 	close( s );
 
-	if( ( rtmsg.hdr.rtm_errno ) || ( rtmsg.hdr.rtm_msglen > l ) ||
+	if( ( rtmsg.hdr.rtm_errno ) || ( rtmsg.hdr.rtm_msglen > len ) ||
 		( rtmsg.hdr.rtm_version != RTM_VERSION ) )
 		return false;
 
@@ -238,37 +239,85 @@ bool rtmsg_recv( int s, int seq, IPROUTE_ENTRY * route )
 		route->local = false;
 
 	char *	cp = rtmsg.msg;
+	long	ml = rtmsg.hdr.rtm_msglen;
 
 	for( int i = 1; i; i <<= 1 )
 	{
-		if( i & rtmsg.hdr.rtm_addrs )
+		if( ml <= 0 )
+			break;
+
+		if( !( rtmsg.hdr.rtm_addrs & i ) )
+			continue;
+
+//		printf( "XXXXXXXXX ml = %lu XXXXXXXX\n", ml );
+
+		struct sockaddr * sa = ( struct sockaddr * ) cp;
+		struct sockaddr_dl * dl = ( struct sockaddr_dl * ) sa;
+
+		switch( i )
 		{
-			struct sockaddr * sa = ( struct sockaddr * ) cp;
-
-			switch( i )
-			{
-				case RTA_DST:
+			case RTA_DST:
+//				printf( "XXXXXXXXX RTA_DST->sa_len = %d/%lu XXXXXXXX\n",
+//					sa->sa_len, RT_ROUNDUP( sa->sa_len ) );
+				if( sa->sa_family == AF_INET )
+				{
 					route->addr = ( ( sockaddr_in * ) cp )->sin_addr;
-					break;
+//					printf( "XXXXXXXXX route->addr = %s XXXXXXXX\n",
+//						inet_ntoa( route->addr ) );
+				}
+				break;
 
-				case RTA_GATEWAY:
+			case RTA_GATEWAY:
+//				printf( "XXXXXXXXX RTA_GATEWAY->sa_len = %d/%lu XXXXXXXX\n",
+//					sa->sa_len, RT_ROUNDUP( sa->sa_len ) );
+				if( sa->sa_family == AF_INET )
+				{
 					route->next = ( ( sockaddr_in * ) cp )->sin_addr;
-					break;
+//					printf( "XXXXXXXXX route->next = %s XXXXXXXX\n",
+//						inet_ntoa( route->next ) );
+				}
+				break;
 
-				case RTA_NETMASK:
+			case RTA_NETMASK:
+//				printf( "XXXXXXXXX RTA_NETMASK->sa_len = %d/%lu XXXXXXXX\n",
+//					sa->sa_len, RT_ROUNDUP( sa->sa_len ) );
+				if( sa->sa_family == AF_INET )
+				{
 					route->mask = ( ( sockaddr_in * ) cp )->sin_addr;
-					break;
+//					printf( "XXXXXXXXX route->mask = %s XXXXXXXX\n",
+//						inet_ntoa( route->mask ) );
+				}
+				break;
 
-				case RTA_IFP:
-					break;
+			case RTA_GENMASK:
+//				printf( "XXXXXXXXX RTA_GENMASK->sa_len = %d/%lu XXXXXXXX\n",
+//					sa->sa_len, RT_ROUNDUP( sa->sa_len ) );
+				break;
 
-				case RTA_IFA:
+			case RTA_IFP:
+//				printf( "XXXXXXXXX RTA_IFP->sa_len = %d/%lu RTA_IFP->sdl_nlen = %d ( %s ) XXXXXXXX\n",
+//					sa->sa_len, RT_ROUNDUP( sa->sa_len ), dl->sdl_nlen, dl->sdl_data );
+				break;
+
+			case RTA_IFA:
+//				printf( "XXXXXXXXX RTA_IFA->sa_len = %d/%lu XXXXXXXX\n",
+//					sa->sa_len, RT_ROUNDUP( sa->sa_len ) );
+				if( sa->sa_family == AF_INET )
+				{
 					route->iface = ( ( sockaddr_in * ) cp )->sin_addr;
-					break;
-			}
+//					printf( "XXXXXXXXX route->iface = %s XXXXXXXX\n",
+//						inet_ntoa( route->iface ) );
+				}
+				break;
 
-			cp += SA_SIZE( sa );
+			default:
+//				printf( "XXXXXXXXX 0x%04x->sa_len = %d/%lu XXXXXXXX\n", i,
+//					sa->sa_len, RT_ROUNDUP( sa->sa_len ) );
+				break;
 		}
+
+		cp += RT_ROUNDUP( sa->sa_len );
+		ml -= RT_ROUNDUP( sa->sa_len );
 	}
 
 	return true;
