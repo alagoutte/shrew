@@ -84,10 +84,10 @@ _IPROUTE_ENTRY::_IPROUTE_ENTRY()
 _IPROUTE_ENTRY & _IPROUTE_ENTRY::operator =( _IPROUTE_ENTRY & entry )
 {
 	local = entry.local;
-	memcpy( &entry.iface, &iface, sizeof( in_addr ) );
-	memcpy( &entry.addr, &addr, sizeof( in_addr ) );
-	memcpy( &entry.mask, &mask, sizeof( in_addr ) );
-	memcpy( &entry.next, &next, sizeof( in_addr ) );
+	memcpy( &iface, &entry.iface, sizeof( in_addr ) );
+	memcpy( &addr, &entry.addr, sizeof( in_addr ) );
+	memcpy( &mask, &entry.mask, sizeof( in_addr ) );
+	memcpy( &next, &entry.next, sizeof( in_addr ) );
 
     return *this;
 }
