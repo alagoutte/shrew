@@ -731,10 +731,10 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 				}
 
 				//
-				// setup client parameters
+				// setup client network parameters
 				//
 
-				if( !client_setup( tunnel ) )
+				if( !client_net_config( tunnel ) )
 					break;
 
 				msg.set_status( STATUS_INFO, "network device configured\n" );
@@ -747,12 +747,10 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 				policy_list_create( tunnel, true );
 
 				//
-				// setup dns transparent proxy
+				// setup client dns parameters
 				//
 
-				#ifdef OPT_DTP
-				dnsproxy_setup( tunnel );
-				#endif
+				client_dns_config( tunnel );
 
 				//
 				// tunnel is enabled
@@ -791,12 +789,10 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 	if( ( tunnel != NULL ) && !suspended )
 	{
 		//
-		// cleanup dns transparent proxy
+		// revert client network parameters
 		//
 
-		#ifdef OPT_DTP
-		dnsproxy_cleanup( tunnel );
-		#endif
+		client_dns_revert( tunnel );
 
 		//
 		// cleanup client settings
@@ -817,10 +813,10 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 			iked.socket_dhcp_remove( tunnel );
 
 		//
-		// setup client parameters
+		// revert client network parameters
 		//
 
-		client_cleanup( tunnel );
+		client_net_revert( tunnel );
 
 		//
 		// flush our arp cache

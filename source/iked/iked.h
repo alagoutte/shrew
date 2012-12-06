@@ -513,8 +513,11 @@ typedef class _IKED
 	bool	vnet_get( VNET_ADAPTER ** adapter );
 	bool	vnet_rel( VNET_ADAPTER * adapter );
 
-	bool	client_setup( IDB_TUNNEL * tunnel );
-	bool	client_cleanup( IDB_TUNNEL * tunnel );
+	bool	client_net_config( IDB_TUNNEL * tunnel );
+	bool	client_net_revert( IDB_TUNNEL * tunnel );
+
+	bool	client_dns_config( IDB_TUNNEL * tunnel );
+	bool	client_dns_revert( IDB_TUNNEL * tunnel );
 
 #ifdef OPT_DTP
 
