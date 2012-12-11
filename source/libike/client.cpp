@@ -1008,7 +1008,7 @@ bool _CLIENT::run_init()
 
 		if( msgres == IKEI_RESULT_PASSWD )
 		{
-			name.add( NULL, 1 );
+			name.add( "", 1 );
 
 			if( !get_filepass( name ) )
 			{
@@ -1057,7 +1057,7 @@ bool _CLIENT::run_init()
 
 		if( msgres == IKEI_RESULT_PASSWD )
 		{
-			name.add( NULL, 1 );
+			name.add( "", 1 );
 
 			if( !get_filepass( name ) )
 			{
@@ -1100,7 +1100,7 @@ bool _CLIENT::run_init()
 
 		if( msgres == IKEI_RESULT_PASSWD )
 		{
-			name.add( NULL, 1 );
+			name.add( "", 1 );
 
 			if( !get_filepass( name ) )
 			{
@@ -1444,7 +1444,7 @@ OPT_RESULT _CLIENT::read_opts( int argc, char ** argv )
 					sprintf_s( file_path, "%s\\Shrew Soft VPN\\sscp-login-info", temp_path );
 					if( site_name.file_load( file_path ) )
 					{
-						site_name.add( NULL, 1 );
+						site_name.add( "", 1 );
 						DeleteFile( file_path );
 						break;
 					}
