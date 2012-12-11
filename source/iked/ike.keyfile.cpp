@@ -268,6 +268,7 @@ bool cert_load_p12( BDATA & cert, BDATA & input, bool ca, BDATA & pass )
 		return false;
 
 	X509 * x509 = NULL;
+	EVP_PKEY * evp_pkey = NULL;
 
 	if( ca )
 	{
@@ -285,8 +286,9 @@ bool cert_load_p12( BDATA & cert, BDATA & input, bool ca, BDATA & pass )
 		}
 	}
 	else
-		PKCS12_parse( p12, ( const char * ) pass.buff(), NULL, &x509, NULL );
+		PKCS12_parse( p12, ( const char * ) pass.buff(), &evp_pkey, &x509, NULL );
 
+	EVP_PKEY_free( evp_pkey );
 	PKCS12_free( p12 );
 
 	if( x509 == NULL )
