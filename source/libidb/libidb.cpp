@@ -481,7 +481,7 @@ bool _BDATA::file_load( const char * path )
 #ifdef WIN32
 
 	FILE * fp;
-	if( fopen_s( &fp, path, "r" ) )
+	if( fopen_s( &fp, path, "rb" ) )
 		return false;
 
 #else
@@ -519,7 +519,7 @@ bool _BDATA::file_save( const char * path )
 #ifdef WIN32
 
 	FILE * fp;
-	if( fopen_s( &fp, path, "w" ) )
+	if( fopen_s( &fp, path, "wb" ) )
 		return false;
 
 #else
