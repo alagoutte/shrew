@@ -1008,6 +1008,8 @@ bool _CLIENT::run_init()
 
 		if( msgres == IKEI_RESULT_PASSWD )
 		{
+			name.add( NULL, 1 );
+
 			if( !get_filepass( name ) )
 			{
 				log( STATUS_FAIL, "server cert file requires password\n" );
@@ -1036,8 +1038,6 @@ bool _CLIENT::run_init()
 			goto config_failed;
 		}
 
-		name.add( "", 1 );
-
 		if( !config.get_binary( "auth-client-cert-data", btext ) )
 		{
 			log( STATUS_FAIL, "config error : auth-client-cert-data undefined\n" );
@@ -1057,6 +1057,8 @@ bool _CLIENT::run_init()
 
 		if( msgres == IKEI_RESULT_PASSWD )
 		{
+			name.add( NULL, 1 );
+
 			if( !get_filepass( name ) )
 			{
 				log( STATUS_FAIL, "client cert file requires password\n" );
@@ -1079,8 +1081,6 @@ bool _CLIENT::run_init()
 			goto config_failed;
 		}
 
-		name.add( "", 1 );
-
 		if( !config.get_binary( "auth-client-key-data", btext ) )
 		{
 			log( STATUS_FAIL, "config error : auth-client-key-data undefined\n" );
@@ -1100,6 +1100,8 @@ bool _CLIENT::run_init()
 
 		if( msgres == IKEI_RESULT_PASSWD )
 		{
+			name.add( NULL, 1 );
+
 			if( !get_filepass( name ) )
 			{
 				log( STATUS_FAIL, "client key file requires password\n" );
@@ -1442,7 +1444,7 @@ OPT_RESULT _CLIENT::read_opts( int argc, char ** argv )
 					sprintf_s( file_path, "%s\\Shrew Soft VPN\\sscp-login-info", temp_path );
 					if( site_name.file_load( file_path ) )
 					{
-						site_name.add( "", 1 );
+						site_name.add( NULL, 1 );
 						DeleteFile( file_path );
 						break;
 					}
