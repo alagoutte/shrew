@@ -271,6 +271,7 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		packet.add_byte( 7 );					// opt size
 		packet.add_byte( tunnel->dhcp_hwtype );	// client hw type
 		packet.add( dhcp_head.chaddr, 6 );		// client id value
+		packet.add_byte( DHCP_OPT_END );
 
 		//
 		// send the packet
@@ -332,6 +333,7 @@ long _IKED::process_dhcp_send( IDB_TUNNEL * tunnel )
 		packet.add_byte( 7 );					// opt size
 		packet.add_byte( BOOTP_HW_IPSEC );		// client hw type
 		packet.add( dhcp_head.chaddr, 6 );		// client id value
+		packet.add_byte( DHCP_OPT_END );
 
 		//
 		// send the packet
