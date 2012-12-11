@@ -44,6 +44,8 @@
 void crypto_init()
 {
 	OpenSSL_add_all_algorithms();
+	ERR_load_crypto_strings();
+
 }
 
 void crypto_done()
