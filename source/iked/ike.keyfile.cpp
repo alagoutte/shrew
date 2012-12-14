@@ -57,6 +57,26 @@
 # define D2I_RSA_CONST 
 #endif
 
+void log_openssl_errors()
+{
+	const char * file;
+	int line;
+
+	while( true )
+	{
+		unsigned long code = ERR_get_error_line( &file, &line );
+		if( code == 0 )
+			break;
+
+		char buf[ 1024 ];
+		ERR_error_string_n( code, buf, sizeof( buf ) );
+		iked.log.txt( LLOG_LOUD,
+				"!! : libeay : %s:%i\n"
+				"!! : %s\n",
+				file, line, buf );
+	}
+}
+
 bool cert_2_bdata( BDATA & cert, X509 * x509 )
 {
 	int size = i2d_X509( x509, NULL );
@@ -126,27 +146,31 @@ bool bdata_2_pubkey_rsa( RSA ** rsa, BDATA & pubkey )
 	return true;
 }
 
-// openssl keyfile callback
+// openssl pem password callback
 
-int keyfile_cb( char * buf, int size, int rwflag, void * userdata )
+int password_cb( char * buf, int size, int rwflag, void * userdata )
 {
 	BDATA * fpass = ( BDATA * ) userdata;
+	if( !fpass->size() )
+		return 0;
+
+	// trim the null terminating charachter
+	int fpass_size = ( int ) fpass->size() - 1;
 
 	memset( buf, 0, size );
+	if( fpass_size > size )
+		fpass_size = size;
 
-	if( size > int( fpass->size() ) )
-		size = int( fpass->size() );
+	memcpy( buf, fpass->buff(), fpass_size );
 
-	memcpy( buf, fpass->buff(), size );
-
-	return size;
+	return fpass_size;
 }
 
 bool cert_load_pem( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 {
 	fseek( fp, 0, SEEK_SET );
 
-	X509 * x509 = PEM_read_X509( fp, NULL, keyfile_cb, pass.buff() );
+	X509 * x509 = PEM_read_X509( fp, NULL, password_cb, &pass );
 	if( x509 == NULL )
 		return false;
 
@@ -218,7 +242,10 @@ long _IKED::cert_load( BDATA & cert, char * fpath, bool ca, BDATA & pass )
 	fclose( fp );
 
 	if( !loaded )
+	{
+		log_openssl_errors();
 		return FILE_FAIL;
+	}
 
 	return FILE_OK;
 }
@@ -235,7 +262,7 @@ bool cert_load_pem( BDATA & cert, BDATA & input, bool ca, BDATA & pass )
 		return false;
 	}
 
-	X509 * x509 = PEM_read_bio_X509( bp, NULL, keyfile_cb, pass.buff() );
+	X509 * x509 = PEM_read_bio_X509( bp, NULL, password_cb, &pass );
 
 	BIO_free_all( bp );
 
@@ -307,7 +334,10 @@ long _IKED::cert_load( BDATA & cert, BDATA & input, bool ca, BDATA & pass )
 		loaded = cert_load_p12( cert, input, ca, pass );
 
 	if( !loaded )
+	{
+		log_openssl_errors();
 		return FILE_FAIL;
+	}
 
 	return FILE_OK;
 }
@@ -618,7 +648,7 @@ bool _IKED::text_asn1( BDATA & text, BDATA & asn1 )
 	return false;
 }
 
-// openssl verify callback
+// openssl certificate verify callback
 
 static int verify_cb( int ok, X509_STORE_CTX * store_ctx )
 {
@@ -816,7 +846,7 @@ bool prvkey_rsa_load_pem( BDATA & prvkey, FILE * fp, BDATA & pass )
 {
 	fseek( fp, 0, SEEK_SET );
 
-	EVP_PKEY * evp_pkey = PEM_read_PrivateKey( fp, NULL, keyfile_cb, pass.buff() );
+	EVP_PKEY * evp_pkey = PEM_read_PrivateKey( fp, NULL, password_cb, &pass );
 	if( evp_pkey == NULL )
 		return false;
 
@@ -870,7 +900,10 @@ long _IKED::prvkey_rsa_load( BDATA & prvkey, char * fpath, BDATA & pass )
 	fclose( fp );
 
 	if( !loaded )
+	{
+		log_openssl_errors();
 		return FILE_FAIL;
+	}
 
 	return FILE_OK;
 }
@@ -887,7 +920,7 @@ bool prvkey_rsa_load_pem( BDATA & prvkey, BDATA & input, BDATA & pass )
 		return false;
 	}
 
-	EVP_PKEY * evp_pkey = PEM_read_bio_PrivateKey( bp, NULL, keyfile_cb, pass.buff() );
+	EVP_PKEY * evp_pkey = PEM_read_bio_PrivateKey( bp, NULL, password_cb, &pass );
 
 	BIO_free_all( bp );
 
@@ -939,7 +972,10 @@ long _IKED::prvkey_rsa_load( BDATA & prvkey, BDATA & input, BDATA & pass )
 		loaded = prvkey_rsa_load_p12( prvkey, input, pass );
 
 	if( !loaded )
+	{
+		log_openssl_errors();
 		return FILE_FAIL;
+	}
 
 	return FILE_OK;
 }
