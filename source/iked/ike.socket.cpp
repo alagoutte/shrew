@@ -653,7 +653,7 @@ bool _IKED::vnet_rel( VNET_ADAPTER * adapter )
 	return true;
 }
 
-bool _IKED::client_setup( IDB_TUNNEL * tunnel )
+bool _IKED::client_net_config( IDB_TUNNEL * tunnel )
 {
 	if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
 	{
@@ -843,6 +843,25 @@ bool _IKED::client_setup( IDB_TUNNEL * tunnel )
 			tunnel->adapter->name );
 	}
 
+	return true;
+}
+
+bool _IKED::client_net_revert( IDB_TUNNEL * tunnel )
+{
+	if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
+	{
+		if( tunnel->adapter != NULL )
+		{
+			vnet_rel( tunnel->adapter );
+			tunnel->adapter = NULL;
+		}
+	}
+
+	return true;
+}
+
+bool _IKED::client_dns_config( IDB_TUNNEL * tunnel )
+{
 	if( tunnel->xconf.opts & ( IPSEC_OPTS_DNSS | IPSEC_OPTS_DOMAIN ) )
 	{
 		// backup the current resolv.conf file
@@ -901,22 +920,13 @@ bool _IKED::client_setup( IDB_TUNNEL * tunnel )
 	return true;
 }
 
-bool _IKED::client_cleanup( IDB_TUNNEL * tunnel )
+bool _IKED::client_dns_revert( IDB_TUNNEL * tunnel )
 {
 	if( tunnel->xconf.opts & ( IPSEC_OPTS_DNSS | IPSEC_OPTS_DOMAIN ) )
 	{
 		// restore the previous resolv.conf file
 
 		rename( "/etc/resolv.iked", "/etc/resolv.conf" );
-	}
-
-	if( tunnel->xconf.opts & IPSEC_OPTS_ADDR )
-	{
-		if( tunnel->adapter != NULL )
-		{
-			vnet_rel( tunnel->adapter );
-			tunnel->adapter = NULL;
-		}
 	}
 
 	return true;
