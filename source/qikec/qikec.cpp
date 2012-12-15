@@ -129,6 +129,9 @@ bool _QIKEC::get_password()
 
 bool _QIKEC::get_filepass( BDATA & path )
 {
+	// null terminate path
+	path.add( "", 1 );
+
 	log( STATUS_INFO, "file password required for %s\n", path.text() );
 
 	FilePassData PassData;

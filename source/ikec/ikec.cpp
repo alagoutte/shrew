@@ -70,6 +70,9 @@ bool _IKEC::get_password()
 
 bool _IKEC::get_filepass( BDATA & path )
 {
+	// null terminate path
+	path.add( "", 1 );
+
 	log( 0, "file password required for %s\n", path.text() );
 	read_pwd( fpass, "<< : enter file password : " );
 
