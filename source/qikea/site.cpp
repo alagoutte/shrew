@@ -1214,8 +1214,11 @@ bool _qikeaSite::save( CONFIG & config )
 	}
 	else
 	{
-		config.del( "auth-server-cert-name" );
-		config.del( "auth-server-cert-data" );
+		if( lineEditCAName->text().isEmpty() )
+		{
+			config.del( "auth-server-cert-name" );
+			config.del( "auth-server-cert-data" );
+		}
 	}
 
 	if( pathCertFile.size() )
@@ -1231,8 +1234,11 @@ bool _qikeaSite::save( CONFIG & config )
 	}
 	else
 	{
-		config.del( "auth-client-cert-name" );
-		config.del( "auth-client-cert-data" );
+		if( lineEditCertName->text().isEmpty() )
+		{
+			config.del( "auth-client-cert-name" );
+			config.del( "auth-client-cert-data" );
+		}
 	}
 
 	if( pathPKeyFile.size() )
@@ -1248,8 +1254,11 @@ bool _qikeaSite::save( CONFIG & config )
 	}
 	else
 	{
-		config.del( "auth-client-key-name" );
-		config.del( "auth-client-key-data" );
+		if( lineEditPKeyName->text().isEmpty() )
+		{
+			config.del( "auth-client-key-name" );
+			config.del( "auth-client-key-data" );
+		}
 	}
 
 	if( lineEditPSK->isEnabled() )
@@ -1532,19 +1541,19 @@ bool _qikeaSite::verify()
 	// check cert authority file
 
 	if( toolButtonCAFile->isEnabled() )
-		if( pathCAFile.length() < 1 )
+		if( lineEditCAName->text().length() < 1 )
 			errmsg = "Please enter valid certificate authority file path.";
 
 	// check cert file
 
 	if( toolButtonCertFile->isEnabled() )
-		if( pathCertFile.length() < 1 )
+		if( lineEditCertName->text().length() < 1 )
 			errmsg = "Please enter valid certificate file path.";
 
 	// check private key file
 
 	if( toolButtonPKeyFile->isEnabled() )
-		if( pathPKeyFile.length() < 1 )
+		if( lineEditPKeyName->text().length() < 1 )
 			errmsg = "Please enter valid private key file path.";
 
 	// check pre shared key
@@ -2337,7 +2346,7 @@ void _qikeaSite::inputCAFile()
 	{
 		pathCAFile = filePath;
 		QFileInfo fileInfo( filePath );
-		lineEditCAName->setText( fileInfo.baseName() );
+		lineEditCAName->setText( fileInfo.fileName() );
 	}
 }
 
@@ -2357,7 +2366,7 @@ void _qikeaSite::inputCertFile()
 	{
 		pathCertFile = filePath;
 		QFileInfo fileInfo( filePath );
-		lineEditCertName->setText( fileInfo.baseName() );
+		lineEditCertName->setText( fileInfo.fileName() );
 	}
 }
 
@@ -2378,6 +2387,6 @@ void _qikeaSite::inputPKeyFile()
 	{
 		pathPKeyFile = filePath;
 		QFileInfo fileInfo( filePath );
-		lineEditPKeyName->setText( fileInfo.baseName() );
+		lineEditPKeyName->setText( fileInfo.fileName() );
 	}
 }
