@@ -154,16 +154,13 @@ int password_cb( char * buf, int size, int rwflag, void * userdata )
 	if( !fpass->size() )
 		return 0;
 
-	// trim the null terminating charachter
-	int fpass_size = ( int ) fpass->size() - 1;
-
 	memset( buf, 0, size );
-	if( fpass_size > size )
-		fpass_size = size;
+	if( size > fpass->size() )
+		size = fpass->size();
 
-	memcpy( buf, fpass->buff(), fpass_size );
+	memcpy( buf, fpass->buff(), size );
 
-	return fpass_size;
+	return size;
 }
 
 bool cert_load_pem( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
@@ -182,6 +179,11 @@ bool cert_load_pem( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 
 bool cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 {
+	// PKCS12 required a null terminated password
+	BDATA nullpass;
+	nullpass.set( pass );
+	nullpass.add( "", 1 );
+
 	fseek( fp, 0, SEEK_SET );
 
 	PKCS12 * p12 = d2i_PKCS12_fp( fp, NULL );
@@ -194,7 +196,7 @@ bool cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 	{
 		STACK_OF( X509 ) * stack = NULL;
 
-		if( PKCS12_parse( p12, pass.text(), NULL, NULL, &stack ) )
+		if( PKCS12_parse( p12, nullpass.text(), NULL, NULL, &stack ) )
 		{
 			if( stack != NULL )
 			{
@@ -206,7 +208,7 @@ bool cert_load_p12( BDATA & cert, FILE * fp, bool ca, BDATA & pass )
 		}
 	}
 	else
-		PKCS12_parse( p12, pass.text(), NULL, &x509, NULL );
+		PKCS12_parse( p12, nullpass.text(), NULL, &x509, NULL );
 
 	PKCS12_free( p12 );
 
@@ -277,6 +279,11 @@ bool cert_load_pem( BDATA & cert, BDATA & input, bool ca, BDATA & pass )
 
 bool cert_load_p12( BDATA & cert, BDATA & input, bool ca, BDATA & pass )
 {
+	// PKCS12 required a null terminated password
+	BDATA nullpass;
+	nullpass.set( pass );
+	nullpass.add( "", 1 );
+
 	BIO * bp = BIO_new( BIO_s_mem() );
 	if( bp == NULL )
 		return false;
@@ -301,7 +308,7 @@ bool cert_load_p12( BDATA & cert, BDATA & input, bool ca, BDATA & pass )
 	{
 		STACK_OF( X509 ) * stack = NULL;
 
-		if( PKCS12_parse( p12, ( const char * ) pass.buff(), NULL, NULL, &stack ) )
+		if( PKCS12_parse( p12, ( const char * ) nullpass.buff(), NULL, NULL, &stack ) )
 		{
 			if( stack != NULL )
 			{
@@ -313,7 +320,7 @@ bool cert_load_p12( BDATA & cert, BDATA & input, bool ca, BDATA & pass )
 		}
 	}
 	else
-		PKCS12_parse( p12, ( const char * ) pass.buff(), &evp_pkey, &x509, NULL );
+		PKCS12_parse( p12, ( const char * ) nullpass.buff(), &evp_pkey, &x509, NULL );
 
 	EVP_PKEY_free( evp_pkey );
 	PKCS12_free( p12 );
@@ -858,6 +865,11 @@ bool prvkey_rsa_load_pem( BDATA & prvkey, FILE * fp, BDATA & pass )
 
 bool prvkey_rsa_load_p12( BDATA & prvkey, FILE * fp, BDATA & pass )
 {
+	// PKCS12 required a null terminated password
+	BDATA nullpass;
+	nullpass.set( pass );
+	nullpass.add( "", 1 );
+
 	fseek( fp, 0, SEEK_SET );
 
 	PKCS12 * p12 = d2i_PKCS12_fp( fp, NULL );
@@ -865,7 +877,7 @@ bool prvkey_rsa_load_p12( BDATA & prvkey, FILE * fp, BDATA & pass )
 		return false;
 
 	EVP_PKEY * evp_pkey;
-	PKCS12_parse( p12, pass.text(), &evp_pkey, NULL, NULL );
+	PKCS12_parse( p12, nullpass.text(), &evp_pkey, NULL, NULL );
 	PKCS12_free( p12 );
 
 	if( evp_pkey == NULL )
@@ -935,6 +947,11 @@ bool prvkey_rsa_load_pem( BDATA & prvkey, BDATA & input, BDATA & pass )
 
 bool prvkey_rsa_load_p12( BDATA & prvkey, BDATA & input, BDATA & pass )
 {
+	// PKCS12 required a null terminated password
+	BDATA nullpass;
+	nullpass.set( pass );
+	nullpass.add( "", 1 );
+
 	BIO * bp = BIO_new( BIO_s_mem() );
 	if( bp == NULL )
 		return false;
@@ -953,7 +970,7 @@ bool prvkey_rsa_load_p12( BDATA & prvkey, BDATA & input, BDATA & pass )
 		return false;
 
 	EVP_PKEY * evp_pkey;
-	PKCS12_parse( p12, pass.text(), &evp_pkey, NULL, NULL );
+	PKCS12_parse( p12, nullpass.text(), &evp_pkey, NULL, NULL );
 	PKCS12_free( p12 );
 
 	if( evp_pkey == NULL )

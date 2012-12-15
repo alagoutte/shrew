@@ -1008,8 +1008,6 @@ bool _CLIENT::run_init()
 
 		if( msgres == IKEI_RESULT_PASSWD )
 		{
-			name.add( "", 1 );
-
 			if( !get_filepass( name ) )
 			{
 				log( STATUS_FAIL, "server cert file requires password\n" );
@@ -1057,8 +1055,6 @@ bool _CLIENT::run_init()
 
 		if( msgres == IKEI_RESULT_PASSWD )
 		{
-			name.add( "", 1 );
-
 			if( !get_filepass( name ) )
 			{
 				log( STATUS_FAIL, "client cert file requires password\n" );
@@ -1100,8 +1096,6 @@ bool _CLIENT::run_init()
 
 		if( msgres == IKEI_RESULT_PASSWD )
 		{
-			name.add( "", 1 );
-
 			if( !get_filepass( name ) )
 			{
 				log( STATUS_FAIL, "client key file requires password\n" );
