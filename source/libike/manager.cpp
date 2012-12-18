@@ -43,6 +43,8 @@
 
 bool file_to_name( BDATA & path, BDATA & name )
 {
+	name.del();
+
 	char * lastslash = strrchr( path.text(), PATH_DELIM );
 	if( lastslash == NULL )
 		name.set( path.text(), path.size() - 1 );

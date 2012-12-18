@@ -145,6 +145,7 @@ bool _QIKEC::get_filepass( BDATA & path )
 		return false;
 
 	QString text = PassData.password;
+	fpass.del();
 	fpass.set(
 		( const char * ) text.toAscii(), text.length() );
 
