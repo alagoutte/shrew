@@ -57,6 +57,12 @@ bool _IKED::rand_bytes( void * buff, long size )
 	return true;
 }
 
+void _IKED::set_files( char * set_path_conf, char * set_path_log )
+{
+	strncpy( path_conf, set_path_conf, MAX_PATH );
+	strncpy( path_log, set_path_log, MAX_PATH );
+}
+
 void _IKED::loop_ref_inc( const char * name )
 {
 	log.txt( LLOG_INFO, "ii : %s process thread begin ...\n", name );
@@ -83,6 +89,9 @@ void _IKED::loop_ref_dec( const char * name )
 
 _IKED::_IKED()
 {
+	path_conf[ 0 ] = 0;
+	path_log[ 0 ] = 0;
+
 	peercount = 0;
 	loopcount = 0;
 	tunnelid = 2;

@@ -332,17 +332,19 @@ bool _IKED::conf_load( const char * path, bool trace )
 	//
 
 	level = LOG_DEBUG;
-	snprintf( path_log, MAX_PATH, "%s/iked.log", PATH_DEBUG );
+
+	if( path_conf[ 0 ] == 0 )
+		snprintf( path_conf, MAX_PATH, "%s/iked.conf", path );
+
+	if( path_log[ 0 ] == 0 )
+		snprintf( path_log, MAX_PATH, "%s/iked.log", PATH_DEBUG );
+
 	snprintf( path_dhcp, MAX_PATH, "%s/iked.dhcp", path );
 
 	//
 	// open file and run parser
 	//
 	
-	char path_conf[ MAX_PATH ];
-	
-	snprintf( path_conf, MAX_PATH, "%s/iked.conf", path );
-
 	yy_flex_debug = trace;
 	if( !( yyin = fopen( path_conf, "r" ) ) )
 	{

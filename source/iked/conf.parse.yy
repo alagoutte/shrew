@@ -330,13 +330,17 @@ daemon_line
 	EOS
   |	LOG_FILE SYSLOG
 	{
-		snprintf( iked.path_log, MAX_PATH, "iked" );
-		iked.logflags |= LOGFLAG_SYSTEM;
+		if( iked.path_log[ 0 ] == 0 )
+		{
+			snprintf( iked.path_log, MAX_PATH, "iked" );
+			iked.logflags |= LOGFLAG_SYSTEM;
+		}
 	}
 	EOS
   |	LOG_FILE QUOTED
 	{
-		snprintf( iked.path_log, MAX_PATH, "%s", $2->text() );
+		if( iked.path_log[ 0 ] == 0 )
+			snprintf( iked.path_log, MAX_PATH, "%s", $2->text() );
 		delete $2;
 	}
 	EOS

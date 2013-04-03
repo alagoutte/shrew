@@ -380,6 +380,7 @@ typedef class _IKED
 	private:
 
 	char	path_ins[ MAX_PATH ];		// install path
+	char	path_conf[ MAX_PATH ];		// configuration file
 	char	path_log[ MAX_PATH ];		// logfile path
 	char	path_decrypt[ MAX_PATH ];	// decrypted pcap path
 	char	path_encrypt[ MAX_PATH ];	// encrypted pcap path
@@ -786,6 +787,8 @@ typedef class _IKED
 	~_IKED();
 
 	LOG	log;	// generic log object
+
+	void	set_files( char * set_path_conf, char * set_path_log );
 
 	long	init( long setlevel );
 	long	halt( bool terminate );

@@ -286,9 +286,9 @@ void daemon_stop( int sig_num )
 	iked.halt( true );
 }
 
-bool daemon_pidfile_create( char * pidpath )
+bool daemon_pidfile_create( char * path_pid )
 {
-	if( !pidpath[ 0 ] )
+	if( !path_pid[ 0 ] )
 		return false;
 
 	//
@@ -297,7 +297,7 @@ bool daemon_pidfile_create( char * pidpath )
 
 	pid_t pid = -1;
 
-	FILE * fp = fopen( pidpath, "r" );
+	FILE * fp = fopen( path_pid, "r" );
 	if( fp != NULL )
 	{
 		fscanf( fp, "%d", &pid );
@@ -310,7 +310,7 @@ bool daemon_pidfile_create( char * pidpath )
 		return false;
 	}
 
-	fp = fopen( pidpath, "w" );
+	fp = fopen( path_pid, "w" );
 	if( fp != NULL )
 	{
 		fprintf( fp, "%d", getpid() );
@@ -318,16 +318,16 @@ bool daemon_pidfile_create( char * pidpath )
 		return true;
 	}
 
-	printf( "unable to open pid file path \'%s\'\n", pidpath );
+	printf( "unable to open pid file path \'%s\'\n", path_pid );
 	return false;
 }
 
-void daemon_pidfile_remove( char * pidpath )
+void daemon_pidfile_remove( char * path_pid )
 {
-	if( !pidpath[ 0 ] )
+	if( !path_pid[ 0 ] )
 		return;
 
-	unlink( pidpath );
+	unlink( path_pid );
 }
 
 #endif
@@ -437,8 +437,11 @@ int main( int argc, char * argv[], char * envp[] )
 	// check command line parameters
 	//
 
+	char path_conf[ MAX_PATH ] = { 0 };
+	char path_log[ MAX_PATH ] = { 0 };
+	char path_pid[ MAX_PATH ] = { 0 };
 	bool service = true;
-	char pidpath[ MAX_PATH ] = { 0 };
+	long debuglevel = 0;
 
 	for( long argi = 1; argi < argc; argi++ )
 	{
@@ -453,10 +456,48 @@ int main( int argc, char * argv[], char * envp[] )
 				return -1;
 			}
 
-			strncpy( pidpath, argv[ ++argi ], MAX_PATH );
+			strncpy( path_pid, argv[ ++argi ], MAX_PATH );
 
-			if( !daemon_pidfile_create( pidpath ) )
+			if( !daemon_pidfile_create( path_pid ) )
 				return -1;
+		}
+
+		if( !strcmp( argv[ argi ], "-f" ) )
+		{
+			if( ( argc - argi ) < 2 )
+			{
+				printf( "you must specify a path following the -f option\n" );
+				return -1;
+			}
+
+			strncpy( path_conf, argv[ ++argi ], MAX_PATH );
+		}
+
+		if( !strcmp( argv[ argi ], "-l" ) )
+		{
+			if( ( argc - argi ) < 2 )
+			{
+				printf( "you must specify a path following the -l option\n" );
+				return -1;
+			}
+
+			strncpy( path_log, argv[ ++argi ], MAX_PATH );
+		}
+
+		if( !strcmp( argv[ argi ], "-d" ) )
+		{
+			if( ( argc - argi ) < 2 )
+			{
+				printf( "you must specify a debug level between 0 and 6 following the -d option\n" );
+				return -1;
+			}
+
+			debuglevel = atol( argv[ ++argi ] );
+			if ( ( debuglevel < 0 ) || (debuglevel > 6) )
+			{
+				printf( "you must specify a debug level between 0 and 6 following the -d option\n" );
+                return -1;
+			}
 		}
 	}
 
@@ -469,10 +510,16 @@ int main( int argc, char * argv[], char * envp[] )
 	signal( SIGPIPE, SIG_IGN );
 
 	//
+	// set config and log file paths
+	//
+
+	iked.set_files( path_conf, path_log );
+
+	//
 	// initialize
 	//
 
-	if( iked.init( 0 ) != LIBIKE_OK )
+	if( iked.init( debuglevel ) != LIBIKE_OK )
 		return -1;
 
 	//
@@ -492,7 +539,7 @@ int main( int argc, char * argv[], char * envp[] )
 	// remove our pidfile
 	//
 
-	daemon_pidfile_remove( pidpath );
+	daemon_pidfile_remove( path_pid );
 
 #endif
 
