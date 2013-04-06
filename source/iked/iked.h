@@ -788,7 +788,7 @@ typedef class _IKED
 
 	LOG	log;	// generic log object
 
-	void	set_files( char * set_path_conf, char * set_path_log );
+	void	set_files( char * set_path_conf, const char * set_path_log );
 
 	long	init( long setlevel );
 	long	halt( bool terminate );

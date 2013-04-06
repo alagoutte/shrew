@@ -57,10 +57,10 @@ bool _IKED::rand_bytes( void * buff, long size )
 	return true;
 }
 
-void _IKED::set_files( char * set_path_conf, char * set_path_log )
+void _IKED::set_files( char * set_path_conf, const char * set_path_log )
 {
-	strncpy( path_conf, set_path_conf, MAX_PATH );
-	strncpy( path_log, set_path_log, MAX_PATH );
+	strcpy_s( path_conf, MAX_PATH, set_path_conf );
+	strcpy_s( path_log, MAX_PATH, set_path_log );
 }
 
 void _IKED::loop_ref_inc( const char * name )
