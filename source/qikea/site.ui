@@ -185,12 +185,12 @@
              <widget class="QComboBox" name="comboBoxAddressMethod" >
               <item>
                <property name="text" >
-                <string>Use a virtual adpter and assigned address</string>
+                <string>Use a virtual adapter and assigned address</string>
                </property>
               </item>
               <item>
                <property name="text" >
-                <string>Use a virtual adpter and random address</string>
+                <string>Use a virtual adapter and random address</string>
                </property>
               </item>
               <item>

@@ -1492,7 +1492,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long setbits, long setmask, VENDOPT
 			cfg->attr_add_v( INTERNAL_IP4_NETMASK,
 				null_ptr, null_len );
 
-			log.txt( LLOG_DEBUG,	"ii : - IP4 Netamask\n" );
+			log.txt( LLOG_DEBUG,	"ii : - IP4 Netmask\n" );
 		}
 		else
 		{
@@ -1504,7 +1504,7 @@ long _IKED::config_xconf_set( IDB_CFG * cfg, long setbits, long setmask, VENDOPT
 			text_addr( txtaddr, cfg->tunnel->xconf.mask );
 
 			log.txt( LLOG_DEBUG,
-				"ii : - IP4 Netamask = %s\n",
+				"ii : - IP4 Netmask = %s\n",
 				txtaddr );
 		}
 	}

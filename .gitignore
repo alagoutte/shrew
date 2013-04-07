@@ -1,0 +1,33 @@
+# CMake #
+##################
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+
+
+# Compiled or generated source #
+################################
+source/iked/conf.parse.cpp
+source/iked/conf.parse.hpp
+source/iked/conf.token.cpp
+source/iked/location.hh
+source/iked/position.hh
+source/iked/stack.hh
+source/ikec/ikec
+source/iked/iked
+source/qikea/qikea
+source/qikec/qikec
+lib*.so*
+
+# Qt #
+######
+*.qrc.depends
+moc_*.cxx
+qrc_*.cxx
+ui_*.h
+
+# Misc #
+########
+*~
+.DS_Store
