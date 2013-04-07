@@ -20,5 +20,5 @@ add_executable(
 
 target_link_libraries(
 	test_ith_timer
-	ith
+	ss_ith
 	pthread )
