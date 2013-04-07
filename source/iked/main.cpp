@@ -446,7 +446,10 @@ int main( int argc, char * argv[], char * envp[] )
 	for( long argi = 1; argi < argc; argi++ )
 	{
 		if( !strcmp( argv[ argi ], "-F" ) )
+		{
 			service = false;
+			continue;
+		}
 
 		if( !strcmp( argv[ argi ], "-p" ) )
 		{
@@ -460,6 +463,8 @@ int main( int argc, char * argv[], char * envp[] )
 
 			if( !daemon_pidfile_create( path_pid ) )
 				return -1;
+
+			continue;
 		}
 
 		if( !strcmp( argv[ argi ], "-f" ) )
@@ -471,6 +476,8 @@ int main( int argc, char * argv[], char * envp[] )
 			}
 
 			strncpy( path_conf, argv[ ++argi ], MAX_PATH );
+
+			continue;
 		}
 
 		if( !strcmp( argv[ argi ], "-l" ) )
@@ -482,6 +489,8 @@ int main( int argc, char * argv[], char * envp[] )
 			}
 
 			strncpy( path_log, argv[ ++argi ], MAX_PATH );
+
+			continue;
 		}
 
 		if( !strcmp( argv[ argi ], "-d" ) )
@@ -496,9 +505,14 @@ int main( int argc, char * argv[], char * envp[] )
 			if ( ( debuglevel < 0 ) || (debuglevel > 6) )
 			{
 				printf( "you must specify a debug level between 0 and 6 following the -d option\n" );
-                return -1;
+				return -1;
 			}
+
+			continue;
 		}
+
+		printf( "invalid option %s specified\n", argv[ argi ] );
+		return -1;
 	}
 
 	//
