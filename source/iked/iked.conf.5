@@ -108,7 +108,7 @@ Specifies the general configuration for
 .Xr iked 8
 operation. This includes parameters related to the basic network configuration,
 log file and debug output. Only one
-.Ic deamon
+.Ic daemon
 section should be defined.
 .Pp
 .Bl -tag -width Ds -compact
@@ -134,12 +134,12 @@ The log output detail level. The default value for this parameter is
 .It Ic pcap_decrypt Ar quoted;
 The path and file name that should be used to dump decrypted ike packets in
 pcap format. If no 
-.Ic pcap_ike
+.Ic pcap_decrypt
 statement is specified, this feature is disabled.
 .It Ic pcap_encrypt Ar quoted;
 The path and file name that should be used to dump encrypted ike packets in
 pcap format. If no 
-.Ic pcap_pub
+.Ic pcap_encrypt
 statement is specified, this feature is disabled.
 .It Ic dhcp_file Ar quoted;
 The path and file name that should be used to store a dhcp mac address seed
@@ -260,7 +260,7 @@ Specifies the contact type when establishing phase1 negotiations with a peer. If
 is used, the daemon will initiate contact but deny contact initiated by the
 peer. If
 .Ic responder
-is used, the deamon will allow contact initiated by the peer but will not
+is used, the daemon will allow contact initiated by the peer but will not
 initiate contact. If
 .Ic both
 is specified, the daemon will initiate contact and allow the peer to initiate

@@ -8,7 +8,7 @@
 #
 
 include_directories(
-        ${IKE_SOURCE_DIR}/source )
+	${IKE_SOURCE_DIR}/source )
 
 add_library(
 	ss_ith SHARED
@@ -46,6 +46,6 @@ if( APPLE )
 endif( APPLE )
 
 install(
-        TARGETS ss_ith
-        LIBRARY DESTINATION ${PATH_LIB}
-		FRAMEWORK DESTINATION "/Library/Frameworks" )
+	TARGETS ss_ith
+	LIBRARY DESTINATION ${PATH_LIB}
+	FRAMEWORK DESTINATION "/Library/Frameworks" )
