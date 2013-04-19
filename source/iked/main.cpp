@@ -461,9 +461,6 @@ int main( int argc, char * argv[], char * envp[] )
 
 			strncpy( path_pid, argv[ ++argi ], MAX_PATH );
 
-			if( !daemon_pidfile_create( path_pid ) )
-				return -1;
-
 			continue;
 		}
 
@@ -542,6 +539,13 @@ int main( int argc, char * argv[], char * envp[] )
 
 	if( service )
 		daemon( 0, 0 );
+
+	//
+	// create our pid file
+	//
+
+	if( !daemon_pidfile_create( path_pid ) )
+		return -1;
 
 	//
 	// run daemon main loop
