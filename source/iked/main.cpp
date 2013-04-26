@@ -544,8 +544,9 @@ int main( int argc, char * argv[], char * envp[] )
 	// create our pid file
 	//
 
-	if( !daemon_pidfile_create( path_pid ) )
-		return -1;
+	if( path_pid[ 0 ] )
+		if( !daemon_pidfile_create( path_pid ) )
+			return -1;
 
 	//
 	// run daemon main loop
@@ -557,7 +558,8 @@ int main( int argc, char * argv[], char * envp[] )
 	// remove our pidfile
 	//
 
-	daemon_pidfile_remove( path_pid );
+	if( path_pid[ 0 ] )
+		daemon_pidfile_remove( path_pid );
 
 #endif
 
