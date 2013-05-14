@@ -522,6 +522,7 @@ typedef class _IKED
 
 #ifdef OPT_DTP
 
+	bool	dnsproxy_check( IKEI * ikei );
 	bool	dnsproxy_setup( IDB_TUNNEL * tunnel );
 	void	dnsproxy_cleanup( IDB_TUNNEL * tunnel );
 

@@ -492,6 +492,16 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 						log.txt( LLOG_INFO, "<A : peer tunnel enable message\n" );
 
 						//
+						// dns proxy init check
+						//
+#ifdef WIN32
+						if( !dnsproxy_check( ikei ) )
+						{
+							detach = true;
+							break;
+						}
+#endif
+						//
 						// create peer object
 						//
 
@@ -625,7 +635,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 					break;
 				}
-
+#ifdef WIN32
 				//
 				// suspend tunnel message
 				//
@@ -670,7 +680,7 @@ long _IKED::loop_ipc_client( IKEI * ikei )
 
 					break;
 				}
-
+#endif
 				default:
 					log.txt( LLOG_ERROR, "!! : message type is invalid ( %u )\n", msg.header.type );
 					if( tunnel != NULL )
